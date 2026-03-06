@@ -1,0 +1,203 @@
+// ============================================
+// MAH.AI — Schéma Prisma v6
+// ============================================
+// Base de données PostgreSQL (Supabase)
+// ============================================
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ── UTILISATEURS ─────────────────────────────────────────────
+model User {
+  id                String   @id @default(cuid())
+  clerkId           String   @unique
+  email             String   @unique
+  prenom            String
+  nom               String?
+  avatarUrl         String?
+  credits           Int      @default(10)
+  roles             Role[]   @default([ETUDIANT])
+  statut            String   @default("ACTIF")
+  
+  // Relations
+  sujets            Sujet[]
+  achats            Achat[]
+  gains             Gain[]
+  transactions      Transaction[]
+  notifications     Notification[]
+  examensBlancs     ExamenBlanc[]
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastLoginAt       DateTime?
+  
+  @@index([clerkId])
+  @@index([email])
+  @@index([roles])
+}
+
+enum Role {
+  ETUDIANT
+  CONTRIBUTEUR
+  VERIFICATEUR
+  PROFESSEUR
+  ADMIN
+}
+
+// ── SUJETS D'EXAMENS ─────────────────────────────────────────
+model Sujet {
+  id                String   @id @default(cuid())
+  titre             String
+  contenu           Json
+  contenuTexte      String?  @db.Text
+  typeExamen        String
+  matiere           String
+  annee             Int
+  serie             String?
+  prixCredits       Int      @default(2)
+  statut            String   @default("BROUILLON")
+  pdfUrl            String?
+  pages             Int      @default(0)
+  
+  // Stats
+  notemoyenne       Float?
+  nbNotes           Int      @default(0)
+  nbAchats          Int      @default(0)
+  nbConsultations   Int      @default(0)
+  
+  // Relations
+  contributeurId    String
+  contributeur      User     @relation(fields: [contributeurId], references: [id])
+  achats            Achat[]
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  publieAt          DateTime?
+  
+  @@index([typeExamen])
+  @@index([matiere])
+  @@index([annee])
+  @@index([statut])
+  @@index([contributeurId])
+}
+
+// ── ACHATS ───────────────────────────────────────────────────
+model Achat {
+  id                String   @id @default(cuid())
+  userId            String
+  sujetId           String
+  typeAcces         String
+  creditsPaies      Int
+  pdfUrl            String?
+  
+  // Relations
+  user              User     @relation(fields: [userId], references: [id])
+  sujet             Sujet    @relation(fields: [sujetId], references: [id])
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  
+  @@unique([userId, sujetId, typeAcces])
+  @@index([userId])
+  @@index([sujetId])
+}
+
+// ── GAINS ────────────────────────────────────────────────────
+model Gain {
+  id                String   @id @default(cuid())
+  userId            String
+  montantAr         Int
+  creditsGagnes     Int
+  source            String
+  role              String
+  paye              Boolean  @default(false)
+  paiementDate      DateTime?
+  referenceMvola    String?
+  
+  // Relations
+  user              User     @relation(fields: [userId], references: [id])
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([paye])
+}
+
+// ── TRANSACTIONS ─────────────────────────────────────────────
+model Transaction {
+  id                String   @id @default(cuid())
+  userId            String
+  montantAr         Int
+  creditsAttendus   Int
+  moyenPaiement     String
+  numeroEnvoyeur    String
+  reference         String?
+  captureUrl        String?
+  statut            String   @default("EN_ATTENTE")
+  validePar         String?
+  motifRejet        String?
+  
+  // Relations
+  user              User     @relation(fields: [userId], references: [id])
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  valideAt          DateTime?
+  
+  @@index([userId])
+  @@index([statut])
+  @@index([createdAt])
+}
+
+// ── NOTIFICATIONS ────────────────────────────────────────────
+model Notification {
+  id                String   @id @default(cuid())
+  userId            String
+  titre             String
+  message           String
+  type              String
+  lue               Boolean  @default(false)
+  lien              String?
+  
+  // Relations
+  user              User     @relation(fields: [userId], references: [id])
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([lue])
+}
+
+// ── EXAMENS BLANCS ───────────────────────────────────────────
+model ExamenBlanc {
+  id                String   @id @default(cuid())
+  userId            String
+  sujetId           String?
+  titre             String
+  dureeSecondes     Int
+  score             Float?
+  scoreMax          Int
+  reponses          Json?
+  corrige           Json?
+  
+  // Relations
+  user              User     @relation(fields: [userId], references: [id])
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  termineAt         DateTime?
+  
+  @@index([userId])
+  @@index([createdAt])
+}
