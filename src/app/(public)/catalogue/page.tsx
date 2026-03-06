@@ -51,13 +51,8 @@ export default function CataloguePage() {
   });
 
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden">
-      {/* Mesh background */}
-      <div className="mesh-bg" aria-hidden="true">
-        <span /><span />
-      </div>
-
-      <div className="relative z-10 pt-24 pb-20 px-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-bg relative">
+      <div className="relative z-10 py-20 px-6 max-w-7xl mx-auto">
         
         {/* ── HEADER ── */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
@@ -249,11 +244,6 @@ export default function CataloguePage() {
 
           </main>
         </div>
-      </div>
-
-      <footer className="relative z-10 py-12 text-center text-muted/40 text-xs font-mono border-t border-border/20">
-        Mah.AI Catalogue — Explore l'excellence éducative malgache. 🇲🇬
-      </footer>
     </div>
   );
 }
