@@ -99,11 +99,7 @@ export default function PricingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden">
-      {/* Mesh background */}
-      <div className="mesh-bg" aria-hidden="true">
-        <span /><span /><span />
-      </div>
+    <div className="min-h-screen relative">
 
       {/* ── HERO SECTION ── */}
       <section className="relative z-10 pt-32 pb-16 px-6">
@@ -263,9 +259,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer className="relative z-10 py-12 text-center text-muted/40 text-xs font-mono border-t border-border/20">
-        Mah.AI — Préparez l'avenir, un crédit à la fois. 🇲🇬
-      </footer>
     </div>
   );
 }

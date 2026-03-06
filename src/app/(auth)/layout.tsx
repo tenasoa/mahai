@@ -6,7 +6,11 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-bg relative py-12 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-bg relative py-12 px-4 overflow-hidden">
+      {/* Mesh Background Global */}
+      <div className="mesh-bg" aria-hidden="true">
+        <span /><span /><span />
+      </div>
       {/* Logo */}
       <div className="relative z-10 mb-10 animate-fade-in">
         <Logo size="lg" />

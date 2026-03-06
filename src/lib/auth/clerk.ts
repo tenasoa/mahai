@@ -1,4 +1,13 @@
 import { clerkClient } from '@clerk/nextjs/server'
+import { db } from '@/lib/db/prisma'
+
+export enum Role {
+  ETUDIANT = 'ETUDIANT',
+  CONTRIBUTEUR = 'CONTRIBUTEUR',
+  VERIFICATEUR = 'VERIFICATEUR',
+  PROFESSEUR = 'PROFESSEUR',
+  ADMIN = 'ADMIN'
+}
 
 // ============================================
 // MAH.AI — Clerk Utils
@@ -25,7 +34,8 @@ export async function syncUserToDb(clerkId: string, email: string, prenom: strin
         email,
         prenom,
         credits: 10, // Crédits d'inscription offerts
-        roles: ['ETUDIANT'],
+        roles: [Role.ETUDIANT],
+        statut: "ACTIF",
       },
     })
     
@@ -37,7 +47,7 @@ export async function syncUserToDb(clerkId: string, email: string, prenom: strin
 }
 
 // ── METTRE À JOUR LES RÔLES ────────────────────────────────────
-export async function updateUserRoles(clerkId: string, roles: string[]) {
+export async function updateUserRoles(clerkId: string, roles: Role[]) {
   try {
     const user = await db.user.update({
       where: { clerkId },
@@ -45,7 +55,8 @@ export async function updateUserRoles(clerkId: string, roles: string[]) {
     })
     
     // Mettre à jour les metadata Clerk
-    await clerkClient.users.updateUserMetadata(clerkId, {
+    const client = await clerkClient()
+    await client.users.updateUserMetadata(clerkId, {
       publicMetadata: { roles },
     })
     

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Mail, MessageSquare, Send, Phone, MapPin, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Mail, MessageSquare, Send, Phone, MapPin, ArrowRight, CheckCircle2, ChevronDown } from "lucide-react";
 
 // ============================================
 // MAH.AI — Contact
@@ -31,11 +31,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden">
-      {/* Mesh background */}
-      <div className="mesh-bg" aria-hidden="true">
-        <span /><span /><span />
-      </div>
+    <div className="min-h-screen relative">
 
       {/* ── HEADER ── */}
       <section className="relative z-10 pt-32 pb-12 px-6">
@@ -135,7 +131,7 @@ export default function ContactPage() {
                           required
                           type="text" 
                           placeholder="Ex: Miora Rakoto"
-                          className="w-full h-14 rounded-2xl bg-bg4 border border-border/40 px-6 text-text placeholder:text-muted/40 focus:border-teal/40 focus:bg-bg3 transition-all outline-none"
+                          className="w-full h-14 rounded-2xl bg-bg2 border border-white/10 px-6 text-white/90 placeholder:text-white/30 focus:border-teal/50 focus:bg-bg3 transition-all duration-300 outline-none shadow-inner"
                         />
                       </div>
                       <div className="space-y-2">
@@ -144,7 +140,7 @@ export default function ContactPage() {
                           required
                           type="email" 
                           placeholder="miora@gmail.com"
-                          className="w-full h-14 rounded-2xl bg-bg4 border border-border/40 px-6 text-text placeholder:text-muted/40 focus:border-teal/40 focus:bg-bg3 transition-all outline-none"
+                          className="w-full h-14 rounded-2xl bg-bg2 border border-white/10 px-6 text-white/90 placeholder:text-white/30 focus:border-teal/50 focus:bg-bg3 transition-all duration-300 outline-none shadow-inner"
                         />
                       </div>
                     </div>
@@ -152,7 +148,7 @@ export default function ContactPage() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-muted uppercase tracking-widest font-mono ml-4">Sujet de ta demande</label>
                       <div className="relative group/select">
-                        <select className="w-full h-14 rounded-2xl bg-bg4 border border-border/40 px-6 text-text/90 focus:border-teal/40 focus:bg-bg3 transition-all outline-none appearance-none cursor-pointer">
+                        <select className="w-full h-14 rounded-2xl bg-bg2 border border-white/10 px-6 text-white/90 focus:border-teal/50 focus:bg-bg3 transition-all duration-300 outline-none appearance-none cursor-pointer">
                           <option className="bg-bg2">Aide sur l'achat de crédits</option>
                           <option className="bg-bg2">Problème technique sur un sujet</option>
                           <option className="bg-bg2">Devenir contributeur ou professeur</option>
@@ -166,11 +162,10 @@ export default function ContactPage() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-muted uppercase tracking-widest font-mono ml-4">Ton Message</label>
                       <textarea 
-                        required
-                        rows={5}
-                        placeholder="Comment pouvons-nous t'aider ?"
-                        className="w-full p-6 rounded-3xl bg-bg4 border border-border/40 text-text placeholder:text-muted/40 focus:border-teal/40 focus:bg-bg3 transition-all outline-none resize-none"
-                      />
+                          rows={4}
+                          placeholder="Comment pouvons-nous t'aider ?"
+                          className="w-full rounded-2xl bg-bg2 border border-white/10 p-6 text-white/90 placeholder:text-white/30 focus:border-teal/50 focus:bg-bg3 transition-all duration-300 outline-none shadow-inner resize-none"
+                        />
                     </div>
 
                     <button 
@@ -196,9 +191,6 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <footer className="relative z-10 py-12 text-center text-muted/40 text-xs font-mono border-t border-border/20">
-        Mah.AI Support Team — 🇲🇬 Antananarivo
-      </footer>
     </div>
   );
 }

@@ -99,8 +99,8 @@ body::before {
 .mesh-bg span {
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.12;
+  filter: blur(150px);
+  opacity: 0.25;
   animation: float-mesh 20s ease-in-out infinite alternate;
 }
 

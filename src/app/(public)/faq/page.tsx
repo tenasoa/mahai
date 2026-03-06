@@ -115,7 +115,7 @@ function FAQItem({ question, answer, idx }: { question: string; answer: string; 
 }
 
 export default function FAQPage() {
-  const [searchTerm, setSearch search] = useState("");
+  const [searchTerm, setSearch] = useState("");
 
   // Reveal on scroll
   useEffect(() => {
@@ -127,11 +127,7 @@ export default function FAQPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden">
-      {/* Mesh background */}
-      <div className="mesh-bg" aria-hidden="true">
-        <span /><span /><span />
-      </div>
+    <div className="min-h-screen relative">
 
       {/* ── HERO SECTION ── */}
       <section className="relative z-10 pt-32 pb-12 px-6">
@@ -210,9 +206,6 @@ export default function FAQPage() {
         </div>
       </section>
 
-      <footer className="relative z-10 py-12 text-center text-muted/40 text-xs font-mono border-t border-border/20">
-        Mah.AI Help Center — 🇲🇬 Madagascar
-      </footer>
     </div>
   );
 }

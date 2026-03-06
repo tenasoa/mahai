@@ -1,11 +1,25 @@
+import Link from 'next/link'
 import { Logo } from '@/components/ui/logo'
-
-// ... (currentYear et footerLinks inchangés)
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
 
-  // ... (footerLinks)
+  const footerLinks = {
+    produit: [
+      { href: '/catalogue', label: 'Catalogue' },
+      { href: '/pricing', label: 'Tarifs' },
+      { href: '/about', label: 'À propos' },
+    ],
+    support: [
+      { href: '/faq', label: 'FAQ' },
+      { href: '/contact', label: 'Contact' },
+      { href: '/terms', label: 'CGU' },
+    ],
+    legal: [
+      { href: '/privacy', label: 'Confidentialité' },
+      { href: '/mentions', label: 'Mentions légales' },
+    ],
+  }
 
   return (
     <footer className="border-t border-white/5 bg-bg2/50 backdrop-blur-md">
@@ -31,17 +45,6 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://tiktok.com/@mahai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted hover:text-teal transition-colors"
-              >
-                <span className="sr-only">TikTok</span>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93v6.16c0 2.52-1.12 4.84-2.9 6.24-1.72 1.36-3.92 1.9-6.07 1.49-2.14-.41-4.04-1.75-5.19-3.61-1.15-1.86-1.44-4.17-.79-6.26.65-2.09 2.2-3.81 4.19-4.66 1.99-.85 4.26-.73 6.16.33v4.21c-.66-.37-1.41-.55-2.16-.52-1.36.05-2.61.77-3.34 1.92-.73 1.15-.84 2.6-.29 3.84.55 1.24 1.67 2.14 3.01 2.42 1.34.28 2.73-.13 3.73-1.1 1-1 1.56-2.37 1.56-3.8V.02z" />
-                </svg>
-              </a>
-              <a
                 href="https://wa.me/261340000000"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -57,13 +60,13 @@ export default function Footer() {
 
           {/* Produit */}
           <div>
-            <h3 className="text-sm font-bold text-text mb-4">Produit</h3>
-            <ul className="space-y-2">
+            <h3 className="text-sm font-bold text-text mb-6 uppercase tracking-widest font-mono">Produit</h3>
+            <ul className="space-y-4">
               {footerLinks.produit.map(link => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted hover:text-teal transition-colors"
+                    className="text-sm text-muted hover:text-teal transition-all duration-300"
                   >
                     {link.label}
                   </Link>
@@ -74,13 +77,13 @@ export default function Footer() {
 
           {/* Support */}
           <div>
-            <h3 className="text-sm font-bold text-text mb-4">Support</h3>
-            <ul className="space-y-2">
+            <h3 className="text-sm font-bold text-text mb-6 uppercase tracking-widest font-mono">Support</h3>
+            <ul className="space-y-4">
               {footerLinks.support.map(link => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted hover:text-teal transition-colors"
+                    className="text-sm text-muted hover:text-teal transition-all duration-300"
                   >
                     {link.label}
                   </Link>
@@ -91,13 +94,13 @@ export default function Footer() {
 
           {/* Légal */}
           <div>
-            <h3 className="text-sm font-bold text-text mb-4">Légal</h3>
-            <ul className="space-y-2">
+            <h3 className="text-sm font-bold text-text mb-6 uppercase tracking-widest font-mono">Légal</h3>
+            <ul className="space-y-4">
               {footerLinks.legal.map(link => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted hover:text-teal transition-colors"
+                    className="text-sm text-muted hover:text-teal transition-all duration-300"
                   >
                     {link.label}
                   </Link>
@@ -108,12 +111,16 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-border">
-          <p className="text-sm text-muted text-center">
-            © {currentYear} Mah.AI. Tous droits réservés.
-            <br />
-            <span className="text-xs">Fait avec ❤️ pour Madagascar 🇲🇬</span>
+        <div className="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-xs text-muted font-mono">
+            © {currentYear} Mah.AI · Tous droits réservés.
           </p>
+          <div className="flex items-center gap-2 text-xs text-muted/60">
+             <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
+             Systèmes Opérationnels
+             <span className="mx-2 opacity-20">|</span>
+             Fait avec ❤️ pour Madagascar 🇲🇬
+          </div>
         </div>
       </div>
     </footer>

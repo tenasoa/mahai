@@ -1,4 +1,4 @@
-import { put, getDownloadURL, del } from '@vercel/blob'
+import { put, getDownloadUrl, del } from '@vercel/blob'
 
 // ============================================
 // MAH.AI — Vercel Blob Utils
@@ -21,7 +21,6 @@ export async function uploadFile(
     url: blob.url,
     pathname: blob.pathname,
     contentType: blob.contentType,
-    size: blob.size,
   }
 }
 
@@ -38,7 +37,7 @@ export async function uploadPreuvePaiement(file: File, userId: string) {
 
 // ── GET URL ──────────────────────────────────────────────────
 export async function getFileUrl(pathname: string) {
-  return getDownloadURL(pathname)
+  return getDownloadUrl(pathname)
 }
 
 // ── DELETE ───────────────────────────────────────────────────

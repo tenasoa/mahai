@@ -25,8 +25,8 @@ export const clerkAppearance = {
   },
   elements: {
     rootBox: 'w-full',
-    cardBox: 'bg-transparent w-full shadow-none',
-    card: 'bg-transparent shadow-none border-0 p-0 m-0',
+    cardBox: 'bg-[#0C1220] w-full shadow-2xl border border-white/10 rounded-[32px] p-2',
+    card: 'bg-transparent shadow-none border-0 p-10 m-0',
     headerTitle: 'hidden',
     headerSubtitle: 'hidden',
     socialButtonsBlockButton: 

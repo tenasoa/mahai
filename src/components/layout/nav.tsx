@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { UserButton, SignedIn, SignedOut, SignInButton } from "@clerk/nextjs"
+import { UserButton, Show, SignInButton } from "@clerk/nextjs"
 import { LayoutDashboard, BookOpen, GraduationCap, Zap, Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
@@ -60,7 +60,7 @@ export default function Nav() {
 
         {/* Actions */}
         <div className="flex items-center gap-5">
-          <SignedIn>
+          <Show when="signed-in">
             <Link 
               href="/dashboard"
               className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-bg2 border border-white/10 rounded-xl hover:border-teal/50 hover:bg-bg3 transition-all duration-300 font-bold text-[10px] uppercase tracking-widest text-text shadow-sm"
@@ -69,17 +69,17 @@ export default function Nav() {
               Espace Client
             </Link>
             <div className="p-0.5 bg-gradient-to-tr from-teal/20 to-purple/20 rounded-full">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </div>
-          </SignedIn>
+          </Show>
           
-          <SignedOut>
+          <Show when="signed-out">
             <SignInButton mode="modal">
               <button className="px-6 py-2.5 bg-teal hover:bg-teal2 text-bg font-black rounded-xl transition-all duration-300 shadow-lg shadow-teal/10 hover:shadow-teal/20 hover:-translate-y-0.5 active:scale-95 text-xs uppercase tracking-wider">
                 Connexion
               </button>
             </SignInButton>
-          </SignedOut>
+          </Show>
 
           {/* Mobile Toggle */}
           <button 
@@ -108,7 +108,7 @@ export default function Nav() {
                 {link.name}
               </Link>
             ))}
-            <SignedIn>
+            <Show when="signed-in">
                  <Link 
                   href="/dashboard"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -119,7 +119,7 @@ export default function Nav() {
                   </div>
                   Dashboard
                 </Link>
-            </SignedIn>
+            </Show>
           </div>
         </div>
       )}

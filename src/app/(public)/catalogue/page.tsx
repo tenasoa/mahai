@@ -1,14 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Filter, Grid3X3, LayoutList, Star, FileText, Heart, ArrowRight, X, SlidersHorizontal, BookOpen } from "lucide-react";
+import { Search, Grid3X3, LayoutList, Star, FileText, ArrowRight, X, SlidersHorizontal } from "lucide-react";
 
 // ============================================
 // MAH.AI — Catalogue
-// ============================================
-// Page d'exploration des sujets
-// Design dynamique avec filtres et recherche
 // ============================================
 
 const SUBJECTS = [
@@ -24,8 +21,6 @@ export default function CataloguePage() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeType, setActiveType] = useState<string[]>([]);
-  const [wished, setWished] = useState<Set<number>>(new Set());
-  const [loading, setLoading] = useState(false);
 
   // Mouse glow
   useEffect(() => {
@@ -51,8 +46,8 @@ export default function CataloguePage() {
   });
 
   return (
-    <div className="min-h-screen bg-bg relative">
-      <div className="relative z-10 py-20 px-6 max-w-7xl mx-auto">
+    <div className="min-h-screen relative">
+      <div className="relative z-10 py-24 px-6 max-w-7xl mx-auto">
         
         {/* ── HEADER ── */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
@@ -110,18 +105,6 @@ export default function CataloguePage() {
                     ))}
                   </div>
                 </div>
-
-                <div>
-                  <div className="text-[10px] font-bold text-muted uppercase tracking-widest mb-4">Matières populaires</div>
-                  <div className="space-y-2">
-                    {["Mathématiques", "Physique-Chimie", "Français", "SVT"].map(m => (
-                      <label key={m} className="flex items-center gap-3 cursor-pointer group">
-                        <div className="w-4 h-4 rounded border border-border/60 group-hover:border-teal/50 transition-colors" />
-                        <span className="text-xs font-medium text-muted group-hover:text-text transition-colors">{m}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
               </div>
 
               {activeType.length > 0 && (
@@ -132,16 +115,6 @@ export default function CataloguePage() {
                   <X className="w-3 h-3" /> Effacer tout
                 </button>
               )}
-            </div>
-
-            <div className="glass p-6 rounded-[24px] border border-border/40 bg-teal/5 border-teal/10">
-              <h4 className="text-xs font-bold text-teal uppercase tracking-widest mb-2">Besoin d'aide ?</h4>
-              <p className="text-[11px] text-teal/70 leading-relaxed font-medium mb-4">
-                Tu ne trouves pas un sujet spécifique ? Notre équipe en ajoute de nouveaux chaque semaine.
-              </p>
-              <Link href="/contact" className="text-[10px] font-black text-teal flex items-center gap-2 group uppercase">
-                Suggérer un sujet <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-              </Link>
             </div>
           </aside>
 
@@ -157,14 +130,14 @@ export default function CataloguePage() {
                 type="text" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un sujet (ex: BAC 2024 Maths)..."
-                className="w-full h-16 pl-16 pr-6 rounded-[20px] bg-bg2/50 border border-border/40 text-text placeholder:text-muted/60 focus:border-teal/50 focus:bg-bg2/80 transition-all outline-none shadow-xl"
+                placeholder="Rechercher un sujet..."
+                className="w-full h-16 pl-16 pr-6 rounded-[20px] bg-bg2 border border-white/10 text-white/90 placeholder:text-white/30 focus:border-teal/50 focus:bg-bg3 transition-all duration-300 outline-none shadow-xl"
               />
             </div>
 
             {/* Results Grid */}
             <div className={`grid gap-4 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"}`}>
-              {filtered.map((s, i) => (
+              {filtered.map((s) => (
                 <div 
                   key={s.id}
                   className={`subject-card-glass glass rounded-[32px] border border-border/40 relative overflow-hidden transition-all duration-500 group
@@ -172,7 +145,6 @@ export default function CataloguePage() {
                     hover:border-teal/30 hover:shadow-2xl hover:shadow-teal/5 hover:-translate-y-1
                   `}
                 >
-                  {/* Mouse Glow */}
                   <div 
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                     style={{
@@ -192,7 +164,7 @@ export default function CataloguePage() {
 
                   <div className="flex-1">
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {s.badges.map(([l, c], idx) => (
+                      {s.badges.map(([l], idx) => (
                         <span key={idx} className="text-[9px] font-black uppercase tracking-tighter text-muted/60">{l}</span>
                       ))}
                     </div>
@@ -213,7 +185,7 @@ export default function CataloguePage() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="text-sm font-mono font-bold text-teal">{s.credits} cr.</div>
                       <Link 
-                        href={`/etudiant/sujets/${s.id}`}
+                        href={`/catalogue/${s.id}`}
                         className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-teal hover:text-bg hover:border-teal transition-all flex items-center gap-2"
                       >
                         Consulter <ArrowRight className="w-3 h-3" />
@@ -223,27 +195,9 @@ export default function CataloguePage() {
                 </div>
               ))}
             </div>
-
-            {filtered.length === 0 && (
-              <div className="py-20 text-center glass rounded-[40px] border border-dashed border-border/60">
-                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6 text-muted">
-                  <Search className="w-10 h-10" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Aucun sujet trouvé</h3>
-                <p className="text-muted text-sm max-w-xs mx-auto font-medium mb-8">
-                  Essaie d'ajuster tes filtres ou ta recherche pour trouver ce que tu souhaites.
-                </p>
-                <button 
-                  onClick={() => {setSearch(""); setActiveType([]);}}
-                  className="px-6 py-3 bg-teal text-bg font-bold rounded-xl text-sm hover:scale-105 transition-all"
-                >
-                  Réinitialiser tout
-                </button>
-              </div>
-            )}
-
           </main>
         </div>
+      </div>
     </div>
   );
 }

@@ -18,7 +18,8 @@ import {
   Sparkles,
   MessageSquare,
   CheckCircle2,
-  Share2
+  Share2,
+  Heart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

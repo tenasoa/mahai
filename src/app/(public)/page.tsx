@@ -74,17 +74,27 @@ export default function LandingPage() {
   const [counts, setCounts] = useState({ sujets: 0, users: 0, bonus: 0 })
 
   useEffect(() => {
-    const targets = { sujets: 250, users: 15000, bonus: 50 }
-    const step = 50
+    const targets = { sujets: 250, users: 15000, bonus: 50 };
+    const step = 50;
     const interval = setInterval(() => {
       setCounts(prev => ({
         sujets: Math.min(prev.sujets + 10, targets.sujets),
         users: Math.min(prev.users + 500, targets.users),
         bonus: Math.min(prev.bonus + 2, targets.bonus)
-      }))
-    }, step)
-    return () => clearInterval(interval)
-  }, [])
+      }));
+    }, step);
+
+    // Reveal on scroll
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
+
+    return () => {
+      clearInterval(interval);
+      obs.disconnect();
+    };
+  }, []);
 
   return (
     <div className="relative">

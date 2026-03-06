@@ -13,9 +13,14 @@ export default function PublicLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative bg-bg">
+      {/* Mesh background global */}
+      <div className="mesh-bg" aria-hidden="true">
+        <span /><span /><span />
+      </div>
+
       <Nav />
-      <main className="flex-grow">
+      <main className="flex-grow relative z-10">
         {children}
       </main>
       <Footer />

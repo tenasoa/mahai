@@ -58,7 +58,11 @@ export default function DashboardLayout({
   if (!isLoaded) return null
 
   return (
-    <div className="min-h-screen bg-bg text-text selection:bg-teal/30">
+    <div className="min-h-screen bg-bg text-text selection:bg-teal/30 relative">
+      {/* Mesh Background Global */}
+      <div className="mesh-bg" aria-hidden="true">
+        <span /><span /><span />
+      </div>
       {/* ── SIDEBAR (Desktop) ── */}
       <aside className={`
         fixed top-0 left-0 bottom-0 w-64 z-50
@@ -78,7 +82,7 @@ export default function DashboardLayout({
           <div className="p-4">
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 group hover:border-teal/20 transition-all">
               <div className="w-10 h-10 rounded-xl overflow-hidden border border-border/40">
-                <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: 'w-full h-full' } }} />
+                <UserButton appearance={{ elements: { avatarBox: 'w-full h-full' } }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold truncate">{user?.firstName || 'Étudiant'}</div>
