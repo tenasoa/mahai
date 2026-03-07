@@ -157,8 +157,8 @@ export default function EtudiantDashboardPage() {
               <span className="text-[10px] text-muted font-mono uppercase">sujets / jour</span>
             </div>
             <div className="h-24 flex items-end gap-2">
-              {ACTIVITY.map((a) => (
-                <div key={a.day} className="flex-1 flex flex-col items-center gap-1">
+              {ACTIVITY.map((a, idx) => (
+                <div key={`${a.day}-${idx}`} className="flex-1 flex flex-col items-center gap-1">
                   <div
                     className="w-full rounded-t-md bg-teal/50 hover:bg-teal transition-all"
                     style={{ height: `${Math.max(10, (a.val / maxActivity) * 90)}px` }}
@@ -220,7 +220,7 @@ export default function EtudiantDashboardPage() {
           <div className="glass p-6 rounded-[24px] border border-white/10">
             <h3 className="text-sm font-black flex items-center gap-2"><CalendarDays className="w-4 h-4 text-teal" /> Juin 2025</h3>
             <div className="mt-4 grid grid-cols-7 gap-1 text-[10px] font-mono text-muted">
-              {["L", "M", "M", "J", "V", "S", "D"].map((d) => <div key={d} className="text-center">{d}</div>)}
+              {["L", "M", "M", "J", "V", "S", "D"].map((d, idx) => <div key={`${d}-${idx}`} className="text-center">{d}</div>)}
               {Array.from({ length: 35 }).map((_, idx) => {
                 const day = idx - 1
                 const isToday = day === 24
