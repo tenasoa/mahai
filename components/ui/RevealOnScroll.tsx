@@ -18,7 +18,7 @@ export function RevealOnScroll<T extends ElementType = 'div'>({
 }: RevealOnScrollProps<T>) {
   const { ref, isVisible } = useRevealOnScroll<HTMLDivElement>()
 
-  const delayClass = delay > 0 ? `reveal-delay-${Math.min(delay, 4)}` : ''
+  const delayClass = delay > 0 ? `reveal-delay-${Math.min(delay, 3)}` : ''
   const Component = as || 'div'
 
   return (
@@ -29,7 +29,7 @@ export function RevealOnScroll<T extends ElementType = 'div'>({
       {children}
     </Component>
   )
-)
+}
 
 // Wrapper for section tag
 export function RevealSection({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
