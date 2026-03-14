@@ -303,8 +303,9 @@ export default function CataloguePage() {
 
       {/* Main Content */}
       <main className="main-area">
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem', flexWrap: 'wrap', gap: '.65rem' }}>
+        <div className="main-content-wrapper">
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem', flexWrap: 'wrap', gap: '.65rem' }}>
           <div>
             <h1 style={{ fontFamily: 'var(--display)', fontSize: '1.6rem', fontWeight: 400, letterSpacing: '-.02em', color: 'var(--text)', lineHeight: 1 }}>
               Catalogue <em style={{ fontStyle: 'italic', color: 'var(--text-3)', fontSize: '.7em' }}>des sujets</em>
@@ -474,6 +475,7 @@ export default function CataloguePage() {
             </button>
           </div>
         )}
+        </div>
       </main>
 
       {/* Preview Modal */}

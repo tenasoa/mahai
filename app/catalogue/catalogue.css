@@ -283,7 +283,7 @@ body::before {
 .page-layout {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 160px 2rem 2rem; /* 62px navbar + 98px marge */
+  padding: 82px 2rem 2rem; /* 62px navbar + 20px marge */
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 1.75rem;
@@ -295,10 +295,10 @@ body::before {
 ═══════════════════════════════════════════════ */
 .sidebar {
   position: fixed !important;
-  top: 160px; /* 62px navbar + 98px marge */
+  top: 82px; /* 62px navbar + 20px marge - sidebar reste en haut */
   left: 2rem;
   width: 280px;
-  height: calc(100vh - 180px); /* 100vh - navbar - marge haut/bas */
+  height: calc(100vh - 102px); /* 100vh - navbar - marge bas */
   overflow-y: auto;
   scrollbar-width: thin;
   display: flex;
@@ -592,8 +592,13 @@ body::before {
   min-width: 0;
   margin-left: calc(280px + 1.75rem + 2rem); /* sidebar + gap + padding gauche */
   margin-right: 2rem;
-  margin-top: 80px; /* Grande marge sous navbar */
+  margin-top: 100px; /* Grande marge pour le contenu principal seulement */
   margin-bottom: 2rem;
+}
+
+/* Wrapper pour le contenu avec marge navbar */
+.main-content-wrapper {
+  margin-top: 80px; /* Pousse le titre et les cartes vers le bas */
 }
 
 /* Titre Catalogue - Plus grand */
