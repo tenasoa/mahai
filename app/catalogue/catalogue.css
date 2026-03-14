@@ -308,11 +308,16 @@ body::before {
 }
 
 .sidebar::-webkit-scrollbar {
-  width: 2px;
+  width: 3px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: var(--void);
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: var(--b1);
+  background: var(--gold-lo);
+  border-radius: 2px;
 }
 
 .filter-panel {
@@ -320,6 +325,9 @@ body::before {
   border: 1px solid var(--b1);
   border-radius: var(--r-lg);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
 }
 
 .filter-head {
@@ -329,6 +337,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .filter-label {
@@ -367,6 +376,21 @@ body::before {
 
 .filter-body {
   padding: 1.1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.filter-body::-webkit-scrollbar {
+  width: 3px;
+}
+
+.filter-body::-webkit-scrollbar-track {
+  background: var(--void);
+}
+
+.filter-body::-webkit-scrollbar-thumb {
+  background: var(--gold-lo);
+  border-radius: 2px;
 }
 
 .filter-section {
