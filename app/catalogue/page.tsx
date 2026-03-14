@@ -291,7 +291,11 @@ export default function CataloguePage() {
             {/* Matière */}
             <div className="filter-section">
               <div className="fsec-title">Matière</div>
-              <select className="select-field">
+              <select 
+                className="select-field"
+                value={selectedMatieres[0] || ''}
+                onChange={(e) => setSelectedMatieres(e.target.value ? [e.target.value] : [])}
+              >
                 <option value="">Toutes les matières</option>
                 <option>Mathématiques</option>
                 <option>Physique-Chimie</option>
@@ -362,7 +366,13 @@ export default function CataloguePage() {
                 <div className="fsec-title">Note minimale</div>
                 <div className="star-row">
                   <label className="star-opt">
-                    <input type="radio" name="rating" value="4" />
+                    <input 
+                      type="radio" 
+                      name="rating" 
+                      value="4"
+                      checked={minRating === 4}
+                      onChange={() => setMinRating(4)}
+                    />
                     <div className="star-label">
                       <div className="stars-mini">
                         <span className="s-filled">★</span>
@@ -375,7 +385,13 @@ export default function CataloguePage() {
                     </div>
                   </label>
                   <label className="star-opt">
-                    <input type="radio" name="rating" value="3" />
+                    <input 
+                      type="radio" 
+                      name="rating" 
+                      value="3"
+                      checked={minRating === 3}
+                      onChange={() => setMinRating(3)}
+                    />
                     <div className="star-label">
                       <div className="stars-mini">
                         <span className="s-filled">★</span>
