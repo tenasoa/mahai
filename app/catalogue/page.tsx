@@ -50,12 +50,10 @@ export default function CataloguePage() {
   const [selectedSeries, setSelectedSeries] = useState<string[]>([])
   const [selectedDifficultes, setSelectedDifficultes] = useState<Difficulte[]>([])
   const [selectedLangues, setSelectedLangues] = useState<Langue[]>([])
-  const [selectedFormats, setSelectedFormats] = useState<Format[]>([])
   const [hasCorrectionIa, setHasCorrectionIa] = useState(false)
   const [hasCorrectionProf, setHasCorrectionProf] = useState(false)
   const [minRating, setMinRating] = useState<number | null>(null)
   const [maxCredits, setMaxCredits] = useState<number>(200)
-  const [minPages, setMinPages] = useState<number | null>(null)
   const [yearFrom, setYearFrom] = useState<number>(2003)
   const [yearTo, setYearTo] = useState<number>(2024)
 
@@ -121,14 +119,6 @@ export default function CataloguePage() {
     setFilters({ langues: newLangues.length > 0 ? newLangues : undefined })
   }
 
-  const toggleFormat = (format: Format) => {
-    const newFormats = selectedFormats.includes(format)
-      ? selectedFormats.filter(f => f !== format)
-      : [...selectedFormats, format]
-    setSelectedFormats(newFormats)
-    setFilters({ formats: newFormats.length > 0 ? newFormats : undefined })
-  }
-
   const toggleSerie = (serie: string) => {
     const newSeries = selectedSeries.includes(serie)
       ? selectedSeries.filter(s => s !== serie)
@@ -157,12 +147,10 @@ export default function CataloguePage() {
     setSelectedSeries([])
     setSelectedDifficultes([])
     setSelectedLangues([])
-    setSelectedFormats([])
     setHasCorrectionIa(false)
     setHasCorrectionProf(false)
     setMinRating(null)
     setMaxCredits(200)
-    setMinPages(null)
     setYearFrom(2003)
     setYearTo(2024)
     clearFilters()
@@ -381,20 +369,6 @@ export default function CataloguePage() {
               </div>
             </div>
 
-            {/* Format */}
-            <div className="filter-section">
-              <div className="fsec-title">Format</div>
-              <div className="pill-row">
-                {(['PDF', 'INTERACTIF', 'GRATUIT'] as Format[]).map(format => (
-                  <div
-                    key={format}
-                    className={`pill ${selectedFormats.includes(format) ? 'on' : ''}`}
-                    onClick={() => toggleFormat(format)}
-                  >{format === 'PDF' ? 'PDF' : format === 'INTERACTIF' ? 'Interactif' : 'Gratuit'}</div>
-                ))}
-              </div>
-            </div>
-
             {/* Correction */}
             <div className="filter-section">
               <div className="fsec-title">Correction disponible</div>
@@ -478,16 +452,6 @@ export default function CataloguePage() {
                   style={{ textAlign: 'left' }}
                 >
                   ⚡ BAC 2024 uniquement
-                </button>
-                <button
-                  className="pill"
-                  onClick={() => {
-                    setSelectedFormats(['GRATUIT'])
-                    showToast('info', 'Filtre rapide', 'Sujets gratuits uniquement')
-                  }}
-                  style={{ textAlign: 'left' }}
-                >
-                  🎁 Sujets gratuits
                 </button>
                 <button
                   className="pill"
