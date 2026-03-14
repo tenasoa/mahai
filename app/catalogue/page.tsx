@@ -362,21 +362,87 @@ export default function CataloguePage() {
 
         {/* Error State */}
         {error && (
-          <div className="empty-state">
-            <div className="empty-icon">⚠️</div>
-            <div className="empty-title">Erreur de chargement</div>
-            <div className="empty-sub">{error.message}</div>
+          <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
+            <div className="empty-icon" style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.4 }}>⚠️</div>
+            <div className="empty-title" style={{ fontFamily: 'var(--display)', fontSize: '1.8rem', fontWeight: 400, color: 'var(--text)', marginBottom: '0.5rem' }}>Erreur de chargement</div>
+            <div className="empty-sub" style={{ fontSize: '0.85rem', color: 'var(--text-3)', lineHeight: 1.75, max-width: '380px', margin: '0 auto 1.5rem' }}>{error.message}</div>
             <button className="btn-consult" onClick={refresh}>Réessayer</button>
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Design Animé (Fichier 28) */}
         {!loading && !error && subjects.length === 0 && (
-          <div className="empty-state">
-            <div className="empty-icon">🔍</div>
-            <div className="empty-title">Aucun sujet trouvé</div>
-            <div className="empty-sub">Essayez d'élargir vos filtres ou de changer votre recherche.</div>
-            <button className="btn-consult" onClick={resetFilters}>Réinitialiser les filtres</button>
+          <div style={{ gridColumn: '1 / -1', padding: '2rem 0' }}>
+            {/* Animated Scope */}
+            <div className="empty-scope-anim">
+              <div className="scope-ring scope-ring-2"></div>
+              <div className="scope-ring scope-ring-3"></div>
+              <div className="scope-ring"></div>
+              <div className="scope-center">🔍</div>
+            </div>
+            
+            {/* Query Display */}
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '0.7rem', color: 'var(--text-3)', marginBottom: '0.65rem', letterSpacing: '0.06em' }}>
+              Recherche : <strong style={{ color: 'var(--gold)' }}>
+                {search || 'tous les sujets'}
+              </strong>
+            </div>
+            
+            {/* Title */}
+            <h1 className="empty-title" style={{ textAlign: 'center' }}>
+              Aucun sujet <em style={{ fontStyle: 'italic', color: 'var(--text-2)' }}>trouvé</em>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="empty-sub" style={{ textAlign: 'center' }}>
+              Aucun sujet ne correspond exactement à votre recherche. Essayez d'autres termes, élargissez les filtres, ou explorez nos suggestions ci-dessous.
+            </p>
+
+            {/* Request Banner */}
+            <div className="request-banner">
+              <span className="rb-icon">💡</span>
+              <div className="rb-info">
+                <div className="rb-title">Ce sujet n'existe pas encore sur Mah.AI ?</div>
+                <div className="rb-sub">Demandez à notre communauté de contributeurs. Soumettez une requête et soyez notifié dès que le sujet est disponible.</div>
+              </div>
+              <button 
+                className="btn-request"
+                onClick={() => showToast('info', 'Demande envoyée', 'Vous serez notifié dès que ce sujet est disponible sur Mah.AI')}
+              >
+                Demander ce sujet →
+              </button>
+            </div>
+
+            {/* Tips Card */}
+            <div className="tips-card">
+              <div className="tip-item">
+                <span className="tip-icon">📝</span>
+                Utilisez des termes généraux : « Mathématiques BAC » plutôt que des termes trop spécifiques
+              </div>
+              <div className="tip-item">
+                <span className="tip-icon">🎯</span>
+                Cherchez par matière principale : Maths, Physique, SVT, Français, Histoire-Géo…
+              </div>
+              <div className="tip-item">
+                <span className="tip-icon">📅</span>
+                Précisez l'année : « BAC 2024 » ou « BEPC 2023 » pour des résultats plus ciblés
+              </div>
+              <div className="tip-item">
+                <span className="tip-icon">🏷</span>
+                Essayez par type : « DS », « Devoir surveillé », « Rattrapage », « Révision »
+              </div>
+            </div>
+
+            {/* Reset Button */}
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <button 
+                className="btn-consult" 
+                onClick={resetFilters}
+                style={{ padding: '0.7rem 2rem', fontSize: '0.85rem' }}
+              >
+                Réinitialiser les filtres
+              </button>
+            </div>
           </div>
         )}
 
