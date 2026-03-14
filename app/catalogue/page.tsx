@@ -316,12 +316,11 @@ export default function CataloguePage() {
               </div>
             </div>
           </div>
-        </div>
-      </aside>
+        </aside>
 
       {/* Main Content */}
       <main className="main-area">
-          {/* Header */}
+        {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem', flexWrap: 'wrap', gap: '.65rem' }}>
             <div>
               <h1 style={{ fontFamily: 'var(--display)', fontSize: '1.6rem', fontWeight: 400, letterSpacing: '-.02em', color: 'var(--text)', lineHeight: 1 }}>
