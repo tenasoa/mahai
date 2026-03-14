@@ -8,12 +8,13 @@ export default defineConfig({
   datasource: {
     url: process.env.DATABASE_URL!,
   },
-  migrate: {
+  migrations: {
     async adapter() {
       const { PrismaPg } = await import('@prisma/adapter-pg')
       const pg = await import('pg')
       const pool = new pg.default.Pool({ connectionString: process.env.DATABASE_URL })
       return new PrismaPg(pool)
     },
+    seed: 'npx tsx prisma/seed.ts',
   },
 })

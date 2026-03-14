@@ -283,7 +283,7 @@ body::before {
 .page-layout {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 62px 2rem 2rem;
+  padding: 82px 2rem 2rem; /* 62px (navbar) + 20px (marge) */
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 1.75rem;
@@ -295,10 +295,10 @@ body::before {
 ═══════════════════════════════════════════════ */
 .sidebar {
   position: fixed !important;
-  top: 82px;
+  top: 82px; /* 62px navbar + 20px marge */
   left: 2rem;
   width: 280px;
-  height: calc(100vh - 82px - 2rem);
+  height: calc(100vh - 102px); /* 100vh - navbar - marge bas */
   overflow-y: auto;
   scrollbar-width: thin;
   display: flex;
@@ -590,8 +590,9 @@ body::before {
 ═══════════════════════════════════════════════ */
 .main-area {
   min-width: 0;
-  margin-left: calc(280px + 1.75rem + 2rem);
+  margin-left: calc(280px + 1.75rem + 2rem); /* sidebar + gap + padding gauche */
   margin-right: 2rem;
+  margin-top: 0; /* Déjà géré par page-layout padding */
   margin-bottom: 2rem;
 }
 
