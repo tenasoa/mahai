@@ -47,10 +47,17 @@ export default function CataloguePage() {
   // Filtres UI
   const [selectedTypes, setSelectedTypes] = useState<ExamenType[]>([])
   const [selectedMatieres, setSelectedMatieres] = useState<string[]>([])
+  const [selectedSeries, setSelectedSeries] = useState<string[]>([])
   const [selectedDifficultes, setSelectedDifficultes] = useState<Difficulte[]>([])
   const [selectedLangues, setSelectedLangues] = useState<Langue[]>([])
   const [selectedFormats, setSelectedFormats] = useState<Format[]>([])
+  const [hasCorrectionIa, setHasCorrectionIa] = useState(false)
+  const [hasCorrectionProf, setHasCorrectionProf] = useState(false)
+  const [minRating, setMinRating] = useState<number | null>(null)
   const [maxCredits, setMaxCredits] = useState<number>(200)
+  const [minPages, setMinPages] = useState<number | null>(null)
+  const [yearFrom, setYearFrom] = useState<number>(2003)
+  const [yearTo, setYearTo] = useState<number>(2024)
 
   const toastIdRef = useRef(0)
   const lastToastTime = useRef<number>(0)
@@ -122,18 +129,42 @@ export default function CataloguePage() {
     setFilters({ formats: newFormats.length > 0 ? newFormats : undefined })
   }
 
+  const toggleSerie = (serie: string) => {
+    const newSeries = selectedSeries.includes(serie)
+      ? selectedSeries.filter(s => s !== serie)
+      : [...selectedSeries, serie]
+    setSelectedSeries(newSeries)
+  }
+
   const handleMaxCreditsChange = (value: number) => {
     setMaxCredits(value)
     setFilters({ maxCredits: value < 200 ? value : undefined })
   }
 
+  const handleMinRatingChange = (value: number | null) => {
+    setMinRating(value)
+    setFilters({ minRating: value || undefined })
+  }
+
+  const handleYearRangeChange = (from: number, to: number) => {
+    setYearFrom(from)
+    setYearTo(to)
+  }
+
   const resetFilters = () => {
     setSelectedTypes([])
     setSelectedMatieres([])
+    setSelectedSeries([])
     setSelectedDifficultes([])
     setSelectedLangues([])
     setSelectedFormats([])
+    setHasCorrectionIa(false)
+    setHasCorrectionProf(false)
+    setMinRating(null)
     setMaxCredits(200)
+    setMinPages(null)
+    setYearFrom(2003)
+    setYearTo(2024)
     clearFilters()
     showToast('info', 'Filtres', 'Tous les filtres réinitialisés')
   }
@@ -263,6 +294,34 @@ export default function CataloguePage() {
               </div>
             </div>
 
+            {/* Matière */}
+            <div className="filter-section">
+              <div className="fsec-title">Matière</div>
+              <div className="pill-row">
+                {['Mathématiques', 'Physique-Chimie', 'SVT', 'Français', 'Anglais', 'Histoire-Géo', 'Philosophie', 'Économie'].map(matiere => (
+                  <div
+                    key={matiere}
+                    className={`pill ${selectedMatieres.includes(matiere) ? 'on' : ''}`}
+                    onClick={() => toggleMatiere(matiere)}
+                  >{matiere.length > 12 ? matiere.substring(0, 12) + '...' : matiere}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Série */}
+            <div className="filter-section">
+              <div className="fsec-title">Série</div>
+              <div className="pill-row">
+                {['C', 'D', 'A', 'G', 'Toutes'].map(serie => (
+                  <div
+                    key={serie}
+                    className={`pill ${selectedSeries.includes(serie) ? 'on' : ''}`}
+                    onClick={() => toggleSerie(serie)}
+                  >{serie}</div>
+                ))}
+              </div>
+            </div>
+
             {/* Difficulté */}
             <div className="filter-section">
               <div className="fsec-title">Difficulté</div>
@@ -274,6 +333,112 @@ export default function CataloguePage() {
                     onClick={() => toggleDifficulte(diff)}
                   >{DIFFICULTE_LABELS[diff]}</div>
                 ))}
+              </div>
+            </div>
+
+            {/* Année */}
+            <div className="filter-section">
+              <div className="fsec-title">
+                Période — <span style={{ color: 'var(--gold)' }}>{yearFrom}–{yearTo}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  type="range"
+                  className="range-input"
+                  min="2003"
+                  max="2024"
+                  value={yearFrom}
+                  onChange={(e) => handleYearRangeChange(Number(e.target.value), yearTo)}
+                  style={{ flex: 1 }}
+                />
+                <input
+                  type="range"
+                  className="range-input"
+                  min="2003"
+                  max="2024"
+                  value={yearTo}
+                  onChange={(e) => handleYearRangeChange(yearFrom, Number(e.target.value))}
+                  style={{ flex: 1 }}
+                />
+              </div>
+              <div className="range-labels">
+                <span>De: {yearFrom}</span>
+                <span>À: {yearTo}</span>
+              </div>
+            </div>
+
+            {/* Langue */}
+            <div className="filter-section">
+              <div className="fsec-title">Langue</div>
+              <div className="pill-row">
+                {(['FRANCAIS', 'MALGACHE'] as Langue[]).map(langue => (
+                  <div
+                    key={langue}
+                    className={`pill ${selectedLangues.includes(langue) ? 'on' : ''}`}
+                    onClick={() => toggleLangue(langue)}
+                  >{langue === 'FRANCAIS' ? 'Français' : 'Malgache'}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Format */}
+            <div className="filter-section">
+              <div className="fsec-title">Format</div>
+              <div className="pill-row">
+                {(['PDF', 'INTERACTIF', 'GRATUIT'] as Format[]).map(format => (
+                  <div
+                    key={format}
+                    className={`pill ${selectedFormats.includes(format) ? 'on' : ''}`}
+                    onClick={() => toggleFormat(format)}
+                  >{format === 'PDF' ? 'PDF' : format === 'INTERACTIF' ? 'Interactif' : 'Gratuit'}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Correction */}
+            <div className="filter-section">
+              <div className="fsec-title">Correction disponible</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={hasCorrectionIa}
+                    onChange={(e) => setHasCorrectionIa(e.target.checked)}
+                    style={{ width: '1rem', height: '1rem', accentColor: 'var(--gold)', cursor: 'none' }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>🤖 Correction IA</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={hasCorrectionProf}
+                    onChange={(e) => setHasCorrectionProf(e.target.checked)}
+                    style={{ width: '1rem', height: '1rem', accentColor: 'var(--gold)', cursor: 'none' }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>👨‍🏫 Correction Prof</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Note minimale */}
+            <div className="filter-section">
+              <div className="fsec-title">Note minimale</div>
+              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                {[5, 4, 3].map(rating => (
+                  <div
+                    key={rating}
+                    className={`pill ${minRating === rating ? 'on' : ''}`}
+                    onClick={() => handleMinRatingChange(minRating === rating ? null : rating)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                  >
+                    <span>{'★'.repeat(rating)}</span>
+                    <span>{'☆'.repeat(5 - rating)}</span>
+                  </div>
+                ))}
+                <div
+                  className={`pill ${minRating === null ? 'on' : ''}`}
+                  onClick={() => handleMinRatingChange(null)}
+                >Toutes</div>
               </div>
             </div>
 
@@ -295,6 +460,46 @@ export default function CataloguePage() {
               <div className="range-labels">
                 <span>Gratuit</span>
                 <span>200 cr</span>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="filter-section" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid var(--b1)` }}>
+              <div className="fsec-title">Actions rapides</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <button
+                  className="pill"
+                  onClick={() => {
+                    setSelectedTypes(['BAC'])
+                    setYearFrom(2024)
+                    setYearTo(2024)
+                    showToast('info', 'Filtre rapide', 'BAC 2024 appliqué')
+                  }}
+                  style={{ textAlign: 'left' }}
+                >
+                  ⚡ BAC 2024 uniquement
+                </button>
+                <button
+                  className="pill"
+                  onClick={() => {
+                    setSelectedFormats(['GRATUIT'])
+                    showToast('info', 'Filtre rapide', 'Sujets gratuits uniquement')
+                  }}
+                  style={{ textAlign: 'left' }}
+                >
+                  🎁 Sujets gratuits
+                </button>
+                <button
+                  className="pill"
+                  onClick={() => {
+                    setMinRating(4)
+                    setHasCorrectionIa(true)
+                    showToast('info', 'Filtre rapide', 'Meilleurs sujets avec IA')
+                  }}
+                  style={{ textAlign: 'left' }}
+                >
+                  ⭐ Meilleurs sujets (4★+ & IA)
+                </button>
               </div>
             </div>
           </div>
