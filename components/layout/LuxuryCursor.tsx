@@ -102,14 +102,14 @@ export function LuxuryCursor() {
           opacity: 1,
           display: 'block',
           zIndex: 99999,
-          background: isDark ? 'var(--gold-lo)' : 'var(--gold)',
+          background: 'var(--gold-lo)',
           borderRadius: '50%',
           mixBlendMode: isDark ? 'screen' : 'multiply',
           transform: 'translate(-50%, -50%)',
           transition: 'width 0.2s, height 0.2s',
           pointerEvents: 'none',
           position: 'fixed',
-          boxShadow: isDark ? '0 0 8px var(--gold-glow)' : '0 0 8px rgba(201,168,76,0.3)'
+          boxShadow: isDark ? '0 0 8px var(--gold-glow)' : '0 0 8px rgba(168,120,42,0.4)'
         }}
       />
       <div
@@ -120,7 +120,7 @@ export function LuxuryCursor() {
           height: isHovering ? "52px" : "36px",
           display: 'block',
           zIndex: 99998,
-          border: `1px solid ${isDark ? 'var(--gold-lo)' : 'var(--gold)'}`,
+          border: '1px solid var(--gold-lo)',
           borderRadius: '50%',
           transform: 'translate(-50%, -50%)',
           transition: 'width 0.35s, height 0.35s',
