@@ -1557,3 +1557,196 @@ body::before {
     min-width: auto;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   EMPTY STATE ANIMÉ (Fichier 28)
+═══════════════════════════════════════════════ */
+.empty-scope-anim {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  position: relative;
+}
+
+.scope-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1px solid var(--b1);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.scope-ring-2 {
+  border-color: var(--gold-line);
+  animation: expand 2s ease-in-out infinite;
+  opacity: 0.5;
+}
+
+.scope-ring-3 {
+  border-color: var(--gold-line);
+  animation: expand 2s 0.5s ease-in-out infinite;
+  opacity: 0.3;
+}
+
+@keyframes expand {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.scope-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* Request Banner */
+.request-banner {
+  background: linear-gradient(135deg, var(--card), rgba(74, 107, 90, 0.04));
+  border: 1px solid rgba(74, 107, 90, 0.3);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.rb-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.rb-info {
+  flex: 1;
+}
+
+.rb-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+
+.rb-sub {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+
+.btn-request {
+  font-family: var(--body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, #4A6B5A, #6AAB8A);
+  color: #fff;
+  border: none;
+  cursor: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-request:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 14px rgba(74, 107, 90, 0.3);
+}
+
+/* Tips Card */
+.tips-card {
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem 1.5rem;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+
+.tip-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+/* Suggestion Pills */
+.sugg-section {
+  margin-bottom: 2rem;
+}
+
+.sec-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.sec-label::before {
+  content: '';
+  width: 16px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.sugg-searches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sugg-pill {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 0.32rem 0.85rem;
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  color: var(--text-2);
+  cursor: none;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sugg-pill:hover {
+  border-color: var(--gold-line);
+  color: var(--gold);
+  background: var(--gold-dim);
+}
