@@ -46,6 +46,17 @@ export default function CataloguePage() {
   const [wished, setWished] = useState<Set<string>>(new Set())
   const [isDark, setIsDark] = useState(true)
 
+  // États des filtres
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(['BAC'])
+  const [selectedMatieres, setSelectedMatieres] = useState<string[]>([])
+  const [selectedAnnees, setSelectedAnnees] = useState<string[]>([])
+  const [selectedDifficultes, setSelectedDifficultes] = useState<string[]>(['Facile', 'Moyen', 'Difficile'])
+  const [selectedLangues, setSelectedLangues] = useState<string[]>(['Français'])
+  const [selectedFormats, setSelectedFormats] = useState<string[]>(['PDF'])
+  const [minRating, setMinRating] = useState<number | null>(null)
+  const [maxPrice, setMaxPrice] = useState<number>(200)
+  const [yearRange, setYearRange] = useState<number>(2003)
+
   const toastIdRef = useRef(0)
 
   // Initialiser le thème au montage
@@ -61,6 +72,56 @@ export default function CataloguePage() {
     setIsDark(!isDark)
     localStorage.setItem('theme', newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
+  }
+
+  // Gestionnaires des filtres
+  const toggleType = (type: string) => {
+    setSelectedTypes(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    )
+  }
+
+  const toggleMatiere = (matiere: string) => {
+    setSelectedMatieres(prev => 
+      prev.includes(matiere) ? prev.filter(m => m !== matiere) : [...prev, matiere]
+    )
+  }
+
+  const toggleAnnee = (annee: string) => {
+    setSelectedAnnees(prev => 
+      prev.includes(annee) ? prev.filter(a => a !== annee) : [...prev, annee]
+    )
+  }
+
+  const toggleDifficulte = (diff: string) => {
+    setSelectedDifficultes(prev => 
+      prev.includes(diff) ? prev.filter(d => d !== diff) : [...prev, diff]
+    )
+  }
+
+  const toggleLangue = (langue: string) => {
+    setSelectedLangues(prev => 
+      prev.includes(langue) ? prev.filter(l => l !== langue) : [...prev, langue]
+    )
+  }
+
+  const toggleFormat = (format: string) => {
+    setSelectedFormats(prev => 
+      prev.includes(format) ? prev.filter(f => f !== format) : [...prev, format]
+    )
+  }
+
+  const resetFilters = () => {
+    setSelectedTypes([])
+    setSelectedMatieres([])
+    setSelectedAnnees([])
+    setSelectedDifficultes([])
+    setSelectedLangues([])
+    setSelectedFormats([])
+    setMinRating(null)
+    setMaxPrice(200)
+    setYearRange(2003)
+    showToast('info', 'Filtres', 'Tous les filtres réinitialisés')
   }
 
   // Toast helper
@@ -217,9 +278,18 @@ export default function CataloguePage() {
             <div className="filter-section">
               <div className="fsec-title">Type d'examen</div>
               <div className="pill-row">
-                <div className="pill on-solid">BAC</div>
-                <div className="pill">BEPC</div>
-                <div className="pill">CEPE</div>
+                <div 
+                  className={`pill ${selectedTypes.includes('BAC') ? 'on-solid' : ''}`}
+                  onClick={() => toggleType('BAC')}
+                >BAC</div>
+                <div 
+                  className={`pill ${selectedTypes.includes('BEPC') ? 'on-solid' : ''}`}
+                  onClick={() => toggleType('BEPC')}
+                >BEPC</div>
+                <div 
+                  className={`pill ${selectedTypes.includes('CEPE') ? 'on-solid' : ''}`}
+                  onClick={() => toggleType('CEPE')}
+                >CEPE</div>
               </div>
             </div>
 
@@ -241,16 +311,25 @@ export default function CataloguePage() {
             <div className="filter-section">
               <div className="fsec-title">Difficulté</div>
               <div className="diff-grid">
-                <div className="diff-btn easy on">Facile</div>
-                <div className="diff-btn med on">Moyen</div>
-                <div className="diff-btn hard on">Difficile</div>
+                <div 
+                  className={`diff-btn easy ${selectedDifficultes.includes('Facile') ? 'on' : ''}`}
+                  onClick={() => toggleDifficulte('Facile')}
+                >Facile</div>
+                <div 
+                  className={`diff-btn med ${selectedDifficultes.includes('Moyen') ? 'on' : ''}`}
+                  onClick={() => toggleDifficulte('Moyen')}
+                >Moyen</div>
+                <div 
+                  className={`diff-btn hard ${selectedDifficultes.includes('Difficile') ? 'on' : ''}`}
+                  onClick={() => toggleDifficulte('Difficile')}
+                >Difficile</div>
               </div>
             </div>
 
             {/* Année */}
             <div className="filter-section">
               <div className="fsec-title">
-                Année — <span style={{ color: 'var(--gold)' }}>2003 – 2024</span>
+                Année — <span style={{ color: 'var(--gold)' }}>{yearRange} – 2024</span>
               </div>
               <div className="range-wrap">
                 <input
@@ -258,7 +337,8 @@ export default function CataloguePage() {
                   className="range-input"
                   min="2003"
                   max="2024"
-                  defaultValue="2003"
+                  value={yearRange}
+                  onChange={(e) => setYearRange(Number(e.target.value))}
                 />
               </div>
               <div className="range-labels">
@@ -271,8 +351,14 @@ export default function CataloguePage() {
             <div className="filter-section">
               <div className="fsec-title">Langue</div>
               <div className="pill-row">
-                <div className="pill on">Français</div>
-                <div className="pill">Malgache</div>
+                <div 
+                  className={`pill ${selectedLangues.includes('Français') ? 'on' : ''}`}
+                  onClick={() => toggleLangue('Français')}
+                >Français</div>
+                <div 
+                  className={`pill ${selectedLangues.includes('Malgache') ? 'on' : ''}`}
+                  onClick={() => toggleLangue('Malgache')}
+                >Malgache</div>
               </div>
             </div>
 
@@ -313,24 +399,34 @@ export default function CataloguePage() {
               <div className="filter-section">
                 <div className="fsec-title">Format</div>
                 <div className="pill-row">
-                  <div className="pill on">PDF</div>
-                  <div className="pill">Interactif</div>
-                  <div className="pill">Gratuit</div>
+                  <div 
+                    className={`pill ${selectedFormats.includes('PDF') ? 'on' : ''}`}
+                    onClick={() => toggleFormat('PDF')}
+                  >PDF</div>
+                  <div 
+                    className={`pill ${selectedFormats.includes('Interactif') ? 'on' : ''}`}
+                    onClick={() => toggleFormat('Interactif')}
+                  >Interactif</div>
+                  <div 
+                    className={`pill ${selectedFormats.includes('Gratuit') ? 'on' : ''}`}
+                    onClick={() => toggleFormat('Gratuit')}
+                  >Gratuit</div>
                 </div>
               </div>
 
               {/* Prix max */}
               <div className="filter-section">
                 <div className="fsec-title">
-                  Prix max — <span style={{ color: 'var(--gold)' }}>200 cr</span>
+                  Prix max — <span style={{ color: 'var(--gold)' }}>{maxPrice} cr</span>
                 </div>
                 <div className="range-wrap">
-                  <input 
-                    type="range" 
-                    className="range-input" 
-                    min="0" 
-                    max="200" 
-                    defaultValue="200"
+                  <input
+                    type="range"
+                    className="range-input"
+                    min="0"
+                    max="200"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(Number(e.target.value))}
                   />
                 </div>
                 <div className="range-labels">
