@@ -270,24 +270,6 @@ export function RegisterForm() {
         </div>
       </div>
 
-      {serverError && (
-        <div style={{ 
-          padding: '1rem', 
-          marginBottom: '1.5rem', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '0.75rem', 
-          fontSize: '0.875rem', 
-          background: 'rgba(155, 35, 53, 0.1)', 
-          color: 'var(--ruby)', 
-          border: '1px solid rgba(155, 35, 53, 0.2)', 
-          borderRadius: '0.5rem' 
-        }}>
-          <span>✕</span>
-          <p>{serverError}</p>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* STEP 1: Profil */}
         {step === 1 && (

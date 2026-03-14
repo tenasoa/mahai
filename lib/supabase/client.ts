@@ -40,6 +40,33 @@ export async function createSupabaseServerClient() {
 }
 
 /**
+ * Creates a Supabase client with admin privileges (Service Role)
+ * ONLY use this in Server Actions or API routes for administrative tasks
+ */
+export async function createSupabaseAdminClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        getAll(): { name: string; value: string }[] {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+          try {
+            cookiesToSet.forEach(({ name, value }) => cookieStore.set(name, value))
+          } catch {
+            // Called from Server Component
+          }
+        },
+      },
+    }
+  )
+}
+
+/**
  * Legacy function for backwards compatibility
  * @deprecated Use createSupabaseServerClient() instead
  */

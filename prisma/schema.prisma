@@ -7,29 +7,26 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  password        String
-  prenom          String
-  nom             String?
-  role            Role      @default(ETUDIANT)
-  credits         Int       @default(10)
-  phone           String?
-  phoneVerified   Boolean   @default(false)
-  schoolLevel     String?
-  emailVerified   Boolean   @default(false)
+  id            String  @id @default(cuid())
+  email         String  @unique
+  prenom        String
+  nom           String?
+  role          Role    @default(ETUDIANT)
+  credits       Int     @default(10)
+  phone         String?
+  phoneVerified Boolean @default(false)
+  schoolLevel   String?
+  emailVerified Boolean @default(false)
 
-  subjects        Subject[]
-  purchases       Purchase[]
-  examAttempts    ExamenBlanc[]
-  contributions   SubjectSubmission[]
-  wishlist        Wishlist[]
+  subjects           Subject[]
+  purchases          Purchase[]
+  examAttempts       ExamenBlanc[]
+  contributions      SubjectSubmission[]
+  wishlist           Wishlist[]
   creditTransactions CreditTransaction[]
-  passwordResets  PasswordReset[]
-  emailVerifications EmailVerification[]
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
@@ -42,63 +39,63 @@ enum Role {
 }
 
 model Subject {
-  id              String    @id @default(cuid())
-  titre           String
-  type            String
-  matiere         String
-  annee           String
-  serie           String?
-  description     String?
-  pages           Int
-  credits         Int
+  id          String  @id @default(cuid())
+  titre       String
+  type        String
+  matiere     String
+  annee       String
+  serie       String?
+  description String?
+  pages       Int
+  credits     Int
 
-  hasCorrectionIa Boolean  @default(false)
+  hasCorrectionIa   Boolean @default(false)
   hasCorrectionProf Boolean @default(false)
 
-  authorId        String
-  author          User      @relation(fields: [authorId], references: [id])
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
 
-  purchases       Purchase[]
-  wishlistItems   Wishlist[]
+  purchases     Purchase[]
+  wishlistItems Wishlist[]
 
-  createdAt       DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Purchase {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  subjectId       String?
-  subject         Subject?  @relation(fields: [subjectId], references: [id])
-  creditsAmount   Int
-  amount          Float
-  paymentMethod   String?
-  status          String    @default("PENDING")
-  
-  createdAt       DateTime  @default(now())
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  subjectId     String?
+  subject       Subject? @relation(fields: [subjectId], references: [id])
+  creditsAmount Int
+  amount        Float
+  paymentMethod String?
+  status        String   @default("PENDING")
+
+  createdAt DateTime @default(now())
 }
 
 model ExamenBlanc {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  
-  titre           String
-  typeExamen      String
-  matiere         String
-  annee           String
-  
-  dureeSecondes   Int
-  startedAt       DateTime?
-  submittedAt     DateTime?
-  
-  score           Float?
-  scoreMax        Float?
-  percentile      Float?
-  
-  status          ExamenStatus @default(NOT_STARTED)
-  
-  createdAt       DateTime  @default(now())
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  titre      String
+  typeExamen String
+  matiere    String
+  annee      String
+
+  dureeSecondes Int
+  startedAt     DateTime?
+  submittedAt   DateTime?
+
+  score      Float?
+  scoreMax   Float?
+  percentile Float?
+
+  status ExamenStatus @default(NOT_STARTED)
+
+  createdAt DateTime @default(now())
 }
 
 enum ExamenStatus {
@@ -109,31 +106,31 @@ enum ExamenStatus {
 }
 
 model CreditTransaction {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  amount          Int
-  type            String    // "PURCHASE" | "SPEND" | "REFUND" | "EARN"
-  description     String?
-  paymentMethod   String?   // "MVOLA" | "ORANGE" | "AIRTEL"
-  transactionId   String?   // ID transaction Mobile Money
-  status          String    @default("PENDING") // "PENDING" | "COMPLETED" | "FAILED"
+  id            String  @id @default(cuid())
+  userId        String
+  user          User    @relation(fields: [userId], references: [id])
+  amount        Int
+  type          String // "PURCHASE" | "SPEND" | "REFUND" | "EARN"
+  description   String?
+  paymentMethod String? // "MVOLA" | "ORANGE" | "AIRTEL"
+  transactionId String? // ID transaction Mobile Money
+  status        String  @default("PENDING") // "PENDING" | "COMPLETED" | "FAILED"
 
-  createdAt       DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 model SubjectSubmission {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  
-  content         Json
-  
-  status          SubmissionStatus @default(PENDING)
-  reviewerId      String?
-  validatedAt     DateTime?
-  
-  createdAt       DateTime  @default(now())
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  content Json
+
+  status      SubmissionStatus @default(PENDING)
+  reviewerId  String?
+  validatedAt DateTime?
+
+  createdAt DateTime @default(now())
 }
 
 enum SubmissionStatus {
@@ -145,13 +142,13 @@ enum SubmissionStatus {
 }
 
 model Wishlist {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subjectId       String
-  subject         Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
-  createdAt       DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([userId, subjectId])
 }
