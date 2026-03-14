@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { useCatalogue } from '@/lib/hooks/useCatalogue'
 import { useAuth } from '@/lib/hooks/useAuth'
