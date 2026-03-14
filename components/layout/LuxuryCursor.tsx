@@ -6,16 +6,32 @@ export function LuxuryCursor() {
   const [isHovering, setIsHovering] = useState(false)
   const cursorRef = useRef<HTMLDivElement>(null)
   const ringRef = useRef<HTMLDivElement>(null)
-  
+
   // Coordonnées cibles (souris)
   const mousePos = useRef({ x: 0, y: 0 })
   // Coordonnées actuelles du cercle (pour l'effet retard)
   const ringPos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
+    // Initialiser la position au centre de l'écran
+    const startX = window.innerWidth / 2
+    const startY = window.innerHeight / 2
+    mousePos.current = { x: startX, y: startY }
+    ringPos.current = { x: startX, y: startY }
+
+    // Initialiser la position du curseur au centre
+    if (cursorRef.current) {
+      cursorRef.current.style.left = `${startX}px`
+      cursorRef.current.style.top = `${startY}px`
+    }
+    if (ringRef.current) {
+      ringRef.current.style.left = `${startX}px`
+      ringRef.current.style.top = `${startY}px`
+    }
+
     const updateMousePos = (e: MouseEvent) => {
       mousePos.current = { x: e.clientX, y: e.clientY }
-      
+
       // Le point (curseur principal) suit instantanément
       if (cursorRef.current) {
         cursorRef.current.style.left = `${e.clientX}px`
@@ -74,6 +90,16 @@ export function LuxuryCursor() {
           width: isHovering ? "14px" : "8px",
           height: isHovering ? "14px" : "8px",
           opacity: 1,
+          display: 'block',
+          zIndex: 99999,
+          background: 'var(--gold)',
+          borderRadius: '50%',
+          mixBlendMode: document.documentElement.classList.contains('dark') ? 'screen' : 'multiply',
+          transform: 'translate(-50%, -50%)',
+          transition: 'width 0.2s, height 0.2s',
+          pointerEvents: 'none',
+          position: 'fixed',
+          boxShadow: '0 0 8px var(--gold-glow)'
         }}
       />
       <div
@@ -82,6 +108,15 @@ export function LuxuryCursor() {
         style={{
           width: isHovering ? "52px" : "36px",
           height: isHovering ? "52px" : "36px",
+          display: 'block',
+          zIndex: 99998,
+          border: '1px solid var(--gold)',
+          borderRadius: '50%',
+          transform: 'translate(-50%, -50%)',
+          transition: 'width 0.35s, height 0.35s',
+          pointerEvents: 'none',
+          position: 'fixed',
+          opacity: 0.6
         }}
       />
     </>

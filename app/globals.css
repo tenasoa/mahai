@@ -33,6 +33,7 @@
   --glow-sm: 0 4px 12px rgba(168,120,42,0.1);
   --lift: #FBF9F6;
   --card-hover: #FFFFFF;
+  --cursor-blend: multiply;
 }
 
 [data-theme='dark'] {
@@ -57,6 +58,7 @@
   --glow-sm: 0 4px 12px rgba(0,0,0,0.2);
   --lift: #12100E;
   --card-hover: #1E1B18;
+  --cursor-blend: screen;
 }
 
 @layer base {
@@ -477,13 +479,8 @@
     pointer-events: none;
     transform: translate(-50%, -50%);
     transition: width 0.2s, height 0.2s;
-    mix-blend-mode: multiply;
-    box-shadow: 0 0 8px var(--gold);
-  }
-
-  [data-theme='dark'] .cursor {
-    mix-blend-mode: screen;
-    box-shadow: none;
+    mix-blend-mode: var(--cursor-blend);
+    box-shadow: 0 0 8px var(--gold-glow);
   }
 
   .cursor-ring {
@@ -497,11 +494,6 @@
     transform: translate(-50%, -50%);
     transition: width 0.35s, height 0.35s;
     opacity: 0.6;
-  }
-
-  [data-theme='dark'] .cursor-ring {
-    border-color: rgba(201, 168, 76, 0.4);
-    opacity: 1;
   }
 
   /* --- Ambient Orbs for Auth Pages --- */

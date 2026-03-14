@@ -41,13 +41,23 @@ enum Role {
 model Subject {
   id          String  @id @default(cuid())
   titre       String
-  type        String
+  type        ExamenType
   matiere     String
   annee       String
   serie       String?
   description String?
   pages       Int
   credits     Int
+  
+  difficulte  Difficulte @default(MOYEN)
+  langue      Langue     @default(FRANCAIS)
+  format      Format     @default(PDF)
+  badge       Badge      @default(AI)
+  glyph       String     @default("∑")
+  featured    Boolean    @default(false)
+  
+  rating       Float @default(0)
+  reviewsCount Int   @default(0)
 
   hasCorrectionIa   Boolean @default(false)
   hasCorrectionProf Boolean @default(false)
@@ -59,6 +69,35 @@ model Subject {
   wishlistItems Wishlist[]
 
   createdAt DateTime @default(now())
+}
+
+enum ExamenType {
+  BAC
+  BEPC
+  CEPE
+}
+
+enum Difficulte {
+  FACILE
+  MOYEN
+  DIFFICILE
+}
+
+enum Langue {
+  FRANCAIS
+  MALGACHE
+}
+
+enum Format {
+  PDF
+  INTERACTIF
+}
+
+enum Badge {
+  GOLD
+  AI
+  FREE
+  INTER
 }
 
 model Purchase {

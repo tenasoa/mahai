@@ -45,7 +45,7 @@ export default function CGUPage() {
       let current = ''
 
       anchors.forEach(anchor => {
-        if (window.scrollY >= anchor.offsetTop - 140) {
+        if (window.scrollY >= (anchor as HTMLElement).offsetTop - 140) {
           current = anchor.id
         }
       })
