@@ -165,7 +165,7 @@ export default function CataloguePage() {
             <div className="credit-badge">
               <span className="credit-icon">◆</span>1 200 cr
             </div>
-            <button 
+            <button
               className="btn-sm btn-ghost"
               onClick={() => showToast('info', 'MVola', 'Rechargez vos crédits via MVola')}
             >
@@ -176,83 +176,81 @@ export default function CataloguePage() {
         </div>
       </nav>
 
-      {/* Page Layout */}
-      <div className="page-layout">
-        {/* Sidebar */}
-        <aside className="sidebar" id="sidebar">
-          <div className="filter-panel">
-            <div className="filter-head">
-              <div className="filter-label">
-                <div className="filter-label-dot"></div>
-                Filtres
-              </div>
-              <button className="filter-reset" onClick={resetFilters}>
-                Réinitialiser
-              </button>
+      {/* Sidebar Fixed */}
+      <aside className="sidebar" id="sidebar">
+        <div className="filter-panel">
+          <div className="filter-head">
+            <div className="filter-label">
+              <div className="filter-label-dot"></div>
+              Filtres
             </div>
-            <div className="filter-body">
-              {/* Type d'examen */}
-              <div className="filter-section">
-                <div className="fsec-title">Type d'examen</div>
-                <div className="pill-row">
-                  <div className="pill on-solid">BAC</div>
-                  <div className="pill">BEPC</div>
-                  <div className="pill">CEPE</div>
-                </div>
+            <button className="filter-reset" onClick={resetFilters}>
+              Réinitialiser
+            </button>
+          </div>
+          <div className="filter-body">
+            {/* Type d'examen */}
+            <div className="filter-section">
+              <div className="fsec-title">Type d'examen</div>
+              <div className="pill-row">
+                <div className="pill on-solid">BAC</div>
+                <div className="pill">BEPC</div>
+                <div className="pill">CEPE</div>
               </div>
+            </div>
 
-              {/* Matière */}
-              <div className="filter-section">
-                <div className="fsec-title">Matière</div>
-                <select className="select-field">
-                  <option value="">Toutes les matières</option>
-                  <option>Mathématiques</option>
-                  <option>Physique-Chimie</option>
-                  <option>SVT</option>
-                  <option>Français</option>
-                  <option>Histoire-Géographie</option>
-                  <option>Philosophie</option>
-                </select>
-              </div>
+            {/* Matière */}
+            <div className="filter-section">
+              <div className="fsec-title">Matière</div>
+              <select className="select-field">
+                <option value="">Toutes les matières</option>
+                <option>Mathématiques</option>
+                <option>Physique-Chimie</option>
+                <option>SVT</option>
+                <option>Français</option>
+                <option>Histoire-Géographie</option>
+                <option>Philosophie</option>
+              </select>
+            </div>
 
-              {/* Difficulté */}
-              <div className="filter-section">
-                <div className="fsec-title">Difficulté</div>
-                <div className="diff-grid">
-                  <div className="diff-btn easy on">Facile</div>
-                  <div className="diff-btn med on">Moyen</div>
-                  <div className="diff-btn hard on">Difficile</div>
-                </div>
+            {/* Difficulté */}
+            <div className="filter-section">
+              <div className="fsec-title">Difficulté</div>
+              <div className="diff-grid">
+                <div className="diff-btn easy on">Facile</div>
+                <div className="diff-btn med on">Moyen</div>
+                <div className="diff-btn hard on">Difficile</div>
               </div>
+            </div>
 
-              {/* Année */}
-              <div className="filter-section">
-                <div className="fsec-title">
-                  Année — <span style={{ color: 'var(--gold)' }}>2003 – 2024</span>
-                </div>
-                <div className="range-wrap">
-                  <input 
-                    type="range" 
-                    className="range-input" 
-                    min="2003" 
-                    max="2024" 
-                    defaultValue="2003"
-                  />
-                </div>
-                <div className="range-labels">
-                  <span>2003</span>
-                  <span>2024</span>
-                </div>
+            {/* Année */}
+            <div className="filter-section">
+              <div className="fsec-title">
+                Année — <span style={{ color: 'var(--gold)' }}>2003 – 2024</span>
               </div>
+              <div className="range-wrap">
+                <input
+                  type="range"
+                  className="range-input"
+                  min="2003"
+                  max="2024"
+                  defaultValue="2003"
+                />
+              </div>
+              <div className="range-labels">
+                <span>2003</span>
+                <span>2024</span>
+              </div>
+            </div>
 
-              {/* Langue */}
-              <div className="filter-section">
-                <div className="fsec-title">Langue</div>
-                <div className="pill-row">
-                  <div className="pill on">Français</div>
-                  <div className="pill">Malgache</div>
-                </div>
+            {/* Langue */}
+            <div className="filter-section">
+              <div className="fsec-title">Langue</div>
+              <div className="pill-row">
+                <div className="pill on">Français</div>
+                <div className="pill">Malgache</div>
               </div>
+            </div>
 
               {/* Note minimale */}
               <div className="filter-section">
@@ -318,10 +316,11 @@ export default function CataloguePage() {
               </div>
             </div>
           </div>
-        </aside>
+        </div>
+      </aside>
 
-        {/* Main Content */}
-        <main className="main-area">
+      {/* Main Content */}
+      <main className="main-area">
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem', flexWrap: 'wrap', gap: '.65rem' }}>
             <div>
