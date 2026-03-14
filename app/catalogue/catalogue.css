@@ -124,8 +124,10 @@ body::before {
    NAVIGATION
 ═══════════════════════════════════════════════ */
 .nav {
-  position: sticky;
+  position: fixed !important;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 300;
   background: rgba(8, 7, 5, 0.94);
   border-bottom: 1px solid var(--b1);
@@ -281,7 +283,7 @@ body::before {
 .page-layout {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 1.75rem 1.5rem;
+  padding: 62px 1.5rem 1.5rem;
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 1.75rem;
@@ -292,14 +294,18 @@ body::before {
    SIDEBAR
 ═══════════════════════════════════════════════ */
 .sidebar {
-  position: sticky;
+  position: fixed !important;
   top: 82px;
-  max-height: calc(100vh - 100px);
+  left: 0;
+  width: 280px;
+  height: calc(100vh - 82px);
   overflow-y: auto;
   scrollbar-width: thin;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding-right: 1.75rem;
+  z-index: 200;
 }
 
 .sidebar::-webkit-scrollbar {
@@ -561,6 +567,7 @@ body::before {
 ═══════════════════════════════════════════════ */
 .main-area {
   min-width: 0;
+  margin-left: 280px;
 }
 
 .results-bar {
@@ -1434,11 +1441,16 @@ body::before {
 @media (max-width: 900px) {
   .page-layout {
     grid-template-columns: 1fr;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 
   .sidebar {
-    display: none;
-    position: static;
+    display: none !important;
+  }
+
+  .main-area {
+    margin-left: 0;
   }
 
   .filter-toggle-btn {
