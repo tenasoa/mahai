@@ -807,25 +807,42 @@ body::before {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: rgba(8, 7, 5, 0.7);
   border: 1px solid var(--b1);
-  border-radius: 50%;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: none;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   transition: all 0.2s;
   z-index: 2;
 }
 
-.pc-fav:hover,
-.pc-fav.on {
-  background: rgba(155, 35, 53, 0.2);
-  border-color: rgba(155, 35, 53, 0.4);
+.pc-fav:hover {
+  background: rgba(155, 35, 53, 0.3);
+  border-color: rgba(155, 35, 53, 0.5);
   color: #E05575;
+}
+
+.pc-fav.on {
+  background: rgba(224, 85, 117, 0.15);
+  border-color: #E05575;
+  color: #E05575;
+}
+
+[data-theme='light'] .pc-fav {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme='light'] .pc-fav:hover {
+  background: rgba(224, 85, 117, 0.2);
+}
+
+[data-theme='light'] .pc-fav.on {
+  background: rgba(224, 85, 117, 0.15);
 }
 
 .pc-body {

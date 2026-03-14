@@ -519,11 +519,12 @@ export default function CataloguePage() {
                   <div className={`pc-badge ${subject.badge}`}>
                     {subject.badge === 'gold' ? 'Premium' : subject.badge === 'ai' ? '✦ IA' : subject.badge === 'free' ? 'Gratuit' : 'Interactif'}
                   </div>
-                  <button 
-                    className="pc-fav" 
+                  <button
+                    className="pc-fav"
                     onClick={() => toggleFav(subject.id)}
+                    title={wished.has(subject.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                   >
-                    {wished.has(subject.id) ? '♥' : '♡'}
+                    {wished.has(subject.id) ? '🔖' : '📑'}
                   </button>
                 </div>
                 <div className="pc-body">
