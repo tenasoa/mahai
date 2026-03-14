@@ -142,11 +142,6 @@ export default function CataloguePage() {
     setActiveFilters(prev => prev.filter(f => f !== filter))
   }
 
-  const resetFilters = () => {
-    setActiveFilters([])
-    showToast('info', 'Filtres', 'Tous les filtres réinitialisés')
-  }
-
   // Wishlist handler
   const toggleFav = (id: string) => {
     setWished(prev => {
