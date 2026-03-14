@@ -365,7 +365,7 @@ export default function CataloguePage() {
           <div className="empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
             <div className="empty-icon" style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.4 }}>⚠️</div>
             <div className="empty-title" style={{ fontFamily: 'var(--display)', fontSize: '1.8rem', fontWeight: 400, color: 'var(--text)', marginBottom: '0.5rem' }}>Erreur de chargement</div>
-            <div className="empty-sub" style={{ fontSize: '0.85rem', color: 'var(--text-3)', lineHeight: 1.75, max-width: '380px', margin: '0 auto 1.5rem' }}>{error.message}</div>
+            <div className="empty-sub" style={{ fontSize: '0.85rem', color: 'var(--text-3)', lineHeight: 1.75, maxWidth: '380px', margin: '0 auto 1.5rem' }}>{String(error.message)}</div>
             <button className="btn-consult" onClick={refresh}>Réessayer</button>
           </div>
         )}
