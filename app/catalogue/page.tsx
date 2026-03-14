@@ -44,8 +44,24 @@ export default function CataloguePage() {
   const [toasts, setToasts] = useState<Toast[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [wished, setWished] = useState<Set<string>>(new Set())
+  const [isDark, setIsDark] = useState(true)
 
   const toastIdRef = useRef(0)
+
+  // Initialiser le thème au montage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark'
+    setIsDark(savedTheme === 'dark')
+    document.documentElement.setAttribute('data-theme', savedTheme)
+  }, [])
+
+  // Toggle thème
+  const toggleTheme = () => {
+    const newTheme = isDark ? 'light' : 'dark'
+    setIsDark(!isDark)
+    localStorage.setItem('theme', newTheme)
+    document.documentElement.setAttribute('data-theme', newTheme)
+  }
 
   // Toast helper
   const showToast = useCallback((type: Toast['type'], title: string, msg: string, duration = 4000) => {
@@ -165,11 +181,19 @@ export default function CataloguePage() {
             <div className="credit-badge">
               <span className="credit-icon">◆</span>1 200 cr
             </div>
-            <button
+            <button 
               className="btn-sm btn-ghost"
               onClick={() => showToast('info', 'MVola', 'Rechargez vos crédits via MVola')}
             >
               + Recharger
+            </button>
+            <button
+              className="btn-sm btn-ghost"
+              onClick={toggleTheme}
+              title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
+              style={{ width: '34px', height: '34px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {isDark ? '☀️' : '🌙'}
             </button>
             <div className="avatar">A</div>
           </div>
