@@ -455,7 +455,6 @@ export default function CataloguePage() {
             <button className="pg-btn">›</button>
           </div>
         </main>
-      </div>
 
       {/* Mobile Filter Drawer */}
       <div 
