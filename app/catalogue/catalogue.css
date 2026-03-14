@@ -283,7 +283,7 @@ body::before {
 .page-layout {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 62px 1.5rem 1.5rem;
+  padding: 62px 2rem 2rem;
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 1.75rem;
@@ -296,15 +296,14 @@ body::before {
 .sidebar {
   position: fixed !important;
   top: 82px;
-  left: 0;
+  left: 2rem;
   width: 280px;
-  height: calc(100vh - 82px);
+  height: calc(100vh - 82px - 2rem);
   overflow-y: auto;
   scrollbar-width: thin;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding-right: 1.75rem;
   z-index: 200;
 }
 
@@ -567,7 +566,9 @@ body::before {
 ═══════════════════════════════════════════════ */
 .main-area {
   min-width: 0;
-  margin-left: 280px;
+  margin-left: calc(280px + 1.75rem + 2rem);
+  margin-right: 2rem;
+  margin-bottom: 2rem;
 }
 
 .results-bar {
@@ -1441,16 +1442,18 @@ body::before {
 @media (max-width: 900px) {
   .page-layout {
     grid-template-columns: 1fr;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 
   .sidebar {
     display: none !important;
+    left: 2rem;
   }
 
   .main-area {
-    margin-left: 0;
+    margin-left: 2rem;
+    margin-right: 2rem;
   }
 
   .filter-toggle-btn {
@@ -1463,6 +1466,16 @@ body::before {
 }
 
 @media (max-width: 600px) {
+  .page-layout {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .main-area {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
   .papers-grid {
     grid-template-columns: 1fr;
   }
