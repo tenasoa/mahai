@@ -283,16 +283,11 @@ body::before {
 .page-layout {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 100px 2rem 2rem; /* 62px navbar + 38px marge */
+  padding: 120px 2rem 2rem; /* 62px navbar + 58px marge */
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 1.75rem;
   align-items: start;
-}
-
-/* Wrapper pour le contenu principal avec marge top */
-.main-wrapper {
-  margin-top: 20px;
 }
 
 /* ═══════════════════════════════════════════════
@@ -300,10 +295,10 @@ body::before {
 ═══════════════════════════════════════════════ */
 .sidebar {
   position: fixed !important;
-  top: 100px; /* 62px navbar + 38px marge */
+  top: 120px; /* 62px navbar + 58px marge */
   left: 2rem;
   width: 280px;
-  height: calc(100vh - 120px); /* 100vh - navbar - marge haut/bas */
+  height: calc(100vh - 140px); /* 100vh - navbar - marge haut/bas */
   overflow-y: auto;
   scrollbar-width: thin;
   display: flex;
@@ -597,7 +592,7 @@ body::before {
   min-width: 0;
   margin-left: calc(280px + 1.75rem + 2rem); /* sidebar + gap + padding gauche */
   margin-right: 2rem;
-  margin-top: 20px; /* Marge supplémentaire sous navbar */
+  margin-top: 40px; /* Marge supplémentaire sous navbar */
   margin-bottom: 2rem;
 }
 
