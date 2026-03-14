@@ -59,6 +59,7 @@ export default function CataloguePage() {
 
   const toastIdRef = useRef(0)
   const lastToastTime = useRef<number>(0)
+  const isToastPending = useRef<boolean>(false)
 
   // Initialiser le thème au montage
   useEffect(() => {
@@ -146,17 +147,24 @@ export default function CataloguePage() {
   // Wishlist handler
   const toggleFav = (id: string) => {
     const now = Date.now()
-    // Empêcher les toasts multiples (min 300ms entre chaque)
-    if (now - lastToastTime.current < 300) return
+    // Empêcher les toasts multiples (min 500ms entre chaque)
+    if (now - lastToastTime.current < 500 || isToastPending.current) return
     
     setWished(prev => {
       const next = new Set(prev)
-      if (next.has(id)) {
+      const wasInWish = next.has(id)
+      
+      if (wasInWish) {
         next.delete(id)
       } else {
         next.add(id)
         lastToastTime.current = now
+        isToastPending.current = true
         showToast('success', 'Favori', 'Sujet ajouté à vos favoris')
+        // Reset du flag après l'affichage du toast
+        setTimeout(() => {
+          isToastPending.current = false
+        }, 600)
       }
       return next
     })

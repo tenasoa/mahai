@@ -14,13 +14,16 @@ export function LuxuryCursor() {
   const ringPos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
-    // Check theme
-    setIsDark(document.documentElement.classList.contains('dark'))
+    // Check theme initial
+    const checkTheme = () => {
+      const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark'
+      setIsDark(isDarkTheme)
+    }
+    checkTheme()
 
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'))
-    })
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    // Observer les changements de thème
+    const observer = new MutationObserver(checkTheme)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] })
 
     // Initialiser la position au centre de l'écran
     const startX = window.innerWidth / 2
