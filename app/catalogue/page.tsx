@@ -58,6 +58,7 @@ export default function CataloguePage() {
   const [yearRange, setYearRange] = useState<number>(2003)
 
   const toastIdRef = useRef(0)
+  const lastToastTime = useRef<number>(0)
 
   // Initialiser le thème au montage
   useEffect(() => {
@@ -144,12 +145,17 @@ export default function CataloguePage() {
 
   // Wishlist handler
   const toggleFav = (id: string) => {
+    const now = Date.now()
+    // Empêcher les toasts multiples (min 300ms entre chaque)
+    if (now - lastToastTime.current < 300) return
+    
     setWished(prev => {
       const next = new Set(prev)
       if (next.has(id)) {
         next.delete(id)
       } else {
         next.add(id)
+        lastToastTime.current = now
         showToast('success', 'Favori', 'Sujet ajouté à vos favoris')
       }
       return next
