@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 
 export function LuxuryCursor() {
   const [isHovering, setIsHovering] = useState(false)
+  const [isDark, setIsDark] = useState(false)
   const cursorRef = useRef<HTMLDivElement>(null)
   const ringRef = useRef<HTMLDivElement>(null)
 
@@ -13,6 +14,14 @@ export function LuxuryCursor() {
   const ringPos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
+    // Check theme
+    setIsDark(document.documentElement.classList.contains('dark'))
+
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
     // Initialiser la position au centre de l'écran
     const startX = window.innerWidth / 2
     const startY = window.innerHeight / 2
@@ -75,6 +84,7 @@ export function LuxuryCursor() {
     animate()
 
     return () => {
+      observer.disconnect()
       window.removeEventListener("mousemove", updateMousePos)
       window.removeEventListener("mouseover", handleMouseOver)
       cancelAnimationFrame(animationId)
@@ -94,7 +104,7 @@ export function LuxuryCursor() {
           zIndex: 99999,
           background: 'var(--gold)',
           borderRadius: '50%',
-          mixBlendMode: document.documentElement.classList.contains('dark') ? 'screen' : 'multiply',
+          mixBlendMode: isDark ? 'screen' : 'multiply',
           transform: 'translate(-50%, -50%)',
           transition: 'width 0.2s, height 0.2s',
           pointerEvents: 'none',
