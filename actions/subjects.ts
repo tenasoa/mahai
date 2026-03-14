@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { ExamenType, Difficulte, Langue, Format, Badge, Prisma } from '@prisma/client'
+import { revalidatePath } from 'next/cache'
 
 export interface SubjectFilters {
   search?: string
@@ -17,7 +18,7 @@ export interface SubjectFilters {
   sortBy?: 'recent' | 'rating' | 'price_asc' | 'price_desc' | 'relevance'
 }
 
-export async function getSubjects(filters: SubjectFilters = {}) {
+export async function getSubjects(filters: SubjectFilters = {}, userId?: string) {
   const {
     search,
     types,
@@ -80,12 +81,23 @@ export async function getSubjects(filters: SubjectFilters = {}) {
         orderBy,
         skip,
         take: limit,
+        include: userId ? {
+          purchases: {
+            where: { userId, status: 'COMPLETED' }
+          }
+        } : undefined
       }),
       prisma.subject.count({ where })
     ])
 
+    // Mapper pour inclure isUnlocked
+    const subjectsWithAccess = subjects.map(s => ({
+      ...s,
+      isUnlocked: userId ? s.purchases.length > 0 : false
+    }))
+
     return {
-      subjects,
+      subjects: subjectsWithAccess,
       total,
       totalPages: Math.ceil(total / limit),
       currentPage: page
@@ -99,5 +111,99 @@ export async function getSubjects(filters: SubjectFilters = {}) {
       currentPage: 1,
       error: 'Erreur lors de la récupération des sujets'
     }
+  }
+}
+
+export async function getSubjectById(id: string, userId?: string) {
+  try {
+    const subject = await prisma.subject.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: { prenom: true, nom: true, role: true }
+        }
+      }
+    })
+
+    if (!subject) return null
+
+    let isUnlocked = false
+    if (userId) {
+      const purchase = await prisma.purchase.findFirst({
+        where: {
+          userId,
+          subjectId: id,
+          status: 'COMPLETED'
+        }
+      })
+      isUnlocked = !!purchase
+    }
+
+    return { ...subject, isUnlocked }
+  } catch (error) {
+    console.error('Error fetching subject by id:', error)
+    return null
+  }
+}
+
+export async function purchaseSubject(subjectId: string, userId: string) {
+  try {
+    // 1. Get subject and user
+    const [subject, user] = await Promise.all([
+      prisma.subject.findUnique({ where: { id: subjectId } }),
+      prisma.user.findUnique({ where: { id: userId } })
+    ])
+
+    if (!subject || !user) {
+      return { success: false, error: 'Sujet ou utilisateur introuvable' }
+    }
+
+    // 2. Check if already purchased
+    const existingPurchase = await prisma.purchase.findFirst({
+      where: { userId, subjectId, status: 'COMPLETED' }
+    })
+
+    if (existingPurchase) {
+      return { success: true, alreadyOwned: true }
+    }
+
+    // 3. Check credits
+    if (user.credits < subject.credits) {
+      return { success: false, error: 'Crédits insuffisants' }
+    }
+
+    // 4. Transaction: Update credits and create purchase
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: { credits: { decrement: subject.credits } }
+      }),
+      prisma.purchase.create({
+        data: {
+          userId,
+          subjectId,
+          creditsAmount: subject.credits,
+          amount: 0, // Transaction en crédits
+          status: 'COMPLETED'
+        }
+      }),
+      prisma.creditTransaction.create({
+        data: {
+          userId,
+          amount: -subject.credits,
+          type: 'SPEND',
+          description: `Achat du sujet: ${subject.titre}`,
+          status: 'COMPLETED'
+        }
+      })
+    ])
+
+    revalidatePath('/catalogue')
+    revalidatePath(`/sujet/${subjectId}`)
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error purchasing subject:', error)
+    return { success: false, error: 'Erreur lors de la transaction' }
   }
 }

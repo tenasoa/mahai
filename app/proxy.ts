@@ -8,10 +8,11 @@ const protectedRoutes = [
   '/sujet',
   '/examens',
   '/profile',
+  '/auth/role-selection',
 ]
 
 // Routes that should redirect to dashboard if already authenticated
-const authRoutes = ['/auth/login', '/auth/register', '/auth/role-selection']
+const authRoutes = ['/auth/login', '/auth/register']
 
 /**
  * Proxy handler for authentication and route protection

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/client'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { BookOpen, Clock, Filter, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 

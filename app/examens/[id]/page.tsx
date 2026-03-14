@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import ExamTakingClient from './page.client'
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/client'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 interface ExamPageProps {
   params: Promise<{ id: string }>

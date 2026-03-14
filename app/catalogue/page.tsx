@@ -1,12 +1,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
+import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { useCatalogue } from '@/lib/hooks/useCatalogue'
 import { useAuth } from '@/lib/hooks/useAuth'
 import type { CatalogueQueryParams, ExamenType, Difficulte, Langue, Format, Badge } from '@/types/catalogue'
 import { BADGE_LABELS, DIFFICULTE_LABELS, DIFFICULTE_COLORS, MATIERE_GLYPHS } from '@/types/catalogue'
 import './catalogue.css'
+
+import { purchaseSubject } from '@/actions/subjects'
 
 export default function CataloguePage() {
   const { userId } = useAuth()
@@ -34,15 +38,16 @@ export default function CataloguePage() {
     },
   })
 
-  // États locaux pour les filtres UI
+  // États locaux
+  const [isPurchasing, setIsPurchasing] = useState(false)
+  const [userCredits, setUserCredits] = useState(1200) 
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [buyModalOpen, setBuyModalOpen] = useState(false)
-  const [currentSubject, setCurrentSubject] = useState<typeof subjects[0] | null>(null)
+  const [currentSubject, setCurrentSubject] = useState<any | null>(null)
   const [previewPage, setPreviewPage] = useState(1)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [isDark, setIsDark] = useState(true)
 
   // Filtres UI
   const [selectedTypes, setSelectedTypes] = useState<ExamenType[]>([])
@@ -59,21 +64,6 @@ export default function CataloguePage() {
 
   const toastIdRef = useRef(0)
   const lastToastTime = useRef<number>(0)
-
-  // Initialiser le thème
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark'
-    setIsDark(savedTheme === 'dark')
-    document.documentElement.setAttribute('data-theme', savedTheme)
-  }, [])
-
-  // Toggle thème
-  const toggleTheme = () => {
-    const newTheme = isDark ? 'light' : 'dark'
-    setIsDark(!isDark)
-    localStorage.setItem('theme', newTheme)
-    document.documentElement.setAttribute('data-theme', newTheme)
-  }
 
   // Toast helper
   const showToast = (type: 'success' | 'error' | 'info', title: string, msg: string, duration = 4000) => {
@@ -184,10 +174,25 @@ export default function CataloguePage() {
     setBuyModalOpen(true)
   }
 
-  const confirmBuy = () => {
-    setBuyModalOpen(false)
-    if (currentSubject) {
-      showToast('success', 'Achat confirmé', `${currentSubject.titre} ajouté à votre bibliothèque !`)
+  const confirmBuy = async () => {
+    if (!currentSubject || !userId) return
+    
+    setIsPurchasing(true)
+    try {
+      const result = await purchaseSubject(currentSubject.id, userId)
+      
+      if (result.success) {
+        showToast('success', 'Achat réussi', `${currentSubject.titre} est maintenant débloqué !`)
+        setBuyModalOpen(false)
+        // Rediriger vers le détail
+        router.push(`/sujet/${currentSubject.id}`)
+      } else {
+        showToast('error', 'Erreur', result.error || 'Impossible de finaliser l\'achat')
+      }
+    } catch (err) {
+      showToast('error', 'Erreur', 'Une erreur inattendue est survenue')
+    } finally {
+      setIsPurchasing(false)
     }
   }
 
@@ -212,48 +217,10 @@ export default function CataloguePage() {
   return (
     <>
       <LuxuryCursor />
+      <LuxuryNavbar />
       
       {/* Toast Container */}
       <ToastContainer />
-
-      {/* Navigation */}
-      <nav className="nav">
-        <div className="nav-inner">
-          <a href="/" className="logo">
-            Mah<span className="logo-gem"></span>AI
-          </a>
-          <div className="nav-search">
-            <span className="nav-search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Chercher un sujet, matière, année…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="nav-search-input"
-            />
-          </div>
-          <div className="nav-right">
-            <div className="credit-badge">
-              <span className="credit-icon">◆</span>1 200 cr
-            </div>
-            <button
-              className="btn-sm btn-ghost"
-              onClick={() => showToast('info', 'MVola', 'Rechargez vos crédits via MVola')}
-            >
-              + Recharger
-            </button>
-            <button
-              className="btn-sm btn-ghost"
-              onClick={toggleTheme}
-              title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
-              style={{ width: '34px', height: '34px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
-            <div className="avatar">A</div>
-          </div>
-        </div>
-      </nav>
 
       {/* Sidebar Fixed */}
       <aside className="sidebar" id="sidebar">
@@ -473,6 +440,20 @@ export default function CataloguePage() {
       {/* Main Content */}
       <main className="main-area">
         <div className="main-content-wrapper">
+          {/* Search Bar - Moved from Nav */}
+          <div className="main-search-wrap" style={{ marginBottom: '2rem' }}>
+            <div className="nav-search" style={{ maxWidth: '600px', margin: '0' }}>
+              <span className="nav-search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Chercher un sujet, matière, année…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="nav-search-input"
+              />
+            </div>
+          </div>
+
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem', flexWrap: 'wrap', gap: '.65rem' }}>
           <div>
@@ -618,30 +599,41 @@ export default function CataloguePage() {
         {/* Cards Grid */}
         {!loading && !error && subjects.length > 0 && (
           <div className={`papers-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
-            {subjects.map((subject) => (
+            {subjects.map((subject: any) => (
               <div key={subject.id} className="pcard">
-                <div className="pc-thumb">
+                <Link href={`/sujet/${subject.id}`} className="pc-thumb">
                   <div className="pc-thumb-lines"></div>
                   <div className="pc-thumb-glyph">
-                    {subject.glyph || MATIERE_GLYPHS[subject.matiere] || '∑'}
+                    {subject.glyph || MATIERE_GLYPHS[subject.matiere as keyof typeof MATIERE_GLYPHS] || '∑'}
                   </div>
                   <div className={`pc-badge ${subject.badge.toLowerCase()}`}>
                     {BADGE_LABELS[subject.badge as Badge] || subject.badge}
                   </div>
+                  {subject.isUnlocked && (
+                    <div className="pc-badge pc-badge-unlocked" style={{ top: '2.5rem', background: 'var(--sage)', color: 'white' }}>
+                      Débloqué
+                    </div>
+                  )}
                   <button
                     className="pc-fav"
-                    onClick={() => handleToggleFav(subject.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleToggleFav(subject.id);
+                    }}
                     title={isWished(subject.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                   >
                     {isWished(subject.id) ? '🔖' : '📑'}
                   </button>
-                </div>
+                </Link>
                 <div className="pc-body">
                   <div className="pc-meta-row">
                     <span className="pc-exam">{subject.type} · {subject.matiere}</span>
                     <span className="pc-year">{subject.annee}</span>
                   </div>
-                  <div className="pc-title">{subject.titre}</div>
+                  <Link href={`/sujet/${subject.id}`} className="pc-title" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    {subject.titre}
+                  </Link>
                   <div className="pc-info">
                     {subject.pages} pages · {subject.difficulte === 'FACILE' ? 'Facile' : subject.difficulte === 'MOYEN' ? 'Moyen' : 'Difficile'}
                   </div>
@@ -661,19 +653,24 @@ export default function CataloguePage() {
                   </div>
                 </div>
                 <div className="pc-footer">
-                  <div className={`pc-price ${subject.credits === 0 ? 'free-price' : ''}`}>
-                    {subject.credits === 0 ? 'Gratuit' : (
+                  <div className={`pc-price ${subject.credits === 0 || subject.isUnlocked ? 'free-price' : ''}`}>
+                    {subject.isUnlocked ? 'Débloqué' : (subject.credits === 0 ? 'Gratuit' : (
                       <>
                         {subject.credits} <span className="unit">cr</span>
                       </>
-                    )}
+                    ))}
                   </div>
                   <div className="pc-actions">
-                    <button className="btn-preview" onClick={() => openPreviewModal(subject)}>
-                      Aperçu
-                    </button>
-                    <button className="btn-buy" onClick={() => openBuyModal(subject)}>
-                      {subject.credits === 0 ? 'Obtenir' : 'Acheter'}
+                    {!subject.isUnlocked && (
+                      <button className="btn-preview" onClick={() => openPreviewModal(subject)}>
+                        Aperçu
+                      </button>
+                    )}
+                    <button 
+                      className={subject.isUnlocked ? "btn-consult" : "btn-buy"} 
+                      onClick={() => subject.isUnlocked ? router.push(`/sujet/${subject.id}`) : openBuyModal(subject)}
+                    >
+                      {subject.isUnlocked ? 'Voir' : (subject.credits === 0 ? 'Obtenir' : 'Acheter')}
                     </button>
                   </div>
                 </div>

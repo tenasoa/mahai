@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/client'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { GraduationCap, ArrowRight, CheckCircle, Bot } from 'lucide-react'
 
