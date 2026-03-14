@@ -1,67 +1,61 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
+import { useCatalogue } from '@/lib/hooks/useCatalogue'
+import { useAuth } from '@/lib/hooks/useAuth'
+import type { CatalogueQueryParams, ExamenType, Difficulte, Langue, Format, Badge } from '@/types/catalogue'
+import { BADGE_LABELS, DIFFICULTE_LABELS, DIFFICULTE_COLORS, MATIERE_GLYPHS } from '@/types/catalogue'
 import './catalogue.css'
 
-interface Subject {
-  id: string
-  title: string
-  exam: string
-  year: string
-  info: string
-  rating: number
-  reviews: number
-  price: number | 'free'
-  badge: 'gold' | 'ai' | 'free' | 'inter'
-  glyph: string
-}
-
-const SUBJECTS: Subject[] = [
-  { id: '1', title: 'Algèbre & Fonctions — Session officielle', exam: 'BAC · Mathématiques', year: '2024', info: '18 pages · 3h · Difficile', rating: 4, reviews: 124, price: 15, badge: 'gold', glyph: '∑' },
-  { id: '2', title: 'Mécanique & Électricité', exam: 'BEPC · Physique-Chimie', year: '2023', info: '12 pages · 2h · Moyen', rating: 4, reviews: 87, price: 10, badge: 'ai', glyph: 'φ' },
-  { id: '3', title: 'Compréhension & Expression écrite', exam: 'CEPE · Français', year: '2022', info: '8 pages · 2h · Facile', rating: 5, reviews: 212, price: 'free', badge: 'free', glyph: '∂' },
-  { id: '4', title: 'Biologie Cellulaire & Génétique', exam: 'BAC · SVT', year: '2023', info: '16 pages · 3h · Difficile', rating: 4, reviews: 65, price: 20, badge: 'inter', glyph: 'Ω' },
-  { id: '5', title: 'Géographie de Madagascar', exam: 'BEPC · Histoire-Géo', year: '2022', info: '10 pages · 2h · Moyen', rating: 3, reviews: 43, price: 8, badge: 'ai', glyph: 'π' },
-  { id: '6', title: 'Dissertation & Argumentation', exam: 'BAC · Philosophie', year: '2024', info: '6 pages · 4h · Difficile', rating: 5, reviews: 98, price: 25, badge: 'gold', glyph: 'λ' },
-]
-
-interface Toast {
-  id: number
-  type: 'success' | 'error' | 'info' | 'warn'
-  title: string
-  msg: string
-}
-
 export default function CataloguePage() {
+  const { userId } = useAuth()
+  
+  const {
+    subjects,
+    loading,
+    error,
+    pagination,
+    currentPage,
+    setPage,
+    setFilters,
+    clearFilters,
+    refresh,
+    wishedIds,
+    toggleWishlist,
+    isWished,
+    activeFilters,
+  } = useCatalogue({
+    userId,
+    pageSize: 9,
+    initialFilters: {
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    },
+  })
+
+  // États locaux pour les filtres UI
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [activeFilters, setActiveFilters] = useState<string[]>(['BAC', 'Français', 'PDF'])
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [buyModalOpen, setBuyModalOpen] = useState(false)
-  const [currentSubject, setCurrentSubject] = useState<Subject | null>(null)
+  const [currentSubject, setCurrentSubject] = useState<typeof subjects[0] | null>(null)
   const [previewPage, setPreviewPage] = useState(1)
-  const [toasts, setToasts] = useState<Toast[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [wished, setWished] = useState<Set<string>>(new Set())
   const [isDark, setIsDark] = useState(true)
 
-  // États des filtres
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(['BAC'])
+  // Filtres UI
+  const [selectedTypes, setSelectedTypes] = useState<ExamenType[]>([])
   const [selectedMatieres, setSelectedMatieres] = useState<string[]>([])
-  const [selectedAnnees, setSelectedAnnees] = useState<string[]>([])
-  const [selectedDifficultes, setSelectedDifficultes] = useState<string[]>(['Facile', 'Moyen', 'Difficile'])
-  const [selectedLangues, setSelectedLangues] = useState<string[]>(['Français'])
-  const [selectedFormats, setSelectedFormats] = useState<string[]>(['PDF'])
-  const [minRating, setMinRating] = useState<number | null>(null)
-  const [maxPrice, setMaxPrice] = useState<number>(200)
-  const [yearRange, setYearRange] = useState<number>(2003)
+  const [selectedDifficultes, setSelectedDifficultes] = useState<Difficulte[]>([])
+  const [selectedLangues, setSelectedLangues] = useState<Langue[]>([])
+  const [selectedFormats, setSelectedFormats] = useState<Format[]>([])
+  const [maxCredits, setMaxCredits] = useState<number>(200)
 
   const toastIdRef = useRef(0)
   const lastToastTime = useRef<number>(0)
-  const isToastPending = useRef<boolean>(false)
 
-  // Initialiser le thème au montage
+  // Initialiser le thème
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark'
     setIsDark(savedTheme === 'dark')
@@ -76,108 +70,97 @@ export default function CataloguePage() {
     document.documentElement.setAttribute('data-theme', newTheme)
   }
 
+  // Toast helper
+  const showToast = (type: 'success' | 'error' | 'info', title: string, msg: string, duration = 4000) => {
+    const id = ++toastIdRef.current
+    const event = new CustomEvent('toast', { detail: { id, type, title, msg } })
+    window.dispatchEvent(event)
+    setTimeout(() => {
+      const closeEvent = new CustomEvent('toast-close', { detail: { id } })
+      window.dispatchEvent(closeEvent)
+    }, duration)
+  }
+
   // Gestionnaires des filtres
-  const toggleType = (type: string) => {
-    setSelectedTypes(prev => 
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    )
+  const toggleType = (type: ExamenType) => {
+    const newTypes = selectedTypes.includes(type)
+      ? selectedTypes.filter(t => t !== type)
+      : [...selectedTypes, type]
+    setSelectedTypes(newTypes)
+    setFilters({ types: newTypes.length > 0 ? newTypes : undefined })
   }
 
   const toggleMatiere = (matiere: string) => {
-    setSelectedMatieres(prev => 
-      prev.includes(matiere) ? prev.filter(m => m !== matiere) : [...prev, matiere]
-    )
+    const newMatieres = selectedMatieres.includes(matiere)
+      ? selectedMatieres.filter(m => m !== matiere)
+      : [...selectedMatieres, matiere]
+    setSelectedMatieres(newMatieres)
+    setFilters({ matieres: newMatieres.length > 0 ? newMatieres : undefined })
   }
 
-  const toggleAnnee = (annee: string) => {
-    setSelectedAnnees(prev => 
-      prev.includes(annee) ? prev.filter(a => a !== annee) : [...prev, annee]
-    )
+  const toggleDifficulte = (diff: Difficulte) => {
+    const newDiff = selectedDifficultes.includes(diff)
+      ? selectedDifficultes.filter(d => d !== diff)
+      : [...selectedDifficultes, diff]
+    setSelectedDifficultes(newDiff)
+    setFilters({ difficultes: newDiff.length > 0 ? newDiff : undefined })
   }
 
-  const toggleDifficulte = (diff: string) => {
-    setSelectedDifficultes(prev => 
-      prev.includes(diff) ? prev.filter(d => d !== diff) : [...prev, diff]
-    )
+  const toggleLangue = (langue: Langue) => {
+    const newLangues = selectedLangues.includes(langue)
+      ? selectedLangues.filter(l => l !== langue)
+      : [...selectedLangues, langue]
+    setSelectedLangues(newLangues)
+    setFilters({ langues: newLangues.length > 0 ? newLangues : undefined })
   }
 
-  const toggleLangue = (langue: string) => {
-    setSelectedLangues(prev => 
-      prev.includes(langue) ? prev.filter(l => l !== langue) : [...prev, langue]
-    )
+  const toggleFormat = (format: Format) => {
+    const newFormats = selectedFormats.includes(format)
+      ? selectedFormats.filter(f => f !== format)
+      : [...selectedFormats, format]
+    setSelectedFormats(newFormats)
+    setFilters({ formats: newFormats.length > 0 ? newFormats : undefined })
   }
 
-  const toggleFormat = (format: string) => {
-    setSelectedFormats(prev => 
-      prev.includes(format) ? prev.filter(f => f !== format) : [...prev, format]
-    )
+  const handleMaxCreditsChange = (value: number) => {
+    setMaxCredits(value)
+    setFilters({ maxCredits: value < 200 ? value : undefined })
   }
 
   const resetFilters = () => {
     setSelectedTypes([])
     setSelectedMatieres([])
-    setSelectedAnnees([])
     setSelectedDifficultes([])
     setSelectedLangues([])
     setSelectedFormats([])
-    setMinRating(null)
-    setMaxPrice(200)
-    setYearRange(2003)
+    setMaxCredits(200)
+    clearFilters()
     showToast('info', 'Filtres', 'Tous les filtres réinitialisés')
   }
 
-  // Toast helper
-  const showToast = useCallback((type: Toast['type'], title: string, msg: string, duration = 4000) => {
-    const id = ++toastIdRef.current
-    setToasts(prev => [...prev, { id, type, title, msg }])
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id))
-    }, duration)
-  }, [])
-
-  const removeToast = (id: number) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
-  }
-
-  // Filter handlers
-  const removeFilter = (filter: string) => {
-    setActiveFilters(prev => prev.filter(f => f !== filter))
-  }
-
   // Wishlist handler
-  const toggleFav = (id: string) => {
+  const handleToggleFav = async (id: string) => {
     const now = Date.now()
-    // Empêcher les toasts multiples (min 500ms entre chaque)
-    if (now - lastToastTime.current < 500 || isToastPending.current) return
-    
-    setWished(prev => {
-      const next = new Set(prev)
-      const wasInWish = next.has(id)
-      
-      if (wasInWish) {
-        next.delete(id)
-      } else {
-        next.add(id)
-        lastToastTime.current = now
-        isToastPending.current = true
-        showToast('success', 'Favori', 'Sujet ajouté à vos favoris')
-        // Reset du flag après l'affichage du toast
-        setTimeout(() => {
-          isToastPending.current = false
-        }, 600)
-      }
-      return next
-    })
+    if (now - lastToastTime.current < 500) return
+
+    const wasInWish = isWished(id)
+    await toggleWishlist(id)
+
+    if (!wasInWish) {
+      lastToastTime.current = now
+      showToast('success', 'Favori', 'Sujet ajouté à vos favoris')
+      setTimeout(() => { lastToastTime.current = 0 }, 600)
+    }
   }
 
   // Modal handlers
-  const openPreviewModal = (subject: Subject) => {
+  const openPreviewModal = (subject: typeof subjects[0]) => {
     setCurrentSubject(subject)
     setPreviewPage(1)
     setPreviewModalOpen(true)
   }
 
-  const openBuyModal = (subject: Subject) => {
+  const openBuyModal = (subject: typeof subjects[0]) => {
     setCurrentSubject(subject)
     setBuyModalOpen(true)
   }
@@ -185,14 +168,7 @@ export default function CataloguePage() {
   const confirmBuy = () => {
     setBuyModalOpen(false)
     if (currentSubject) {
-      showToast('success', 'Achat confirmé', `${currentSubject.title} ajouté à votre bibliothèque !`)
-    }
-  }
-
-  const openBuyFromPreview = () => {
-    setPreviewModalOpen(false)
-    if (currentSubject) {
-      openBuyModal(currentSubject)
+      showToast('success', 'Achat confirmé', `${currentSubject.titre} ajouté à votre bibliothèque !`)
     }
   }
 
@@ -201,35 +177,25 @@ export default function CataloguePage() {
   const prevPage = () => setPreviewPage(p => Math.max(1, p - 1))
   const nextPage = () => setPreviewPage(p => Math.min(totalPages, p + 1))
 
-  // Filtered subjects
-  const filteredSubjects = SUBJECTS.filter(s =>
-    s.title.toLowerCase().includes(search.toLowerCase())
-  )
+  // Recherche (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search.trim()) {
+        setFilters({ search: search.trim() })
+      } else {
+        setFilters({ search: undefined })
+      }
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [search, setFilters])
 
   return (
     <>
       <LuxuryCursor />
       
       {/* Toast Container */}
-      <div className="toast-container" id="toastContainer">
-        {toasts.map(toast => (
-          <div key={toast.id} className={`toast ${toast.type}`}>
-            <div className="toast-icon">
-              {toast.type === 'success' ? '✦' : toast.type === 'error' ? '✕' : toast.type === 'info' ? 'ℹ' : '⚠'}
-            </div>
-            <div>
-              <div className="toast-title">{toast.title}</div>
-              <div className="toast-msg">{toast.msg}</div>
-            </div>
-            <button 
-              className="toast-close" 
-              onClick={() => removeToast(toast.id)}
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-      </div>
+      <ToastContainer />
 
       {/* Navigation */}
       <nav className="nav">
@@ -251,7 +217,7 @@ export default function CataloguePage() {
             <div className="credit-badge">
               <span className="credit-icon">◆</span>1 200 cr
             </div>
-            <button 
+            <button
               className="btn-sm btn-ghost"
               onClick={() => showToast('info', 'MVola', 'Rechargez vos crédits via MVola')}
             >
@@ -287,347 +253,359 @@ export default function CataloguePage() {
             <div className="filter-section">
               <div className="fsec-title">Type d'examen</div>
               <div className="pill-row">
-                <div 
-                  className={`pill ${selectedTypes.includes('BAC') ? 'on-solid' : ''}`}
-                  onClick={() => toggleType('BAC')}
-                >BAC</div>
-                <div 
-                  className={`pill ${selectedTypes.includes('BEPC') ? 'on-solid' : ''}`}
-                  onClick={() => toggleType('BEPC')}
-                >BEPC</div>
-                <div 
-                  className={`pill ${selectedTypes.includes('CEPE') ? 'on-solid' : ''}`}
-                  onClick={() => toggleType('CEPE')}
-                >CEPE</div>
+                {(['BAC', 'BEPC', 'CEPE'] as ExamenType[]).map(type => (
+                  <div
+                    key={type}
+                    className={`pill ${selectedTypes.includes(type) ? 'on-solid' : ''}`}
+                    onClick={() => toggleType(type)}
+                  >{type}</div>
+                ))}
               </div>
-            </div>
-
-            {/* Matière */}
-            <div className="filter-section">
-              <div className="fsec-title">Matière</div>
-              <select 
-                className="select-field"
-                value={selectedMatieres[0] || ''}
-                onChange={(e) => setSelectedMatieres(e.target.value ? [e.target.value] : [])}
-              >
-                <option value="">Toutes les matières</option>
-                <option>Mathématiques</option>
-                <option>Physique-Chimie</option>
-                <option>SVT</option>
-                <option>Français</option>
-                <option>Histoire-Géographie</option>
-                <option>Philosophie</option>
-              </select>
             </div>
 
             {/* Difficulté */}
             <div className="filter-section">
               <div className="fsec-title">Difficulté</div>
               <div className="diff-grid">
-                <div 
-                  className={`diff-btn easy ${selectedDifficultes.includes('Facile') ? 'on' : ''}`}
-                  onClick={() => toggleDifficulte('Facile')}
-                >Facile</div>
-                <div 
-                  className={`diff-btn med ${selectedDifficultes.includes('Moyen') ? 'on' : ''}`}
-                  onClick={() => toggleDifficulte('Moyen')}
-                >Moyen</div>
-                <div 
-                  className={`diff-btn hard ${selectedDifficultes.includes('Difficile') ? 'on' : ''}`}
-                  onClick={() => toggleDifficulte('Difficile')}
-                >Difficile</div>
+                {(['FACILE', 'MOYEN', 'DIFFICILE'] as Difficulte[]).map(diff => (
+                  <div
+                    key={diff}
+                    className={`diff-btn ${diff.toLowerCase()} ${selectedDifficultes.includes(diff) ? 'on' : ''}`}
+                    onClick={() => toggleDifficulte(diff)}
+                  >{DIFFICULTE_LABELS[diff]}</div>
+                ))}
               </div>
             </div>
 
-            {/* Année */}
+            {/* Prix max */}
             <div className="filter-section">
               <div className="fsec-title">
-                Année — <span style={{ color: 'var(--gold)' }}>{yearRange} – 2024</span>
+                Prix max — <span style={{ color: 'var(--gold)' }}>{maxCredits} cr</span>
               </div>
               <div className="range-wrap">
                 <input
                   type="range"
                   className="range-input"
-                  min="2003"
-                  max="2024"
-                  value={yearRange}
-                  onChange={(e) => setYearRange(Number(e.target.value))}
+                  min="0"
+                  max="200"
+                  value={maxCredits}
+                  onChange={(e) => handleMaxCreditsChange(Number(e.target.value))}
                 />
               </div>
               <div className="range-labels">
-                <span>2003</span>
-                <span>2024</span>
-              </div>
-            </div>
-
-            {/* Langue */}
-            <div className="filter-section">
-              <div className="fsec-title">Langue</div>
-              <div className="pill-row">
-                <div 
-                  className={`pill ${selectedLangues.includes('Français') ? 'on' : ''}`}
-                  onClick={() => toggleLangue('Français')}
-                >Français</div>
-                <div 
-                  className={`pill ${selectedLangues.includes('Malgache') ? 'on' : ''}`}
-                  onClick={() => toggleLangue('Malgache')}
-                >Malgache</div>
-              </div>
-            </div>
-
-              {/* Note minimale */}
-              <div className="filter-section">
-                <div className="fsec-title">Note minimale</div>
-                <div className="star-row">
-                  <label className="star-opt">
-                    <input 
-                      type="radio" 
-                      name="rating" 
-                      value="4"
-                      checked={minRating === 4}
-                      onChange={() => setMinRating(4)}
-                    />
-                    <div className="star-label">
-                      <div className="stars-mini">
-                        <span className="s-filled">★</span>
-                        <span className="s-filled">★</span>
-                        <span className="s-filled">★</span>
-                        <span className="s-filled">★</span>
-                        <span className="s-empty">☆</span>
-                      </div>
-                      et plus
-                    </div>
-                  </label>
-                  <label className="star-opt">
-                    <input 
-                      type="radio" 
-                      name="rating" 
-                      value="3"
-                      checked={minRating === 3}
-                      onChange={() => setMinRating(3)}
-                    />
-                    <div className="star-label">
-                      <div className="stars-mini">
-                        <span className="s-filled">★</span>
-                        <span className="s-filled">★</span>
-                        <span className="s-filled">★</span>
-                        <span className="s-empty">☆</span>
-                        <span className="s-empty">☆</span>
-                      </div>
-                      et plus
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Format */}
-              <div className="filter-section">
-                <div className="fsec-title">Format</div>
-                <div className="pill-row">
-                  <div 
-                    className={`pill ${selectedFormats.includes('PDF') ? 'on' : ''}`}
-                    onClick={() => toggleFormat('PDF')}
-                  >PDF</div>
-                  <div 
-                    className={`pill ${selectedFormats.includes('Interactif') ? 'on' : ''}`}
-                    onClick={() => toggleFormat('Interactif')}
-                  >Interactif</div>
-                  <div 
-                    className={`pill ${selectedFormats.includes('Gratuit') ? 'on' : ''}`}
-                    onClick={() => toggleFormat('Gratuit')}
-                  >Gratuit</div>
-                </div>
-              </div>
-
-              {/* Prix max */}
-              <div className="filter-section">
-                <div className="fsec-title">
-                  Prix max — <span style={{ color: 'var(--gold)' }}>{maxPrice} cr</span>
-                </div>
-                <div className="range-wrap">
-                  <input
-                    type="range"
-                    className="range-input"
-                    min="0"
-                    max="200"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  />
-                </div>
-                <div className="range-labels">
-                  <span>Gratuit</span>
-                  <span>200 cr</span>
-                </div>
+                <span>Gratuit</span>
+                <span>200 cr</span>
               </div>
             </div>
           </div>
-        </aside>
+        </div>
+      </aside>
 
       {/* Main Content */}
       <main className="main-area">
         {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem', flexWrap: 'wrap', gap: '.65rem' }}>
-            <div>
-              <h1 style={{ fontFamily: 'var(--display)', fontSize: '1.6rem', fontWeight: 400, letterSpacing: '-.02em', color: 'var(--text)', lineHeight: 1 }}>
-                Catalogue <em style={{ fontStyle: 'italic', color: 'var(--text-3)', fontSize: '.7em' }}>des sujets</em>
-              </h1>
-            </div>
-            <button className="filter-toggle-btn" onClick={() => setDrawerOpen(true)}>
-              ⚙ Filtres
-            </button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem', flexWrap: 'wrap', gap: '.65rem' }}>
+          <div>
+            <h1 style={{ fontFamily: 'var(--display)', fontSize: '1.6rem', fontWeight: 400, letterSpacing: '-.02em', color: 'var(--text)', lineHeight: 1 }}>
+              Catalogue <em style={{ fontStyle: 'italic', color: 'var(--text-3)', fontSize: '.7em' }}>des sujets</em>
+            </h1>
           </div>
+          <button className="filter-toggle-btn" onClick={() => setDrawerOpen(true)}>
+            ⚙ Filtres
+          </button>
+        </div>
 
-          {/* Active Filters */}
-          <div className="active-filters" id="activeFilters">
-            {activeFilters.map(filter => (
-              <div key={filter} className="af-chip">
-                {filter}
-                <button className="af-remove" onClick={() => removeFilter(filter)}>✕</button>
+        {/* Results Bar */}
+        <div className="results-bar">
+          <div className="results-count">
+            <strong>{loading ? '...' : pagination.totalItems}</strong> sujets trouvés
+          </div>
+          <div className="sort-view">
+            <select className="sort-select" onChange={(e) => setFilters({ sortBy: e.target.value as any })}>
+              <option value="createdAt">Plus récents</option>
+              <option value="rating">Mieux notés</option>
+              <option value="reviewsCount">Plus populaires</option>
+              <option value="credits">Prix croissant</option>
+            </select>
+            <div className="view-toggle">
+              <button
+                className={`vt-btn ${viewMode === 'grid' ? 'on' : ''}`}
+                onClick={() => setViewMode('grid')}
+              >
+                ⊞
+              </button>
+              <button
+                className={`vt-btn ${viewMode === 'list' ? 'on' : ''}`}
+                onClick={() => setViewMode('list')}
+              >
+                ☰
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className={`papers-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div key={i} className="pcard skeleton-card">
+                <div className="pc-thumb skeleton"></div>
+                <div className="pc-body">
+                  <div className="skeleton" style={{ height: '16px', marginBottom: '8px' }}></div>
+                  <div className="skeleton" style={{ height: '14px', width: '70%' }}></div>
+                </div>
               </div>
             ))}
           </div>
+        )}
 
-          {/* Results Bar */}
-          <div className="results-bar">
-            <div className="results-count">
-              <strong id="resultCount">{filteredSubjects.length}</strong> sujets trouvés
-            </div>
-            <div className="sort-view">
-              <select className="sort-select">
-                <option>Pertinence</option>
-                <option>Plus récents</option>
-                <option>Mieux notés</option>
-                <option>Prix croissant</option>
-                <option>Prix décroissant</option>
-              </select>
-              <div className="view-toggle">
-                <button 
-                  className={`vt-btn ${viewMode === 'grid' ? 'on' : ''}`} 
-                  onClick={() => setViewMode('grid')}
-                  title="Grille"
-                >
-                  ⊞
-                </button>
-                <button 
-                  className={`vt-btn ${viewMode === 'list' ? 'on' : ''}`} 
-                  onClick={() => setViewMode('list')}
-                  title="Liste"
-                >
-                  ☰
-                </button>
-              </div>
-            </div>
+        {/* Error State */}
+        {error && (
+          <div className="empty-state">
+            <div className="empty-icon">⚠️</div>
+            <div className="empty-title">Erreur de chargement</div>
+            <div className="empty-sub">{error.message}</div>
+            <button className="btn-consult" onClick={refresh}>Réessayer</button>
           </div>
+        )}
 
-          {/* Cards Grid */}
-          <div className={`papers-grid ${viewMode === 'list' ? 'list-view' : ''}`} id="papersGrid">
-            {filteredSubjects.map((subject) => (
-              <div 
-                key={subject.id} 
-                className="pcard"
-                data-title={subject.title}
-              >
+        {/* Empty State */}
+        {!loading && !error && subjects.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-icon">🔍</div>
+            <div className="empty-title">Aucun sujet trouvé</div>
+            <div className="empty-sub">Essayez d'élargir vos filtres ou de changer votre recherche.</div>
+            <button className="btn-consult" onClick={resetFilters}>Réinitialiser les filtres</button>
+          </div>
+        )}
+
+        {/* Cards Grid */}
+        {!loading && !error && subjects.length > 0 && (
+          <div className={`papers-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
+            {subjects.map((subject) => (
+              <div key={subject.id} className="pcard">
                 <div className="pc-thumb">
                   <div className="pc-thumb-lines"></div>
-                  <div className="pc-thumb-glyph">{subject.glyph}</div>
-                  <div className={`pc-badge ${subject.badge}`}>
-                    {subject.badge === 'gold' ? 'Premium' : subject.badge === 'ai' ? '✦ IA' : subject.badge === 'free' ? 'Gratuit' : 'Interactif'}
+                  <div className="pc-thumb-glyph">
+                    {subject.glyph || MATIERE_GLYPHS[subject.matiere] || '∑'}
+                  </div>
+                  <div className={`pc-badge ${subject.badge.toLowerCase()}`}>
+                    {BADGE_LABELS[subject.badge as Badge] || subject.badge}
                   </div>
                   <button
                     className="pc-fav"
-                    onClick={() => toggleFav(subject.id)}
-                    title={wished.has(subject.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    onClick={() => handleToggleFav(subject.id)}
+                    title={isWished(subject.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                   >
-                    {wished.has(subject.id) ? '🔖' : '📑'}
+                    {isWished(subject.id) ? '🔖' : '📑'}
                   </button>
                 </div>
                 <div className="pc-body">
                   <div className="pc-meta-row">
-                    <span className="pc-exam">{subject.exam}</span>
-                    <span className="pc-year">{subject.year}</span>
+                    <span className="pc-exam">{subject.type} · {subject.matiere}</span>
+                    <span className="pc-year">{subject.annee}</span>
                   </div>
-                  <div className="pc-title">{subject.title}</div>
-                  <div className="pc-info">{subject.info}</div>
+                  <div className="pc-title">{subject.titre}</div>
+                  <div className="pc-info">
+                    {subject.pages} pages · {subject.difficulte === 'FACILE' ? 'Facile' : subject.difficulte === 'MOYEN' ? 'Moyen' : 'Difficile'}
+                  </div>
                   <div className="pc-rating">
                     <div className="pc-stars">
                       {[...Array(5)].map((_, i) => (
-                        <span 
-                          key={i} 
+                        <span
+                          key={i}
                           className="pc-star"
-                          style={{ color: i < subject.rating ? 'var(--gold)' : 'var(--text-4)' }}
+                          style={{ color: i < Math.floor(subject.rating) ? 'var(--gold)' : 'var(--text-4)' }}
                         >
                           ★
                         </span>
                       ))}
                     </div>
-                    <span className="pc-review-count">({subject.reviews})</span>
+                    <span className="pc-review-count">({subject.reviewsCount})</span>
                   </div>
                 </div>
                 <div className="pc-footer">
-                  <div className={`pc-price ${subject.price === 'free' ? 'free-price' : ''}`}>
-                    {subject.price === 'free' ? 'Gratuit' : (
+                  <div className={`pc-price ${subject.credits === 0 ? 'free-price' : ''}`}>
+                    {subject.credits === 0 ? 'Gratuit' : (
                       <>
-                        {subject.price} <span className="unit">cr</span>
+                        {subject.credits} <span className="unit">cr</span>
                       </>
                     )}
                   </div>
                   <div className="pc-actions">
-                    <button 
-                      className="btn-preview"
-                      onClick={() => openPreviewModal(subject)}
-                    >
+                    <button className="btn-preview" onClick={() => openPreviewModal(subject)}>
                       Aperçu
                     </button>
-                    <button 
-                      className="btn-buy"
-                      onClick={() => openBuyModal(subject)}
-                    >
-                      {subject.price === 'free' ? 'Obtenir' : 'Acheter'}
+                    <button className="btn-buy" onClick={() => openBuyModal(subject)}>
+                      {subject.credits === 0 ? 'Obtenir' : 'Acheter'}
                     </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+        )}
 
-          {/* Pagination */}
+        {/* Pagination */}
+        {!loading && !error && pagination.totalPages > 1 && (
           <div className="pagination">
-            <button className="pg-btn">‹</button>
-            <button className="pg-btn on">1</button>
-            <button className="pg-btn">2</button>
-            <button className="pg-btn">3</button>
-            <span className="pg-dots">…</span>
-            <button className="pg-btn">48</button>
-            <button className="pg-btn">›</button>
+            <button
+              className="pg-btn"
+              onClick={() => setPage(currentPage - 1)}
+              disabled={!pagination.hasPrevPage}
+            >
+              ‹
+            </button>
+            {[...Array(pagination.totalPages)].map((_, i) => (
+              <button
+                key={i}
+                className={`pg-btn ${currentPage === i + 1 ? 'on' : ''}`}
+                onClick={() => setPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              className="pg-btn"
+              onClick={() => setPage(currentPage + 1)}
+              disabled={!pagination.hasNextPage}
+            >
+              ›
+            </button>
           </div>
-        </main>
+        )}
+      </main>
+
+      {/* Preview Modal */}
+      {previewModalOpen && currentSubject && (
+        <div
+          className="modal-overlay open"
+          onClick={() => setPreviewModalOpen(false)}
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-title">{currentSubject.titre}</div>
+                <div className="modal-sub">{currentSubject.type} · {currentSubject.matiere} · {currentSubject.annee}</div>
+              </div>
+              <button className="modal-close" onClick={() => setPreviewModalOpen(false)}>✕</button>
+            </div>
+            <div className="preview-viewport">
+              <div className="preview-paper">
+                <div className="pp-line h"></div>
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} className={`pp-line ${i % 2 === 0 ? 'm' : 's'}`}></div>
+                ))}
+              </div>
+              <div
+                className="locked-msg"
+                style={{ display: previewPage > 4 ? 'flex' : 'none' }}
+              >
+                <div className="locked-icon">🔒</div>
+                <div className="locked-text">Achetez pour débloquer</div>
+              </div>
+            </div>
+            <div className="preview-nav" style={{ marginBottom: '1.25rem' }}>
+              <button className="prev-nav-btn" onClick={prevPage}>‹</button>
+              <span className="pg-indicator">Page {previewPage} / {totalPages}</span>
+              <button className="prev-nav-btn" onClick={nextPage}>›</button>
+            </div>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--b3)', borderRadius: 'var(--r)', padding: '.85rem 1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.65rem' }}>
+              <div style={{ fontSize: '.78rem', color: 'var(--text-2)' }}>
+                {currentSubject.pages} pages · {currentSubject.difficulte}
+              </div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '.75rem', color: 'var(--gold)' }}>
+                {currentSubject.credits === 0 ? 'Gratuit' : `${currentSubject.credits} cr`}
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-modal-buy" onClick={() => { setPreviewModalOpen(false); openBuyModal(currentSubject); }}>
+                Acheter — {currentSubject.credits === 0 ? 'Gratuit' : `${currentSubject.credits} cr`}
+              </button>
+              <button className="btn-modal-ghost" onClick={() => setPreviewModalOpen(false)}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Buy Modal */}
+      {buyModalOpen && currentSubject && (
+        <div
+          className="modal-overlay open"
+          onClick={() => setBuyModalOpen(false)}
+        >
+          <div className="modal" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <div className="modal-title">Confirmer l'achat</div>
+                <div className="modal-sub">{currentSubject.titre}</div>
+              </div>
+              <button className="modal-close" onClick={() => setBuyModalOpen(false)}>✕</button>
+            </div>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--b1)', borderRadius: 'var(--r)', padding: '1.25rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.65rem' }}>
+                <span style={{ fontSize: '.82rem', color: 'var(--text-2)' }}>Prix du sujet</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '.85rem', color: 'var(--gold)' }}>
+                  {currentSubject.credits === 0 ? 'Gratuit' : `${currentSubject.credits} cr`}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.65rem' }}>
+                <span style={{ fontSize: '.82rem', color: 'var(--text-2)' }}>Votre solde actuel</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '.85rem', color: 'var(--text)' }}>1 200 cr</span>
+              </div>
+              <div style={{ height: '1px', background: 'var(--b1)', margin: '.75rem 0' }}></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '.85rem', fontWeight: 500, color: 'var(--text)' }}>Solde après achat</span>
+                <span style={{ fontFamily: 'var(--display)', fontSize: '1.25rem', color: 'var(--gold)' }}>
+                  {currentSubject.credits === 0 ? '1 200 cr' : `${1200 - currentSubject.credits} cr`}
+                </span>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-modal-buy" onClick={confirmBuy}>
+                Confirmer l'achat
+              </button>
+              <button className="btn-modal-ghost" onClick={() => setBuyModalOpen(false)}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Filter Drawer */}
-      <div 
-        className="drawer-overlay" 
-        id="drawerOverlay" 
+      <div
+        className="drawer-overlay"
+        id="drawerOverlay"
         onClick={() => setDrawerOpen(false)}
         style={{ opacity: drawerOpen ? 1 : 0, pointerEvents: drawerOpen ? 'all' : 'none' }}
       ></div>
-      <div 
-        className="filter-drawer" 
+      <div
+        className="filter-drawer"
         id="filterDrawer"
         style={{ transform: drawerOpen ? 'translateX(0)' : 'translateX(-100%)' }}
       >
         <button className="drawer-close" onClick={() => setDrawerOpen(false)}>✕</button>
         <div style={{ marginTop: '2rem' }}>
           <div className="filter-section">
-            <div className="fsec-title" style={{ color: 'var(--text-3)', fontFamily: 'var(--mono)', fontSize: '.6rem', textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: '.65rem' }}>
-              Type d'examen
-            </div>
+            <div className="fsec-title">Type d'examen</div>
             <div className="pill-row">
-              <div className="pill on-solid">BAC</div>
-              <div className="pill">BEPC</div>
-              <div className="pill">CEPE</div>
+              {(['BAC', 'BEPC', 'CEPE'] as ExamenType[]).map(type => (
+                <div
+                  key={type}
+                  className={`pill ${selectedTypes.includes(type) ? 'on-solid' : ''}`}
+                  onClick={() => {
+                    toggleType(type)
+                    setDrawerOpen(false)
+                  }}
+                >{type}</div>
+              ))}
             </div>
           </div>
           <div style={{ marginTop: '1.25rem' }}>
-            <button 
+            <button
               onClick={() => setDrawerOpen(false)}
               style={{ width: '100%', background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))', color: 'var(--void)', border: 'none', borderRadius: 'var(--r)', padding: '.75rem', fontFamily: 'var(--body)', fontSize: '.85rem', fontWeight: 500, cursor: 'none' }}
             >
@@ -636,109 +614,53 @@ export default function CataloguePage() {
           </div>
         </div>
       </div>
-
-      {/* Preview Modal */}
-      <div 
-        className="modal-overlay" 
-        id="previewModal"
-        style={{ opacity: previewModalOpen ? 1 : 0, pointerEvents: previewModalOpen ? 'all' : 'none' }}
-        onClick={() => setPreviewModalOpen(false)}
-      >
-        <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-head">
-            <div>
-              <div className="modal-title">{currentSubject?.title || ''}</div>
-              <div className="modal-sub">{currentSubject?.exam} · {currentSubject?.year}</div>
-            </div>
-            <button className="modal-close" onClick={() => setPreviewModalOpen(false)}>✕</button>
-          </div>
-          <div className="preview-viewport">
-            <div className="preview-paper">
-              <div className="pp-line h"></div>
-              <div className="pp-line"></div>
-              <div className="pp-line m"></div>
-              <div className="pp-line s"></div>
-              <div className="pp-line"></div>
-              <div className="pp-line m"></div>
-              <div className="pp-line s"></div>
-              <div className="pp-line"></div>
-              <div className="pp-line m"></div>
-            </div>
-            <div 
-              className="locked-msg" 
-              id="lockedMsg" 
-              style={{ display: previewPage > 4 ? 'flex' : 'none' }}
-            >
-              <div className="locked-icon">🔒</div>
-              <div className="locked-text">Achetez pour débloquer</div>
-            </div>
-          </div>
-          <div className="preview-nav" style={{ marginBottom: '1.25rem' }}>
-            <button className="prev-nav-btn" onClick={prevPage}>‹</button>
-            <span className="pg-indicator" id="pgIndicator">Page {previewPage} / {totalPages}</span>
-            <button className="prev-nav-btn" onClick={nextPage}>›</button>
-          </div>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--b3)', borderRadius: 'var(--r)', padding: '.85rem 1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.65rem' }}>
-            <div style={{ fontSize: '.78rem', color: 'var(--text-2)' }}>{currentSubject?.info}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: '.75rem', color: 'var(--gold)' }}>
-              {currentSubject?.price === 'free' ? 'Gratuit' : `${currentSubject?.price} cr`}
-            </div>
-          </div>
-          <div className="modal-actions">
-            <button className="btn-modal-buy" onClick={openBuyFromPreview}>
-              Acheter — {currentSubject?.price === 'free' ? 'Gratuit' : `${currentSubject?.price} cr`}
-            </button>
-            <button className="btn-modal-ghost" onClick={() => setPreviewModalOpen(false)}>
-              Fermer
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Buy Modal */}
-      <div 
-        className="modal-overlay" 
-        id="buyModal"
-        style={{ opacity: buyModalOpen ? 1 : 0, pointerEvents: buyModalOpen ? 'all' : 'none' }}
-        onClick={() => setBuyModalOpen(false)}
-      >
-        <div className="modal" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
-          <div className="modal-head">
-            <div>
-              <div className="modal-title">Confirmer l'achat</div>
-              <div className="modal-sub">{currentSubject?.title || ''}</div>
-            </div>
-            <button className="modal-close" onClick={() => setBuyModalOpen(false)}>✕</button>
-          </div>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--b1)', borderRadius: 'var(--r)', padding: '1.25rem', marginBottom: '1.25rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.65rem' }}>
-              <span style={{ fontSize: '.82rem', color: 'var(--text-2)' }}>Prix du sujet</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: '.85rem', color: 'var(--gold)' }}>
-                {currentSubject?.price === 'free' ? 'Gratuit' : `${currentSubject?.price} cr`}
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.65rem' }}>
-              <span style={{ fontSize: '.82rem', color: 'var(--text-2)' }}>Votre solde actuel</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: '.85rem', color: 'var(--text)' }}>1 200 cr</span>
-            </div>
-            <div style={{ height: '1px', background: 'var(--b1)', margin: '.75rem 0' }}></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '.85rem', fontWeight: 500, color: 'var(--text)' }}>Solde après achat</span>
-              <span style={{ fontFamily: 'var(--display)', fontSize: '1.25rem', color: 'var(--gold)' }}>
-                {currentSubject?.price === 'free' ? '1 200 cr' : `${1200 - (typeof currentSubject?.price === 'number' ? currentSubject.price : 0)} cr`}
-              </span>
-            </div>
-          </div>
-          <div className="modal-actions">
-            <button className="btn-modal-buy" onClick={confirmBuy}>
-              Confirmer l'achat
-            </button>
-            <button className="btn-modal-ghost" onClick={() => setBuyModalOpen(false)}>
-              Annuler
-            </button>
-          </div>
-        </div>
-      </div>
     </>
+  )
+}
+
+// Toast Component
+function ToastContainer() {
+  const [toasts, setToasts] = useState<Array<{ id: number; type: string; title: string; msg: string }>>([])
+
+  useEffect(() => {
+    const handleToast = (e: CustomEvent) => {
+      setToasts(prev => [...prev, e.detail])
+    }
+    const handleCloseToast = (e: CustomEvent) => {
+      setToasts(prev => prev.filter(t => t.id !== e.detail.id))
+    }
+
+    window.addEventListener('toast' as any, handleToast as any)
+    window.addEventListener('toast-close' as any, handleCloseToast as any)
+
+    return () => {
+      window.removeEventListener('toast' as any, handleToast as any)
+      window.removeEventListener('toast-close' as any, handleCloseToast as any)
+    }
+  }, [])
+
+  return (
+    <div className="toast-container">
+      {toasts.map(toast => (
+        <div key={toast.id} className={`toast ${toast.type}`}>
+          <div className="toast-icon">
+            {toast.type === 'success' ? '✦' : toast.type === 'error' ? '✕' : toast.type === 'info' ? 'ℹ' : '⚠'}
+          </div>
+          <div>
+            <div className="toast-title">{toast.title}</div>
+            <div className="toast-msg">{toast.msg}</div>
+          </div>
+          <button
+            className="toast-close"
+            onClick={() => {
+              const event = new CustomEvent('toast-close', { detail: { id: toast.id } })
+              window.dispatchEvent(event)
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
   )
 }
