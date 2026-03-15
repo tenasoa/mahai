@@ -673,12 +673,14 @@ export default function SujetDetailPage() {
         </aside>
       </div>
 
-      {/* STATE DEMO SWITCHER */}
+      {/* STATE DEMO SWITCHER - Uncomment for development/testing only */}
+      {/* 
       <div className="state-demo">
         <button className={`sdemo-btn ${state === 'locked' ? 'on' : ''}`} onClick={() => setState('locked')}>🔒 Verrouillé</button>
         <button className={`sdemo-btn ${state === 'unlocked' ? 'on' : ''}`} onClick={() => setState('unlocked')}>🔓 Débloqué</button>
         <button className={`sdemo-btn ${state === 'pending' ? 'on' : ''}`} onClick={() => setState('pending')}>⏳ En attente</button>
       </div>
+      */}
     </div>
   )
 }
