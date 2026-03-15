@@ -471,3 +471,14 @@ export async function resendVerificationEmail(email: string) {
     return { error: 'Erreur lors de l\'envoi du code' }
   }
 }
+
+// Get user data from database by ID
+export async function getUserData(userId: string) {
+  try {
+    const result = await query('SELECT * FROM "User" WHERE id = $1', [userId])
+    return result.rows[0] || null
+  } catch (error) {
+    console.error('Error fetching user data:', error)
+    return null
+  }
+}

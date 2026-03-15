@@ -71,6 +71,7 @@ export function useCatalogue({
       const result = await getSubjects({
         ...activeFilters,
         limit: pageSize,
+        userId, // Pass userId to get unlock status
       })
 
       setSubjects(result.data)
@@ -81,7 +82,7 @@ export function useCatalogue({
     } finally {
       setLoading(false)
     }
-  }, [activeFilters, pageSize])
+  }, [activeFilters, pageSize, userId])
 
   // Charger la wishlist
   const fetchWishlist = useCallback(async () => {

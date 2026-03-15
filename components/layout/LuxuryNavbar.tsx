@@ -85,11 +85,10 @@ export function LuxuryNavbar() {
                 className="flex items-center gap-2 p-1 pl-3 pr-2 rounded-full border border-gold/10 hover:border-gold-line transition-all bg-card/50 cursor-none"
               >
                 <div className="flex flex-col items-end hidden sm:flex">
-                  <span className="text-[10px] font-mono text-gold leading-none mb-1">{user?.credits || 0} CR</span>
-                  <span className="text-xs font-medium text-text leading-none">{user?.prenom || 'Moi'}</span>
+                  <span className="text-xs font-medium text-text leading-none">{user?.email?.split('@')[0] || 'Moi'}</span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold to-gold-hi flex items-center justify-center text-void font-bold text-xs shadow-sm">
-                  {user?.prenom?.charAt(0) || 'U'}
+                  {(user?.email?.charAt(0) || 'U').toUpperCase()}
                 </div>
                 <ChevronDown size={14} className={`text-text-3 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -113,7 +112,7 @@ export function LuxuryNavbar() {
 
                   <Link href="/credits" className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-2 hover:text-text hover:bg-surface transition-colors cursor-none">
                     <CreditCard size={16} className="text-gold" />
-                    Crédits ({user?.credits || 0})
+                    Crédits
                   </Link>
 
                   <div className="border-t border-border-3 my-1"></div>

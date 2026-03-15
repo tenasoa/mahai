@@ -28,6 +28,7 @@ export interface Subject {
   hasCorrectionProf: boolean
   authorId: string
   createdAt: string
+  isUnlocked?: boolean
   author?: {
     prenom: string
     nom?: string | null

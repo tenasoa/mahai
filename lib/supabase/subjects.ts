@@ -9,7 +9,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function getSubjects(
-  params: CatalogueQueryParams
+  params: CatalogueQueryParams & { userId?: string }
 ): Promise<PaginatedResponse<Subject>> {
   const {
     page = 1,
@@ -27,13 +27,21 @@ export async function getSubjects(
     maxCredits,
     search,
     featured,
+    userId,
   } = params
 
   try {
-    // Construction de la query
+    // Construction de la query avec une jointure pour vérifier les achats
     let query = supabase
       .from('Subject')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        Purchase!left (
+          id,
+          userId,
+          status
+        )
+      `, { count: 'exact' })
 
     // Filtres
     if (types && types.length > 0) {
@@ -79,7 +87,7 @@ export async function getSubjects(
     // Recherche textuelle
     if (search && search.trim()) {
       const searchTerms = search.trim().split(/\s+/)
-      searchTerms.forEach((term, i) => {
+      searchTerms.forEach((term) => {
         const orConditions = [
           `titre.ilike.%${term}%`,
           `matiere.ilike.%${term}%`,
@@ -115,11 +123,25 @@ export async function getSubjects(
       throw new Error(`Impossible de récupérer les sujets: ${error.message}`)
     }
 
+    // Transformer les données pour ajouter isUnlocked
+    const subjectsWithUnlockStatus = (data || []).map((subject: any) => {
+      // Vérifier si l'utilisateur a acheté ce sujet
+      const hasPurchase = userId && Array.isArray(subject.Purchase) && 
+        subject.Purchase.some((p: any) => p.userId === userId && p.status === 'COMPLETED')
+      
+      // Return subject with isUnlocked flag
+      const { Purchase, ...subjectData } = subject
+      return {
+        ...subjectData,
+        isUnlocked: hasPurchase || false,
+      } as Subject
+    })
+
     const totalItems = count || 0
     const totalPages = Math.ceil(totalItems / limit)
 
     return {
-      data: (data as Subject[]) || [],
+      data: subjectsWithUnlockStatus || [],
       pagination: {
         currentPage: page,
         totalPages,

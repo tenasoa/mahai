@@ -823,6 +823,17 @@ body::before {
   border: 1px solid rgba(155, 35, 53, 0.5);
 }
 
+.pc-badge-unlocked {
+  background: rgba(74, 107, 90, 0.9) !important;
+  color: #8ECAAC !important;
+  border: 1px solid rgba(74, 107, 90, 0.5) !important;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.5rem !important;
+  padding: 0.15rem 0.4rem !important;
+}
+
 .pc-fav {
   position: absolute;
   top: 0.75rem;
@@ -955,9 +966,8 @@ body::before {
 
 .pc-price.free-price {
   color: #6EAA8C;
-  font-size: 0.88rem;
-  font-family: var(--mono);
-  letter-spacing: 0.08em;
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
 .pc-actions {
@@ -1000,6 +1010,24 @@ body::before {
 .btn-buy:hover {
   transform: translateY(-1px);
   box-shadow: 0 3px 14px rgba(201, 168, 76, 0.28);
+}
+
+.btn-consult {
+  font-family: var(--body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, var(--sage), #6AAB8A);
+  color: var(--void);
+  border: none;
+  cursor: none;
+  transition: all 0.18s;
+}
+
+.btn-consult:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 14px rgba(74, 107, 90, 0.28);
 }
 
 /* List View */

@@ -11,6 +11,17 @@
   --r:4px;--r-lg:8px;
 }
 
+[data-theme='light']{
+  --void:#F8F4EE;--depth:#F2EDE4;--surface:#EDE6DA;--card:#FFFFFF;--card-hover:#F5EFE4;--lift:#EDE6DA;
+  --gold:#A8782A;--gold-hi:#C9A84C;--gold-lo:#D4A855;
+  --gold-dim:rgba(168,120,42,.08);--gold-glow:rgba(168,120,42,.12);--gold-line:rgba(168,120,42,.25);
+  --text:#1A1714;--text-2:rgba(26,23,20,.62);--text-3:rgba(26,23,20,.38);--text-4:rgba(26,23,20,.18);
+  --ruby:#9B2335;--ruby-dim:rgba(155,35,53,.12);--ruby-line:rgba(155,35,53,.3);
+  --sage:#4A6B5A;--sage-dim:rgba(74,107,90,.12);--sage-line:rgba(74,107,90,.3);
+  --amber:#C9843C;--amber-dim:rgba(201,132,60,.12);--amber-line:rgba(201,132,60,.28);
+  --b1:rgba(26,23,20,.1);--b2:rgba(26,23,20,.07);--b3:rgba(26,23,20,.04);
+}
+
 .detail-page-container {
   font-family: var(--body);
   background: var(--void);

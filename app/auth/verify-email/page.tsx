@@ -1,10 +1,19 @@
 "use client"
 
+import { Suspense } from 'react'
 import { VerifyEmailForm } from '@/components/auth/VerifyEmailForm'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+      <VerifyEmailContent />
+    </Suspense>
+  )
+}
+
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || 'herizo.r@gmail.com'
 

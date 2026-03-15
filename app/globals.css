@@ -22,9 +22,6 @@
   --b1: rgba(26,23,20,0.1);
   --b2: rgba(168,120,42,0.08);
   --b3: rgba(26,23,20,0.04);
-  --display: 'Cormorant Garamond', serif;
-  --body: 'Outfit', sans-serif;
-  --mono: 'DM Mono', monospace;
   --r: 4px;
   --r-lg: 8px;
   --shadow-md: 0 8px 40px rgba(26,23,20,0.1);
@@ -34,6 +31,7 @@
   --lift: #FBF9F6;
   --card-hover: #FFFFFF;
   --cursor-blend: multiply;
+  /* Font families are set by Next.js in layout.tsx */
 }
 
 [data-theme='dark'] {

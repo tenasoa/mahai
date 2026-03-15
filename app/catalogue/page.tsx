@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { useCatalogue } from '@/lib/hooks/useCatalogue'
@@ -13,8 +14,9 @@ import './catalogue.css'
 import { purchaseSubject } from '@/actions/subjects'
 
 export default function CataloguePage() {
+  const router = useRouter()
   const { userId } = useAuth()
-  
+
   const {
     subjects,
     loading,
@@ -609,11 +611,6 @@ export default function CataloguePage() {
                   <div className={`pc-badge ${subject.badge.toLowerCase()}`}>
                     {BADGE_LABELS[subject.badge as Badge] || subject.badge}
                   </div>
-                  {subject.isUnlocked && (
-                    <div className="pc-badge pc-badge-unlocked" style={{ top: '2.5rem', background: 'var(--sage)', color: 'white' }}>
-                      Débloqué
-                    </div>
-                  )}
                   <button
                     className="pc-fav"
                     onClick={(e) => {
@@ -654,7 +651,9 @@ export default function CataloguePage() {
                 </div>
                 <div className="pc-footer">
                   <div className={`pc-price ${subject.credits === 0 || subject.isUnlocked ? 'free-price' : ''}`}>
-                    {subject.isUnlocked ? 'Débloqué' : (subject.credits === 0 ? 'Gratuit' : (
+                    {subject.isUnlocked ? (
+                      <span style={{ color: 'var(--sage)', fontSize: '1.2rem' }}>🔓</span>
+                    ) : (subject.credits === 0 ? 'Gratuit' : (
                       <>
                         {subject.credits} <span className="unit">cr</span>
                       </>
@@ -666,8 +665,8 @@ export default function CataloguePage() {
                         Aperçu
                       </button>
                     )}
-                    <button 
-                      className={subject.isUnlocked ? "btn-consult" : "btn-buy"} 
+                    <button
+                      className={subject.isUnlocked ? "btn-consult" : "btn-buy"}
                       onClick={() => subject.isUnlocked ? router.push(`/sujet/${subject.id}`) : openBuyModal(subject)}
                     >
                       {subject.isUnlocked ? 'Voir' : (subject.credits === 0 ? 'Obtenir' : 'Acheter')}

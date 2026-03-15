@@ -2,10 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { User } from '@supabase/supabase-js'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
+
+// Custom user data from our database
+export interface AppUser {
+  id: string
+  email: string
+  prenom: string
+  nom?: string
+  role: string
+  credits: number
+  phone?: string
+  phoneVerified: boolean
+  schoolLevel?: string
+  emailVerified: boolean
+}
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [appUser, setAppUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | undefined>(undefined)
 
@@ -14,7 +29,8 @@ export function useAuth() {
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
       setUserId(session?.user?.id)
       setLoading(false)
     })
@@ -23,7 +39,8 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
       setUserId(session?.user?.id)
       setLoading(false)
     })
@@ -31,5 +48,5 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  return { user, userId, loading, isAuthenticated: !!user }
+  return { user, appUser, userId, loading, isAuthenticated: !!user }
 }

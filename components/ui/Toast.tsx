@@ -18,6 +18,7 @@ const TOAST_CONFIG = {
     icBg: 'rgba(74,107,90,.15)',
     icBd: 'rgba(74,107,90,.3)',
     title: 'Succès',
+    shake: false,
     svg: <path d="M4 8L7 11L13 5" stroke="#8ECAAC" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
   },
   error: {
@@ -27,7 +28,7 @@ const TOAST_CONFIG = {
     icBd: 'rgba(155,35,53,.3)',
     title: 'Erreur',
     shake: true,
-    svg: <path d="M8 4V9M8 11.5V11.4" stroke="#E06070" strokeWidth="1.6" strokeLinecap="round"/>
+    svg: <path d="M8 4V9M8 11.5V11.4" stroke="#E06070" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
   },
   info: {
     line: '#C9A84C',
@@ -35,6 +36,7 @@ const TOAST_CONFIG = {
     icBg: 'rgba(201,168,76,.08)',
     icBd: 'rgba(201,168,76,.22)',
     title: 'Information',
+    shake: false,
     svg: <path d="M8 5V5.1M8 7V12" stroke="#C9A84C" strokeWidth="1.6" strokeLinecap="round"/>
   },
   warning: {
@@ -43,6 +45,7 @@ const TOAST_CONFIG = {
     icBg: 'rgba(201,132,60,.12)',
     icBd: 'rgba(201,132,60,.28)',
     title: 'Attention',
+    shake: false,
     svg: <><path d="M8 2.5L14 13.5H2L8 2.5Z" stroke="#C9843C" strokeWidth="1.3" strokeLinejoin="round"/><path d="M8 7V9.5M8 11V11.1" stroke="#C9843C" strokeWidth="1.3" strokeLinecap="round"/></>
   }
 }
