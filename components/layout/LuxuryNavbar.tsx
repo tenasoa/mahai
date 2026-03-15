@@ -3,83 +3,30 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
-import { Bell, ChevronDown, Diamond } from "lucide-react"
+import { Bell, Diamond } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { logoutUser } from "@/actions/auth"
 
 interface NavItem {
   label: string
   href: string
-  icon: React.ReactNode
 }
 
 export function LuxuryNavbar() {
   const pathname = usePathname()
   const { userId, user, appUser } = useAuth()
   const [scrolled, setScrolled] = useState(false)
-  const [theme, setTheme] = useState('dark')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const notifDropdownRef = useRef<HTMLDivElement>(null)
 
-  // Navigation items with icons
   const navItems: NavItem[] = [
-    {
-      label: 'Tableau de bord',
-      href: '/dashboard',
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="3" y="3" width="7" height="7" rx="1"/>
-          <rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/>
-          <rect x="14" y="14" width="7" height="7" rx="1"/>
-        </svg>
-      )
-    },
-    {
-      label: 'Catalogue',
-      href: '/catalogue',
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-        </svg>
-      )
-    },
-    {
-      label: 'Mes Sujets',
-      href: '/dashboard/achats',
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-      )
-    },
-    {
-      label: 'Examens',
-      href: '/examens',
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-          <polyline points="14,2 14,8 20,8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-      )
-    },
-    {
-      label: 'Communauté',
-      href: '/dashboard/communaute',
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-          <path d="M16 3.13a4 4 0 010 7.75"/>
-        </svg>
-      )
-    }
+    { label: 'Tableau de bord', href: '/dashboard' },
+    { label: 'Catalogue', href: '/catalogue' },
+    { label: 'Mes Sujets', href: '/dashboard/achats' },
+    { label: 'Examens', href: '/examens' },
+    { label: 'Communauté', href: '/dashboard/communaute' }
   ]
 
   useEffect(() => {
@@ -88,11 +35,6 @@ export function LuxuryNavbar() {
     }
     window.addEventListener("scroll", handleScroll)
 
-    const savedTheme = localStorage.getItem('theme') || 'dark'
-    setTheme(savedTheme)
-    document.documentElement.setAttribute('data-theme', savedTheme)
-
-    // Close dropdowns on click outside
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false)
@@ -109,13 +51,6 @@ export function LuxuryNavbar() {
     }
   }, [])
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    document.documentElement.setAttribute('data-theme', newTheme)
-  }
-
   const isActive = (href: string) => {
     if (href === '/dashboard') {
       return pathname === '/dashboard' || pathname.startsWith('/dashboard/')
@@ -124,39 +59,92 @@ export function LuxuryNavbar() {
   }
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 px-8 transition-all duration-400 ${
-      scrolled 
-        ? "bg-[var(--card)]/95 backdrop-blur-xl shadow-lg border-b border-[var(--b1)]" 
-        : "bg-transparent"
-    }`}>
-      <div className="max-w-[1400px] mx-auto h-[76px] flex items-center justify-between">
+    <nav className="nav" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 500,
+      background: scrolled ? 'var(--card)/95' : 'rgba(248,244,238,0.94)',
+      borderBottom: '1px solid var(--b1)',
+      backdropFilter: 'blur(20px)',
+      transition: 'all 0.4s'
+    }}>
+      <div className="nav-inner" style={{
+        maxWidth: '1100px',
+        margin: '0 auto',
+        padding: '0 1.5rem',
+        height: '64px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem'
+      }}>
         
         {/* ═══════ GAUCHE : Logo ═══════ */}
-        <div className="flex items-center gap-4">
-          <Link href="/" className="font-display text-2xl font-semibold tracking-tight text-text no-underline flex items-center relative group">
-            Mah
-            <span className="w-2 h-2 mx-1 rounded-full bg-gradient-to-br from-gold-hi to-gold shadow-[0_0_10px_var(--gold-glow)] animate-[gemPulse_3s_ease-in-out_infinite] group-hover:shadow-[0_0_20px_var(--gold-glow)] transition-shadow"></span>
-            AI
-          </Link>
-        </div>
+        <Link href="/" className="logo" style={{
+          fontFamily: 'var(--display)',
+          fontSize: '1.5rem',
+          fontWeight: 600,
+          letterSpacing: '-.02em',
+          color: 'var(--text)',
+          textDecoration: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '.3rem'
+        }}>
+          Mah
+          <span className="logo-gem" style={{
+            width: '7px',
+            height: '7px',
+            background: 'var(--gold)',
+            borderRadius: '50%',
+            boxShadow: '0 0 10px var(--gold-glow)',
+            animation: 'gp 3s ease-in-out infinite'
+          }}></span>
+          AI
+        </Link>
 
         {/* ═══════ CENTRE : Menu Navigation ═══════ */}
-        <ul className="hidden md:flex items-center gap-2 list-none m-0 p-0">
+        <ul className="nav-menu" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          listStyle: 'none',
+          margin: 0,
+          padding: 0
+        }}>
           {navItems.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg
-                  text-sm font-medium transition-all duration-300
-                  cursor-none
-                  ${isActive(item.href)
-                    ? 'bg-gold-dim text-gold border border-gold-line'
-                    : 'text-text-2 hover:text-text hover:bg-surface'
+                className="nav-link"
+                style={{
+                  fontFamily: 'var(--mono)',
+                  fontSize: '0.62rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: isActive(item.href) ? 'var(--gold)' : 'var(--text-3)',
+                  textDecoration: 'none',
+                  padding: '0.4rem 0.9rem',
+                  borderRadius: 'var(--r)',
+                  border: isActive(item.href) ? '1px solid var(--gold-line)' : '1px solid transparent',
+                  background: isActive(item.href) ? 'var(--gold-dim)' : 'transparent',
+                  transition: 'all 0.2s',
+                  cursor: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive(item.href)) {
+                    e.currentTarget.style.color = 'var(--text-2)'
+                    e.currentTarget.style.borderColor = 'var(--gold-line)'
                   }
-                `}
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive(item.href)) {
+                    e.currentTarget.style.color = 'var(--text-3)'
+                    e.currentTarget.style.borderColor = 'transparent'
+                  }
+                }}
               >
-                {item.icon}
                 {item.label}
               </Link>
             </li>
@@ -164,28 +152,70 @@ export function LuxuryNavbar() {
         </ul>
 
         {/* ═══════ DROITE : Groupe d'icônes ═══════ */}
-        <div className="flex items-center gap-3">
+        <div className="nav-right" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          marginLeft: 'auto'
+        }}>
           
           {/* Bouton Recharger */}
           {userId && (
             <Link
               href="/credits"
-              className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-br from-gold to-gold-hi text-void font-medium text-sm cursor-none transition-all hover:-translate-y-px hover:shadow-[0_4px_24px_rgba(201,168,76,0.35)]"
+              className="btn-recharge"
+              style={{
+                fontFamily: 'var(--body)',
+                fontSize: '0.76rem',
+                fontWeight: 500,
+                padding: '0.4rem 0.9rem',
+                borderRadius: 'var(--r)',
+                background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+                color: 'var(--void)',
+                border: 'none',
+                cursor: 'none',
+                letterSpacing: '0.04em',
+                transition: 'all 0.2s',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap'
+              }}
             >
-              <span>+ Recharger</span>
+              + Recharger
             </Link>
           )}
 
           {/* Crédits Display */}
           {userId && (
-            <div className="flex items-center gap-2 px-3 py-1.5">
-              <span className="text-lg font-display font-semibold text-text">
+            <div className="credits-display" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.25rem 0.5rem'
+            }}>
+              <span style={{
+                fontFamily: 'var(--display)',
+                fontSize: '1.25rem',
+                fontWeight: 500,
+                color: 'var(--text)',
+                letterSpacing: '-.02em'
+              }}>
                 {appUser?.credits ?? 0}
               </span>
-              <span className="text-sm font-mono text-gold font-semibold">
+              <span style={{
+                fontFamily: 'var(--mono)',
+                fontSize: '0.6rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--gold)'
+              }}>
                 CR
               </span>
-              <Diamond className="w-4 h-4 text-blue-500 fill-blue-500" />
+              <Diamond className="w-4 h-4" style={{
+                width: '16px',
+                height: '16px',
+                color: 'var(--gold)',
+                fill: 'var(--gold-dim)'
+              }} />
             </div>
           )}
 
@@ -194,38 +224,111 @@ export function LuxuryNavbar() {
             <div className="relative" ref={notifDropdownRef}>
               <button
                 onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                className="
-                  w-11 h-11 rounded-full flex items-center justify-center
-                  transition-all cursor-none relative
-                  bg-[var(--card)] border border-[var(--b1)]
-                  hover:border-[var(--gold-line)] hover:bg-[var(--surface)]
-                "
+                className="notif-btn"
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '50%',
+                  background: 'var(--card)',
+                  border: '1px solid var(--b1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'none',
+                  transition: 'all 0.2s',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--gold-line)'
+                  e.currentTarget.style.background = 'var(--gold-dim)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--b1)'
+                  e.currentTarget.style.background = 'var(--card)'
+                }}
               >
-                <Bell size={18} className="text-[var(--gold)]" />
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[var(--ruby)] rounded-full border-2 border-[var(--card)]"></span>
+                <Bell size={16} style={{ color: 'var(--gold)' }} />
+                <span style={{
+                  position: 'absolute',
+                  top: '6px',
+                  right: '6px',
+                  width: '7px',
+                  height: '7px',
+                  background: 'var(--ruby)',
+                  borderRadius: '50%',
+                  border: '1px solid var(--depth)'
+                }}></span>
               </button>
 
               {notifDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-card border border-border-3 rounded-lg shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-200 z-[100]">
-                  <div className="px-4 py-2 border-b border-border-3">
-                    <p className="text-sm font-medium text-text">Notifications</p>
+                <div className="notif-dropdown" style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 'calc(100% + 0.5rem)',
+                  width: '280px',
+                  background: 'var(--card)',
+                  border: '1px solid var(--b1)',
+                  borderRadius: 'var(--r-lg)',
+                  boxShadow: '0 8px 28px rgba(26,23,20,0.11)',
+                  padding: '0.5rem 0',
+                  zIndex: 100,
+                  animation: 'fadeIn 0.2s ease'
+                }}>
+                  <div style={{
+                    padding: '0.5rem 1rem',
+                    borderBottom: '1px solid var(--b1)',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <p style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      color: 'var(--text)'
+                    }}>Notifications</p>
                   </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    <div className="px-4 py-3 hover:bg-surface transition-colors cursor-none">
-                      <p className="text-sm text-text">3 nouvelles corrections IA disponibles</p>
-                      <p className="text-xs text-text-4 mt-1">Il y a 2 heures</p>
+                  <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+                    <div style={{
+                      padding: '0.75rem 1rem',
+                      borderBottom: '1px solid var(--b3)',
+                      cursor: 'none'
+                    }}>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: '0.2rem' }}>
+                        3 nouvelles corrections IA disponibles
+                      </p>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-4)' }}>Il y a 2 heures</p>
                     </div>
-                    <div className="px-4 py-3 hover:bg-surface transition-colors cursor-none">
-                      <p className="text-sm text-text">Nouveau sujet ajouté : Mathématiques BAC 2024</p>
-                      <p className="text-xs text-text-4 mt-1">Il y a 5 heures</p>
+                    <div style={{
+                      padding: '0.75rem 1rem',
+                      borderBottom: '1px solid var(--b3)',
+                      cursor: 'none'
+                    }}>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: '0.2rem' }}>
+                        Nouveau sujet ajouté : Mathématiques BAC 2024
+                      </p>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-4)' }}>Il y a 5 heures</p>
                     </div>
-                    <div className="px-4 py-3 hover:bg-surface transition-colors cursor-none">
-                      <p className="text-sm text-text">Recharge de 150 crédits effectuée</p>
-                      <p className="text-xs text-text-4 mt-1">Il y a 1 jour</p>
+                    <div style={{
+                      padding: '0.75rem 1rem',
+                      cursor: 'none'
+                    }}>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: '0.2rem' }}>
+                        Recharge de 150 crédits effectuée
+                      </p>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-4)' }}>Il y a 1 jour</p>
                     </div>
                   </div>
-                  <div className="px-4 py-2 border-t border-border-3">
-                    <Link href="/dashboard/notifications" className="text-xs text-gold hover:text-gold-hi transition-colors">
+                  <div style={{
+                    padding: '0.5rem 1rem',
+                    borderTop: '1px solid var(--b1)',
+                    marginTop: '0.5rem'
+                  }}>
+                    <Link href="/dashboard/notifications" style={{
+                      fontSize: '0.65rem',
+                      color: 'var(--gold)',
+                      textDecoration: 'none',
+                      fontFamily: 'var(--mono)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em'
+                    }}>
                       Voir tout →
                     </Link>
                   </div>
@@ -239,42 +342,138 @@ export function LuxuryNavbar() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="
-                  w-11 h-11 rounded-full flex items-center justify-center
-                  font-display text-lg font-semibold
-                  transition-all cursor-none
-                  bg-[var(--gold-dim)] border border-[var(--gold-line)] text-[var(--gold)]
-                  hover:border-[var(--gold)]
-                "
+                className="avatar-btn"
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--gold-lo), var(--gold-dim))',
+                  border: '1px solid var(--gold-line)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'var(--display)',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  color: 'var(--gold)',
+                  cursor: 'none',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 2px 8px rgba(168,134,58,0.2)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)'
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(168,134,58,0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)'
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(168,134,58,0.2)'
+                }}
               >
                 {(appUser?.prenom?.charAt(0) || user?.email?.charAt(0) || 'S').toUpperCase()}
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-card border border-border-3 rounded-lg shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-200 z-[100]">
-                  <div className="px-4 py-2 border-b border-border-3 mb-1">
-                    <p className="text-xs font-mono text-text-3 uppercase tracking-wider mb-1">Mon Compte</p>
-                    <p className="text-sm font-medium text-text truncate">{appUser?.prenom || user?.email?.split('@')[0]}</p>
-                    <p className="text-xs text-text-4 truncate">{user?.email}</p>
+                <div className="avatar-dropdown" style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 'calc(100% + 0.5rem)',
+                  width: '180px',
+                  background: 'var(--card)',
+                  border: '1px solid var(--b1)',
+                  borderRadius: 'var(--r-lg)',
+                  boxShadow: '0 8px 28px rgba(26,23,20,0.11)',
+                  padding: '0.5rem 0',
+                  zIndex: 100,
+                  animation: 'fadeIn 0.2s ease'
+                }}>
+                  <div style={{
+                    padding: '0.5rem 1rem',
+                    borderBottom: '1px solid var(--b1)',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <p style={{
+                      fontSize: '0.6rem',
+                      fontFamily: 'var(--mono)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      color: 'var(--text-3)',
+                      marginBottom: '0.2rem'
+                    }}>Mon Compte</p>
+                    <p style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      color: 'var(--text)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>{appUser?.prenom || user?.email?.split('@')[0]}</p>
+                    <p style={{
+                      fontSize: '0.65rem',
+                      color: 'var(--text-4)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>{user?.email}</p>
                   </div>
 
                   <Link 
                     href="/dashboard/profil" 
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-2 hover:text-text hover:bg-surface transition-colors cursor-none"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.8rem',
+                      color: 'var(--text-2)',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s',
+                      cursor: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--text)'
+                      e.currentTarget.style.background = 'var(--surface)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--text-2)'
+                      e.currentTarget.style.background = 'transparent'
+                    }}
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                     Profil
                   </Link>
 
-                  <div className="border-t border-border-3 my-1"></div>
+                  <div style={{
+                    height: '1px',
+                    background: 'var(--b1)',
+                    margin: '0.5rem 0'
+                  }}></div>
 
                   <button
                     onClick={() => logoutUser()}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ruby hover:bg-ruby/5 transition-colors cursor-none text-left"
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.8rem',
+                      color: 'var(--ruby)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'none',
+                      transition: 'all 0.2s',
+                      textAlign: 'left'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--ruby-dim)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent'
+                    }}
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
                       <polyline points="16,17 21,12 16,7"/>
                       <line x1="21" y1="12" x2="9" y2="12"/>
@@ -288,13 +487,41 @@ export function LuxuryNavbar() {
             <>
               <Link
                 href="/auth/login"
-                className="hidden sm:inline-flex items-center font-body text-xs font-medium px-5 py-2 rounded-lg border border-gold/10 bg-transparent text-text-2 tracking-wide transition-all hover:border-gold-line hover:text-text hover:bg-gold-dim/30 cursor-none"
+                style={{
+                  fontFamily: 'var(--body)',
+                  fontSize: '0.76rem',
+                  fontWeight: 500,
+                  padding: '0.4rem 0.9rem',
+                  borderRadius: 'var(--r)',
+                  border: '1px solid var(--b1)',
+                  background: 'transparent',
+                  color: 'var(--text-2)',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
+                  cursor: 'none',
+                  whiteSpace: 'nowrap'
+                }}
               >
                 Connexion
               </Link>
               <Link
                 href="/auth/register"
-                className="inline-flex items-center font-body text-xs font-medium px-6 py-2 rounded-lg bg-gradient-to-br from-gold to-gold-hi text-void border-none tracking-wide shadow-[0_2px_16px_rgba(201,168,76,0.25)] transition-all hover:-translate-y-px hover:shadow-[0_4px_24px_rgba(201,168,76,0.35)] cursor-none"
+                style={{
+                  fontFamily: 'var(--body)',
+                  fontSize: '0.76rem',
+                  fontWeight: 500,
+                  padding: '0.4rem 0.9rem',
+                  borderRadius: 'var(--r)',
+                  background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+                  color: 'var(--void)',
+                  border: 'none',
+                  textDecoration: 'none',
+                  letterSpacing: '0.04em',
+                  transition: 'all 0.2s',
+                  cursor: 'none',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 12px rgba(168,134,58,0.22)'
+                }}
               >
                 S'inscrire
               </Link>
@@ -302,6 +529,17 @@ export function LuxuryNavbar() {
           )}
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes gp {
+          0%, 100% { box-shadow: 0 0 6px var(--gold-glow); }
+          50% { box-shadow: 0 0 18px rgba(201,168,76,0.4); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </nav>
   )
 }
