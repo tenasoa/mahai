@@ -77,7 +77,7 @@ export function LuxuryNavbar() {
       left: 0,
       right: 0,
       zIndex: 500,
-      background: scrolled ? 'var(--card)/95' : 'rgba(248,244,238,0.94)',
+      background: scrolled ? 'var(--card)/95' : 'var(--depth)/95',
       borderBottom: '1px solid var(--b1)',
       backdropFilter: 'blur(20px)',
       transition: 'all 0.4s'
@@ -316,7 +316,7 @@ export function LuxuryNavbar() {
                   background: 'var(--card)',
                   border: '1px solid var(--b1)',
                   borderRadius: 'var(--r-lg)',
-                  boxShadow: '0 8px 28px rgba(26,23,20,0.11)',
+                  boxShadow: 'var(--glow-md)',
                   padding: '0.5rem 0',
                   zIndex: 100,
                   animation: 'fadeIn 0.2s ease'
@@ -428,7 +428,7 @@ export function LuxuryNavbar() {
                   background: 'var(--card)',
                   border: '1px solid var(--b1)',
                   borderRadius: 'var(--r-lg)',
-                  boxShadow: '0 8px 28px rgba(26,23,20,0.11)',
+                  boxShadow: 'var(--glow-md)',
                   padding: '0.5rem 0',
                   zIndex: 100,
                   animation: 'fadeIn 0.2s ease'

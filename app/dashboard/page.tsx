@@ -64,6 +64,9 @@ export default function DashboardPage() {
   const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState('')
+  const [currentTime, setCurrentTime] = useState('')
+  const [greeting, setGreeting] = useState('')
+  const [showDarkModeSuggestion, setShowDarkModeSuggestion] = useState(false)
 
   // Mock data - À remplacer par des données réelles de Supabase
   const [progressItems] = useState<ProgressItem[]>([
@@ -184,6 +187,29 @@ export default function DashboardPage() {
       day: 'numeric' 
     }
     setCurrentDate(now.toLocaleDateString('fr-FR', options))
+    
+    // Format time
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: '2-digit',
+      minute: '2-digit'
+    }
+    setCurrentTime(now.toLocaleTimeString('fr-FR', timeOptions))
+
+    // Determine greeting based on hour
+    const hour = now.getHours()
+    if (hour >= 5 && hour < 12) {
+      setGreeting('Bonjour')
+    } else if (hour >= 12 && hour < 18) {
+      setGreeting('Bon après-midi')
+    } else {
+      setGreeting('Bonsoir')
+    }
+
+    // Show dark mode suggestion if it's evening/night and theme is light
+    const savedTheme = localStorage.getItem('theme') || 'dark'
+    if (hour >= 18 || hour < 5) {
+      setShowDarkModeSuggestion(savedTheme === 'light')
+    }
 
     if (appUser) {
       setUser(appUser)
@@ -194,6 +220,14 @@ export default function DashboardPage() {
       setLoading(false)
     }
   }, [appUser])
+
+  const switchToDarkMode = () => {
+    localStorage.setItem('theme', 'dark')
+    document.documentElement.setAttribute('data-theme', 'dark')
+    setShowDarkModeSuggestion(false)
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: 'dark' } }))
+  }
 
   const showToast = (type: 'success' | 'info' | 'error', title: string, msg: string) => {
     const container = document.getElementById('toast-container')
@@ -241,11 +275,91 @@ export default function DashboardPage() {
                 <span className="hero-icon">🔥</span>
                 <div>
                   <h1 className="hero-title">
-                    Bonjour, <em>{user?.prenom || 'Utilisateur'}</em> ✦
+                    {greeting}, <em>{user?.prenom || 'Utilisateur'}</em> ✦
                   </h1>
                   <p className="hero-subtitle">"Prêt à réussir tes examens aujourd'hui ?"</p>
+                  <p className="hero-time" style={{
+                    fontFamily: 'var(--mono)',
+                    fontSize: '0.65rem',
+                    color: 'var(--text-3)',
+                    marginTop: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <span>🕐</span>
+                    <span>{currentTime}</span>
+                  </p>
                 </div>
               </div>
+              
+              {/* Dark Mode Suggestion */}
+              {showDarkModeSuggestion && (
+                <div className="dark-mode-suggestion" style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  background: 'linear-gradient(135deg, var(--surface), var(--lift))',
+                  border: '1px solid var(--gold-line)',
+                  borderRadius: 'var(--r-lg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem'
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>🌙</span>
+                    <div>
+                      <p style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 500,
+                        color: 'var(--text)',
+                        marginBottom: '0.25rem'
+                      }}>Mode sombre recommandé</p>
+                      <p style={{
+                        fontSize: '0.72rem',
+                        color: 'var(--text-3)',
+                        fontFamily: 'var(--mono)'
+                      }}>Pour protéger vos yeux ce soir</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      switchToDarkMode()
+                    }}
+                    style={{
+                      fontFamily: 'var(--body)',
+                      fontSize: '0.76rem',
+                      fontWeight: 500,
+                      padding: '0.5rem 1rem',
+                      borderRadius: 'var(--r)',
+                      background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+                      color: 'var(--void)',
+                      border: 'none',
+                      cursor: 'none',
+                      letterSpacing: '0.04em',
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap',
+                      boxShadow: '0 2px 12px rgba(168,134,58,0.22)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)'
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(168,134,58,0.35)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 2px 12px rgba(168,134,58,0.22)'
+                    }}
+                  >
+                    Activer le mode sombre
+                  </button>
+                </div>
+              )}
+              
               <div className="hero-meta">
                 <span className="hero-meta-item">📅 {currentDate}</span>
                 <span className="hero-meta-item">🎯 {stats.serie}</span>
