@@ -126,7 +126,7 @@ export function LuxuryNavbar() {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 px-8 transition-all duration-400 ${
       scrolled 
-        ? "bg-card/95 backdrop-blur-xl shadow-md border-b border-b1" 
+        ? "bg-[var(--card)]/95 backdrop-blur-xl shadow-lg border-b border-[var(--b1)]" 
         : "bg-transparent"
     }`}>
       <div className="max-w-[1400px] mx-auto h-[76px] flex items-center justify-between">
@@ -194,17 +194,15 @@ export function LuxuryNavbar() {
             <div className="relative" ref={notifDropdownRef}>
               <button
                 onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                className={`
+                className="
                   w-11 h-11 rounded-full flex items-center justify-center
                   transition-all cursor-none relative
-                  ${scrolled || theme === 'light'
-                    ? 'bg-card border border-b1 hover:border-gold-line'
-                    : 'bg-card/50 border border-gold/10 hover:border-gold-line'
-                  }
-                `}
+                  bg-[var(--card)] border border-[var(--b1)]
+                  hover:border-[var(--gold-line)] hover:bg-[var(--surface)]
+                "
               >
-                <Bell size={18} className="text-gold" />
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-ruby rounded-full border-2 border-card"></span>
+                <Bell size={18} className="text-[var(--gold)]" />
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[var(--ruby)] rounded-full border-2 border-[var(--card)]"></span>
               </button>
 
               {notifDropdownOpen && (
@@ -241,15 +239,13 @@ export function LuxuryNavbar() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={`
+                className="
                   w-11 h-11 rounded-full flex items-center justify-center
                   font-display text-lg font-semibold
                   transition-all cursor-none
-                  ${scrolled || theme === 'light'
-                    ? 'bg-surface border border-b1 text-gold'
-                    : 'bg-gold-dim border border-gold-line text-gold'
-                  }
-                `}
+                  bg-[var(--gold-dim)] border border-[var(--gold-line)] text-[var(--gold)]
+                  hover:border-[var(--gold)]
+                "
               >
                 {(appUser?.prenom?.charAt(0) || user?.email?.charAt(0) || 'S').toUpperCase()}
               </button>
