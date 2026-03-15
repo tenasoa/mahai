@@ -859,9 +859,9 @@ body::before {
 }
 
 .pc-fav.on {
-  background: rgba(224, 85, 117, 0.15);
-  border-color: #E05575;
-  color: #E05575;
+  background: rgba(224, 85, 117, 0.15) !important;
+  border-color: #E05575 !important;
+  color: #E05575 !important;
 }
 
 [data-theme='light'] .pc-fav {
