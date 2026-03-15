@@ -22,12 +22,17 @@ export function LuxuryNavbar() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const notifDropdownRef = useRef<HTMLDivElement>(null)
 
-  const navItems: NavItem[] = [
+  const navItems: NavItem[] = userId ? [
     { label: 'Tableau de bord', href: '/dashboard' },
     { label: 'Catalogue', href: '/catalogue' },
     { label: 'Mes Sujets', href: '/dashboard/achats' },
     { label: 'Examens', href: '/examens' },
     { label: 'Communauté', href: '/dashboard/communaute' }
+  ] : [
+    { label: 'Accueil', href: '/' },
+    { label: 'Catalogue', href: '/catalogue' },
+    { label: 'Fonctionnalités', href: '/#features' },
+    { label: 'Tarifs', href: '/#pricing' }
   ]
 
   useEffect(() => {
@@ -169,11 +174,75 @@ export function LuxuryNavbar() {
         <div className="nav-right" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
+          gap: userId ? '1rem' : '1.5rem',
           marginLeft: 'auto'
         }}>
           
-          {/* Crédits Display */}
+          {/* Menu simplifié si non connecté */}
+          {!userId && (
+            <>
+              <Link
+                href="/auth/login"
+                style={{
+                  fontFamily: 'var(--body)',
+                  fontSize: '0.82rem',
+                  fontWeight: 500,
+                  padding: '0.5rem 1rem',
+                  borderRadius: 'var(--r)',
+                  border: '1px solid var(--b1)',
+                  background: 'transparent',
+                  color: 'var(--text-2)',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
+                  cursor: 'none',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--gold-line)'
+                  e.currentTarget.style.color = 'var(--text)'
+                  e.currentTarget.style.background = 'var(--surface)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--b1)'
+                  e.currentTarget.style.color = 'var(--text-2)'
+                  e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                Connexion
+              </Link>
+              <Link
+                href="/auth/register"
+                style={{
+                  fontFamily: 'var(--body)',
+                  fontSize: '0.82rem',
+                  fontWeight: 500,
+                  padding: '0.5rem 1.25rem',
+                  borderRadius: 'var(--r)',
+                  background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+                  color: 'var(--void)',
+                  border: 'none',
+                  textDecoration: 'none',
+                  letterSpacing: '0.04em',
+                  transition: 'all 0.2s',
+                  cursor: 'none',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 12px rgba(168,134,58,0.22)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(168,134,58,0.35)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 2px 12px rgba(168,134,58,0.22)'
+                }}
+              >
+                S'inscrire
+              </Link>
+            </>
+          )}
+
+          {/* Crédits Display (seulement si connecté) */}
           {userId && (
             <div className="credits-display" style={{
               display: 'flex',
@@ -530,50 +599,7 @@ export function LuxuryNavbar() {
                 </div>
               )}
             </div>
-          ) : (
-            <>
-              <Link
-                href="/auth/login"
-                style={{
-                  fontFamily: 'var(--body)',
-                  fontSize: '0.76rem',
-                  fontWeight: 500,
-                  padding: '0.4rem 0.9rem',
-                  borderRadius: 'var(--r)',
-                  border: '1px solid var(--b1)',
-                  background: 'transparent',
-                  color: 'var(--text-2)',
-                  textDecoration: 'none',
-                  transition: 'all 0.2s',
-                  cursor: 'none',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Connexion
-              </Link>
-              <Link
-                href="/auth/register"
-                style={{
-                  fontFamily: 'var(--body)',
-                  fontSize: '0.76rem',
-                  fontWeight: 500,
-                  padding: '0.4rem 0.9rem',
-                  borderRadius: 'var(--r)',
-                  background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
-                  color: 'var(--void)',
-                  border: 'none',
-                  textDecoration: 'none',
-                  letterSpacing: '0.04em',
-                  transition: 'all 0.2s',
-                  cursor: 'none',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 2px 12px rgba(168,134,58,0.22)'
-                }}
-              >
-                S'inscrire
-              </Link>
-            </>
-          )}
+          ) : null}
         </div>
       </div>
 
