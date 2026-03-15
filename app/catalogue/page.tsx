@@ -802,7 +802,6 @@ export default function CataloguePage() {
                 className="btn-modal-buy" 
                 onClick={confirmBuy}
                 disabled={userCredits < currentSubject.credits}
-                style={{ opacity: userCredits < currentSubject.credits ? 0.5 : 1, cursor: userCredits < currentSubject.credits ? 'not-allowed' : 'none' }}
               >
                 {userCredits < currentSubject.credits ? 'Crédits insuffisants' : 'Confirmer l\'achat'}
               </button>
