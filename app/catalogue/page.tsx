@@ -612,7 +612,7 @@ export default function CataloguePage() {
                     {BADGE_LABELS[subject.badge as Badge] || subject.badge}
                   </div>
                   <button
-                    className="pc-fav"
+                    className={`pc-fav ${isWished(subject.id) ? 'on' : ''}`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
