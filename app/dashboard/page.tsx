@@ -292,179 +292,6 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* ═══════ NAVIGATION RAPIDE ═══════ */}
-          <section className="dashboard-section">
-            <h2 className="section-title">Navigation Rapide</h2>
-            <div className="cards-grid cards-grid-5">
-              <DashboardCard
-                icon="📖"
-                label="Catalogue"
-                value="Tous"
-                subtitle="Sujets disponibles"
-                route="/catalogue"
-                color="gold"
-              />
-              <DashboardCard
-                icon="📝"
-                label="Examens"
-                value={stats.examsAvailable}
-                subtitle="Blancs dispo"
-                route="/examens"
-                color="blue"
-              />
-              <DashboardCard
-                icon="🔖"
-                label="Favoris"
-                value={stats.favorites}
-                subtitle="Enregistrés"
-                route="/dashboard/favoris"
-                color="green"
-              />
-              <DashboardCard
-                icon="📥"
-                label="Downloads"
-                value={stats.downloads}
-                subtitle="PDF téléchargés"
-                route="/dashboard/downloads"
-                color="navy"
-              />
-              <DashboardCard
-                icon="📊"
-                label="Progression"
-                value="72%"
-                subtitle="Moyenne"
-                route="/dashboard/progression"
-                color="sage"
-              />
-            </div>
-          </section>
-
-          {/* ═══════ OUTILS & SERVICES ═══════ */}
-          <section className="dashboard-section">
-            <h2 className="section-title">Outils & Services</h2>
-            <div className="cards-grid cards-grid-4">
-              <DashboardCard
-                icon="🔍"
-                label="Recherche"
-                value=""
-                subtitle="Trouver un sujet"
-                route="/catalogue?search"
-                color="gold"
-              />
-              <DashboardCard
-                icon="🎯"
-                label="Objectifs"
-                value={stats.objectives}
-                subtitle="En cours"
-                route="/dashboard/objectifs"
-                color="blue"
-              />
-              <DashboardCard
-                icon="🏆"
-                label="Classement"
-                value={stats.rank}
-                subtitle="Position"
-                route="/dashboard/classement"
-                color="green"
-              />
-              <DashboardCard
-                icon="💬"
-                label="Support"
-                value=""
-                subtitle="Aide & FAQ"
-                route="/support"
-                color="ruby"
-              />
-              <DashboardCard
-                icon="⏱️"
-                label="Mode Focus"
-                value="25:00"
-                subtitle="Pomodoro"
-                route="/dashboard/focus"
-                color="navy"
-              />
-              <DashboardCard
-                icon="📅"
-                label="Calendrier"
-                value=""
-                subtitle="Planning"
-                route="/dashboard/calendrier"
-                color="sage"
-              />
-              <DashboardCard
-                icon="🤖"
-                label="IA Chat"
-                value=""
-                subtitle="Assistant"
-                route="/dashboard/ia-chat"
-                color="gold"
-              />
-              <DashboardCard
-                icon="👥"
-                label="Communauté"
-                value=""
-                subtitle="Groupes"
-                route="/dashboard/communaute"
-                color="blue"
-              />
-            </div>
-          </section>
-
-          {/* ═══════ STATISTIQUES ═══════ */}
-          <section className="dashboard-section">
-            <h2 className="section-title">Statistiques</h2>
-            <div className="cards-grid cards-grid-3">
-              <DashboardCard
-                icon="⏱️"
-                label="Temps d'étude"
-                value={stats.studyTime}
-                subtitle="Cette semaine"
-                route="/dashboard/stats"
-                color="gold"
-              />
-              <DashboardCard
-                icon="📈"
-                label="Score Moyen"
-                value={stats.avgScore}
-                subtitle="Toutes matières"
-                route="/dashboard/performance"
-                color="blue"
-              />
-              <DashboardCard
-                icon="🎖️"
-                label="Badges"
-                value={stats.badges}
-                subtitle="Obtenus"
-                route="/dashboard/badges"
-                color="green"
-              />
-              <DashboardCard
-                icon="📅"
-                label="Jours restants"
-                value={stats.daysLeft}
-                subtitle="Avant BAC"
-                route="/dashboard/calendrier"
-                color="ruby"
-              />
-              <DashboardCard
-                icon="🔥"
-                label="Série"
-                value={`${stats.streak}j`}
-                subtitle="Consécutifs"
-                route="/dashboard/streak"
-                color="navy"
-              />
-              <DashboardCard
-                icon="📚"
-                label="Pages lues"
-                value={stats.pagesRead}
-                subtitle="Total"
-                route="/dashboard/stats"
-                color="sage"
-              />
-            </div>
-          </section>
-
           {/* ═══════ EN COURS DE RÉVISION ═══════ */}
           <section className="dashboard-section">
             <div className="section-header">
@@ -591,6 +418,184 @@ export default function DashboardPage() {
 
         </div>
       </main>
+
+      {/* ═══════ TOUTES LES CARTES DE NAVIGATION ═══════ */}
+      <div className="dashboard-container">
+        
+        {/* ═══════ NAVIGATION RAPIDE ═══════ */}
+        <section className="dashboard-section">
+          <h2 className="section-title">Navigation Rapide</h2>
+          <div className="cards-grid cards-grid-5">
+            <DashboardCard
+              icon="📖"
+              label="Catalogue"
+              value="Tous"
+              subtitle="Sujets disponibles"
+              route="/catalogue"
+              color="gold"
+            />
+            <DashboardCard
+              icon="📝"
+              label="Examens"
+              value={stats.examsAvailable}
+              subtitle="Blancs dispo"
+              route="/examens"
+              color="blue"
+            />
+            <DashboardCard
+              icon="🔖"
+              label="Favoris"
+              value={stats.favorites}
+              subtitle="Enregistrés"
+              route="/dashboard/favoris"
+              color="green"
+            />
+            <DashboardCard
+              icon="📥"
+              label="Downloads"
+              value={stats.downloads}
+              subtitle="PDF téléchargés"
+              route="/dashboard/downloads"
+              color="navy"
+            />
+            <DashboardCard
+              icon="📊"
+              label="Progression"
+              value="72%"
+              subtitle="Moyenne"
+              route="/dashboard/progression"
+              color="sage"
+            />
+          </div>
+        </section>
+
+        {/* ═══════ OUTILS & SERVICES ═══════ */}
+        <section className="dashboard-section">
+          <h2 className="section-title">Outils & Services</h2>
+          <div className="cards-grid cards-grid-4">
+            <DashboardCard
+              icon="🔍"
+              label="Recherche"
+              value=""
+              subtitle="Trouver un sujet"
+              route="/catalogue?search"
+              color="gold"
+            />
+            <DashboardCard
+              icon="🎯"
+              label="Objectifs"
+              value={stats.objectives}
+              subtitle="En cours"
+              route="/dashboard/objectifs"
+              color="blue"
+            />
+            <DashboardCard
+              icon="🏆"
+              label="Classement"
+              value={stats.rank}
+              subtitle="Position"
+              route="/dashboard/classement"
+              color="green"
+            />
+            <DashboardCard
+              icon="💬"
+              label="Support"
+              value=""
+              subtitle="Aide & FAQ"
+              route="/support"
+              color="ruby"
+            />
+            <DashboardCard
+              icon="⏱️"
+              label="Mode Focus"
+              value="25:00"
+              subtitle="Pomodoro"
+              route="/dashboard/focus"
+              color="navy"
+            />
+            <DashboardCard
+              icon="📅"
+              label="Calendrier"
+              value=""
+              subtitle="Planning"
+              route="/dashboard/calendrier"
+              color="sage"
+            />
+            <DashboardCard
+              icon="🤖"
+              label="IA Chat"
+              value=""
+              subtitle="Assistant"
+              route="/dashboard/ia-chat"
+              color="gold"
+            />
+            <DashboardCard
+              icon="👥"
+              label="Communauté"
+              value=""
+              subtitle="Groupes"
+              route="/dashboard/communaute"
+              color="blue"
+            />
+          </div>
+        </section>
+
+        {/* ═══════ STATISTIQUES ═══════ */}
+        <section className="dashboard-section">
+          <h2 className="section-title">Statistiques</h2>
+          <div className="cards-grid cards-grid-3">
+            <DashboardCard
+              icon="⏱️"
+              label="Temps d'étude"
+              value={stats.studyTime}
+              subtitle="Cette semaine"
+              route="/dashboard/stats"
+              color="gold"
+            />
+            <DashboardCard
+              icon="📈"
+              label="Score Moyen"
+              value={stats.avgScore}
+              subtitle="Toutes matières"
+              route="/dashboard/performance"
+              color="blue"
+            />
+            <DashboardCard
+              icon="🎖️"
+              label="Badges"
+              value={stats.badges}
+              subtitle="Obtenus"
+              route="/dashboard/badges"
+              color="green"
+            />
+            <DashboardCard
+              icon="📅"
+              label="Jours restants"
+              value={stats.daysLeft}
+              subtitle="Avant BAC"
+              route="/dashboard/calendrier"
+              color="ruby"
+            />
+            <DashboardCard
+              icon="🔥"
+              label="Série"
+              value={`${stats.streak}j`}
+              subtitle="Consécutifs"
+              route="/dashboard/streak"
+              color="navy"
+            />
+            <DashboardCard
+              icon="📚"
+              label="Pages lues"
+              value={stats.pagesRead}
+              subtitle="Total"
+              route="/dashboard/stats"
+              color="sage"
+            />
+          </div>
+        </section>
+
+      </div>
 
       <LuxuryFooter />
 
