@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { getSubjectById } from '@/actions/subjects'
 import { getUserCredits, purchaseSubject } from '@/actions/user'
@@ -267,7 +266,6 @@ export default function SujetDetailPage() {
         ))}
       </div>
 
-      <LuxuryNavbar />
 
       {/* HERO */}
       <div className="hero">

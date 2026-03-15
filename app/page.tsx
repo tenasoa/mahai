@@ -3,7 +3,6 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { useMultiReveal } from '@/lib/hooks'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import './landing.css'
 
@@ -13,7 +12,6 @@ export default function LandingPage() {
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      <LuxuryNavbar />
 
       {/* ═══════ HERO ═══════ */}
       <section className="hero">

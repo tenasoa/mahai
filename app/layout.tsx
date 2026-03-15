@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Outfit, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { ScrollToTop } from '@/components/layout/ScrollToTop'
+import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -68,6 +69,7 @@ export default function RootLayout({
       <body className={`${cormorant.variable} ${outfit.variable} ${dmMono.variable} min-h-screen bg-void text-text antialiased font-body font-[family-name:var(--body)]`}>
         <LuxuryCursor />
         <ScrollToTop />
+        <LuxuryNavbar />
         {children}
       </body>
     </html>

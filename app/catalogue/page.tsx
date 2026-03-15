@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { useCatalogue } from '@/lib/hooks/useCatalogue'
 import { useAuth } from '@/lib/hooks/useAuth'
 import type { CatalogueQueryParams, ExamenType, Difficulte, Langue, Format, Badge } from '@/types/catalogue'
@@ -219,8 +218,7 @@ export default function CataloguePage() {
   return (
     <>
       <LuxuryCursor />
-      <LuxuryNavbar />
-      
+
       {/* Toast Container */}
       <ToastContainer />
 
