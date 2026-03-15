@@ -21,6 +21,31 @@ body::before {
 }
 
 /* ═══════════════════════════════════════════════
+   GRID PATTERN - Motif en carreaux luxury
+   Appliqué en overlay sur toutes les pages
+═══════════════════════════════════════════════ */
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9996;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(var(--b3) 1px, transparent 1px),
+    linear-gradient(90deg, var(--b3) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.4;
+  mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 0%, transparent 60%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 0%, transparent 60%);
+}
+
+/* Light mode - grid plus subtil */
+[data-theme='light'] body::after {
+  opacity: 0.3;
+}
+
+/* ═══════════════════════════════════════════════
    AMBIENT ORBS - Effets de lueur luxueux
    Pour Hero sections et pages principales
 ═══════════════════════════════════════════════ */
