@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { getSubjectById, purchaseSubject } from '@/actions/subjects'
-import { getUserCredits } from '@/actions/user'
+import { getSubjectById } from '@/actions/subjects'
+import { getUserCredits, purchaseSubject } from '@/actions/user'
 import './detail.css'
 
 // Types

@@ -2,7 +2,19 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import { query } from '@/lib/db'
+import { 
+  getUserByEmail, 
+  createUser, 
+  updateUserCredits,
+  createEmailVerification,
+  findValidEmailVerification,
+  markEmailAsVerified,
+  markEmailVerificationAsUsed,
+  createPasswordReset,
+  findValidPasswordReset,
+  markPasswordResetAsUsed
+} from '@/lib/sql-queries'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, verifyEmailSchema, type RegisterFormData, type LoginFormData, type ForgotPasswordFormData, type ResetPasswordFormData, type VerifyEmailFormData } from '@/lib/validations/auth'
@@ -53,13 +65,7 @@ export async function registerUser(formData: RegisterFormData) {
     const token = generate6DigitCode()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
-    await prisma.emailVerification.create({
-      data: {
-        email,
-        token,
-        expiresAt,
-      },
-    })
+    await createEmailVerification(email, token, expiresAt)
 
     // Send verification email
     try {
@@ -112,15 +118,13 @@ export async function registerUser(formData: RegisterFormData) {
       // Continue even if email fails
     }
 
-    await prisma.user.create({
-      data: {
-        id: authData.user.id,
-        email,
-        prenom,
-        nom: nom || null,
-        role: 'ETUDIANT',
-        credits: 10,
-      },
+    await createUser({
+      id: authData.user.id,
+      email,
+      prenom,
+      nom: nom || undefined,
+      role: 'ETUDIANT',
+      credits: 10,
     })
   }
 
@@ -151,10 +155,10 @@ export async function updateUserRole(formData: RoleFormData) {
   }
 
   try {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: updateData,
-    })
+    await query(
+      'UPDATE "User" SET role = $1, "schoolLevel" = $2, "updatedAt" = NOW() WHERE id = $3',
+      [updateData.role, updateData.schoolLevel || null, session.user.id]
+    )
   } catch (error) {
     console.error('Error updating role:', error)
     return { error: 'Erreur lors de la mise à jour du rôle' }
@@ -216,9 +220,7 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
   const { email } = validation.data
 
   // Check if user exists
-  const user = await prisma.user.findUnique({
-    where: { email },
-  })
+  const user = await getUserByEmail(email)
 
   if (!user) {
     // Don't reveal that user doesn't exist
@@ -231,13 +233,7 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
   
   console.log('🔐 Password Reset Token Generated:', { token, email, expiresAt })
 
-  await prisma.passwordReset.create({
-    data: {
-      email,
-      token,
-      expiresAt,
-    },
-  })
+  await createPasswordReset(email, token, expiresAt)
 
   // Send password reset email
   try {
@@ -303,15 +299,7 @@ export async function resetPassword(formData: ResetPasswordFormData) {
   console.log('🔍 Reset Password Attempt:', { token, password })
 
   // Find valid reset token
-  const resetToken = await prisma.passwordReset.findFirst({
-    where: {
-      token,
-      used: false,
-      expiresAt: {
-        gt: new Date(),
-      },
-    },
-  })
+  const resetToken = await findValidPasswordReset(token)
 
   console.log('🔍 Found Token:', resetToken)
 
@@ -321,9 +309,7 @@ export async function resetPassword(formData: ResetPasswordFormData) {
   }
 
   // Find user by email
-  const user = await prisma.user.findUnique({
-    where: { email: resetToken.email },
-  })
+  const user = await getUserByEmail(resetToken.email)
 
   if (!user) {
     return { error: 'Utilisateur non trouvé' }
@@ -359,22 +345,14 @@ export async function resetPassword(formData: ResetPasswordFormData) {
 
   console.log('✅ Supabase password updated successfully')
 
-  // Update password in Prisma using the Supabase ID
-  // Password is now removed from Prisma for security
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      // Just updating the updatedAt timestamp if needed, 
-      // or we can remove the update entirely if only email/password changed
-      updatedAt: new Date(),
-    },
-  })
+  // Update user timestamp in database
+  await query(
+    'UPDATE "User" SET "updatedAt" = NOW() WHERE id = $1',
+    [user.id]
+  )
 
   // Mark token as used
-  await prisma.passwordReset.update({
-    where: { id: resetToken.id },
-    data: { used: true },
-  })
+  await markPasswordResetAsUsed(token)
 
   return { success: 'Mot de passe réinitialisé avec succès' }
 }
@@ -392,58 +370,35 @@ export async function verifyEmail(formData: VerifyEmailFormData) {
   const { token } = validation.data
 
   // Find valid verification token
-  const verificationToken = await prisma.emailVerification.findFirst({
-    where: {
-      token,
-      used: false,
-      expiresAt: {
-        gt: new Date(),
-      },
-    },
-  })
+  const verificationToken = await findValidEmailVerification(token)
 
   if (!verificationToken) {
     return { error: 'Token invalide ou expiré' }
   }
 
   // Find user by email
-  const user = await prisma.user.findUnique({
-    where: { email: verificationToken.email },
-  })
+  const user = await getUserByEmail(verificationToken.email)
 
   if (!user) {
     return { error: 'Utilisateur non trouvé' }
   }
 
   // Mark email as verified
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { emailVerified: true },
-  })
+  await markEmailAsVerified(user.id)
 
   // Mark token as used
-  await prisma.emailVerification.update({
-    where: { id: verificationToken.id },
-    data: { used: true },
-  })
+  await markEmailVerificationAsUsed(token)
 
   // Add welcome credits if not already added
   if (user.credits === 0) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { credits: 10 },
-    })
+    await updateUserCredits(user.id, 10)
 
     // Create credit transaction
-    await prisma.creditTransaction.create({
-      data: {
-        userId: user.id,
-        amount: 10,
-        type: 'EARN',
-        description: 'Crédits de bienvenue',
-        status: 'COMPLETED',
-      },
-    })
+    await query(
+      `INSERT INTO "CreditTransaction" ("userId", amount, type, description, status) 
+       VALUES ($1, $2, $3, $4, $5)`,
+      [user.id, 10, 'EARN', 'Crédits de bienvenue', 'COMPLETED']
+    )
   }
 
   return { success: 'Email vérifié avec succès' }
@@ -452,9 +407,7 @@ export async function verifyEmail(formData: VerifyEmailFormData) {
 export async function resendVerificationEmail(email: string) {
   try {
     // Find existing user
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
+    const user = await getUserByEmail(email)
 
     if (!user) {
       return { error: 'Utilisateur non trouvé' }
@@ -465,18 +418,10 @@ export async function resendVerificationEmail(email: string) {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
     // Delete old tokens
-    await prisma.emailVerification.deleteMany({
-      where: { email },
-    })
+    await query('DELETE FROM "EmailVerification" WHERE email = $1', [email])
 
     // Create new token
-    await prisma.emailVerification.create({
-      data: {
-        email,
-        token,
-        expiresAt,
-      },
-    })
+    await createEmailVerification(email, token, expiresAt)
 
     // Send verification email
     try {

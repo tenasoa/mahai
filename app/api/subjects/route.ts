@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { getSubjectsAction } from '@/actions/subjects'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -10,65 +10,39 @@ export async function GET(request: Request) {
   const types = searchParams.get('types')?.split(',').filter(Boolean) || []
   const matieres = searchParams.get('matieres')?.split(',').filter(Boolean) || []
   const annees = searchParams.get('annees')?.split(',').filter(Boolean) || []
-  const maxCredits = parseInt(searchParams.get('maxCredits') || '100', 10)
+  const difficultes = searchParams.get('difficultes')?.split(',').filter(Boolean) || []
+  const langues = searchParams.get('langues')?.split(',').filter(Boolean) || []
+  const formats = searchParams.get('formats')?.split(',').filter(Boolean) || []
+  
+  const sortBy = searchParams.get('sortBy') as any || 'recent'
+  const q = searchParams.get('q') || ''
+  const minRating = searchParams.get('minRating') ? parseFloat(searchParams.get('min')!) : undefined
+  const maxPrice = searchParams.get('maxPrice') ? parseInt(searchParams.get('maxPrice')!) : undefined
+  
   const hasCorrectionIa = searchParams.get('hasCorrectionIa') === 'true'
   const hasCorrectionProf = searchParams.get('hasCorrectionProf') === 'true'
-  const q = searchParams.get('q')?.trim()
-  
-  const skip = (page - 1) * limit
 
-  const where: any = {}
-
-  if (types.length > 0) {
-    where.type = { in: types }
-  }
-  
-  if (matieres.length > 0) {
-    where.matiere = { in: matieres }
-  }
-  
-  if (annees.length > 0) {
-    where.annee = { in: annees }
-  }
-  
-  where.credits = { lte: maxCredits }
-  
-  if (hasCorrectionIa) {
-    where.hasCorrectionIa = true
-  }
-  
-  if (hasCorrectionProf) {
-    where.hasCorrectionProf = true
-  }
-
-  if (q && q.length >= 2) {
-    where.OR = [
-      { titre: { contains: q, mode: 'insensitive' } },
-      { matiere: { contains: q, mode: 'insensitive' } },
-    ]
+  const filters = {
+    search: q,
+    types,
+    matiere: matieres[0],
+    difficultes,
+    langues,
+    formats,
+    minRating,
+    maxPrice,
+    page,
+    limit,
+    sortBy
   }
 
   try {
-    const [subjects, total] = await Promise.all([
-      prisma.subject.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.subject.count({ where }),
-    ])
-
-    return NextResponse.json({
-      subjects,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total,
-    })
+    const result = await getSubjectsAction(filters)
+    return NextResponse.json(result)
   } catch (error) {
     console.error('Error fetching subjects:', error)
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des sujets' },
+      { error: 'Failed to fetch subjects' },
       { status: 500 }
     )
   }

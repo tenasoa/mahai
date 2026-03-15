@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { query } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { BookOpen, CreditCard, TrendingUp, Award, Clock, Target } from 'lucide-react'
@@ -14,216 +14,167 @@ export default async function DashboardPage() {
 
   let user = null
   try {
-    user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        purchases: {
-          include: {
-            subject: true,
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 5,
-        },
-        examAttempts: {
-          orderBy: { createdAt: 'desc' },
-          take: 3,
-        },
-      },
-    })
-  } catch (error) {
-    console.error('Error fetching user:', error)
-  }
+    // Get user with basic info
+    const userResult = await query(
+      'SELECT id, email, prenom, nom, role, credits, "emailVerified", "schoolLevel", "createdAt" FROM "User" WHERE id = $1',
+      [session.user.id]
+    )
+    user = userResult.rows[0]
 
-  if (!user) {
-    redirect('/auth/role-selection')
-  }
+    if (!user) {
+      redirect('/auth/login')
+    }
 
-  const stats = {
-    credits: user.credits,
-    sujetsAchetes: user.purchases.length,
-    examsFaits: user.examAttempts.length,
-    moyenneExams: user.examAttempts.length > 0
-      ? user.examAttempts.reduce((acc, exam) => acc + (exam.score || 0), 0) / user.examAttempts.length
-      : 0,
-  }
+    // Get recent purchases
+    const purchasesResult = await query(`
+      SELECT p.*, s.titre, s.matiere, s.annee 
+      FROM "Purchase" p 
+      LEFT JOIN "Subject" s ON p."subjectId" = s.id 
+      WHERE p."userId" = $1 AND p.status = 'COMPLETED'
+      ORDER BY p."createdAt" DESC 
+      LIMIT 5
+    `, [session.user.id])
 
-  return (
-    <div className="min-h-screen bg-bg">
-      <div className="max-w-content mx-auto px-content py-8">
-        <div className="mb-8">
-          <h1 className="text-h1 font-bold text-text">
-            Bonjour, {user.prenom} 👋
+    // Get recent exam attempts
+    const examsResult = await query(`
+      SELECT * FROM "ExamenBlanc" 
+      WHERE "userId" = $1 
+      ORDER BY "createdAt" DESC 
+      LIMIT 3
+    `, [session.user.id])
+
+    // Get stats
+    const statsResult = await query(`
+      SELECT 
+        COUNT(CASE WHEN p.status = 'COMPLETED' THEN 1 END) as total_purchases,
+        COUNT(CASE WHEN e.status = 'COMPLETED' THEN 1 END) as completed_exams,
+        AVG(CASE WHEN e.status = 'COMPLETED' THEN e.score END) as avg_score
+      FROM "User" u
+      LEFT JOIN "Purchase" p ON u.id = p."userId"
+      LEFT JOIN "ExamenBlanc" e ON u.id = e."userId"
+      WHERE u.id = $1
+    `, [session.user.id])
+
+    const stats = statsResult.rows[0]
+
+    return (
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">
+            Bienvenue, {user.prenom} !
           </h1>
-          <p className="mt-2 text-text-muted">
-            Voici votre tableau de bord
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-muted">Crédits</p>
-                <p className="text-3xl font-bold text-teal">{stats.credits}</p>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <CreditCard className="h-8 w-8 text-blue-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Crédits</p>
+                  <p className="text-2xl font-semibold text-gray-900">{user.credits}</p>
+                </div>
               </div>
-              <CreditCard className="w-10 h-10 text-teal/30" />
             </div>
-            <a href="/credits" className="text-sm text-teal hover:text-teal-secondary mt-2 inline-block">
-              Acheter des crédits →
-            </a>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <BookOpen className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Sujets achetés</p>
+                  <p className="text-2xl font-semibold text-gray-900">{Number(stats.total_purchases) || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <Target className="h-8 w-8 text-purple-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Examens complétés</p>
+                  <p className="text-2xl font-semibold text-gray-900">{Number(stats.completed_exams) || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <Award className="h-8 w-8 text-yellow-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Score moyen</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.avg_score ? Math.round(Number(stats.avg_score)) : 0}%
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-muted">Sujets achetés</p>
-                <p className="text-3xl font-bold text-green">{stats.sujetsAchetes}</p>
-              </div>
-              <BookOpen className="w-10 h-10 text-green/30" />
-            </div>
-            <a href="/dashboard/sujets" className="text-sm text-green hover:text-green/80 mt-2 inline-block">
-              Voir mes sujets →
-            </a>
-          </div>
-
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-muted">Examens faits</p>
-                <p className="text-3xl font-bold text-purple">{stats.examsFaits}</p>
-              </div>
-              <Target className="w-10 h-10 text-purple/30" />
-            </div>
-            <a href="/examens" className="text-sm text-purple hover:text-purple/80 mt-2 inline-block">
-              Passer un examen →
-            </a>
-          </div>
-
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-muted">Moyenne</p>
-                <p className="text-3xl font-bold text-gold">
-                  {stats.moyenneExams.toFixed(1)}%
-                </p>
-              </div>
-              <Award className="w-10 h-10 text-gold/30" />
-            </div>
-            <p className="text-sm text-text-muted mt-2">Continuez comme ça !</p>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="card">
-            <h2 className="text-h3 font-bold text-text mb-4">Sujets récents</h2>
-            {user.purchases.length > 0 ? (
-              <div className="space-y-3">
-                {user.purchases.map((purchase) => {
-                  if (!purchase.subject) return null
-                  return (
-                    <div
-                      key={purchase.id}
-                      className="flex items-center justify-between p-3 bg-bg3 rounded-lg"
-                    >
+          {/* Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Recent Purchases */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Achats récents</h2>
+              {purchasesResult.rows.length > 0 ? (
+                <div className="space-y-3">
+                  {purchasesResult.rows.map((purchase: any) => (
+                    <div key={purchase.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                       <div>
-                        <p className="font-semibold text-text">{purchase.subject.titre}</p>
-                        <p className="text-sm text-text-muted">
-                          {purchase.subject.matiere} - {purchase.subject.annee}
+                        <p className="font-medium text-gray-900">{purchase.titre}</p>
+                        <p className="text-sm text-gray-600">{purchase.matiere} • {purchase.annee}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-blue-600">{purchase.creditsAmount} crédits</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(purchase.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <a
-                        href={`/sujet/${purchase.subject.id}/consult`}
-                        className="text-teal hover:text-teal-secondary text-sm font-medium"
-                      >
-                        Consulter →
-                      </a>
                     </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-text-muted">
-                <BookOpen className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p>Aucun sujet acheté</p>
-                <a href="/catalogue" className="text-teal hover:text-teal-secondary mt-2 inline-block">
-                  Parcourir le catalogue →
-                </a>
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">Aucun achat récent</p>
+              )}
+            </div>
 
-          <div className="card">
-            <h2 className="text-h3 font-bold text-text mb-4">Derniers examens</h2>
-            {user.examAttempts.length > 0 ? (
-              <div className="space-y-3">
-                {user.examAttempts.map((exam) => (
-                  <div
-                    key={exam.id}
-                    className="flex items-center justify-between p-3 bg-bg3 rounded-lg"
-                  >
-                    <div>
-                      <p className="font-semibold text-text">{exam.titre}</p>
-                      <p className="text-sm text-text-muted">
-                        {exam.matiere} - {exam.typeExamen}
-                      </p>
+            {/* Recent Exams */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Examens récents</h2>
+              {examsResult.rows.length > 0 ? (
+                <div className="space-y-3">
+                  {examsResult.rows.map((exam: any) => (
+                    <div key={exam.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                      <div>
+                        <p className="font-medium text-gray-900">{exam.titre}</p>
+                        <p className="text-sm text-gray-600">{exam.typeExamen}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-purple-600">
+                          {exam.score ? `${exam.score}/${exam.scoreMax}` : 'En cours'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(exam.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-green">
-                        {exam.score ? `${exam.score}%` : 'En attente'}
-                      </p>
-                      <p className="text-xs text-text-muted">
-                        {exam.percentile ? `Top ${exam.percentile}%` : ''}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-text-muted">
-                <Clock className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p>Aucun examen passé</p>
-                <a href="/examens" className="text-teal hover:text-teal-secondary mt-2 inline-block">
-                  Passer un examen →
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6 card">
-          <h2 className="text-h3 font-bold text-text mb-4">Actions rapides</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <a
-              href="/catalogue"
-              className="flex flex-col items-center justify-center p-4 bg-bg3 hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <BookOpen className="w-8 h-8 text-teal mb-2" />
-              <span className="text-sm font-medium text-text">Catalogue</span>
-            </a>
-            <a
-              href="/credits"
-              className="flex flex-col items-center justify-center p-4 bg-bg3 hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <CreditCard className="w-8 h-8 text-green mb-2" />
-              <span className="text-sm font-medium text-text">Crédits</span>
-            </a>
-            <a
-              href="/examens"
-              className="flex flex-col items-center justify-center p-4 bg-bg3 hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <Target className="w-8 h-8 text-purple mb-2" />
-              <span className="text-sm font-medium text-text">Examens</span>
-            </a>
-            <a
-              href="/profile"
-              className="flex flex-col items-center justify-center p-4 bg-bg3 hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <TrendingUp className="w-8 h-8 text-gold mb-2" />
-              <span className="text-sm font-medium text-text">Profil</span>
-            </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">Aucun examen récent</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  } catch (error) {
+    console.error('Dashboard error:', error)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Erreur de chargement</h1>
+          <p className="text-gray-600">Impossible de charger vos données. Veuillez réessayer.</p>
+        </div>
+      </div>
+    )
+  }
 }
