@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
-import { Bell, Diamond } from "lucide-react"
+import { Bell, Diamond, Sun, Moon } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { logoutUser } from "@/actions/auth"
 
@@ -16,6 +16,7 @@ export function LuxuryNavbar() {
   const pathname = usePathname()
   const { userId, user, appUser } = useAuth()
   const [scrolled, setScrolled] = useState(false)
+  const [theme, setTheme] = useState('dark')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -35,6 +36,10 @@ export function LuxuryNavbar() {
     }
     window.addEventListener("scroll", handleScroll)
 
+    const savedTheme = localStorage.getItem('theme') || 'dark'
+    setTheme(savedTheme)
+    document.documentElement.setAttribute('data-theme', savedTheme)
+
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false)
@@ -50,6 +55,13 @@ export function LuxuryNavbar() {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [])
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
+    document.documentElement.setAttribute('data-theme', newTheme)
+  }
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -71,13 +83,13 @@ export function LuxuryNavbar() {
       transition: 'all 0.4s'
     }}>
       <div className="nav-inner" style={{
-        maxWidth: '1100px',
+        maxWidth: '1400px',
         margin: '0 auto',
-        padding: '0 1.5rem',
+        padding: '0 2rem',
         height: '64px',
         display: 'flex',
         alignItems: 'center',
-        gap: '1rem'
+        gap: '1.5rem'
       }}>
         
         {/* ═══════ GAUCHE : Logo ═══════ */}
@@ -108,10 +120,12 @@ export function LuxuryNavbar() {
         <ul className="nav-menu" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
+          gap: '0.75rem',
           listStyle: 'none',
           margin: 0,
-          padding: 0
+          padding: 0,
+          flex: 1,
+          justifyContent: 'center'
         }}>
           {navItems.map((item) => (
             <li key={item.href}>
@@ -155,35 +169,10 @@ export function LuxuryNavbar() {
         <div className="nav-right" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem',
+          gap: '1rem',
           marginLeft: 'auto'
         }}>
           
-          {/* Bouton Recharger */}
-          {userId && (
-            <Link
-              href="/credits"
-              className="btn-recharge"
-              style={{
-                fontFamily: 'var(--body)',
-                fontSize: '0.76rem',
-                fontWeight: 500,
-                padding: '0.4rem 0.9rem',
-                borderRadius: 'var(--r)',
-                background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
-                color: 'var(--void)',
-                border: 'none',
-                cursor: 'none',
-                letterSpacing: '0.04em',
-                transition: 'all 0.2s',
-                textDecoration: 'none',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              + Recharger
-            </Link>
-          )}
-
           {/* Crédits Display */}
           {userId && (
             <div className="credits-display" style={{
@@ -213,10 +202,68 @@ export function LuxuryNavbar() {
               <Diamond className="w-4 h-4" style={{
                 width: '16px',
                 height: '16px',
-                color: 'var(--gold)',
-                fill: 'var(--gold-dim)'
+                color: '#4A8BC9',
+                fill: 'rgba(74,139,201,0.2)'
               }} />
             </div>
+          )}
+
+          {/* Toggle Thème */}
+          <button
+            onClick={toggleTheme}
+            className="theme-toggle"
+            style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '50%',
+              background: 'var(--card)',
+              border: '1px solid var(--b1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'none',
+              transition: 'all 0.2s',
+              color: 'var(--gold)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--gold-line)'
+              e.currentTarget.style.background = 'var(--gold-dim)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--b1)'
+              e.currentTarget.style.background = 'var(--card)'
+            }}
+          >
+            {theme === 'dark' ? (
+              <Sun size={16} style={{ color: 'var(--gold)' }} />
+            ) : (
+              <Moon size={16} style={{ color: 'var(--gold)' }} />
+            )}
+          </button>
+
+          {/* Bouton Recharger */}
+          {userId && (
+            <Link
+              href="/credits"
+              className="btn-recharge"
+              style={{
+                fontFamily: 'var(--body)',
+                fontSize: '0.76rem',
+                fontWeight: 500,
+                padding: '0.4rem 0.9rem',
+                borderRadius: 'var(--r)',
+                background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+                color: 'var(--void)',
+                border: 'none',
+                cursor: 'none',
+                letterSpacing: '0.04em',
+                transition: 'all 0.2s',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              + Recharger
+            </Link>
           )}
 
           {/* Notifications */}
