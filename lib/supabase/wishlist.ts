@@ -47,9 +47,11 @@ export async function addToWishlist(userId: string, subjectId: string) {
     return { success: false, error: 'Déjà dans la wishlist' }
   }
 
+  // Générer un ID unique
   const { data, error } = await supabase
     .from('Wishlist')
     .insert({
+      id: crypto.randomUUID(),
       userId,
       subjectId,
     })
