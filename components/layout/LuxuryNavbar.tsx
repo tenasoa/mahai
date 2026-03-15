@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
-import { Sun, Moon, Bell, LogOut, User, CreditCard, ChevronDown } from "lucide-react"
+import { Bell, ChevronDown, Diamond } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { logoutUser } from "@/actions/auth"
 
@@ -131,26 +131,13 @@ export function LuxuryNavbar() {
     }`}>
       <div className="max-w-[1400px] mx-auto h-[76px] flex items-center justify-between">
         
-        {/* ═══════ GAUCHE : Logo + Crédits ═══════ */}
-        <div className="flex items-center gap-6">
+        {/* ═══════ GAUCHE : Logo ═══════ */}
+        <div className="flex items-center gap-4">
           <Link href="/" className="font-display text-2xl font-semibold tracking-tight text-text no-underline flex items-center relative group">
             Mah
             <span className="w-2 h-2 mx-1 rounded-full bg-gradient-to-br from-gold-hi to-gold shadow-[0_0_10px_var(--gold-glow)] animate-[gemPulse_3s_ease-in-out_infinite] group-hover:shadow-[0_0_20px_var(--gold-glow)] transition-shadow"></span>
             AI
           </Link>
-
-          {/* Crédits Badge */}
-          {userId && (
-            <Link 
-              href="/credits"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gold-dim border border-gold-line hover:border-gold transition-all cursor-none group"
-            >
-              <CreditCard className="w-4 h-4 text-gold group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-mono text-gold font-semibold">
-                {appUser?.credits ?? 0} CR
-              </span>
-            </Link>
-          )}
         </div>
 
         {/* ═══════ CENTRE : Menu Navigation ═══════ */}
@@ -176,27 +163,48 @@ export function LuxuryNavbar() {
           ))}
         </ul>
 
-        {/* ═══════ DROITE : Notifications + Thème + Avatar ═══════ */}
+        {/* ═══════ DROITE : Groupe d'icônes ═══════ */}
         <div className="flex items-center gap-3">
           
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-full border border-gold/10 hover:border-gold-line transition-all text-text-2 hover:text-text cursor-none"
-            aria-label="Changer de thème"
-          >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
+          {/* Bouton Recharger */}
+          {userId && (
+            <Link
+              href="/credits"
+              className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-br from-gold to-gold-hi text-void font-medium text-sm cursor-none transition-all hover:-translate-y-px hover:shadow-[0_4px_24px_rgba(201,168,76,0.35)]"
+            >
+              <span>+ Recharger</span>
+            </Link>
+          )}
+
+          {/* Crédits Display */}
+          {userId && (
+            <div className="flex items-center gap-2 px-3 py-1.5">
+              <span className="text-lg font-display font-semibold text-text">
+                {appUser?.credits ?? 0}
+              </span>
+              <span className="text-sm font-mono text-gold font-semibold">
+                CR
+              </span>
+              <Diamond className="w-4 h-4 text-blue-500 fill-blue-500" />
+            </div>
+          )}
 
           {/* Notifications */}
           {userId && (
             <div className="relative" ref={notifDropdownRef}>
               <button
                 onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                className="p-2 rounded-full border border-gold/10 hover:border-gold-line transition-all text-text-2 hover:text-text cursor-none relative"
+                className={`
+                  w-11 h-11 rounded-full flex items-center justify-center
+                  transition-all cursor-none relative
+                  ${scrolled || theme === 'light'
+                    ? 'bg-card border border-b1 hover:border-gold-line'
+                    : 'bg-card/50 border border-gold/10 hover:border-gold-line'
+                  }
+                `}
               >
-                <Bell size={18} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-ruby rounded-full border-2 border-card"></span>
+                <Bell size={18} className="text-gold" />
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-ruby rounded-full border-2 border-card"></span>
               </button>
 
               {notifDropdownOpen && (
@@ -233,12 +241,17 @@ export function LuxuryNavbar() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 p-1 pl-3 pr-2 rounded-full border border-gold/10 hover:border-gold-line transition-all bg-card/50 cursor-none"
+                className={`
+                  w-11 h-11 rounded-full flex items-center justify-center
+                  font-display text-lg font-semibold
+                  transition-all cursor-none
+                  ${scrolled || theme === 'light'
+                    ? 'bg-surface border border-b1 text-gold'
+                    : 'bg-gold-dim border border-gold-line text-gold'
+                  }
+                `}
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold to-gold-hi flex items-center justify-center text-void font-bold text-xs shadow-sm">
-                  {(appUser?.prenom?.charAt(0) || user?.email?.charAt(0) || 'U').toUpperCase()}
-                </div>
-                <ChevronDown size={14} className={`text-text-3 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                {(appUser?.prenom?.charAt(0) || user?.email?.charAt(0) || 'S').toUpperCase()}
               </button>
 
               {dropdownOpen && (
@@ -253,7 +266,9 @@ export function LuxuryNavbar() {
                     href="/dashboard/profil" 
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-2 hover:text-text hover:bg-surface transition-colors cursor-none"
                   >
-                    <User size={16} className="text-gold" />
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
                     Profil
                   </Link>
 
@@ -263,7 +278,11 @@ export function LuxuryNavbar() {
                     onClick={() => logoutUser()}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ruby hover:bg-ruby/5 transition-colors cursor-none text-left"
                   >
-                    <LogOut size={16} />
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                      <polyline points="16,17 21,12 16,7"/>
+                      <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
                     Déconnexion
                   </button>
                 </div>
