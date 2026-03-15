@@ -587,9 +587,21 @@ body {
   margin-bottom: 2rem;
 }
 
+/* Mode Guest - Sidebar masquée, le contenu prend tout l'espace */
+.main-area.guest-mode {
+  margin-left: 2rem;
+}
+
 /* Wrapper pour le contenu avec marge navbar */
 .main-content-wrapper {
   margin-top: 80px; /* Pousse le titre et les cartes vers le bas */
+}
+
+/* Wrapper pour le contenu avec marge navbar - Mode Guest */
+.main-content-wrapper.guest-mode {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Titre Catalogue - Plus grand */

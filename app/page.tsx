@@ -38,7 +38,7 @@ export default function LandingPage() {
               Accédez à des milliers de sujets d'examens officiels — BAC, BEPC, CEPE — avec correction par intelligence artificielle. Payez via MVola, étudiez intelligemment.
             </p>
             <div className="hero-actions">
-              <Link href="/catalogue" className="btn-primary">
+              <Link href="/catalogue?guest=true" className="btn-primary">
                 Parcourir le catalogue
                 <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </Link>
@@ -477,7 +477,7 @@ export default function LandingPage() {
             Rejoignez des milliers d'élèves malgaches qui préparent leurs examens avec MahAI.
           </p>
           <div className="cta-actions reveal">
-            <Link href="/catalogue" className="btn-primary" style={{ fontSize: ".9rem", padding: ".9rem 2.2rem" }}>
+            <Link href="/catalogue?guest=true" className="btn-primary" style={{ fontSize: ".9rem", padding: ".9rem 2.2rem" }}>
               Explorer le catalogue
               <svg viewBox="0 0 24 24" style={{ width: 16, stroke: "var(--void)", strokeWidth: 2, fill: "none" }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </Link>

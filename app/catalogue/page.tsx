@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { useCatalogue } from '@/lib/hooks/useCatalogue'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { AuthModal } from '@/components/ui/AuthModal'
 import type { CatalogueQueryParams, ExamenType, Difficulte, Langue, Format, Badge } from '@/types/catalogue'
 import { BADGE_LABELS, DIFFICULTE_LABELS, DIFFICULTE_COLORS, MATIERE_GLYPHS } from '@/types/catalogue'
 import './catalogue.css'
@@ -14,7 +15,12 @@ import { purchaseSubject } from '@/actions/subjects'
 
 export default function CataloguePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { userId } = useAuth()
+  
+  // Détection mode guest (non connecté)
+  const isGuest = !userId
+  const guestMode = searchParams.get('guest') === 'true' || isGuest
 
   const {
     subjects,
@@ -52,6 +58,7 @@ export default function CataloguePage() {
   const [currentSubject, setCurrentSubject] = useState<any | null>(null)
   const [previewPage, setPreviewPage] = useState(1)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
 
   // Filtres UI
   const [selectedTypes, setSelectedTypes] = useState<ExamenType[]>([])
@@ -168,14 +175,30 @@ export default function CataloguePage() {
 
   // Modal handlers
   const openPreviewModal = (subject: typeof subjects[0]) => {
+    if (isGuest) {
+      setAuthModalOpen(true)
+      return
+    }
     setCurrentSubject(subject)
     setPreviewPage(1)
     setPreviewModalOpen(true)
   }
 
   const openBuyModal = (subject: typeof subjects[0]) => {
+    if (isGuest) {
+      setAuthModalOpen(true)
+      return
+    }
     setCurrentSubject(subject)
     setBuyModalOpen(true)
+  }
+
+  const handleSubjectClick = (subjectId: string) => {
+    if (isGuest) {
+      setAuthModalOpen(true)
+      return
+    }
+    router.push(`/sujet/${subjectId}`)
   }
 
   const confirmBuy = async () => {
@@ -225,7 +248,16 @@ export default function CataloguePage() {
       {/* Toast Container */}
       <ToastContainer />
 
-      {/* Sidebar Fixed */}
+      {/* Auth Modal pour les non-connectés */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        title="Authentification requise"
+        message="Connectez-vous ou créez un compte pour accéder à cette fonctionnalité"
+      />
+
+      {/* Sidebar Fixed - Masquée pour les non-connectés */}
+      {!guestMode && (
       <aside className="sidebar" id="sidebar">
         <div className="filter-panel">
           <div className="filter-head">
@@ -439,10 +471,11 @@ export default function CataloguePage() {
           </div>
         </div>
       </aside>
+      )}
 
       {/* Main Content */}
-      <main className="main-area">
-        <div className="main-content-wrapper">
+      <main className={`main-area ${guestMode ? 'guest-mode' : ''}`}>
+        <div className={`main-content-wrapper ${guestMode ? 'guest-mode' : ''}`}>
           {/* Search Bar - Moved from Nav */}
           <div className="main-search-wrap" style={{ marginBottom: '2rem' }}>
             <div className="nav-search" style={{ maxWidth: '600px', margin: '0' }}>
@@ -464,10 +497,94 @@ export default function CataloguePage() {
               Catalogue <em style={{ fontStyle: 'italic', color: 'var(--text-3)', fontSize: '.7em' }}>des sujets</em>
             </h1>
           </div>
-          <button className="filter-toggle-btn" onClick={() => setDrawerOpen(true)}>
-            ⚙ Filtres
-          </button>
+          {guestMode ? (
+            <Link
+              href="/auth/register"
+              style={{
+                fontFamily: 'var(--body)',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                padding: '0.5rem 1rem',
+                borderRadius: 'var(--r)',
+                background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+                color: 'var(--void)',
+                textDecoration: 'none',
+                letterSpacing: '0.04em',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              🔓 S'inscrire pour accéder aux filtres
+            </Link>
+          ) : (
+            <button className="filter-toggle-btn" onClick={() => setDrawerOpen(true)}>
+              ⚙ Filtres
+            </button>
+          )}
         </div>
+
+        {/* Guest Banner */}
+        {guestMode && (
+          <div style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--b1)',
+            borderRadius: 'var(--r)',
+            padding: '1rem 1.25rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            flexWrap: 'wrap'
+          }}>
+            <span style={{ fontSize: '1.5rem' }}>👋</span>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <div style={{ fontFamily: 'var(--body)', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', marginBottom: '0.25rem' }}>
+                Vous naviguez en mode visiteur
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', lineHeight: 1.5 }}>
+                Connectez-vous ou créez un compte pour accéder aux filtres avancés, acheter des sujets et voir les détails complets.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Link
+                href="/auth/login"
+                style={{
+                  fontFamily: 'var(--body)',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  padding: '0.5rem 1rem',
+                  borderRadius: 'var(--r)',
+                  border: '1px solid var(--b1)',
+                  background: 'transparent',
+                  color: 'var(--text-2)',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Connexion
+              </Link>
+              <Link
+                href="/auth/register"
+                style={{
+                  fontFamily: 'var(--body)',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  padding: '0.5rem 1rem',
+                  borderRadius: 'var(--r)',
+                  background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+                  color: 'var(--void)',
+                  textDecoration: 'none',
+                  letterSpacing: '0.04em',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Inscription
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Results Bar */}
         <div className="results-bar">
@@ -604,7 +721,21 @@ export default function CataloguePage() {
           <div className={`papers-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
             {subjects.map((subject: any) => (
               <div key={subject.id} className="pcard">
-                <Link href={`/sujet/${subject.id}`} className="pc-thumb">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleSubjectClick(subject.id)
+                  }}
+                  className="pc-thumb"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'none',
+                    width: '100%',
+                    textAlign: 'left'
+                  }}
+                >
                   <div className="pc-thumb-lines"></div>
                   <div className="pc-thumb-glyph">
                     {subject.glyph || MATIERE_GLYPHS[subject.matiere as keyof typeof MATIERE_GLYPHS] || '∑'}
@@ -620,18 +751,37 @@ export default function CataloguePage() {
                       handleToggleFav(subject.id);
                     }}
                     title={isWished(subject.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    style={{ pointerEvents: 'auto' }}
                   >
                     {isWished(subject.id) ? '🔖' : '📑'}
                   </button>
-                </Link>
+                </button>
                 <div className="pc-body">
                   <div className="pc-meta-row">
                     <span className="pc-exam">{subject.type} · {subject.matiere}</span>
                     <span className="pc-year">{subject.annee}</span>
                   </div>
-                  <Link href={`/sujet/${subject.id}`} className="pc-title" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleSubjectClick(subject.id)
+                    }}
+                    className="pc-title"
+                    style={{
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'none',
+                      width: '100%',
+                      textAlign: 'left',
+                      fontFamily: 'inherit',
+                      fontSize: 'inherit'
+                    }}
+                  >
                     {subject.titre}
-                  </Link>
+                  </button>
                   <div className="pc-info">
                     {subject.pages} pages · {subject.difficulte === 'FACILE' ? 'Facile' : subject.difficulte === 'MOYEN' ? 'Moyen' : 'Difficile'}
                   </div>
@@ -662,13 +812,23 @@ export default function CataloguePage() {
                   </div>
                   <div className="pc-actions">
                     {!subject.isUnlocked && (
-                      <button className="btn-preview" onClick={() => openPreviewModal(subject)}>
+                      <button className="btn-preview" onClick={(e) => {
+                        e.stopPropagation()
+                        openPreviewModal(subject)
+                      }}>
                         Aperçu
                       </button>
                     )}
                     <button
                       className={subject.isUnlocked ? "btn-consult" : "btn-buy"}
-                      onClick={() => subject.isUnlocked ? router.push(`/sujet/${subject.id}`) : openBuyModal(subject)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (subject.isUnlocked) {
+                          router.push(`/sujet/${subject.id}`)
+                        } else {
+                          openBuyModal(subject)
+                        }
+                      }}
                     >
                       {subject.isUnlocked ? 'Voir' : (subject.credits === 0 ? 'Obtenir' : 'Acheter')}
                     </button>

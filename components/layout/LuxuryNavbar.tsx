@@ -30,7 +30,6 @@ export function LuxuryNavbar() {
     { label: 'Communauté', href: '/dashboard/communaute' }
   ] : [
     { label: 'Accueil', href: '/' },
-    { label: 'Catalogue', href: '/catalogue' },
     { label: 'Fonctionnalités', href: '/#features' },
     { label: 'Tarifs', href: '/#pricing' }
   ]

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { AuthModal } from '@/components/ui/AuthModal'
 import { getSubjectById } from '@/actions/subjects'
 import { getUserCredits, purchaseSubject } from '@/actions/user'
 import './detail.css'
@@ -85,6 +86,10 @@ export default function SujetDetailPage() {
   const [countdown, setCountdown] = useState(90)
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+
+  // Vérifier si l'utilisateur est connecté
+  const isGuest = !userId
   
   // Chargement des données
   useEffect(() => {
@@ -137,17 +142,22 @@ export default function SujetDetailPage() {
   }
 
   const unlockSubject = async () => {
-    if (!subject || !userId) {
-      if (!userId) showToast('error', 'Connexion requise', 'Veuillez vous connecter pour débloquer ce sujet.')
+    if (isGuest) {
+      setShowAuthModal(true)
       return
     }
     
+    if (!subject || !userId) {
+      showToast('error', 'Connexion requise', 'Veuillez vous connecter pour débloquer ce sujet.')
+      return
+    }
+
     // Vérifier les crédits avant d'afficher la modale
     if (credits < subject.credits) {
       showToast('error', 'Crédits insuffisants', `Il vous manque ${subject.credits - credits} crédits pour acheter ce sujet.`)
       return
     }
-    
+
     setShowPurchaseModal(true)
   }
 
@@ -195,7 +205,15 @@ export default function SujetDetailPage() {
   return (
     <div className="detail-page-container">
       <LuxuryCursor />
-      
+
+      {/* MODALE D'AUTHENTIFICATION POUR LES NON-CONNECTÉS */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Authentification requise"
+        message="Connectez-vous ou créez un compte pour accéder à ce sujet"
+      />
+
       {/* MODALE D'ACHAT */}
       {showPurchaseModal && subject && (
         <div className="modal-overlay" onClick={() => setShowPurchaseModal(false)}>
