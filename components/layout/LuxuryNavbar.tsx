@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/hooks/useAuth"
 import { logoutUser } from "@/actions/auth"
 
 export function LuxuryNavbar() {
-  const { userId, user } = useAuth()
+  const { userId, user, appUser } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [theme, setTheme] = useState('dark')
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -80,15 +80,16 @@ export function LuxuryNavbar() {
 
           {userId ? (
             <div className="relative" ref={dropdownRef}>
-              <button 
+              <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="flex items-center gap-2 p-1 pl-3 pr-2 rounded-full border border-gold/10 hover:border-gold-line transition-all bg-card/50 cursor-none"
               >
                 <div className="flex flex-col items-end hidden sm:flex">
-                  <span className="text-xs font-medium text-text leading-none">{user?.email?.split('@')[0] || 'Moi'}</span>
+                  <span className="text-[10px] font-mono text-gold leading-none mb-1">{appUser?.credits ?? 0} CR</span>
+                  <span className="text-xs font-medium text-text leading-none">{appUser?.prenom || user?.email?.split('@')[0] || 'Moi'}</span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold to-gold-hi flex items-center justify-center text-void font-bold text-xs shadow-sm">
-                  {(user?.email?.charAt(0) || 'U').toUpperCase()}
+                  {(appUser?.prenom?.charAt(0) || user?.email?.charAt(0) || 'U').toUpperCase()}
                 </div>
                 <ChevronDown size={14} className={`text-text-3 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -99,7 +100,12 @@ export function LuxuryNavbar() {
                     <p className="text-xs font-mono text-text-3 uppercase tracking-wider mb-1">Mon Compte</p>
                     <p className="text-sm font-medium text-text truncate">{user?.email}</p>
                   </div>
-                  
+
+                  <div className="px-4 py-2 mb-1 bg-gold-dim border border-gold-line rounded" style={{ margin: '0.5rem 1rem' }}>
+                    <p className="text-xs font-mono text-text-3 uppercase tracking-wider mb-0.5">Crédits restants</p>
+                    <p className="text-xl font-display text-gold font-semibold">{appUser?.credits ?? 0} CR</p>
+                  </div>
+
                   <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-2 hover:text-text hover:bg-surface transition-colors cursor-none">
                     <User size={16} className="text-gold" />
                     Tableau de bord

@@ -39,9 +39,12 @@ export default function CataloguePage() {
     },
   })
 
+  // Récupérer les crédits depuis appUser
+  const { appUser } = useAuth()
+  const userCredits = appUser?.credits ?? 0
+
   // États locaux
   const [isPurchasing, setIsPurchasing] = useState(false)
-  const [userCredits, setUserCredits] = useState(1200) 
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
@@ -784,19 +787,24 @@ export default function CataloguePage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.65rem' }}>
                 <span style={{ fontSize: '.82rem', color: 'var(--text-2)' }}>Votre solde actuel</span>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: '.85rem', color: 'var(--text)' }}>1 200 cr</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '.85rem', color: 'var(--text)' }}>{userCredits} cr</span>
               </div>
               <div style={{ height: '1px', background: 'var(--b1)', margin: '.75rem 0' }}></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '.85rem', fontWeight: 500, color: 'var(--text)' }}>Solde après achat</span>
-                <span style={{ fontFamily: 'var(--display)', fontSize: '1.25rem', color: 'var(--gold)' }}>
-                  {currentSubject.credits === 0 ? '1 200 cr' : `${1200 - currentSubject.credits} cr`}
+                <span style={{ fontFamily: 'var(--display)', fontSize: '1.25rem', color: userCredits - currentSubject.credits >= 0 ? 'var(--gold)' : 'var(--ruby)' }}>
+                  {userCredits - currentSubject.credits} cr
                 </span>
               </div>
             </div>
             <div className="modal-actions">
-              <button className="btn-modal-buy" onClick={confirmBuy}>
-                Confirmer l'achat
+              <button 
+                className="btn-modal-buy" 
+                onClick={confirmBuy}
+                disabled={userCredits < currentSubject.credits}
+                style={{ opacity: userCredits < currentSubject.credits ? 0.5 : 1, cursor: userCredits < currentSubject.credits ? 'not-allowed' : 'none' }}
+              >
+                {userCredits < currentSubject.credits ? 'Crédits insuffisants' : 'Confirmer l\'achat'}
               </button>
               <button className="btn-modal-ghost" onClick={() => setBuyModalOpen(false)}>
                 Annuler

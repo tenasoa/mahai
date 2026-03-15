@@ -24,6 +24,17 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | undefined>(undefined)
 
+  // Fonction pour récupérer les données utilisateur depuis la DB
+  const fetchAppUser = async (uid: string) => {
+    try {
+      const { getUserData } = await import('@/actions/auth')
+      const data = await getUserData(uid)
+      setAppUser(data)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+    }
+  }
+
   useEffect(() => {
     const supabase = createClient()
 
@@ -31,7 +42,11 @@ export function useAuth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      setUserId(session?.user?.id)
+      const uid = session?.user?.id
+      setUserId(uid)
+      if (uid) {
+        fetchAppUser(uid)
+      }
       setLoading(false)
     })
 
@@ -41,7 +56,13 @@ export function useAuth() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      setUserId(session?.user?.id)
+      const uid = session?.user?.id
+      setUserId(uid)
+      if (uid) {
+        fetchAppUser(uid)
+      } else {
+        setAppUser(null)
+      }
       setLoading(false)
     })
 
