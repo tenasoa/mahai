@@ -509,7 +509,7 @@ export default function DashboardPage() {
                 <div className="streak-days">
                   {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
                     <div 
-                      key={day} 
+                      key={`${day}-${i}`} 
                       className={`streak-day ${i === streak - 1 ? 'today' : 'done'}`}
                     >
                       {day}
