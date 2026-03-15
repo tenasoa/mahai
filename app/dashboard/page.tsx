@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
+import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import './dashboard.css'
 
 interface AppUser {
@@ -48,21 +49,13 @@ interface RecommendationItem {
   glyph: string
 }
 
-interface NavCardProps {
+interface DashboardCardProps {
   icon: string
-  title: string
-  subtitle: string
+  label: string
+  value: string | number
+  subtitle?: string
   route: string
-  badge?: string | number
-  variant?: 'default' | 'trending' | 'new' | 'premium'
-}
-
-interface StatCardProps {
-  icon: string
-  title: string
-  value: string
-  route: string
-  trend?: string
+  color: 'gold' | 'blue' | 'green' | 'ruby' | 'navy' | 'sage'
 }
 
 export default function DashboardPage() {
@@ -176,7 +169,9 @@ export default function DashboardPage() {
     daysLeft: 95,
     streak: 7,
     pagesRead: 342,
-    examsAvailable: 5
+    examsAvailable: 5,
+    rank: 'Top 15%',
+    objectives: 3
   })
 
   useEffect(() => {
@@ -259,75 +254,87 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* ═══════ NAVIGATION PRINCIPALE ═══════ */}
+          {/* ═══════ STATS PRINCIPALES ═══════ */}
           <section className="dashboard-section">
-            <h2 className="section-title">Navigation Principale</h2>
-            <div className="nav-cards-grid">
-              <NavCard
+            <div className="stats-grid-original">
+              <DashboardCard
                 icon="📚"
-                title="Catalogue"
-                subtitle="Tous les sujets"
-                route="/catalogue"
-              />
-              <NavCard
-                icon="📖"
-                title="Mes Sujets"
-                subtitle={`${stats.subjectsOwned} achats`}
+                label="Sujets achetés"
+                value={stats.subjectsOwned}
+                subtitle="+3 ce mois"
                 route="/dashboard/achats"
-                badge={stats.subjectsOwned}
+                color="gold"
               />
-              <NavCard
+              <DashboardCard
                 icon="🤖"
-                title="Corrections IA"
-                subtitle={`${stats.iaCorrections} corrections`}
+                label="Corrections IA"
+                value={stats.iaCorrections}
+                subtitle="Score moy. 13.4/20"
                 route="/dashboard/corrections"
-                badge="3 nouveaux"
-                variant="new"
+                color="blue"
               />
-              <NavCard
+              <DashboardCard
                 icon="💎"
-                title="Crédits"
-                subtitle={`${stats.credits} cr restants`}
+                label="Crédits restants"
+                value={stats.credits}
+                subtitle="≈ 5 sujets BAC"
                 route="/credits"
-                variant="premium"
+                color="green"
               />
-              <NavCard
-                icon="📝"
-                title="Examens Blancs"
-                subtitle={`${stats.examsAvailable} disponibles`}
-                route="/examens"
-                variant="trending"
-              />
-              <NavCard
-                icon="📊"
-                title="Progression"
-                subtitle={`${stats.avgScore} moyen`}
+              <DashboardCard
+                icon="🎯"
+                label="Série active"
+                value={stats.serie}
+                subtitle="Objectif : Juin 2025"
                 route="/dashboard/progression"
+                color="ruby"
               />
-              <NavCard
-                icon="👤"
-                title="Profil"
-                subtitle="Mon compte"
-                route="/dashboard/profil"
+            </div>
+          </section>
+
+          {/* ═══════ NAVIGATION RAPIDE ═══════ */}
+          <section className="dashboard-section">
+            <h2 className="section-title">Navigation Rapide</h2>
+            <div className="cards-grid cards-grid-5">
+              <DashboardCard
+                icon="📖"
+                label="Catalogue"
+                value="Tous"
+                subtitle="Sujets disponibles"
+                route="/catalogue"
+                color="gold"
               />
-              <NavCard
-                icon="⚙️"
-                title="Paramètres"
-                subtitle="Préférences"
-                route="/dashboard/parametres"
+              <DashboardCard
+                icon="📝"
+                label="Examens"
+                value={stats.examsAvailable}
+                subtitle="Blancs dispo"
+                route="/examens"
+                color="blue"
               />
-              <NavCard
+              <DashboardCard
                 icon="🔖"
-                title="Favoris"
-                subtitle={`${stats.favorites} sujets`}
+                label="Favoris"
+                value={stats.favorites}
+                subtitle="Enregistrés"
                 route="/dashboard/favoris"
-                badge={stats.favorites}
+                color="green"
               />
-              <NavCard
+              <DashboardCard
                 icon="📥"
-                title="Downloads"
-                subtitle={`${stats.downloads} PDF`}
+                label="Downloads"
+                value={stats.downloads}
+                subtitle="PDF téléchargés"
                 route="/dashboard/downloads"
+                color="navy"
+              />
+              <DashboardCard
+                icon="📊"
+                label="Progression"
+                value="72%"
+                subtitle="Moyenne"
+                route="/dashboard/progression"
+                color="sage"
               />
             </div>
           </section>
@@ -335,100 +342,125 @@ export default function DashboardPage() {
           {/* ═══════ OUTILS & SERVICES ═══════ */}
           <section className="dashboard-section">
             <h2 className="section-title">Outils & Services</h2>
-            <div className="tools-grid">
-              <NavCard
+            <div className="cards-grid cards-grid-4">
+              <DashboardCard
                 icon="🔍"
-                title="Recherche"
+                label="Recherche"
+                value=""
                 subtitle="Trouver un sujet"
                 route="/catalogue?search"
+                color="gold"
               />
-              <NavCard
+              <DashboardCard
                 icon="🎯"
-                title="Objectifs"
-                subtitle="BAC 2026"
+                label="Objectifs"
+                value={stats.objectives}
+                subtitle="En cours"
                 route="/dashboard/objectifs"
+                color="blue"
               />
-              <NavCard
+              <DashboardCard
                 icon="🏆"
-                title="Classement"
-                subtitle="Top 15%"
+                label="Classement"
+                value={stats.rank}
+                subtitle="Position"
                 route="/dashboard/classement"
+                color="green"
               />
-              <NavCard
+              <DashboardCard
                 icon="💬"
-                title="Support"
+                label="Support"
+                value=""
                 subtitle="Aide & FAQ"
                 route="/support"
+                color="ruby"
               />
-              <NavCard
+              <DashboardCard
                 icon="⏱️"
-                title="Mode Focus"
-                subtitle="Timer Pomodoro"
+                label="Mode Focus"
+                value="25:00"
+                subtitle="Pomodoro"
                 route="/dashboard/focus"
+                color="navy"
               />
-              <NavCard
+              <DashboardCard
                 icon="📅"
-                title="Calendrier"
-                subtitle="Planning révisions"
+                label="Calendrier"
+                value=""
+                subtitle="Planning"
                 route="/dashboard/calendrier"
+                color="sage"
               />
-              <NavCard
+              <DashboardCard
                 icon="🤖"
-                title="IA Chat"
-                subtitle="Assistant virtuel"
+                label="IA Chat"
+                value=""
+                subtitle="Assistant"
                 route="/dashboard/ia-chat"
-                variant="new"
+                color="gold"
               />
-              <NavCard
+              <DashboardCard
                 icon="👥"
-                title="Communauté"
-                subtitle="Groupes d'étude"
+                label="Communauté"
+                value=""
+                subtitle="Groupes"
                 route="/dashboard/communaute"
+                color="blue"
               />
             </div>
           </section>
 
-          {/* ═══════ QUICK STATS ═══════ */}
+          {/* ═══════ STATISTIQUES ═══════ */}
           <section className="dashboard-section">
-            <h2 className="section-title">Statistiques Rapides</h2>
-            <div className="stats-cards-grid">
-              <StatCard
+            <h2 className="section-title">Statistiques</h2>
+            <div className="cards-grid cards-grid-3">
+              <DashboardCard
                 icon="⏱️"
-                title="Temps d'étude"
+                label="Temps d'étude"
                 value={stats.studyTime}
+                subtitle="Cette semaine"
                 route="/dashboard/stats"
-                trend="cette semaine"
+                color="gold"
               />
-              <StatCard
+              <DashboardCard
                 icon="📈"
-                title="Score Moyen"
+                label="Score Moyen"
                 value={stats.avgScore}
+                subtitle="Toutes matières"
                 route="/dashboard/performance"
+                color="blue"
               />
-              <StatCard
+              <DashboardCard
                 icon="🎖️"
-                title="Badges"
-                value={`${stats.badges} obtenus`}
+                label="Badges"
+                value={stats.badges}
+                subtitle="Obtenus"
                 route="/dashboard/badges"
+                color="green"
               />
-              <StatCard
+              <DashboardCard
                 icon="📅"
-                title="Jours restants"
-                value={`${stats.daysLeft} jours`}
+                label="Jours restants"
+                value={stats.daysLeft}
+                subtitle="Avant BAC"
                 route="/dashboard/calendrier"
-                trend="avant BAC"
+                color="ruby"
               />
-              <StatCard
+              <DashboardCard
                 icon="🔥"
-                title="Série Actuelle"
-                value={`${stats.streak} jours`}
+                label="Série"
+                value={`${stats.streak}j`}
+                subtitle="Consécutifs"
                 route="/dashboard/streak"
+                color="navy"
               />
-              <StatCard
+              <DashboardCard
                 icon="📚"
-                title="Pages lues"
-                value={`${stats.pagesRead} pages`}
+                label="Pages lues"
+                value={stats.pagesRead}
+                subtitle="Total"
                 route="/dashboard/stats"
+                color="sage"
               />
             </div>
           </section>
@@ -560,51 +592,28 @@ export default function DashboardPage() {
         </div>
       </main>
 
+      <LuxuryFooter />
+
       {/* Toast Container */}
       <div className="toast-container" id="toast-container"></div>
     </>
   )
 }
 
-// ═══════ COMPOSANTS DE CARTES ═══════
+// ═══════ COMPOSANT DE CARTE UNIFIÉ ═══════
 
-function NavCard({ icon, title, subtitle, route, badge, variant = 'default' }: NavCardProps) {
+function DashboardCard({ icon, label, value, subtitle, route, color }: DashboardCardProps) {
   const router = useRouter()
   
   return (
     <div 
-      className={`nav-card nav-card-${variant}`}
+      className={`stat-card stat-card-${color}`}
       onClick={() => router.push(route)}
     >
-      <div className="nav-card-icon">{icon}</div>
-      <div className="nav-card-content">
-        <h3 className="nav-card-title">{title}</h3>
-        <p className="nav-card-subtitle">{subtitle}</p>
-      </div>
-      {badge && (
-        <div className={`nav-card-badge ${variant === 'new' ? 'badge-new' : variant === 'trending' ? 'badge-trending' : ''}`}>
-          {badge}
-        </div>
-      )}
-      {variant === 'premium' && <div className="nav-card-premium">💎</div>}
-    </div>
-  )
-}
-
-function StatCard({ icon, title, value, route, trend }: StatCardProps) {
-  const router = useRouter()
-  
-  return (
-    <div 
-      className="stat-card-small"
-      onClick={() => router.push(route)}
-    >
-      <div className="stat-card-small-icon">{icon}</div>
-      <div className="stat-card-small-content">
-        <div className="stat-card-small-title">{title}</div>
-        <div className="stat-card-small-value">{value}</div>
-        {trend && <div className="stat-card-small-trend">{trend}</div>}
-      </div>
+      <div className="sc-label">{label}</div>
+      <div className="sc-value">{value}</div>
+      {subtitle && <div className="sc-subtitle">{subtitle}</div>}
+      <div className="sc-icon">{icon}</div>
     </div>
   )
 }

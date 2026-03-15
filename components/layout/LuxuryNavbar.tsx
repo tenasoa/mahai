@@ -45,7 +45,11 @@ export function LuxuryNavbar() {
   }
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 px-8 transition-all duration-400 ${scrolled ? "bg-void/90 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 px-8 transition-all duration-400 ${
+      scrolled 
+        ? "bg-card/95 backdrop-blur-xl shadow-md border-b border-b1" 
+        : "bg-transparent"
+    }`}>
       <div className="max-w-[1300px] mx-auto h-[76px] flex items-center justify-between">
         <Link href="/" className="font-display text-2xl font-semibold tracking-tight text-text no-underline flex items-center relative">
           Mah
