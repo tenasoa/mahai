@@ -15,7 +15,7 @@ type TabType = 'infos' | 'achats' | 'mvola' | 'securite'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { userId, user, appUser } = useAuth()
+  const { userId, user, appUser, setAppUser } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('infos')
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -50,8 +50,10 @@ export default function ProfilePage() {
       if (result.success) {
         setNotification({ type: 'success', message: 'Profil mis à jour avec succès !' })
         setEditModalOpen(false)
-        // Recharger les données du profil
-        window.location.reload()
+        // Mettre à jour les données localement sans recharger la page
+        if (result.data && setAppUser) {
+          setAppUser(result.data)
+        }
       } else {
         setNotification({ type: 'error', message: result.error || 'Erreur lors de la mise à jour' })
       }

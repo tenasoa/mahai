@@ -69,5 +69,5 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  return { user, appUser, userId, loading, isAuthenticated: !!user }
+  return { user, appUser, setAppUser, userId, loading, isAuthenticated: !!user }
 }
