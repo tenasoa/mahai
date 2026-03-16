@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import './profil.css'
 
 type TabType = 'infos' | 'achats' | 'mvola' | 'securite'
@@ -72,7 +71,6 @@ export default function ProfilePage() {
                 <div className="ph-stat"><div className="n">4.8</div><div className="l">Note</div></div>
               </div>
               <div className="ph-actions">
-                <button className="btn-edit-profile">Enregistrer les modifications</button>
                 <button className="btn-profile-ghost">Voir mon profil public</button>
               </div>
             </div>
@@ -139,6 +137,7 @@ export default function ProfilePage() {
                   <div><div className="toggle-label">E-mails promotionnels</div><div className="toggle-desc">Offres et crédits bonus</div></div>
                   <div className={`toggle-switch ${notifPromo ? 'on' : ''}`} onClick={() => setNotifPromo(!notifPromo)}><div className="toggle-knob"></div></div>
                 </div>
+                <button className="btn-save-profile">Enregistrer</button>
               </div>
             </div>
           </div>
@@ -224,8 +223,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      <LuxuryFooter />
     </div>
   )
 }

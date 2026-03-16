@@ -3,14 +3,14 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
-import { Bell, Sun, Moon, LayoutDashboard, Library, BookOpen, Users, User, LogOut, ChevronDown } from "lucide-react"
+import { Sun, Moon, User, LogOut, ChevronDown, Bell, CreditCard, RefreshCw, Settings } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { logoutUser } from "@/actions/auth"
 
 interface NavItem {
   label: string
   href: string
-  icon: any
+  icon?: React.ComponentType<{ size?: number }>
 }
 
 export function LuxuryNavbar() {
@@ -23,12 +23,23 @@ export function LuxuryNavbar() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const notifDropdownRef = useRef<HTMLDivElement>(null)
 
-  const navItems: NavItem[] = [
-    { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Catalogue', href: '/catalogue', icon: Library },
-    { label: 'Mes Sujets', href: '/dashboard/achats', icon: BookOpen },
-    { label: 'Examens', href: '/examens', icon: BookOpen },
-    { label: 'Communauté', href: '/dashboard/communaute', icon: Users }
+  // Menus centraux - différents pour connecté / non-connecté
+  const centerNavItems: NavItem[] = userId ? [
+    { label: 'Tableau de bord', href: '/dashboard' },
+    { label: 'Catalogue', href: '/catalogue' },
+    { label: 'Mes Sujets', href: '/dashboard/achats' },
+    { label: 'Examens', href: '/examens' },
+    { label: 'Communauté', href: '/dashboard/communaute' }
+  ] : [
+    { label: 'Accueil', href: '/' },
+    { label: 'Fonctionnalités', href: '/#features' },
+    { label: 'Tarifs', href: '/#pricing' }
+  ]
+
+  // Items du dropdown (uniquement menus supplémentaires)
+  const dropdownNavItems: NavItem[] = [
+    { label: 'Profil', href: '/profil', icon: User },
+    { label: 'Paramètres', href: '/parametres', icon: Settings }
   ]
 
   useEffect(() => {
@@ -73,7 +84,7 @@ export function LuxuryNavbar() {
         maxWidth: '1440px', margin: '0 auto', padding: '0 2rem', height: '64px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between'
       }}>
-        
+
         {/* LOGO */}
         <Link href="/" className="logo" style={{
           fontFamily: 'var(--display)', fontSize: '1.5rem', fontWeight: 600,
@@ -85,43 +96,41 @@ export function LuxuryNavbar() {
           }}></span>AI
         </Link>
 
-        {/* ACTIONS DROITE */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          
-          {/* CRÉDITS & RECHARGE (MERGÉ) */}
-          {userId && (
-            <Link href="/credits" className="credit-pill-merged" style={{
-              display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.35rem 0.85rem',
-              background: 'rgba(201, 168, 76, 0.08)', border: '1px solid var(--gold-line)',
-              borderRadius: '2rem', textDecoration: 'none', transition: 'all 0.2s', cursor: 'none'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--gold-dim)'; e.currentTarget.style.borderColor = 'var(--gold)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.08)'; e.currentTarget.style.borderColor = 'var(--gold-line)' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ fontFamily: 'var(--body)', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)' }}>
-                  {appUser?.credits ?? 0}
-                </span>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--gold)', textTransform: 'uppercase' }}>cr</span>
-              </div>
-              <div style={{ width: '1px', height: '14px', background: 'var(--gold-line)' }}></div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--gold)' }}>
-                <span style={{ fontSize: '1rem', fontWeight: 400 }}>+</span>
-                <span style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recharger</span>
-              </div>
-            </Link>
-          )}
+        {/* MENUS CENTRAUX */}
+        <ul style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem', listStyle: 'none', margin: 0, padding: 0
+        }}>
+          {centerNavItems.map((item) => (
+            <li key={item.href}>
+              <Link href={item.href} style={{
+                fontFamily: 'var(--mono)', fontSize: '0.62rem', textTransform: 'uppercase',
+                letterSpacing: '0.1em', color: isActive(item.href) ? 'var(--gold)' : 'var(--text-3)',
+                textDecoration: 'none', padding: '0.4rem 0.9rem', borderRadius: 'var(--r)',
+                border: isActive(item.href) ? '1px solid var(--gold-line)' : '1px solid transparent',
+                background: isActive(item.href) ? 'var(--gold-dim)' : 'transparent',
+                transition: 'all 0.2s', cursor: 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive(item.href)) {
+                  e.currentTarget.style.color = 'var(--text-2)'
+                  e.currentTarget.style.borderColor = 'var(--gold-line)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive(item.href)) {
+                  e.currentTarget.style.color = 'var(--text-3)'
+                  e.currentTarget.style.borderColor = 'transparent'
+                }
+              }}
+              >
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
 
-          {/* THEME TOGGLE */}
-          <button onClick={toggleTheme} style={{
-            width: '34px', height: '34px', borderRadius: '50%', background: 'var(--card)', border: '1px solid var(--b1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'none', transition: 'all 0.2s', color: 'var(--text-3)'
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--gold-line)'; e.currentTarget.style.color = 'var(--gold)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--b1)'; e.currentTarget.style.color = 'var(--text-3)' }}
-          >
-            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-          </button>
+        {/* ACTIONS DROITE - Uniquement Notification + Avatar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
 
           {/* NOTIFICATIONS */}
           {userId && (
@@ -134,11 +143,15 @@ export function LuxuryNavbar() {
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.12)'; e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.3)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.05)'; e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.15)' }}
               >
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="#F5C75D"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <Bell size={18} style={{ color: 'var(--gold)' }} />
                 <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#FF4D4F', borderRadius: '50%', border: '2px solid var(--void)' }}></span>
               </button>
               {notifDropdownOpen && (
-                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 0.75rem)', width: '300px', background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)', boxShadow: '0 10px 40px rgba(0,0,0,0.3)', padding: '0.5rem 0', zIndex: 100, animation: 'fadeIn 0.2s ease' }}>
+                <div style={{
+                  position: 'absolute', right: 0, top: 'calc(100% + 0.75rem)', width: '300px',
+                  background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)',
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.3)', padding: '0.5rem 0', zIndex: 100, animation: 'fadeIn 0.2s ease'
+                }}>
                   <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--b1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)' }}>Notifications</p>
                     <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>3 nouvelles</span>
@@ -188,9 +201,29 @@ export function LuxuryNavbar() {
                     <p style={{ fontSize: '0.7rem', color: 'var(--text-4)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
                   </div>
 
-                  {/* Navigation Links (Moved here) */}
+                  {/* Navigation Links & Actions */}
                   <div style={{ padding: '0.5rem 0' }}>
-                    {navItems.map((item) => (
+                    {/* Crédits + Recharger (fusionné) */}
+                    <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--b3)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-4)' }}>Solde</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--gold)' }}>250 cr</span>
+                      </div>
+                      <button style={{
+                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                        padding: '0.5rem', fontSize: '0.75rem', color: 'var(--gold)', background: 'rgba(201, 168, 76, 0.1)',
+                        border: '1px solid rgba(201, 168, 76, 0.2)', borderRadius: 'var(--r)', cursor: 'none', transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.2)'; e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.4)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.1)'; e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.2)' }}
+                      >
+                        <RefreshCw size={14} />
+                        Recharger
+                      </button>
+                    </div>
+                    
+                    {/* Navigation Links */}
+                    {dropdownNavItems.map((item) => (
                       <Link key={item.href} href={item.href} style={{
                         display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.7rem 1.25rem',
                         fontSize: '0.82rem', color: isActive(item.href) ? 'var(--gold)' : 'var(--text-2)',
@@ -200,7 +233,7 @@ export function LuxuryNavbar() {
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; if(!isActive(item.href)) e.currentTarget.style.color = 'var(--text-2)' }}
                       onClick={() => setDropdownOpen(false)}
                       >
-                        <item.icon size={16} />
+                        {item.icon && <item.icon size={16} />}
                         {item.label}
                       </Link>
                     ))}
@@ -208,18 +241,24 @@ export function LuxuryNavbar() {
 
                   <div style={{ height: '1px', background: 'var(--b1)', margin: '0.25rem 0' }}></div>
 
-                  {/* Profile & Logout */}
+                  {/* Thème + Déconnexion */}
                   <div style={{ padding: '0.5rem 0' }}>
-                    <Link href="/profil" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.7rem 1.25rem', fontSize: '0.82rem', color: 'var(--text-2)', textDecoration: 'none' }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      onClick={() => setDropdownOpen(false)}
+                    <button onClick={toggleTheme} style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.7rem 1.25rem',
+                      fontSize: '0.82rem', color: 'var(--text-2)', background: 'none', border: 'none', cursor: 'none', textAlign: 'left'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     >
-                      <User size={16} /> Mon Profil
-                    </Link>
-                    <button onClick={() => logoutUser()} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.7rem 1.25rem', fontSize: '0.82rem', color: 'var(--ruby)', background: 'none', border: 'none', cursor: 'none', textAlign: 'left' }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--ruby-dim)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                      {theme === 'dark' ? 'Mode Clair' : 'Mode Sombre'}
+                    </button>
+                    <button onClick={() => logoutUser()} style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.7rem 1.25rem',
+                      fontSize: '0.82rem', color: 'var(--ruby)', background: 'none', border: 'none', cursor: 'none', textAlign: 'left'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--ruby-dim)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     >
                       <LogOut size={16} /> Déconnexion
                     </button>

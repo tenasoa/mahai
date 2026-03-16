@@ -16,7 +16,7 @@
 
 /* PROFILE HEADER */
 .profile-header {
-  background: linear-gradient(160deg, var(--navy) 0%, var(--card) 60%);
+  background: linear-gradient(160deg, var(--depth) 0%, var(--card) 60%);
   border: 1px solid var(--b1);
   border-radius: var(--r-lg);
   padding: 2.5rem;
