@@ -117,7 +117,11 @@ export default function ProfilePage() {
                   </select>
                 </div>
                 <div className="form-group"><label className="form-label">Biographie</label>
-                  <textarea className="form-textarea" placeholder="Parlez-nous de vous…">Élève passionné préparant ses examens avec Mah.AI.</textarea>
+                  <textarea 
+                    className="form-textarea" 
+                    placeholder="Parlez-nous de vous…" 
+                    defaultValue="Élève passionné préparant ses examens avec Mah.AI."
+                  />
                 </div>
                 <button className="btn-save-profile">Enregistrer</button>
               </div>
