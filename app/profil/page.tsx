@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
+import { ProfileEditModal } from '@/components/modals/ProfileEditModal'
+import { getProfileAction, updateProfileAction } from '@/actions/profile'
 import './profil.css'
+import '@/components/modals/ProfileEditModal.css'
 
 type TabType = 'infos' | 'achats' | 'mvola' | 'securite'
 
@@ -15,6 +18,9 @@ export default function ProfilePage() {
   const { userId, user, appUser } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('infos')
   const [loading, setLoading] = useState(true)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
   // États des switchs (Notifications)
   const [notifIA, setNotifIA] = useState(true)
@@ -34,6 +40,26 @@ export default function ProfilePage() {
         Chargement du profil...
       </div>
     )
+  }
+
+  const handleProfileUpdate = async (data: any) => {
+    setSaveLoading(true)
+    try {
+      const result = await updateProfileAction(userId!, data)
+      
+      if (result.success) {
+        setNotification({ type: 'success', message: 'Profil mis à jour avec succès !' })
+        setEditModalOpen(false)
+        // Recharger les données du profil
+        window.location.reload()
+      } else {
+        setNotification({ type: 'error', message: result.error || 'Erreur lors de la mise à jour' })
+      }
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Erreur serveur' })
+    } finally {
+      setSaveLoading(false)
+    }
   }
 
   const userInitial = (appUser?.prenom?.charAt(0) || user?.email?.charAt(0) || 'U').toUpperCase()
@@ -223,6 +249,75 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Notification */}
+      {notification && (
+        <div className={`notification ${notification.type}`} style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          padding: '1rem 1.5rem',
+          borderRadius: 'var(--r)',
+          background: notification.type === 'success' ? 'var(--sage)' : 'var(--ruby)',
+          color: 'white',
+          zIndex: 1000,
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          {notification.message}
+        </div>
+      )}
+
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        userData={appUser}
+        onSave={handleProfileUpdate}
+        loading={saveLoading}
+      />
+
+      {/* Bouton d'édition flottant */}
+      <button 
+        onClick={() => setEditModalOpen(true)}
+        className="floating-edit-btn"
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+          border: 'none',
+          color: 'var(--void)',
+          fontSize: '1.5rem',
+          cursor: 'none',
+          boxShadow: '0 4px 20px rgba(201, 168, 76, 0.4)',
+          transition: 'all 0.3s',
+          zIndex: 900
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1) rotate(0deg)'
+        }}
+      >
+        ✏️
+      </button>
+
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   )
 }
