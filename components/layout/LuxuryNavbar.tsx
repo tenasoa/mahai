@@ -428,7 +428,7 @@ export function LuxuryNavbar() {
                     <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.15rem' }}>{appUser?.prenom || 'Utilisateur'}</p>
                     <p style={{ fontSize: '0.7rem', color: 'var(--text-4)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
                   </div>
-                  <Link href="/dashboard/profil" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.25rem', fontSize: '0.85rem', color: 'var(--text-2)', textDecoration: 'none' }}>
+                  <Link href="/profil" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.25rem', fontSize: '0.85rem', color: 'var(--text-2)', textDecoration: 'none' }}>
                     <span>👤</span> Profil
                   </Link>
                   <Link href="/credits" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.25rem', fontSize: '0.85rem', color: 'var(--text-2)', textDecoration: 'none' }}>
