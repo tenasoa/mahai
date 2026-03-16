@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db-client'
 
 export async function POST(
   request: Request,
@@ -10,7 +10,7 @@ export async function POST(
     const userId = 'demo-user-id' // In production, get from session
 
     // Get subject details
-    const subject = await prisma.subject.findUnique({
+    const subject = await db.subject.findUnique({
       where: { id },
     })
 
@@ -22,7 +22,7 @@ export async function POST(
     }
 
     // Get user
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
     })
 
@@ -34,7 +34,7 @@ export async function POST(
     }
 
     // Check if already purchased
-    const existingPurchase = await prisma.purchase.findFirst({
+    const existingPurchase = await db.purchase.findFirst({
       where: {
         userId,
         subjectId: id,
@@ -58,9 +58,9 @@ export async function POST(
     }
 
     // Perform purchase in a transaction
-    const [purchase] = await prisma.$transaction([
+    const [purchase] = await db.$transaction([
       // Deduct credits from user
-      prisma.user.update({
+      db.user.update({
         where: { id: userId },
         data: {
           credits: {
@@ -70,7 +70,7 @@ export async function POST(
       }),
 
       // Create purchase record
-      prisma.purchase.create({
+      db.purchase.create({
         data: {
           userId,
           subjectId: id,
@@ -81,7 +81,7 @@ export async function POST(
       }),
 
       // Create credit transaction record
-      prisma.creditTransaction.create({
+      db.creditTransaction.create({
         data: {
           userId,
           amount: subject.credits,

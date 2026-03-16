@@ -84,18 +84,24 @@ export async function getSubjects(
       query = query.eq('featured', featured)
     }
 
-    // Recherche textuelle
+    // Recherche textuelle multi-critères
     if (search && search.trim()) {
-      const searchTerms = search.trim().split(/\s+/)
-      searchTerms.forEach((term) => {
-        const orConditions = [
-          `titre.ilike.%${term}%`,
-          `matiere.ilike.%${term}%`,
-          `serie.ilike.%${term}%`,
-          `description.ilike.%${term}%`,
-        ]
-        query = query.or(orConditions.join(','))
-      })
+      const searchTerms = search.trim().split(/\s+/).filter(term => term.length > 0)
+      
+      if (searchTerms.length > 0) {
+        // Pour chaque mot, il doit correspondre à au moins une des colonnes
+        searchTerms.forEach((term) => {
+          const orConditions = [
+            `titre.ilike.%${term}%`,
+            `matiere.ilike.%${term}%`,
+            `type.ilike.%${term}%`,
+            `annee.ilike.%${term}%`,
+            `serie.ilike.%${term}%`,
+            `description.ilike.%${term}%`,
+          ]
+          query = query.or(orConditions.join(','))
+        })
+      }
     }
 
     // Tri

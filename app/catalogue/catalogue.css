@@ -587,6 +587,10 @@ body {
   margin-bottom: 2rem;
 }
 
+.main-area.full-width {
+  margin-left: 2rem;
+}
+
 /* Mode Guest - Sidebar masquée, le contenu prend tout l'espace */
 .main-area.guest-mode {
   margin-left: 2rem;

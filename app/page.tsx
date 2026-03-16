@@ -194,7 +194,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════ FEATURES ═══════ */}
-      <section className="section" style={{ background: "var(--surface)" }}>
+      <section className="section" id="features" style={{ background: "var(--surface)" }}>
         <div className="container">
           <div className="eyebrow reveal">Fonctionnalités</div>
           <h2 className="serif reveal" style={{ fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 400, letterSpacing: "-.03em", lineHeight: 1.1 }}>
@@ -408,6 +408,22 @@ export default function LandingPage() {
           </div>
 
           <div className="pricing-grid">
+            <div className="price-card reveal">
+              <div className="price-plan">Gratuit</div>
+              <div className="price-amount">0 <span className="unit">cr</span></div>
+              <p className="price-desc">Pour tester la plateforme avec les sujets offerts gratuitement.</p>
+              <div className="price-divider"></div>
+              <ul className="price-features">
+                <li><span className="price-check">✦</span>Accès aux sujets gratuits</li>
+                <li><span className="price-check">✦</span>Aperçu illimité</li>
+                <li><span className="price-check">✦</span>10 crédits offerts à l'inscription</li>
+                <li className="muted"><span className="price-x">—</span>Corrections IA limitées</li>
+              </ul>
+              <Link href="/auth/register" className="btn-secondary" style={{ width: "100%", justifyContent: "center", padding: ".75rem", textDecoration: "none" }}>
+                Créer un compte
+              </Link>
+            </div>
+
             <div className="price-card reveal">
               <div className="price-plan">Starter</div>
               <div className="price-amount">50 <span className="unit">cr</span></div>

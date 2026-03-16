@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 export function LuxuryCursor() {
   const [isHovering, setIsHovering] = useState(false)
   const [isDark, setIsDark] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
   const cursorRef = useRef<HTMLDivElement>(null)
   const ringRef = useRef<HTMLDivElement>(null)
 
@@ -14,6 +15,15 @@ export function LuxuryCursor() {
   const ringPos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
+    // Ne pas activer sur mobile ou tablette tactile
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    const isSmallScreen = window.innerWidth < 1024
+    if (isTouchDevice || isSmallScreen) {
+      setIsVisible(false)
+      return
+    }
+    setIsVisible(true)
+
     // Check theme initial
     const checkTheme = () => {
       const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark'
@@ -93,6 +103,8 @@ export function LuxuryCursor() {
       cancelAnimationFrame(animationId)
     }
   }, [])
+
+  if (!isVisible) return null
 
   return (
     <>

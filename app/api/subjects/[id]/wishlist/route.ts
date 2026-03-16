@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db-client'
 
 export async function POST(
   request: Request,
@@ -12,7 +12,7 @@ export async function POST(
 
     if (add) {
       // Add to wishlist
-      await prisma.wishlist.upsert({
+      await db.wishlist.upsert({
         where: {
           userId_subjectId: {
             userId,
@@ -27,7 +27,7 @@ export async function POST(
       })
     } else {
       // Remove from wishlist
-      await prisma.wishlist.delete({
+      await db.wishlist.delete({
         where: {
           userId_subjectId: {
             userId,

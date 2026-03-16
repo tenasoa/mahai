@@ -1,11 +1,11 @@
 /**
- * Raw SQL implementation to replace Prisma client
- * All queries use the pg pool directly instead of Prisma ORM
+ * Implémentation SQL brute pour remplacer le client ORM.
+ * Toutes les requêtes utilisent directement le pool 'pg'.
  */
 
 import { query, transaction } from './db'
 
-// Helper to convert snake_case to camelCase
+// Helper pour convertir snake_case en camelCase
 function toCamelCase(row: any) {
   if (!row) return null
   const result: any = {}
@@ -16,8 +16,8 @@ function toCamelCase(row: any) {
   return result
 }
 
-// User queries
-export const prisma = {
+// Requêtes base de données
+export const db = {
   user: {
     async findUnique({ where }: { where: { id?: string; email?: string } }) {
       let sql: string
@@ -91,7 +91,7 @@ export const prisma = {
       const result = await query(sql, params)
       const purchase = result.rows[0] || null
       
-      // Handle include.subject
+      // Gérer include.subject
       if (purchase && include?.subject && purchase.subjectId) {
         const subjectResult = await query('SELECT * FROM "Subject" WHERE id = $1', [purchase.subjectId])
         purchase.subject = subjectResult.rows[0] || null
@@ -124,17 +124,17 @@ export const prisma = {
     async upsert({ where, update, create }: { where: { userId_subjectId: { userId: string; subjectId: string } }; update: any; create: any }) {
       const { userId, subjectId } = where.userId_subjectId
       
-      // Check if exists
+      // Vérifier si existe
       const existing = await query(
         'SELECT * FROM "Wishlist" WHERE "userId" = $1 AND "subjectId" = $2',
         [userId, subjectId]
       )
       
       if (existing.rows.length > 0) {
-        // Update (no-op for now)
+        // Mise à jour (pas d'action pour le moment)
         return existing.rows[0]
       } else {
-        // Create
+        // Création
         const result = await query(
           'INSERT INTO "Wishlist" ("userId", "subjectId") VALUES ($1, $2) RETURNING *',
           [userId, subjectId]
@@ -222,8 +222,7 @@ export const prisma = {
     return await transaction(async (client) => {
       const results = []
       for (const queryPromise of queries) {
-        // Execute each query - this is a simplified version
-        // In a real transaction, you'd need to adapt each prisma query to use the client
+        // Exécuter chaque requête - version simplifiée
         const result = await queryPromise
         results.push(result)
       }

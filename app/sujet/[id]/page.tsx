@@ -8,6 +8,10 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { AuthModal } from '@/components/ui/AuthModal'
 import { getSubjectById } from '@/actions/subjects'
 import { getUserCredits, purchaseSubject } from '@/actions/user'
+import { SkeletonCard, Skeleton } from '@/components/ui/Skeleton'
+import { AIFeedbackNarrative } from '@/components/ui/AIFeedbackNarrative'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Check, Info, FileText, Zap, Star, LucideIcon, Search, Sparkles, FileSearch, Scale, CheckCircle } from 'lucide-react'
 import './detail.css'
 
 // Types
@@ -200,7 +204,42 @@ export default function SujetDetailPage() {
     setIsReadOnly(!isReadOnly)
   }
 
-  if (!subject) return null
+  if (loading) {
+    return (
+      <div className="p-8 max-w-[1300px] mx-auto space-y-8 min-h-screen bg-void">
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-2/3" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-6 w-24 rounded-full" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-[600px] w-full rounded-[32px]" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-[200px] w-full rounded-[24px]" />
+            <Skeleton className="h-[300px] w-full rounded-[24px]" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!subject) {
+    return (
+      <div className="min-h-screen bg-void flex items-center justify-center p-6">
+        <EmptyState 
+          title="Sujet introuvable" 
+          description="Désolé, nous ne parvenons pas à trouver ce sujet d'examen. Il a peut-être été déplacé ou supprimé."
+          actionLabel="Retour au catalogue"
+          actionHref="/catalogue"
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="detail-page-container">
@@ -507,26 +546,14 @@ export default function SujetDetailPage() {
 
             {/* ── STATE: PENDING ── */}
             {state === 'pending' && (
-              <div id="state-pending">
-                <div className="pending-hero">
-                  <div className="spinner-wrap">
-                    <div className="spinner-ring"></div>
-                    <div className="spinner-ring spinner-ring2"></div>
-                    <div className="spinner-icon">🤖</div>
-                  </div>
-                  <div className="pending-title">Correction <em>en cours</em>…</div>
-                  <div className="pending-sub">L'IA Mah.AI analyse vos réponses. Une notification vous sera envoyée dès que la correction est prête, généralement en moins de 2 minutes.</div>
-                  <div className="pending-progress">
-                    <div className="pp-label"><span>Analyse en cours</span><span>~65%</span></div>
-                    <div className="pp-track"><div className="pp-fill"></div></div>
-                  </div>
-                  <div className="pending-eta">
-                    <span className="eta-dot"></span>
-                    Résultat estimé dans <strong style={{ margin: '0 .3rem', color: 'var(--text)' }}>
-                      {Math.floor(countdown / 60)} min {countdown % 60} s
-                    </strong>
-                  </div>
-                </div>
+              <div id="state-pending" className="space-y-8">
+                <AIFeedbackNarrative 
+                  isVisible={state === 'pending'} 
+                  onComplete={() => {
+                    showToast('success', 'Analyse terminée', 'Votre correction est prête !')
+                  }} 
+                />
+                
                 <div className="answers-recap">
                   <div className="ar-head">
                     <div className="sec-label" style={{ marginBottom: 0 }}>Vos réponses soumises</div>

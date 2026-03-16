@@ -1,4 +1,4 @@
-// Types pour le catalogue basés sur le schema Prisma
+// Types pour le catalogue basés sur le schéma de la base de données
 
 export type ExamenType = 'BAC' | 'BEPC' | 'CEPE'
 export type Difficulte = 'FACILE' | 'MOYEN' | 'DIFFICILE'

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db-client'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function POST(
@@ -19,7 +19,7 @@ export async function POST(
     const body = await request.json()
     const { answers } = body
 
-    const exam = await prisma.examenBlanc.findUnique({
+    const exam = await db.examenBlanc.findUnique({
       where: { id },
     })
 
@@ -47,7 +47,7 @@ export async function POST(
       })
     }
 
-    await prisma.examenBlanc.update({
+    await db.examenBlanc.update({
       where: { id },
       data: {
         score,
@@ -56,7 +56,7 @@ export async function POST(
       },
     })
 
-    await prisma.creditTransaction.create({
+    await db.creditTransaction.create({
       data: {
         userId: session.user.id,
         amount: score > 0 ? Math.floor(score / 10) : 0,

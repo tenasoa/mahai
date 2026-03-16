@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project now uses **raw SQL queries** instead of Prisma ORM. All database operations are handled through the `pg` library with a PostgreSQL connection pool.
+This project now uses **raw SQL queries** instead of SQL pur. All database operations are handled through the `pg` library with a PostgreSQL connection pool.
 
 ## Migration Steps
 
@@ -61,7 +61,7 @@ Check the console for any database connection errors.
 ```
 lib/
 ├── db.ts              # PostgreSQL pool and query helpers
-├── prisma.ts          # Raw SQL implementation (Prisma API compatibility layer)
+├── db-client.ts          # Raw SQL implementation (API db compatibility layer)
 └── sql-queries.ts     # Pre-written SQL queries for common operations
 ```
 
@@ -71,10 +71,10 @@ lib/
    - `query(text, params)` - Execute any SQL query
    - `transaction(callback)` - Run queries in a transaction
 
-2. **lib/prisma.ts** - Provides a Prisma-like API that uses raw SQL:
-   - `prisma.user.findUnique()` - Find a user by ID or email
-   - `prisma.subject.findUnique()` - Find a subject by ID
-   - `prisma.purchase.create()` - Create a purchase record
+2. **lib/db-client.ts** - Provides a la base de donn�es-like API that uses raw SQL:
+   - `db.user.findUnique()` - Find a user by ID or email
+   - `db.subject.findUnique()` - Find a subject by ID
+   - `db.purchase.create()` - Create a purchase record
    - etc.
 
 3. **lib/sql-queries.ts** - Contains type-safe helper functions:
@@ -113,25 +113,25 @@ const result = await transaction(async (client) => {
 })
 ```
 
-### Using the Prisma compatibility layer
+### Using the la base de donn�es compatibility layer
 
 ```typescript
-import { prisma } from '@/lib/prisma'
+import { la base de donn�es } from '@/lib/la base de donn�es'
 
-const user = await prisma.user.findUnique({ where: { id: userId } })
-const subject = await prisma.subject.findUnique({ where: { id: subjectId } })
+const user = await db.user.findUnique({ where: { id: userId } })
+const subject = await db.subject.findUnique({ where: { id: subjectId } })
 ```
 
 ## Common Operations
 
 ### Find a user by email
 ```typescript
-const user = await prisma.user.findUnique({ where: { email: 'user@example.com' } })
+const user = await db.user.findUnique({ where: { email: 'user@example.com' } })
 ```
 
 ### Update user credits
 ```typescript
-await prisma.user.update({
+await db.user.update({
   where: { id: userId },
   data: { credits: { decrement: 10 } }
 })
@@ -139,15 +139,15 @@ await prisma.user.update({
 
 ### Create a purchase with transaction
 ```typescript
-const [updatedUser, purchase, transactionRecord] = await prisma.$transaction([
-  prisma.user.update({
+const [updatedUser, purchase, transactionRecord] = await db.$transaction([
+  db.user.update({
     where: { id: userId },
     data: { credits: { decrement: subject.credits } }
   }),
-  prisma.purchase.create({
+  db.purchase.create({
     data: { userId, subjectId: subject.id, creditsAmount: subject.credits, status: 'COMPLETED' }
   }),
-  prisma.creditTransaction.create({
+  db.creditTransaction.create({
     data: { userId, amount: subject.credits, type: 'SPEND', description: `Achat: ${subject.titre}` }
   })
 ])
@@ -155,11 +155,11 @@ const [updatedUser, purchase, transactionRecord] = await prisma.$transaction([
 
 ## Benefits of Raw SQL
 
-1. **No Prisma incompatibilities** - Direct control over SQL
+1. **No la base de donn�es incompatibilities** - Direct control over SQL
 2. **Better performance** - No ORM overhead
 3. **Full PostgreSQL features** - Use all Supabase/Postgres capabilities
 4. **Transparent queries** - See exactly what SQL is executed
-5. **Smaller bundle** - No Prisma client to generate
+5. **Smaller bundle** - No la base de donn�es client to generate
 
 ## Troubleshooting
 

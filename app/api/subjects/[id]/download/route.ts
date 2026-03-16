@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db-client'
 
 export async function GET(
   request: Request,
@@ -10,7 +10,7 @@ export async function GET(
     const userId = 'demo-user-id' // In production, get from session
 
     // Verify user has purchased this subject
-    const purchase = await prisma.purchase.findFirst({
+    const purchase = await db.purchase.findFirst({
       where: {
         userId,
         subjectId: id,
@@ -26,7 +26,7 @@ export async function GET(
     }
 
     // Get subject
-    const subject = await prisma.subject.findUnique({
+    const subject = await db.subject.findUnique({
       where: { id },
     })
 

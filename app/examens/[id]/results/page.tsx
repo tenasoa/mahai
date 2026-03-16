@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db-client'
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import Link from 'next/link'
@@ -20,7 +20,7 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
     redirect('/auth/login')
   }
 
-  const exam = await prisma.examenBlanc.findUnique({
+  const exam = await db.examenBlanc.findUnique({
     where: { id },
   })
 

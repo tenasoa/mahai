@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db-client'
 import { notFound, redirect } from 'next/navigation'
 
 interface ConsultPageProps {
@@ -13,7 +13,7 @@ export default async function ConsultPage({ params }: ConsultPageProps) {
 
   try {
     // Verify user has purchased this subject
-    const purchase = await prisma.purchase.findFirst({
+    const purchase = await db.purchase.findFirst({
       where: {
         userId,
         subjectId: id,

@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db-client'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -8,7 +8,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 export async function resendVerificationEmail(email: string) {
   try {
     // Find existing user
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { email },
     })
 
@@ -25,12 +25,12 @@ export async function resendVerificationEmail(email: string) {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
     // Delete old tokens
-    await prisma.emailVerification.deleteMany({
+    await db.emailVerification.deleteMany({
       where: { email },
     })
 
     // Create new token
-    await prisma.emailVerification.create({
+    await db.emailVerification.create({
       data: {
         email,
         token,
