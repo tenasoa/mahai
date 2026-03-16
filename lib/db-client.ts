@@ -43,7 +43,7 @@ export const db = {
       let paramIndex = 2
       
       for (const [key, value] of Object.entries(data)) {
-        const dbKey = key.replace(/([A-Z])/g, '_$1').toUpperCase()
+        const dbKey = key // Utiliser directement la clé camelCase
         if (typeof value === 'object' && value !== null && 'decrement' in value && value.decrement) {
           updates.push(`"${dbKey}" = "${dbKey}" - $${paramIndex}`)
           values.push((value as { decrement: number }).decrement)
@@ -107,7 +107,7 @@ export const db = {
       
       let paramIndex = 1
       for (const [key, value] of Object.entries(data)) {
-        const dbKey = key.replace(/([A-Z])/g, '_$1').toUpperCase()
+        const dbKey = key // Utiliser directement la clé camelCase
         fields.push(`"${dbKey}"`)
         placeholders.push(`$${paramIndex}`)
         values.push(value)
@@ -161,7 +161,7 @@ export const db = {
       
       let paramIndex = 1
       for (const [key, value] of Object.entries(data)) {
-        const dbKey = key.replace(/([A-Z])/g, '_$1').toUpperCase()
+        const dbKey = key
         fields.push(`"${dbKey}"`)
         placeholders.push(`$${paramIndex}`)
         values.push(value)
@@ -206,7 +206,7 @@ export const db = {
       
       let paramIndex = 2
       for (const [key, value] of Object.entries(data)) {
-        const dbKey = key.replace(/([A-Z])/g, '_$1').toUpperCase()
+        const dbKey = key
         updates.push(`"${dbKey}" = $${paramIndex}`)
         values.push(value)
         paramIndex++

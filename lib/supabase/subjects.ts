@@ -89,16 +89,21 @@ export async function getSubjects(
       const searchTerms = search.trim().split(/\s+/).filter(term => term.length > 0)
       
       if (searchTerms.length > 0) {
-        // Pour chaque mot, il doit correspondre à au moins une des colonnes
         searchTerms.forEach((term) => {
           const orConditions = [
             `titre.ilike.%${term}%`,
             `matiere.ilike.%${term}%`,
-            `type.ilike.%${term}%`,
             `annee.ilike.%${term}%`,
             `serie.ilike.%${term}%`,
             `description.ilike.%${term}%`,
           ]
+          
+          // Pour l'Enum type, on utilise une comparaison exacte si le mot correspond
+          const upperTerm = term.toUpperCase()
+          if (['BAC', 'BEPC', 'CEPE'].includes(upperTerm)) {
+            orConditions.push(`type.eq.${upperTerm}`)
+          }
+          
           query = query.or(orConditions.join(','))
         })
       }
