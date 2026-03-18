@@ -35,7 +35,8 @@ async function getPublicProfile(userId: string) {
         bio,
         matieresPreferees,
         objectifsEtude,
-        profilePublic
+        profilePublic,
+        profilePicture
       `)
       .eq('id', userId)
       .single()
@@ -68,7 +69,7 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
   }
 
   const userInitial = (profile.prenom?.charAt(0) || 'U').toUpperCase()
-  
+
   const displayUserType = () => {
     if (profile.userType === 'AUTRE') return profile.customUserType || 'Passionné'
     const types: Record<string, string> = {
@@ -90,11 +91,20 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
         <div className="profile-header luxury-card public-header">
           <div className="ph-left">
             <div className="ph-avatar-wrap">
-              <div className="ph-avatar large">{userInitial}</div>
+              {profile.profilePicture ? (
+                <div className="ph-avatar-image large">
+                  <img src={profile.profilePicture} alt={profile.prenom} />
+                </div>
+              ) : (
+                <div className="ph-avatar large">{userInitial}</div>
+              )}
             </div>
             <div className="ph-info">
               <div className="ph-name-wrap">
-                <h1 className="ph-name">{profile.nomComplet || `${profile.prenom} ${profile.nom || ''}`.trim()}</h1>
+                <h1 className="ph-name">{profile.prenom} {profile.nom}</h1>
+                {profile.pseudo && (
+                  <span className="ph-badge">@{profile.pseudo}</span>
+                )}
               </div>
               <div className="ph-badges">
                 <span className="ph-badge student">{displayUserType()}</span>
@@ -128,9 +138,15 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
               </div>
               <div className="public-field-grid">
                 <div className="public-field-item">
-                  <div className="public-field-label">Nom affiché</div>
+                  <div className="public-field-label">Prénom</div>
                   <div className="public-field-value">
-                    {profile.nomComplet || `${profile.prenom} ${profile.nom || ''}`.trim() || 'Non renseigné'}
+                    {profile.prenom || 'Non renseigné'}
+                  </div>
+                </div>
+                <div className="public-field-item">
+                  <div className="public-field-label">Nom</div>
+                  <div className="public-field-value">
+                    {profile.nom || 'Non renseigné'}
                   </div>
                 </div>
                 <div className="public-field-item">
