@@ -735,7 +735,7 @@ export default function ProfilePage() {
 
               {/* Modal Changement de mot de passe */}
               {passwordModalOpen && (
-                <div className="modal-overlay" onClick={() => setPasswordModalOpen(false)}>
+                <div className={`modal-overlay open`} onClick={() => setPasswordModalOpen(false)}>
                   <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
                     <div className="modal-header">
                       <h2 className="modal-title">Changer le <em>mot de passe</em></h2>

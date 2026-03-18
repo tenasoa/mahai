@@ -3,13 +3,15 @@
 import { useState, useEffect } from 'react'
 import { X, User, MapPin, GraduationCap, Phone, Building, BookOpen } from 'lucide-react'
 import { MADAGASCAR_REGIONS, getDistrictsByRegion } from '@/lib/data/madagascar-geo'
-import { 
-  USER_TYPES, 
-  EDUCATION_LEVELS, 
-  GRADE_LEVELS_MAP, 
-  COMMON_SUBJECTS, 
-  STUDY_OBJECTIVES 
+import {
+  USER_TYPES,
+  EDUCATION_LEVELS,
+  GRADE_LEVELS_MAP,
+  COMMON_SUBJECTS,
+  STUDY_OBJECTIVES
 } from '@/lib/constants/profile-data'
+import '@/components/modals/Modal.css'
+import './ProfileEditModal.css'
 
 interface ProfileEditModalProps {
   isOpen: boolean
@@ -175,7 +177,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
   const isHigherEd = ['UNIVERSITE', 'FACULTE', 'INSTITUT', 'FORMATION'].includes(formData.educationLevel);
 
   return (
-    <div className="modal-overlay">
+    <div className={`modal-overlay ${isOpen ? 'open' : ''}`}>
       <div className="modal-container profile-edit-modal">
         <div className="modal-header">
           <h2 className="modal-title">Compléter mon profil</h2>

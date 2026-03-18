@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react'
 import { X, Upload, Trash2, Image as ImageIcon } from 'lucide-react'
 import { uploadAvatarAction, deleteAvatarAction } from '@/actions/avatar'
+import '@/components/modals/Modal.css'
+import './AvatarUploadModal.css'
 
 interface AvatarUploadModalProps {
   isOpen: boolean
@@ -158,14 +160,17 @@ export function AvatarUploadModal({
   }
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
+    <div className={`modal-overlay ${isOpen ? 'open' : ''}`} onClick={handleClose}>
       <div className="modal-container avatar-upload-modal" onClick={(e) => e.stopPropagation()}>
-        <button onClick={handleClose} className="modal-close" style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--luxury-text)', zIndex: 10 }}>
-          <X size={20} />
-        </button>
+        <div className="modal-header">
+          <h2 className="modal-title">Modifier mon <em>avatar</em></h2>
+          <button onClick={handleClose} className="modal-close">
+            <X size={20} />
+          </button>
+        </div>
         <div className="modal-content">
           {/* Preview avec Drag & Drop */}
-          <div 
+          <div
             className="avatar-preview-section"
             ref={dropZoneRef}
             onDragOver={handleDragOver}
