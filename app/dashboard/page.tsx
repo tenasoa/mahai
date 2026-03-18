@@ -7,6 +7,7 @@ import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import { DashboardPageSkeleton } from '@/components/ui/PageSkeletons'
+import { getRandomQuote, type MotivationalQuote } from '@/lib/constants/motivationalQuotes'
 import './dashboard.css'
 
 interface DashboardCardProps {
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState('')
   const [currentTime, setCurrentTime] = useState('')
   const [greeting, setGreeting] = useState('')
+  const [motivationalQuote, setMotivationalQuote] = useState<MotivationalQuote | null>(null)
 
   useEffect(() => {
     const now = new Date()
@@ -50,6 +52,9 @@ export default function DashboardPage() {
     } else {
       setGreeting('Bonsoir')
     }
+
+    // Charger une citation aléatoire
+    setMotivationalQuote(getRandomQuote())
   }, [])
 
   useEffect(() => {
@@ -122,10 +127,10 @@ export default function DashboardPage() {
                 <span className="hero-icon">✦</span>
                 <div>
                   <h1 className="hero-title">
-                    {greeting}, <em>{appUser?.prenom || 'Utilisateur'}</em>
+                    {greeting}, <em>{appUser?.pseudo || appUser?.prenom || 'Utilisateur'}</em>
                   </h1>
                   <p className="hero-subtitle">
-                    Espace de pilotage minimal pendant l’intégration du profil.
+                    Espace de pilotage minimal pendant l'intégration du profil.
                   </p>
                   <p
                     className="hero-time"
@@ -144,6 +149,23 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
+              
+              {/* Citation de motivation */}
+              {motivationalQuote && (
+                <div className="hero-quote-card">
+                  <div className="hero-quote-icon">💬</div>
+                  <div className="hero-quote-content">
+                    <p className="hero-quote-text">"{motivationalQuote.text}"</p>
+                    {(motivationalQuote.author || motivationalQuote.source) && (
+                      <p className="hero-quote-author">
+                        {motivationalQuote.author}
+                        {motivationalQuote.source && ` — ${motivationalQuote.source}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <div className="hero-meta">
                 <span className="hero-meta-item">📅 {currentDate}</span>
                 <span className="hero-meta-item">🎓 {appUser?.role || 'Compte étudiant'}</span>

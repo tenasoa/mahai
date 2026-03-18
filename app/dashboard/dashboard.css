@@ -217,6 +217,58 @@ body {
   gap: 0.5rem;
 }
 
+/* ═══════ HERO QUOTE CARD ═══════ */
+.hero-quote-card {
+  background: linear-gradient(135deg, rgba(168, 134, 58, 0.05) 0%, rgba(168, 134, 58, 0.02) 100%);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0 1.5rem 0;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+[data-theme='dark'] .hero-quote-card {
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(201, 168, 76, 0.03) 100%);
+}
+
+.hero-quote-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 20px rgba(168, 134, 58, 0.12);
+  transform: translateY(-1px);
+}
+
+.hero-quote-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.hero-quote-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-quote-text {
+  font-family: var(--body);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+  font-style: italic;
+}
+
+.hero-quote-author {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
 /* ═══════ SECTIONS ═══════ */
 .dashboard-section {
   margin-bottom: 2.5rem;
@@ -858,24 +910,33 @@ body {
   .dashboard-container {
     padding: 1.25rem;
   }
-  
+
   .cards-grid-5,
   .cards-grid-4,
   .cards-grid-3 {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .progress-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .hero-title {
     font-size: 1.5rem;
   }
-  
+
   .hero-meta {
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  .hero-quote-card {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .hero-quote-icon {
+    font-size: 1.25rem;
   }
 }
 
