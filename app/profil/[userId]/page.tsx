@@ -1,338 +1,181 @@
-'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { createClient } from '@supabase/supabase-js'
+import { notFound } from 'next/navigation'
+import { MapPin, GraduationCap, Calendar, BookOpen, Award, Zap } from 'lucide-react'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { getProfileAction } from '@/actions/profile'
-import { User, Calendar, MapPin, GraduationCap, BookOpen, Award, Star } from 'lucide-react'
 import '../profil.css'
 
-interface PublicProfile {
-  id: string
-  prenom: string
-  nom?: string
-  userType: string
-  customUserType?: string
-  bio?: string
-  etablissement?: string
-  educationLevel?: string
-  gradeLevel?: string
-  filiere?: string
-  region?: string
-  district?: string
-  credits?: number
-  profilePublic?: boolean
-  showEmail?: boolean
-  showPhone?: boolean
-  showEtablissement?: boolean
-  email?: string
-  phone?: string
-  createdAt: string
+// On utilise le Service Role pour lire le profil public et outrepasser les politiques RLS
+async function getPublicProfile(userId: string) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    const { data: profile, error } = await supabase
+      .from('User')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (error) {
+      console.error('Erreur Supabase détaillée:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      })
+      return null
+    }
+    
+    if (!profile) return null
+    
+    // Sécurité de visibilité
+    if (profile.profilePublic === false) {
+      console.log('Profil trouvé mais marqué comme privé.')
+      return null
+    }
+
+    return profile
+  } catch (e) {
+    console.error('Exception lors du fetch profil:', e)
+    return null
+  }
 }
 
-export default function PublicProfilePage() {
-  const params = useParams()
-  const userId = params.userId as string
-  const [profile, setProfile] = useState<PublicProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export default async function PublicProfilePage({ params }: { params: { userId: string } }) {
+  const { userId } = await params;
+  
+  console.log('Chargement du profil public pour:', userId)
+  
+  const profile = await getPublicProfile(userId)
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const result = await getProfileAction(userId)
-        
-        if (result.success) {
-          const userProfile = result.data as PublicProfile
-          
-          // Vérifier si le profil est public
-          if (!userProfile.profilePublic) {
-            setError('Ce profil est privé')
-            setLoading(false)
-            return
-          }
-          
-          setProfile(userProfile)
-        } else {
-          setError('Utilisateur non trouvé')
-        }
-      } catch (err) {
-        setError('Erreur lors du chargement du profil')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (userId) {
-      fetchProfile()
-    }
-  }, [userId])
-
-  if (loading) {
-    return (
-      <div className="profile-page">
-        <LuxuryCursor />
-        <LuxuryNavbar />
-        <div className="loading-screen" style={{ 
-          background: 'var(--void)', 
-          height: '100vh', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          color: 'var(--gold)' 
-        }}>
-          Chargement du profil...
-        </div>
-      </div>
-    )
+  if (!profile) {
+    notFound()
   }
 
-  if (error || !profile) {
-    return (
-      <div className="profile-page">
-        <LuxuryCursor />
-        <LuxuryNavbar />
-        <div className="profile-container">
-          <div className="error-container" style={{
-            textAlign: 'center',
-            padding: '4rem 2rem',
-            background: 'var(--card)',
-            border: '1px solid var(--b1)',
-            borderRadius: 'var(--r-lg)',
-            margin: '2rem auto'
-          }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔒</div>
-            <h2 style={{ 
-              fontFamily: 'var(--display)', 
-              fontSize: '1.5rem', 
-              color: 'var(--text)', 
-              marginBottom: '1rem' 
-            }}>
-              Profil non accessible
-            </h2>
-            <p style={{ color: 'var(--text-2)', marginBottom: '2rem' }}>
-              {error || 'Ce profil n\'existe pas ou est privé'}
-            </p>
-            <button 
-              onClick={() => window.history.back()}
-              className="btn-secondary"
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: 'var(--r)',
-                background: 'var(--b2)',
-                border: '1px solid var(--b3)',
-                color: 'var(--text)',
-                cursor: 'pointer'
-              }}
-            >
-              Retour
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const getUserTypeLabel = (type: string, custom?: string) => {
-    if (type === 'AUTRE' && custom) return custom
+  const userInitial = (profile.prenom?.charAt(0) || 'U').toUpperCase()
+  
+  const displayUserType = () => {
+    if (profile.userType === 'AUTRE') return profile.customUserType || 'Passionné'
     const types: Record<string, string> = {
       'ETUDIANT': 'Étudiant',
       'PROFESSIONNEL': 'Professionnel',
       'ENSEIGNANT': 'Enseignant',
       'PARENT': 'Parent'
     }
-    return types[type] || type
-  }
-
-  const getEducationLevelLabel = (level: string) => {
-    const levels: Record<string, string> = {
-      'PRIMAIRE': 'Primaire',
-      'COLLEGE': 'Collège',
-      'LYCEE': 'Lycée',
-      'UNIVERSITE': 'Université/Faculté',
-      'FORMATION': 'Formation'
-    }
-    return levels[level] || level
-  }
-
-  const getGradeLevelLabel = (grade: string) => {
-    const grades: Record<string, string> = {
-      '11EME': '11ème', '10EME': '10ème', '9EME': '9ème', '8EME': '8ème', '7EME': '7ème',
-      '6EME': '6ème', '5EME': '5ème', '4EME': '4ème', '3EME': '3ème',
-      'SECONDE': 'Seconde', 'PREMIERE': 'Première', 'TERMINALE': 'Terminale',
-      'L1': 'L1', 'L2': 'L2', 'L3': 'L3', 'M1': 'M1', 'M2': 'M2'
-    }
-    return grades[grade] || grade
+    return types[profile.userType || ''] || 'Utilisateur'
   }
 
   return (
-    <div className="profile-page">
+    <div className="profile-page public">
       <LuxuryCursor />
       <LuxuryNavbar />
 
-      <div className="profile-container">
+      <div className="profile-container" style={{ marginTop: '120px' }}>
         {/* HEADER */}
-        <div className="profile-header">
-          <div className="ph-inner">
+        <div className="profile-header luxury-card public-header">
+          <div className="ph-left">
             <div className="ph-avatar-wrap">
-              <div className="ph-avatar">
-                {profile.prenom?.charAt(0)?.toUpperCase() || 'U'}
-              </div>
+              <div className="ph-avatar large">{userInitial}</div>
             </div>
             <div className="ph-info">
-              <div className="ph-name">
-                {profile.prenom} {profile.nom}
+              <div className="ph-name-wrap">
+                <h1 className="ph-name">{profile.prenom} {profile.nom}</h1>
               </div>
               <div className="ph-badges">
-                <span className="ph-badge student">
-                  {getUserTypeLabel(profile.userType, profile.customUserType)}
-                </span>
-                <span className="ph-badge verified">✓ Vérifié</span>
+                <span className="ph-badge student">{displayUserType()}</span>
+                <span className="ph-badge verified">✓ Profil Vérifié</span>
               </div>
               <div className="ph-meta">
                 {profile.region && (
-                  <span className="ph-meta-item">
-                    <MapPin size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                    {profile.region}
-                    {profile.district && `, ${profile.district}`}
-                  </span>
+                  <div className="ph-meta-item">
+                    <MapPin size={12} />
+                    <span>{profile.district}, {profile.region}</span>
+                  </div>
                 )}
-                <span className="ph-meta-item">
-                  <Calendar size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                  Membre depuis {new Date(profile.createdAt).toLocaleDateString('fr-FR', { 
-                    year: 'numeric', 
-                    month: 'long' 
-                  })}
-                </span>
-                {profile.educationLevel && (
-                  <span className="ph-meta-item">
-                    <GraduationCap size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                    {getEducationLevelLabel(profile.educationLevel)}
-                    {profile.gradeLevel && ` - ${getGradeLevelLabel(profile.gradeLevel)}`}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="ph-stats">
-                <div className="ph-stat">
-                  <div className="n">{profile.credits || 0}</div>
-                  <div className="l">Crédits</div>
-                </div>
-                <div className="ph-stat">
-                  <div className="n">4.8</div>
-                  <div className="l">Note</div>
+                <div className="ph-meta-item">
+                  <Calendar size={12} />
+                  <span>Membre depuis {new Date(profile.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
                 </div>
               </div>
             </div>
+          </div>
+          <div className="ph-right">
+             <Award size={64} className="text-gold opacity-10" />
           </div>
         </div>
 
-        {/* BIOGRAPHIE */}
-        {profile.bio && (
-          <div className="settings-card" style={{ marginBottom: '1.5rem' }}>
-            <div className="sc-title">
-              <BookOpen size={18} style={{ display: 'inline', marginRight: '8px' }} />
-              Biographie
-            </div>
-            <p style={{ 
-              lineHeight: '1.6', 
-              color: 'var(--text-2)', 
-              fontSize: '0.9rem' 
-            }}>
-              {profile.bio}
-            </p>
-          </div>
-        )}
-
-        {/* INFORMATIONS ACADEMIQUES */}
-        {(profile.etablissement || profile.filiere) && (
-          <div className="settings-card" style={{ marginBottom: '1.5rem' }}>
-            <div className="sc-title">
-              <GraduationCap size={18} style={{ display: 'inline', marginRight: '8px' }} />
-              Informations académiques
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {profile.showEtablissement && profile.etablissement && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-3)', minWidth: '120px' }}>Établissement:</span>
-                  <span style={{ color: 'var(--text)' }}>{profile.etablissement}</span>
+        <div className="public-grid">
+          <div className="grid-column">
+            <div className="luxury-card settings-card">
+              <div className="sc-header">
+                <h3 className="sc-title">Parcours <em>Académique</em></h3>
+                <GraduationCap size={14} className="opacity-50" />
+              </div>
+              
+              <div className="public-info-row">
+                <div className="p-label">Niveau & Classe</div>
+                <div className="p-val">{profile.educationLevel || 'Non renseigné'} — {profile.gradeLevel || '—'}</div>
+              </div>
+              
+              {profile.etablissement && (
+                <div className="public-info-row">
+                  <div className="p-label">Établissement</div>
+                  <div className="p-val">{profile.etablissement}</div>
                 </div>
               )}
+              
               {profile.filiere && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-3)', minWidth: '120px' }}>Filière:</span>
-                  <span style={{ color: 'var(--text)' }}>{profile.filiere}</span>
+                <div className="public-info-row">
+                  <div className="p-label">Filière / Mention</div>
+                  <div className="p-val">{profile.filiere}</div>
                 </div>
               )}
             </div>
-          </div>
-        )}
 
-        {/* CONTACT */}
-        <div className="settings-card">
-          <div className="sc-title">
-            <User size={18} style={{ display: 'inline', marginRight: '8px' }} />
-            Contact
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {profile.showEmail && profile.email && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: 'var(--text-3)', minWidth: '120px' }}>Email:</span>
-                <a 
-                  href={`mailto:${profile.email}`}
-                  style={{ 
-                    color: 'var(--gold)', 
-                    textDecoration: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {profile.email}
-                </a>
+            <div className="luxury-card settings-card">
+              <div className="sc-header">
+                <h3 className="sc-title">À propos de <em>{profile.prenom}</em></h3>
+                <BookOpen size={14} className="opacity-50" />
               </div>
-            )}
-            {profile.showPhone && profile.phone && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: 'var(--text-3)', minWidth: '120px' }}>Téléphone:</span>
-                <span style={{ color: 'var(--text)' }}>{profile.phone}</span>
-              </div>
-            )}
+              <p className="public-bio">{profile.bio || "Cet utilisateur n'a pas encore rédigé de biographie."}</p>
+            </div>
           </div>
-        </div>
 
-        {/* STATISTIQUES */}
-        <div className="settings-card" style={{ marginTop: '1.5rem' }}>
-          <div className="sc-title">
-            <Award size={18} style={{ display: 'inline', marginRight: '8px' }} />
-            Statistiques
-          </div>
-          <div className="stats-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            gap: '1rem'
-          }}>
-            <div style={{ textAlign: 'center', padding: '1rem', background: 'var(--surface)', borderRadius: 'var(--r)' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--gold)', marginBottom: '0.5rem' }}>
-                {profile.credits || 0}
+          <div className="grid-column">
+            <div className="luxury-card settings-card">
+              <div className="sc-header">
+                <h3 className="sc-title">Matières <em>Favorites</em></h3>
+                <Zap size={14} className="opacity-50" />
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>Crédits disponibles</div>
+              <div className="luxury-tags">
+                {profile.matieresPreferees?.length > 0 ? (
+                  profile.matieresPreferees.map((m: string) => <span key={m} className="luxury-tag">{m}</span>)
+                ) : (
+                  <span className="luxury-tag-empty">Aucune matière favorite</span>
+                )}
+              </div>
             </div>
-            <div style={{ textAlign: 'center', padding: '1rem', background: 'var(--surface)', borderRadius: 'var(--r)' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--gold)', marginBottom: '0.5rem' }}>
-                4.8
+
+            <div className="luxury-card settings-card">
+              <div className="sc-header">
+                <h3 className="sc-title">Objectifs <em>Visés</em></h3>
+                <Award size={14} className="opacity-50" />
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>Note moyenne</div>
-            </div>
-            <div style={{ textAlign: 'center', padding: '1rem', background: 'var(--surface)', borderRadius: 'var(--r)' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--gold)', marginBottom: '0.5rem' }}>
-                24
+              <div className="luxury-tags">
+                {profile.objectifsEtude?.length > 0 ? (
+                  profile.objectifsEtude.map((o: string) => <span key={o} className="luxury-tag gold">{o}</span>)
+                ) : (
+                  <span className="luxury-tag-empty">Aucun objectif public</span>
+                )}
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>Sujets achetés</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

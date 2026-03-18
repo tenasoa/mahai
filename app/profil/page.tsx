@@ -1,43 +1,79 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal'
-import { getProfileAction, updateProfileAction } from '@/actions/profile'
+import { updateProfileAction } from '@/actions/profile'
+import { 
+  MapPin, GraduationCap, Building, Phone, Calendar, 
+  User as UserIcon, BookOpen, Shield, ShoppingBag, 
+  Wallet, Eye, EyeOff, CheckCircle, Info, ArrowRight,
+  Lock, Trash2, Database, Zap
+} from 'lucide-react'
 import './profil.css'
 import '@/components/modals/ProfileEditModal.css'
 
 type TabType = 'infos' | 'achats' | 'mvola' | 'securite'
 
+interface InfoRowProps {
+  label: string
+  value: string | number | undefined | null
+  icon?: React.ReactNode
+  isPublic?: boolean
+  showVisibilityIcon?: boolean
+}
+
+function ProfileInfoRow({ label, value, icon, isPublic, showVisibilityIcon = true }: InfoRowProps) {
+  const isEmpty = !value || value === ''
+  const displayValue = isEmpty ? 'Non renseigné' : value
+
+  return (
+    <div className={`info-row ${isEmpty ? 'is-empty' : ''}`}>
+      <div className="ir-label">{label}</div>
+      <div className="ir-content">
+        {icon && <span className="ir-icon">{icon}</span>}
+        <span className="ir-value">{displayValue}</span>
+      </div>
+      <div className="ir-visibility-cell">
+        {showVisibilityIcon && (
+          <div className={`ir-visibility ${isPublic ? 'public' : 'private'}`} title={isPublic ? 'Visible sur votre profil public' : 'Masqué sur votre profil public'}>
+            {isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const router = useRouter()
-  const { userId, user, appUser, setAppUser } = useAuth()
+  const { userId, user, appUser, loading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('infos')
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
-  // États des switchs (Notifications)
-  const [notifIA, setNotifIA] = useState(true)
-  const [notifSubjects, setNotifSubjects] = useState(true)
-  const [notifPromo, setNotifPromo] = useState(false)
-
   useEffect(() => {
-    if (!userId && !loading) {
-      router.push('/auth/login')
+    if (!authLoading) {
+      if (!userId) {
+        router.push('/auth/login')
+      } else {
+        setLoading(false)
+      }
     }
-    setLoading(false)
-  }, [userId, loading, router])
+  }, [userId, authLoading, router])
 
-  if (loading || !userId) {
+  if (loading || authLoading || !userId) {
     return (
       <div className="loading-screen" style={{ background: 'var(--void)', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>
-        Chargement du profil...
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Symphonie de vos données...</p>
+        </div>
       </div>
     )
   }
@@ -48,23 +84,43 @@ export default function ProfilePage() {
       const result = await updateProfileAction(userId!, data)
       
       if (result.success) {
-        setNotification({ type: 'success', message: 'Profil mis à jour avec succès !' })
+        setNotification({ type: 'success', message: 'Profil sublimé avec succès !' })
         setEditModalOpen(false)
-        // Mettre à jour les données localement sans recharger la page
-        if (result.data && setAppUser) {
-          setAppUser(result.data)
-        }
+        setTimeout(() => window.location.reload(), 1500)
       } else {
-        setNotification({ type: 'error', message: result.error || 'Erreur lors de la mise à jour' })
+        setNotification({ type: 'error', message: result.error || 'Dissonance lors de la mise à jour' })
       }
     } catch (error) {
-      setNotification({ type: 'error', message: 'Erreur serveur' })
+      setNotification({ type: 'error', message: 'Erreur mystique du serveur' })
     } finally {
       setSaveLoading(false)
     }
   }
 
+  const calculateAge = (birthDate: string | null | undefined) => {
+    if (!birthDate) return null
+    const birth = new Date(birthDate)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const m = today.getMonth() - birth.getMonth()
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }
+
   const userInitial = (appUser?.prenom?.charAt(0) || user?.email?.charAt(0) || 'U').toUpperCase()
+  
+  const displayUserType = () => {
+    if (appUser?.userType === 'AUTRE') return appUser.customUserType || 'Passionné'
+    const types: Record<string, string> = {
+      'ETUDIANT': 'Étudiant',
+      'PROFESSIONNEL': 'Professionnel',
+      'ENSEIGNANT': 'Enseignant',
+      'PARENT': 'Parent'
+    }
+    return types[appUser?.userType || ''] || 'Utilisateur'
+  }
 
   return (
     <div className="profile-page">
@@ -72,204 +128,278 @@ export default function ProfilePage() {
       <LuxuryNavbar />
 
       <div className="profile-container">
-        {/* HEADER */}
-        <div className="profile-header">
-          <div className="ph-inner">
+        {/* HEADER ARCHITECTURAL */}
+        <div className="profile-header luxury-card">
+          <div className="ph-left">
             <div className="ph-avatar-wrap">
-              <div className="ph-avatar">{userInitial}</div>
-              <button className="ph-edit-btn">✏️</button>
+              <div className="ph-avatar">
+                <span className="ph-avatar-glow"></span>
+                {userInitial}
+              </div>
+              <button className="ph-edit-btn" onClick={() => setEditModalOpen(true)}>✏️</button>
             </div>
+            
             <div className="ph-info">
-              <div className="ph-name">{appUser?.prenom} {appUser?.nom}</div>
+              <div className="ph-name-wrap">
+                <h1 className="ph-name">{appUser?.prenom} {appUser?.nom}</h1>
+                <CheckCircle size={22} className="ph-verified-icon" />
+              </div>
+              
               <div className="ph-badges">
-                <span className="ph-badge student">Étudiant</span>
-                {appUser?.role === 'CONTRIBUTEUR' && <span className="ph-badge contrib">Contributeur</span>}
-                <span className="ph-badge verified">✓ Vérifié</span>
+                <span className="ph-badge student">{displayUserType()}</span>
+                {appUser?.role === 'CONTRIBUTEUR' && <span className="ph-badge contrib">Contributeur Or</span>}
               </div>
+              
               <div className="ph-meta">
-                <span className="ph-meta-item">📍 Antananarivo, Madagascar</span>
-                <span className="ph-meta-item">📅 Membre depuis janv. 2024</span>
-                <span className="ph-meta-item">🎓 {appUser?.schoolLevel || 'Niveau non défini'}</span>
-              </div>
-            </div>
-            <div>
-              <div className="ph-stats">
-                <div className="ph-stat"><div className="n">24</div><div className="l">Sujets achetés</div></div>
-                <div className="ph-stat"><div className="n">{appUser?.credits}</div><div className="l">Crédits</div></div>
-                <div className="ph-stat"><div className="n">4.8</div><div className="l">Note</div></div>
-              </div>
-              <div className="ph-actions">
-                <button className="btn-profile-ghost">Voir mon profil public</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* TABS */}
-        <div className="profile-tabs">
-          <button className={`ptab ${activeTab === 'infos' ? 'active' : ''}`} onClick={() => setActiveTab('infos')}>Informations</button>
-          <button className={`ptab ${activeTab === 'achats' ? 'active' : ''}`} onClick={() => setActiveTab('achats')}>Mes achats</button>
-          <button className={`ptab ${activeTab === 'mvola' ? 'active' : ''}`} onClick={() => setActiveTab('mvola')}>MVola & Crédits</button>
-          <button className={`ptab ${activeTab === 'securite' ? 'active' : ''}`} onClick={() => setActiveTab('securite')}>Sécurité</button>
-        </div>
-
-        {/* TAB: INFOS */}
-        <div className={`ptab-panel ${activeTab === 'infos' ? 'active' : ''}`}>
-          <div className="profile-grid">
-            <div>
-              <div className="settings-card">
-                <div className="sc-title">Informations <em>personnelles</em></div>
-                <div className="form-row">
-                  <div className="form-group"><label className="form-label">Prénom</label><input className="form-input" defaultValue={appUser?.prenom} /></div>
-                  <div className="form-group"><label className="form-label">Nom</label><input className="form-input" defaultValue={appUser?.nom || ''} /></div>
-                </div>
-                <div className="form-group"><label className="form-label">Adresse e-mail</label><input className="form-input" type="email" defaultValue={user?.email || ''} readOnly /></div>
-                <div className="form-group"><label className="form-label">Téléphone MVola</label><input className="form-input" type="tel" placeholder="+261 34 XX XXX XX" /></div>
-                <div className="form-group"><label className="form-label">Ville</label><input className="form-input" defaultValue="Antananarivo" /></div>
-                <button className="btn-save-profile">Enregistrer</button>
-              </div>
-            </div>
-            <div>
-              <div className="settings-card">
-                <div className="sc-title">Profil <em>académique</em></div>
-                <div className="form-group"><label className="form-label">Niveau d'études</label>
-                  <select className="form-select" defaultValue={appUser?.schoolLevel || 'BAC'}>
-                    <option>BAC</option><option>BEPC</option><option>CEPE</option><option>Université</option>
-                  </select>
-                </div>
-                <div className="form-group"><label className="form-label">Série</label>
-                  <select className="form-select" defaultValue="Série D">
-                    <option>Série A</option><option>Série B</option><option>Série C</option><option>Série D</option><option>Série L</option>
-                  </select>
-                </div>
-                <div className="form-group"><label className="form-label">Biographie</label>
-                  <textarea 
-                    className="form-textarea" 
-                    placeholder="Parlez-nous de vous…" 
-                    defaultValue="Élève passionné préparant ses examens avec Mah.AI."
-                  />
-                </div>
-                <button className="btn-save-profile">Enregistrer</button>
-              </div>
-              <div className="settings-card">
-                <div className="sc-title">Notifications <em>& préférences</em></div>
-                <div className="toggle-row">
-                  <div><div className="toggle-label">Nouvelles corrections IA</div><div className="toggle-desc">Alerte quand une correction est prête</div></div>
-                  <div className={`toggle-switch ${notifIA ? 'on' : ''}`} onClick={() => setNotifIA(!notifIA)}><div className="toggle-knob"></div></div>
-                </div>
-                <div className="toggle-row">
-                  <div><div className="toggle-label">Nouveaux sujets disponibles</div><div className="toggle-desc">Selon vos matières préférées</div></div>
-                  <div className={`toggle-switch ${notifSubjects ? 'on' : ''}`} onClick={() => setNotifSubjects(!notifSubjects)}><div className="toggle-knob"></div></div>
-                </div>
-                <div className="toggle-row">
-                  <div><div className="toggle-label">E-mails promotionnels</div><div className="toggle-desc">Offres et crédits bonus</div></div>
-                  <div className={`toggle-switch ${notifPromo ? 'on' : ''}`} onClick={() => setNotifPromo(!notifPromo)}><div className="toggle-knob"></div></div>
-                </div>
-                <button className="btn-save-profile">Enregistrer</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* TAB: ACHATS */}
-        <div className={`ptab-panel ${activeTab === 'achats' ? 'active' : ''}`}>
-          <div className="settings-card full">
-            <div className="sc-title" style={{ marginBottom: '1.5rem' }}>Sujets <em>achetés</em></div>
-            <div className="purchase-grid">
-              <div className="pur-card"><div className="pur-tag">BAC · Maths</div><div className="pur-title">Algèbre & Fonctions 2024</div><div className="pur-meta">18 pages · 3h · ★ 4.9</div><div className="pur-price">−15 cr · 12 Jan 2025</div></div>
-              <div className="pur-card"><div className="pur-tag">BEPC · Physique</div><div className="pur-title">Mécanique & Électricité 2023</div><div className="pur-meta">12 pages · 2h · ★ 4.6</div><div className="pur-price">−10 cr · 9 Jan 2025</div></div>
-              <div className="pur-card"><div className="pur-tag">BAC · Chimie</div><div className="pur-title">Thermodynamique 2024</div><div className="pur-meta">16 pages · 3h · ★ 4.7</div><div className="pur-price">−15 cr · 7 Jan 2025</div></div>
-            </div>
-          </div>
-        </div>
-
-        {/* TAB: MVOLA */}
-        <div className={`ptab-panel ${activeTab === 'mvola' ? 'active' : ''}`}>
-          <div className="profile-grid">
-            <div className="mvola-card">
-              <div className="mvola-header">
-                <div className="mvola-title">Wallet <em>MVola</em></div>
-                <div className="mvola-status">● Connecté</div>
-              </div>
-              <div className="mvola-num">+261 34 XX XXX XX</div>
-              <div className="mvola-balance-row">
-                <div className="mb-item"><div className="lbl">Crédits disponibles</div><div className="val">{appUser?.credits} cr</div></div>
-                <div className="mb-item"><div className="lbl">En attente</div><div className="val" style={{ color: 'var(--text-3)' }}>0 cr</div></div>
-              </div>
-              <div className="mvola-actions">
-                <button className="btn-mvola primary">+ Recharger</button>
-                <button className="btn-mvola ghost">Changer de numéro</button>
-              </div>
-            </div>
-            <div className="settings-card">
-              <div className="sc-title">Historique <em>crédits</em></div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '.65rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '.6rem 0', borderBottom: '1px solid var(--b3)' }}>
-                  <div><div style={{ fontSize: '.82rem', color: 'var(--text)' }}>Recharge MVola</div><div style={{ fontFamily: 'var(--mono)', fontSize: '.6rem', color: 'var(--text-3)' }}>5 Jan 2025</div></div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '.72rem', color: 'var(--gold)' }}>+150 cr</div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '.6rem 0', borderBottom: '1px solid var(--b3)' }}>
-                  <div><div style={{ fontSize: '.82rem', color: 'var(--text)' }}>Achat — Maths BAC 2024</div><div style={{ fontFamily: 'var(--mono)', fontSize: '.6rem', color: 'var(--text-3)' }}>12 Jan 2025</div></div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '.72rem', color: 'var(--ruby)' }}>−15 cr</div>
+                {appUser?.region && (
+                  <div className="ph-meta-item">
+                    <MapPin size={12} />
+                    <span>{appUser.district}, {appUser.region}</span>
+                  </div>
+                )}
+                <div className="ph-meta-item">
+                  <Calendar size={12} />
+                  <span>Membre depuis {new Date(appUser?.createdAt || Date.now()).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
                 </div>
               </div>
             </div>
           </div>
+
+          <div className="ph-right">
+            <div className="ph-stats">
+              <div className="ph-stat">
+                <div className="n">24</div>
+                <div className="l">Sujets</div>
+              </div>
+              <div className="ph-stat">
+                <div className="n gold-text">{appUser?.credits || 0}</div>
+                <div className="l">Crédits</div>
+              </div>
+              <div className="ph-stat">
+                <div className="n">4.8</div>
+                <div className="l">Note</div>
+              </div>
+            </div>
+            <button className="btn-profile-public" onClick={() => router.push(`/profil/${userId}`)}>
+              <Eye size={14} /> Aperçu Public
+            </button>
+          </div>
         </div>
 
-        {/* TAB: SECURITE */}
-        <div className={`ptab-panel ${activeTab === 'securite' ? 'active' : ''}`}>
-          <div className="profile-grid">
-            <div className="settings-card">
-              <div className="sc-title">Changer le <em>mot de passe</em></div>
-              <div className="form-group"><label className="form-label">Mot de passe actuel</label><input className="form-input" type="password" placeholder="••••••••" /></div>
-              <div className="form-group"><label className="form-label">Nouveau mot de passe</label><input className="form-input" type="password" placeholder="8 caractères minimum" /></div>
-              <div className="form-group"><label className="form-label">Confirmer</label><input className="form-input" type="password" placeholder="Répétez le nouveau mot de passe" /></div>
-              <button className="btn-save-profile">Mettre à jour</button>
-            </div>
-            <div>
-              <div className="settings-card" style={{ marginBottom: '1.25rem' }}>
-                <div className="sc-title">Sessions <em>actives</em></div>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '.85rem', background: 'var(--surface)', border: '1px solid var(--b2)', borderRadius: 'var(--r)', marginBottom: '.65rem' }}>
-                  <div><div style={{ fontSize: '.82rem', color: 'var(--text)' }}>📱 Chrome — Antananarivo</div><div style={{ fontFamily: 'var(--mono)', fontSize: '.6rem', color: 'var(--text-3)', marginTop: '.18rem' }}>Session actuelle · Aujourd'hui</div></div>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: '.58rem', color: 'var(--sage)', background: 'rgba(74,107,90,.2)', padding: '.2rem .5rem', borderRadius: '2px' }}>Active</span>
+        {/* NAVIGATION TABS */}
+        <div className="profile-nav-tabs">
+          {[
+            { id: 'infos', label: 'Identité', icon: <UserIcon size={16} /> },
+            { id: 'achats', label: 'Bibliothèque', icon: <ShoppingBag size={16} /> },
+            { id: 'mvola', label: 'Finance', icon: <Wallet size={16} /> },
+            { id: 'securite', label: 'Coffre-fort', icon: <Shield size={16} /> }
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id as TabType)}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* CONTENU DES ONGLETS */}
+        <div className="tabs-content">
+          
+          {/* TAB: INFOS */}
+          <div className={`ptab-panel ${activeTab === 'infos' ? 'active' : ''}`}>
+            <div className="profile-grid">
+              <div className="grid-column">
+                <div className="luxury-card settings-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">Informations <em>Personnelles</em></h3>
+                    <Info size={14} className="sc-info-icon" />
+                  </div>
+                  <div className="info-rows">
+                    <ProfileInfoRow label="Identité" value={`${appUser?.prenom} ${appUser?.nom || ''}`} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
+                    <ProfileInfoRow label="Âge" value={appUser?.birthDate ? `${calculateAge(appUser.birthDate)} ans` : null} icon={<Calendar size={14} />} showVisibilityIcon={false} />
+                    <ProfileInfoRow label="E-mail" value={user?.email} icon={<Shield size={14} />} isPublic={appUser?.showEmail} />
+                    <ProfileInfoRow label="Téléphone" value={appUser?.phone} icon={<Phone size={14} />} isPublic={appUser?.showPhone} />
+                  </div>
+                  <button className="btn-card-action" onClick={() => setEditModalOpen(true)}>Éditer le profil</button>
                 </div>
-                <button className="btn-danger-profile">Déconnecter toutes les autres sessions</button>
+
+                <div className="luxury-card settings-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">Localisation <em>& Zone</em></h3>
+                    <MapPin size={14} className="sc-info-icon" />
+                  </div>
+                  <div className="info-rows">
+                    <ProfileInfoRow label="Région" value={appUser?.region} showVisibilityIcon={false} />
+                    <ProfileInfoRow label="District" value={appUser?.district} showVisibilityIcon={false} />
+                  </div>
+                </div>
               </div>
-              <div className="danger-zone">
-                <div className="dz-title">Zone dangereuse</div>
-                <div className="dz-action">
-                  <div><div className="dz-desc">Exporter mes données</div><div className="dz-sub">Télécharger toutes vos données en JSON</div></div>
-                  <button className="btn-danger-profile">Exporter</button>
+
+              <div className="grid-column">
+                <div className="luxury-card settings-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">Parcours <em>Académique</em></h3>
+                    <GraduationCap size={14} className="sc-info-icon" />
+                  </div>
+                  <div className="info-rows">
+                    <ProfileInfoRow label="Établissement" value={appUser?.etablissement} icon={<Building size={14} />} isPublic={appUser?.showEtablissement} />
+                    <ProfileInfoRow label="Niveau" value={appUser?.educationLevel} showVisibilityIcon={false} />
+                    <ProfileInfoRow label="Classe / Série" value={appUser?.gradeLevel} showVisibilityIcon={false} />
+                    {appUser?.filiere && (
+                      <ProfileInfoRow label="Filière" value={appUser.filiere} icon={<BookOpen size={14} />} showVisibilityIcon={false} />
+                    )}
+                  </div>
                 </div>
-                <div className="dz-action">
-                  <div><div className="dz-desc">Supprimer mon compte</div><div className="dz-sub">Action irréversible — tous vos crédits seront perdus</div></div>
-                  <button className="btn-danger-profile">Supprimer</button>
+
+                <div className="luxury-card settings-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">Ambitions <em>& Goûts</em></h3>
+                    <Zap size={14} className="sc-info-icon" />
+                  </div>
+                  
+                  <div className="pref-group">
+                    <span className="ir-label">Matières de Prédilection</span>
+                    <div className="luxury-tags">
+                      {appUser?.matieresPreferees?.length > 0 ? (
+                        appUser.matieresPreferees.map((m: string) => <span key={m} className="luxury-tag">{m}</span>)
+                      ) : (
+                        <span className="luxury-tag-empty">Aucune matière favorite</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pref-group mt-6">
+                    <span className="ir-label">Objectifs Visés</span>
+                    <div className="luxury-tags">
+                      {appUser?.objectifsEtude?.length > 0 ? (
+                        appUser.objectifsEtude.map((o: string) => <span key={o} className="luxury-tag gold">{o}</span>)
+                      ) : (
+                        <span className="luxury-tag-empty">Aucun objectif défini</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* TAB: ACHATS (BIBLIOTHÈQUE) */}
+          <div className={`ptab-panel ${activeTab === 'achats' ? 'active' : ''}`}>
+            <div className="luxury-card p-10">
+              <div className="sc-header mb-8">
+                <h3 className="sc-title">Ma <em>Bibliothèque</em> de Sujets</h3>
+                <ShoppingBag size={18} className="text-gold opacity-50" />
+              </div>
+              <div className="purchase-modern-grid">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="modern-pur-card">
+                    <div className="mp-header">
+                      <span className="mp-tag">{i % 2 === 0 ? 'Maths BAC' : 'Physique BEPC'}</span>
+                      <span className="mp-price">-{i * 5} cr</span>
+                    </div>
+                    <h4 className="mp-title">{i % 2 === 0 ? 'Algèbre & Fonctions Complexes' : 'Mécanique & Électricité'}</h4>
+                    <div className="mp-footer">
+                      <span>Acheté le {i + 10} Mar 2026</span>
+                      <button className="mp-view">Consulter <ArrowRight size={12} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* TAB: MVOLA (FINANCE) */}
+          <div className={`ptab-panel ${activeTab === 'mvola' ? 'active' : ''}`}>
+            <div className="finance-layout">
+              <div className="luxury-card mvola-premium">
+                <div className="mp-head">
+                  <div className="mp-logo">MVola</div>
+                  <div className="mp-status">ACTIF</div>
+                </div>
+                <div className="mp-number">{appUser?.phone || '034 XX XXX XX'}</div>
+                <div className="mp-balance">
+                  <span className="lbl">Solde Mah.AI</span>
+                  <span className="val">{appUser?.credits || 0} <em>cr</em></span>
+                </div>
+                <button className="btn-mp-topup" onClick={() => router.push('/credits')}>Recharger le compte</button>
+              </div>
+
+              <div className="luxury-card settings-card flex-1">
+                <div className="sc-header">
+                  <h3 className="sc-title">Dernières <em>Transactions</em></h3>
+                  <Wallet size={14} className="sc-info-icon" />
+                </div>
+                <div className="info-rows">
+                  <div className="transaction-row">
+                    <div className="tr-icon plus">+</div>
+                    <div className="tr-info">
+                      <div className="tr-title">Recharge MVola</div>
+                      <div className="tr-date">12 Mars 2026</div>
+                    </div>
+                    <div className="tr-amount positive">+150 cr</div>
+                  </div>
+                  <div className="transaction-row">
+                    <div className="tr-icon minus">-</div>
+                    <div className="tr-info">
+                      <div className="tr-title">Achat Sujet BAC</div>
+                      <div className="tr-date">10 Mars 2026</div>
+                    </div>
+                    <div className="tr-amount negative">-15 cr</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* TAB: SECURITE (COFFRE-FORT) */}
+          <div className={`ptab-panel ${activeTab === 'securite' ? 'active' : ''}`}>
+            <div className="profile-grid">
+              <div className="luxury-card settings-card">
+                <div className="sc-header">
+                  <h3 className="sc-title">Accès <em>& Protection</em></h3>
+                  <Lock size={14} className="sc-info-icon" />
+                </div>
+                <p className="text-sm text-text-3 mb-8">Gérez vos identifiants et la sécurité de votre session.</p>
+                <div className="info-rows mb-8">
+                  <ProfileInfoRow label="Mot de passe" value="••••••••••••" showVisibilityIcon={false} />
+                  <ProfileInfoRow label="Double Auth" value="Désactivé" showVisibilityIcon={false} />
+                </div>
+                <button className="btn-card-action">Changer le mot de passe</button>
+              </div>
+
+              <div className="luxury-card danger-zone-modern">
+                <div className="sc-header">
+                  <h3 className="sc-title text-rose">Zone de <em>Confiance</em></h3>
+                  <Trash2 size={14} className="text-rose opacity-50" />
+                </div>
+                <p className="text-sm text-text-3 mb-8">Action irréversibles concernant vos données personnelles.</p>
+                <div className="info-rows mb-8">
+                  <div className="info-row">
+                    <div className="ir-label">Données</div>
+                    <div className="ir-content"><span className="ir-value">Télécharger mon archive JSON</span></div>
+                    <div className="ir-visibility-cell"><Database size={14} className="opacity-30" /></div>
+                  </div>
+                </div>
+                <button className="btn-danger-modern">Supprimer mon compte définitivement</button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      {/* Notification */}
+      {/* NOTIFICATION LUXURY */}
       {notification && (
-        <div className={`notification ${notification.type}`} style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          padding: '1rem 1.5rem',
-          borderRadius: 'var(--r)',
-          background: notification.type === 'success' ? 'var(--sage)' : 'var(--ruby)',
-          color: 'white',
-          zIndex: 1000,
-          animation: 'slideIn 0.3s ease-out'
-        }}>
-          {notification.message}
+        <div className={`luxury-notif ${notification.type}`}>
+          <div className="ln-icon">{notification.type === 'success' ? '✓' : '✕'}</div>
+          <div className="ln-text">{notification.message}</div>
         </div>
       )}
 
-      {/* Profile Edit Modal */}
+      {/* MODALE D'ÉDITION */}
       <ProfileEditModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
@@ -278,47 +408,12 @@ export default function ProfilePage() {
         loading={saveLoading}
       />
 
-      {/* Bouton d'édition flottant */}
-      <button 
-        onClick={() => setEditModalOpen(true)}
-        className="floating-edit-btn"
-        style={{
-          position: 'fixed',
-          bottom: '30px',
-          right: '30px',
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
-          border: 'none',
-          color: 'var(--void)',
-          fontSize: '1.5rem',
-          cursor: 'none',
-          boxShadow: '0 4px 20px rgba(201, 168, 76, 0.4)',
-          transition: 'all 0.3s',
-          zIndex: 900
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1) rotate(0deg)'
-        }}
-      >
-        ✏️
-      </button>
-
       <style jsx>{`
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
+        .mt-6 { margin-top: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .p-10 { padding: 3rem; }
+        .flex-1 { flex: 1; }
+        .text-rose { color: #FF4D4F; }
       `}</style>
     </div>
   )

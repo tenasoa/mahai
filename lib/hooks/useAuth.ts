@@ -15,6 +15,12 @@ export interface AppUser {
   phone?: string
   phoneVerified: boolean
   schoolLevel?: string
+  educationLevel?: string
+  gradeLevel?: string
+  region?: string
+  district?: string
+  bio?: string
+  createdAt?: string
   emailVerified: boolean
 }
 

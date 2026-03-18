@@ -7,7 +7,7 @@ const protectedRoutes = [
   '/credits',
   '/sujet',
   '/examens',
-  '/profile',
+  '/profil',  // Corrigé: '/profile' -> '/profil'
   '/auth/role-selection',
 ]
 

@@ -1,17 +1,15 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { X, User, MapPin, GraduationCap, Calendar, Phone, Building, BookOpen } from 'lucide-react'
+import { X, User, MapPin, GraduationCap, Phone, Building, BookOpen } from 'lucide-react'
+import { MADAGASCAR_REGIONS, getDistrictsByRegion } from '@/lib/data/madagascar-geo'
 import { 
-  madagascarRegions, 
-  getDistrictsByRegion, 
-  educationLevels, 
-  gradeLevels, 
-  bacSeries,
-  userTypes,
-  commonSubjects,
-  studyObjectives
-} from '@/data/madagascar-regions-districts'
+  USER_TYPES, 
+  EDUCATION_LEVELS, 
+  GRADE_LEVELS_MAP, 
+  COMMON_SUBJECTS, 
+  STUDY_OBJECTIVES 
+} from '@/lib/constants/profile-data'
 
 interface ProfileEditModalProps {
   isOpen: boolean
@@ -23,45 +21,44 @@ interface ProfileEditModalProps {
 
 export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = false }: ProfileEditModalProps) {
   const [formData, setFormData] = useState({
-    // Personal Information
+    // Informations personnelles
     userType: userData?.userType || 'ETUDIANT',
     customUserType: userData?.customUserType || '',
-    age: userData?.age || '',
-    dateNaissance: userData?.dateNaissance || '',
+    birthDate: userData?.birthDate || '',
     phone: userData?.phone || '',
     
-    // Educational Information
+    // Informations académiques
     etablissement: userData?.etablissement || '',
     educationLevel: userData?.educationLevel || '',
     gradeLevel: userData?.gradeLevel || '',
     filiere: userData?.filiere || '',
     
-    // Location
+    // Localisation
     region: userData?.region || '',
     district: userData?.district || '',
     
-    // Preferences
+    // Préférences
     bio: userData?.bio || '',
     matieresPreferees: userData?.matieresPreferees || [],
     objectifsEtude: userData?.objectifsEtude || [],
     
-    // Privacy Settings
+    // Paramètres de confidentialité
     profilePublic: userData?.profilePublic ?? true,
     showEmail: userData?.showEmail ?? false,
     showPhone: userData?.showPhone ?? false,
     showEtablissement: userData?.showEtablissement ?? true,
     
-    // Notification Settings
+    // Paramètres de notification
     notifCorrections: userData?.notifCorrections ?? true,
     notifSujets: userData?.notifSujets ?? true,
     notifPromos: userData?.notifPromos ?? false,
     notifRappels: userData?.notifRappels ?? true
   })
 
-  const [availableDistricts, setAvailableDistricts] = useState<any[]>([])
-  const [availableGrades, setAvailableGrades] = useState<any[]>([])
+  const [availableDistricts, setAvailableDistricts] = useState<string[]>([])
+  const [availableGrades, setAvailableGrades] = useState<{value: string, label: string}[]>([])
 
-  // Update districts when region changes
+  // Mettre à jour les districts quand la région change
   useEffect(() => {
     if (formData.region) {
       setAvailableDistricts(getDistrictsByRegion(formData.region))
@@ -70,10 +67,10 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
     }
   }, [formData.region])
 
-  // Update grades when education level changes
+  // Mettre à jour les classes quand le niveau d'étude change
   useEffect(() => {
     if (formData.educationLevel) {
-      setAvailableGrades(gradeLevels[formData.educationLevel as keyof typeof gradeLevels] || [])
+      setAvailableGrades(GRADE_LEVELS_MAP[formData.educationLevel as keyof typeof GRADE_LEVELS_MAP] || [])
     } else {
       setAvailableGrades([])
     }
@@ -85,9 +82,6 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked
       setFormData(prev => ({ ...prev, [name]: checked }))
-    } else if (type === 'select-multiple') {
-      const selectedOptions = Array.from((e.target as HTMLSelectElement).selectedOptions, option => option.value)
-      setFormData(prev => ({ ...prev, [name]: selectedOptions }))
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
@@ -132,11 +126,13 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
 
   if (!isOpen) return null
 
+  const isHigherEd = ['UNIVERSITE', 'FACULTE', 'INSTITUT', 'FORMATION'].includes(formData.educationLevel);
+
   return (
     <div className="modal-overlay">
       <div className="modal-container profile-edit-modal">
         <div className="modal-header">
-          <h2 className="modal-title">Modifier mon profil</h2>
+          <h2 className="modal-title">Compléter mon profil</h2>
           <button onClick={onClose} className="modal-close">
             <X size={20} />
           </button>
@@ -144,23 +140,23 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
 
         <form onSubmit={handleSubmit} className="modal-content">
           <div className="modal-sections">
-            {/* Personal Information */}
+            {/* Informations personnelles */}
             <div className="modal-section">
               <h3 className="section-title">
                 <User size={18} />
-                Informations personnelles
+                Identité & Type
               </h3>
               
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Type d'utilisateur</label>
+                  <label className="form-label">Vous êtes :</label>
                   <select 
                     name="userType" 
                     value={formData.userType}
                     onChange={handleChange}
                     className="form-select"
                   >
-                    {userTypes.map(type => (
+                    {USER_TYPES.map(type => (
                       <option key={type.value} value={type.value}>
                         {type.label}
                       </option>
@@ -170,14 +166,14 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                 
                 {formData.userType === 'AUTRE' && (
                   <div className="form-group">
-                    <label className="form-label">Précisez</label>
+                    <label className="form-label">Précisez votre type</label>
                     <input
                       type="text"
                       name="customUserType"
                       value={formData.customUserType}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="Décrivez votre type"
+                      placeholder="Ex: Passionné, Auditeur libre..."
                     />
                   </div>
                 )}
@@ -185,57 +181,44 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Âge</label>
+                  <label className="form-label">Date de naissance</label>
                   <input
-                    type="number"
-                    name="age"
-                    value={formData.age}
+                    type="date"
+                    name="birthDate"
+                    value={formData.birthDate}
                     onChange={handleChange}
                     className="form-input"
-                    min="13"
-                    max="100"
                   />
                 </div>
                 
                 <div className="form-group">
-                  <label className="form-label">Date de naissance</label>
+                  <label className="form-label">
+                    <Phone size={16} style={{ display: 'inline', marginRight: '8px' }} />
+                    Téléphone
+                  </label>
                   <input
-                    type="date"
-                    name="dateNaissance"
-                    value={formData.dateNaissance}
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleChange}
                     className="form-input"
+                    placeholder="034 XX XXX XX"
                   />
                 </div>
               </div>
-
-              <div className="form-group">
-                <label className="form-label">
-                  <Phone size={16} style={{ display: 'inline', marginRight: '8px' }} />
-                  Téléphone
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="+261 34 XX XXX XX"
-                />
-              </div>
             </div>
 
-            {/* Educational Information */}
+            {/* Informations académiques */}
             <div className="modal-section">
               <h3 className="section-title">
                 <GraduationCap size={18} />
-                Informations académiques
+                Parcours Académique
               </h3>
               
               <div className="form-group">
                 <label className="form-label">
                   <Building size={16} style={{ display: 'inline', marginRight: '8px' }} />
-                  Établissement
+                  Établissement (Nom)
                 </label>
                 <input
                   type="text"
@@ -243,21 +226,21 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                   value={formData.etablissement}
                   onChange={handleChange}
                   className="form-input"
-                  placeholder="Nom de votre établissement"
+                  placeholder="Ex: LMA, UGM, ISPM..."
                 />
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Niveau d'études</label>
+                  <label className="form-label">Niveau</label>
                   <select 
                     name="educationLevel" 
                     value={formData.educationLevel}
                     onChange={handleChange}
                     className="form-select"
                   >
-                    <option value="">Sélectionner un niveau</option>
-                    {educationLevels.map(level => (
+                    <option value="">Sélectionner</option>
+                    {EDUCATION_LEVELS.map(level => (
                       <option key={level.value} value={level.value}>
                         {level.label}
                       </option>
@@ -274,7 +257,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     className="form-select"
                     disabled={!formData.educationLevel}
                   >
-                    <option value="">Sélectionner une classe</option>
+                    <option value="">Sélectionner</option>
                     {availableGrades.map(grade => (
                       <option key={grade.value} value={grade.value}>
                         {grade.label}
@@ -284,26 +267,26 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                 </div>
               </div>
 
-              {(formData.educationLevel === 'UNIVERSITE' || formData.gradeLevel?.includes('TERMINALE')) && (
+              {isHigherEd && (
                 <div className="form-group">
-                  <label className="form-label">Filière</label>
+                  <label className="form-label">Filière / Mention</label>
                   <input
                     type="text"
                     name="filiere"
                     value={formData.filiere}
                     onChange={handleChange}
                     className="form-input"
-                    placeholder={formData.educationLevel === 'UNIVERSITE' ? 'Ex: Informatique, Droit, Médecine...' : 'Ex: Série D, C, A...'}
+                    placeholder="Ex: Gestion, Informatique, Médecine..."
                   />
                 </div>
               )}
             </div>
 
-            {/* Location Information */}
+            {/* Localisation */}
             <div className="modal-section">
               <h3 className="section-title">
                 <MapPin size={18} />
-                Localisation
+                Localisation (Madagascar)
               </h3>
               
               <div className="form-row">
@@ -315,9 +298,9 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     onChange={handleChange}
                     className="form-select"
                   >
-                    <option value="">Sélectionner une région</option>
-                    {madagascarRegions.map(region => (
-                      <option key={region.code} value={region.name}>
+                    <option value="">Sélectionner la région</option>
+                    {MADAGASCAR_REGIONS.map(region => (
+                      <option key={region.name} value={region.name}>
                         {region.name}
                       </option>
                     ))}
@@ -333,10 +316,10 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     className="form-select"
                     disabled={!formData.region}
                   >
-                    <option value="">Sélectionner un district</option>
+                    <option value="">Sélectionner le district</option>
                     {availableDistricts.map(district => (
-                      <option key={district.code} value={district.name}>
-                        {district.name}
+                      <option key={district} value={district}>
+                        {district}
                       </option>
                     ))}
                   </select>
@@ -344,35 +327,21 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
               </div>
             </div>
 
-            {/* Preferences */}
+            {/* Préférences */}
             <div className="modal-section">
               <h3 className="section-title">
                 <BookOpen size={18} />
-                Préférences d'apprentissage
+                Objectifs & Matières
               </h3>
               
               <div className="form-group">
-                <label className="form-label">Biographie</label>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  className="form-textarea"
-                  rows={3}
-                  placeholder="Parlez-nous de vous..."
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Matières préférées</label>
+                <label className="form-label">Matières de prédilection</label>
                 <div className="tag-input-container">
                   <div className="selected-tags">
                     {formData.matieresPreferees.map((subject: string) => (
                       <span key={subject} className="tag">
                         {subject}
-                        <button type="button" onClick={() => removeSubject(subject)} className="tag-remove">
-                          ×
-                        </button>
+                        <button type="button" onClick={() => removeSubject(subject)} className="tag-remove">×</button>
                       </span>
                     ))}
                   </div>
@@ -386,25 +355,21 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     className="form-select"
                   >
                     <option value="">Ajouter une matière...</option>
-                    {commonSubjects.filter(subject => !formData.matieresPreferees.includes(subject)).map(subject => (
-                      <option key={subject} value={subject}>
-                        {subject}
-                      </option>
+                    {COMMON_SUBJECTS.filter(subject => !formData.matieresPreferees.includes(subject)).map(subject => (
+                      <option key={subject} value={subject}>{subject}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Objectifs d'étude</label>
+                <label className="form-label">Vos objectifs</label>
                 <div className="tag-input-container">
                   <div className="selected-tags">
                     {formData.objectifsEtude.map((objective: string) => (
                       <span key={objective} className="tag">
                         {objective}
-                        <button type="button" onClick={() => removeObjective(objective)} className="tag-remove">
-                          ×
-                        </button>
+                        <button type="button" onClick={() => removeObjective(objective)} className="tag-remove">×</button>
                       </span>
                     ))}
                   </div>
@@ -418,19 +383,17 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     className="form-select"
                   >
                     <option value="">Ajouter un objectif...</option>
-                    {studyObjectives.filter(objective => !formData.objectifsEtude.includes(objective)).map(objective => (
-                      <option key={objective} value={objective}>
-                        {objective}
-                      </option>
+                    {STUDY_OBJECTIVES.filter(objective => !formData.objectifsEtude.includes(objective)).map(objective => (
+                      <option key={objective} value={objective}>{objective}</option>
                     ))}
                   </select>
                 </div>
               </div>
             </div>
 
-            {/* Privacy Settings */}
+            {/* Confidentialité */}
             <div className="modal-section">
-              <h3 className="section-title">Confidentialité</h3>
+              <h3 className="section-title">Visibilité du profil</h3>
               
               <div className="checkbox-group">
                 <label className="checkbox-label">
@@ -440,84 +403,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     checked={formData.profilePublic}
                     onChange={handleChange}
                   />
-                  <span className="checkbox-text">Profil public</span>
-                </label>
-                
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="showEmail"
-                    checked={formData.showEmail}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-text">Afficher mon email</span>
-                </label>
-                
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="showPhone"
-                    checked={formData.showPhone}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-text">Afficher mon téléphone</span>
-                </label>
-                
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="showEtablissement"
-                    checked={formData.showEtablissement}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-text">Afficher mon établissement</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Notification Settings */}
-            <div className="modal-section">
-              <h3 className="section-title">Notifications</h3>
-              
-              <div className="checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="notifCorrections"
-                    checked={formData.notifCorrections}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-text">Nouvelles corrections IA</span>
-                </label>
-                
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="notifSujets"
-                    checked={formData.notifSujets}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-text">Nouveaux sujets disponibles</span>
-                </label>
-                
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="notifPromos"
-                    checked={formData.notifPromos}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-text">Offres promotionnelles</span>
-                </label>
-                
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="notifRappels"
-                    checked={formData.notifRappels}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-text">Rappels d'étude</span>
+                  <span className="checkbox-text">Rendre mon profil public (accessible via lien)</span>
                 </label>
               </div>
             </div>
@@ -528,7 +414,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
               Annuler
             </button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              {loading ? 'Enregistrement...' : 'Enregistrer mon profil'}
             </button>
           </div>
         </form>
