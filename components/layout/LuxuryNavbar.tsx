@@ -198,7 +198,7 @@ export function LuxuryNavbar() {
                   {/* User Info */}
                   <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--b1)' }}>
                     <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.15rem' }}>
-                      {appUser?.nomComplet || `${appUser?.prenom || ''} ${appUser?.nom || ''}`.trim()}
+                      {appUser?.nomComplet || appUser?.prenom || ''}
                     </p>
                     {appUser?.pseudo && (
                       <p style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 500 }}>@{appUser.pseudo}</p>

@@ -22,9 +22,8 @@ interface ProfileEditModalProps {
 export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = false }: ProfileEditModalProps) {
   const [formData, setFormData] = useState({
     // Informations personnelles
-    nom: userData?.nom || '',
-    nomComplet: userData?.nomComplet || '',
-    pseudo: userData?.pseudo || '',
+    nomComplet: userData?.nomComplet || `${userData?.prenom || ''} ${userData?.nom || ''}`.trim() || '',
+    pseudo: userData?.pseudo || userData?.prenom || '',
     userType: userData?.userType || 'ETUDIANT',
     customUserType: userData?.customUserType || '',
     birthDate: userData?.birthDate || '',
@@ -178,50 +177,6 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Vous êtes :</label>
-                  <select
-                    name="userType"
-                    value={formData.userType}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    {USER_TYPES.map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {formData.userType === 'AUTRE' && (
-                  <div className="form-group">
-                    <label className="form-label">Précisez votre type</label>
-                    <input
-                      type="text"
-                      name="customUserType"
-                      value={formData.customUserType}
-                      onChange={handleChange}
-                      className="form-input"
-                      placeholder="Ex: Passionné, Auditeur libre..."
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Nom</label>
-                  <input
-                    type="text"
-                    name="nom"
-                    value={formData.nom}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="Votre nom de famille"
-                  />
-                </div>
-
-                <div className="form-group">
                   <label className="form-label">Date de naissance</label>
                   <input
                     type="date"
@@ -231,9 +186,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     className="form-input"
                   />
                 </div>
-              </div>
 
-              <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">
                     <Phone size={16} style={{ display: 'inline', marginRight: '8px' }} />
