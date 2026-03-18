@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useMultiReveal } from '@/lib/hooks'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
+import { MOBILE_MONEY_PROVIDERS } from '@/data/mobile-money-providers'
 import './landing.css'
 
 export default function LandingPage() {
@@ -35,7 +36,7 @@ export default function LandingPage() {
               <span>à portée de main</span>
             </h1>
             <p className="hero-sub">
-              Accédez à des milliers de sujets d'examens officiels — BAC, BEPC, CEPE — avec correction par intelligence artificielle. Payez via MVola, étudiez intelligemment.
+              Accédez à des milliers de sujets d'examens officiels — BAC, BEPC, CEPE — avec correction par intelligence artificielle. Payez via Mobile Money (MVola, Orange Money, Airtel Money), étudiez intelligemment.
             </p>
             <div className="hero-actions">
               <Link href="/catalogue?guest=true" className="btn-primary">
@@ -132,7 +133,7 @@ export default function LandingPage() {
           <div className="marquee-item"><div className="marquee-dot"></div><strong>BEPC</strong> Français</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>CEPE</strong> Sciences</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>IA</strong> Correction GPT-4o</div>
-          <div className="marquee-item"><div className="marquee-dot"></div><strong>MVola</strong> Paiement Mobile</div>
+          <div className="marquee-item"><div className="marquee-dot"></div><strong>Mobile Money</strong> MVola · Orange · Airtel</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>2003–2024</strong> Archives</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>47</strong> Matières</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>2 138</strong> Sujets</div>
@@ -141,7 +142,7 @@ export default function LandingPage() {
           <div className="marquee-item"><div className="marquee-dot"></div><strong>BEPC</strong> Français</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>CEPE</strong> Sciences</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>IA</strong> Correction GPT-4o</div>
-          <div className="marquee-item"><div className="marquee-dot"></div><strong>MVola</strong> Paiement Mobile</div>
+          <div className="marquee-item"><div className="marquee-dot"></div><strong>Mobile Money</strong> MVola · Orange · Airtel</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>2003–2024</strong> Archives</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>47</strong> Matières</div>
           <div className="marquee-item"><div className="marquee-dot"></div><strong>2 138</strong> Sujets</div>
@@ -178,8 +179,8 @@ export default function LandingPage() {
                 <div className="how-num">03</div>
                 <div className="how-icon">📱</div>
               </div>
-              <div className="how-title">Payez via MVola</div>
-              <p className="how-desc">Rechargez votre wallet en crédits depuis votre téléphone. Sécurisé et instantané.</p>
+              <div className="how-title">Payez via Mobile Money</div>
+              <p className="how-desc">Rechargez votre wallet en crédits depuis votre téléphone via MVola, Orange Money ou Airtel Money. Sécurisé et instantané.</p>
             </div>
             <div className="how-step reveal reveal-delay-3">
               <div className="how-step-header">
@@ -241,14 +242,14 @@ export default function LandingPage() {
 
             <div className="feat-card reveal reveal-delay-2">
               <div className="feat-small-icon">📱</div>
-              <div className="feat-small-title">Paiement MVola natif</div>
-              <p className="feat-small-desc">Rechargez votre wallet MahAI en crédits directement depuis votre numéro MVola. Simple et sécurisé.</p>
+              <div className="feat-small-title">Paiement Mobile Money</div>
+              <p className="feat-small-desc">Rechargez votre wallet MahAI en crédits directement depuis votre numéro MVola, Orange Money ou Airtel Money. Simple et sécurisé.</p>
             </div>
 
             <div className="feat-card reveal">
               <div className="feat-small-icon">✍️</div>
               <div className="feat-small-title">Devenez contributeur</div>
-              <p className="feat-small-desc">Publiez vos sujets, définissez votre prix et recevez vos gains directement sur MVola ou en virement bancaire.</p>
+              <p className="feat-small-desc">Publiez vos sujets, définissez votre prix et recevez vos gains directement via Mobile Money ou en virement bancaire.</p>
             </div>
 
             <div className="feat-card reveal reveal-delay-1">
@@ -369,7 +370,7 @@ export default function LandingPage() {
 
             <div className="testi-card reveal reveal-delay-1">
               <div className="testi-quote">"</div>
-              <p className="testi-text">L'interface est élégante et les sujets sont bien organisés. Le paiement MVola fonctionne parfaitement, je recommande vivement.</p>
+              <p className="testi-text">L'interface est élégante et les sujets sont bien organisés. Le paiement Mobile Money fonctionne parfaitement, je recommande vivement.</p>
               <div className="testi-author">
                 <div className="testi-avatar">T</div>
                 <div>
@@ -381,7 +382,7 @@ export default function LandingPage() {
 
             <div className="testi-card reveal reveal-delay-2">
               <div className="testi-quote">"</div>
-              <p className="testi-text">En tant que contributeur, j'ai publié 12 sujets et reçu mes gains directement sur MVola. Un système transparent et équitable.</p>
+              <p className="testi-text">En tant que contributeur, j'ai publié 12 sujets et reçu mes gains directement via Mobile Money. Un système transparent et équitable.</p>
               <div className="testi-author">
                 <div className="testi-avatar">R</div>
                 <div>
@@ -424,22 +425,6 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="price-card reveal">
-              <div className="price-plan">Starter</div>
-              <div className="price-amount">50 <span className="unit">cr</span></div>
-              <p className="price-desc">Parfait pour découvrir la plateforme et accéder à quelques sujets.</p>
-              <div className="price-divider"></div>
-              <ul className="price-features">
-                <li><span className="price-check">✦</span>50 crédits</li>
-                <li><span className="price-check">✦</span>Accès illimité au catalogue</li>
-                <li><span className="price-check">✦</span>Aperçu gratuit</li>
-                <li className="muted"><span className="price-x">—</span>Corrections IA illimitées</li>
-              </ul>
-              <button className="btn-secondary" style={{ width: "100%", justifyContent: "center", padding: ".75rem" }}>
-                Payer via MVola
-              </button>
-            </div>
-
             <div className="price-card popular reveal reveal-delay-1">
               <div className="popular-badge">Le plus populaire</div>
               <div className="price-plan">Standard</div>
@@ -453,7 +438,7 @@ export default function LandingPage() {
                 <li><span className="price-check">✦</span>Historique des achats</li>
               </ul>
               <button className="btn-primary" style={{ width: "100%", justifyContent: "center", padding: ".75rem" }}>
-                Payer via MVola
+                Payer via Mobile Money
               </button>
             </div>
 
@@ -469,14 +454,27 @@ export default function LandingPage() {
                 <li><span className="price-check">✦</span>Support prioritaire</li>
               </ul>
               <button className="btn-secondary" style={{ width: "100%", justifyContent: "center", padding: ".75rem" }}>
-                Payer via MVola
+                Payer via Mobile Money
               </button>
             </div>
           </div>
 
-          <div className="mvola-note reveal">
-            <div className="mvola-badge">📱 MVola · Orange Money · Airtel Money</div>
-            <span className="mvola-note-text">Paiement mobile sécurisé · Crédits instantanés · Sans frais cachés</span>
+          <div className="payment-note reveal">
+            <div className="payment-provider-list" role="list" aria-label="Moyens de paiement Mobile Money">
+              {MOBILE_MONEY_PROVIDERS.map((provider) => (
+                <div className="payment-provider-badge" key={provider.id} role="listitem">
+                  <Image
+                    src={provider.logoPath}
+                    alt={provider.alt}
+                    width={42}
+                    height={42}
+                    className="payment-provider-logo"
+                  />
+                  <span>{provider.name}</span>
+                </div>
+              ))}
+            </div>
+            <span className="payment-note-text">Paiement mobile sécurisé · Crédits instantanés · Sans frais cachés</span>
           </div>
         </div>
       </section>

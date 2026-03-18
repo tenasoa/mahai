@@ -1,6 +1,8 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
+import { MOBILE_MONEY_PROVIDERS } from "@/data/mobile-money-providers"
 
 export function LuxuryFooter() {
   return (
@@ -14,8 +16,22 @@ export function LuxuryFooter() {
             <p className="footer-tagline text-sm text-text-2 mb-4 leading-relaxed">
               La référence des examens scolaires malgaches — BAC, BEPC, CEPE.
             </p>
-            <div className="footer-mvola inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-gold bg-gold-dim border border-gold-line py-1 px-3 rounded-sm">
-              📱 Paiement via MVola
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {MOBILE_MONEY_PROVIDERS.map((provider) => (
+                <div
+                  key={provider.id}
+                  className="inline-flex items-center gap-2 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-gold bg-gold-dim border border-gold-line py-1 px-2 rounded-full"
+                >
+                  <Image
+                    src={provider.logoPath}
+                    alt={provider.alt}
+                    width={20}
+                    height={20}
+                    className="h-5 w-5 rounded-full border border-b3 object-contain bg-void/70"
+                  />
+                  {provider.name}
+                </div>
+              ))}
             </div>
           </div>
           

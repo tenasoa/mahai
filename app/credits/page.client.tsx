@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { CreditCard, Zap, Gift, Phone } from 'lucide-react'
+import { MOBILE_MONEY_PROVIDERS } from '@/data/mobile-money-providers'
 
 interface CreditPack {
   id: string
@@ -42,12 +44,6 @@ const creditPacks: CreditPack[] = [
     icon: CreditCard,
     popular: false,
   },
-]
-
-const mobileMoneyProviders = [
-  { id: 'mvola', name: 'MVola', color: 'bg-green', logo: '📱' },
-  { id: 'orange', name: 'Orange Money', color: 'bg-gold', logo: '🟠' },
-  { id: 'airtel', name: 'Airtel Money', color: 'bg-rose', logo: '🔴' },
 ]
 
 export default function CreditsPageClient() {
@@ -168,7 +164,7 @@ export default function CreditsPageClient() {
           </h2>
 
           <div className="grid md:grid-cols-3 gap-3 mb-6">
-            {mobileMoneyProviders.map((provider) => (
+            {MOBILE_MONEY_PROVIDERS.map((provider) => (
               <div
                 key={provider.id}
                 onClick={() => setOperator(provider.id)}
@@ -178,8 +174,14 @@ export default function CreditsPageClient() {
                     : 'border-white/10 hover:border-white/20'
                 }`}
               >
-                <div className={`w-10 h-10 ${provider.color} rounded-full flex items-center justify-center text-xl`}>
-                  {provider.logo}
+                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/15 bg-white/5 overflow-hidden">
+                  <Image
+                    src={provider.logoPath}
+                    alt={provider.alt}
+                    width={40}
+                    height={40}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="text-sm text-text">{provider.name}</div>
               </div>

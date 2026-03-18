@@ -45,6 +45,32 @@ body::after {
   opacity: 0.01;
 }
 
+/* Dot field animé global (petits points subtils) */
+html::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9995;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(201, 168, 76, 0.2) 0 1px, transparent 1.3px),
+    radial-gradient(circle at 70% 35%, rgba(201, 168, 76, 0.18) 0 1px, transparent 1.3px),
+    radial-gradient(circle at 35% 75%, rgba(201, 168, 76, 0.16) 0 1px, transparent 1.3px),
+    radial-gradient(circle at 85% 65%, rgba(201, 168, 76, 0.16) 0 1px, transparent 1.3px);
+  background-size: 180px 180px, 220px 220px, 160px 160px, 240px 240px;
+  opacity: 0.16;
+  animation: dotDrift 34s linear infinite;
+}
+
+[data-theme='light'] html::before {
+  opacity: 0.11;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(168, 120, 42, 0.14) 0 1px, transparent 1.3px),
+    radial-gradient(circle at 70% 35%, rgba(168, 120, 42, 0.12) 0 1px, transparent 1.3px),
+    radial-gradient(circle at 35% 75%, rgba(168, 120, 42, 0.1) 0 1px, transparent 1.3px),
+    radial-gradient(circle at 85% 65%, rgba(168, 120, 42, 0.1) 0 1px, transparent 1.3px);
+}
+
 /* ═══════════════════════════════════════════════
    ANIMATIONS - Noise en mouvement
 ═══════════════════════════════════════════════ */
@@ -80,6 +106,26 @@ body::after {
   75% {
     transform: translate(5px, 5px) scale(1.01);
     opacity: 0.016;
+  }
+}
+
+@keyframes dotDrift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-18px, 14px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  html::before {
+    animation: none !important;
   }
 }
 

@@ -76,7 +76,7 @@ export default function CGUPage() {
     { id: 'art4a', label: '4.1 Responsabilité', sub: true },
     { id: 'art4b', label: '4.2 Commission', sub: true },
     { id: 'art5', label: '5. Correction IA', sub: false },
-    { id: 'art6', label: '6. Paiement MVola', sub: false },
+    { id: 'art6', label: '6. Paiement Mobile Money', sub: false },
     { id: 'art7', label: '7. Responsabilité', sub: false },
     { id: 'art8', label: '8. Résiliation', sub: false },
     { id: 'art9', label: '9. Droit applicable', sub: false }
@@ -228,7 +228,7 @@ export default function CGUPage() {
             <li className="text-text2 leading-relaxed mb-1"><strong>Utilisateur</strong> : toute personne physique accédant à la plateforme ;</li>
             <li className="text-text2 leading-relaxed mb-1"><strong>Étudiant</strong> : utilisateur qui consulte et achète des sujets d'examen ;</li>
             <li className="text-text2 leading-relaxed mb-1"><strong>Contributeur</strong> : utilisateur qui publie des sujets d'examen ;</li>
-            <li className="text-text2 leading-relaxed mb-1"><strong>Crédits</strong> : unité monétaire interne à la plateforme, acquise via paiement MVola ;</li>
+            <li className="text-text2 leading-relaxed mb-1"><strong>Crédits</strong> : unité monétaire interne à la plateforme, acquise via paiement Mobile Money (MVola, Orange Money, Airtel Money) ;</li>
             <li className="text-text2 leading-relaxed mb-1"><strong>Correction IA</strong> : service automatisé d'analyse et d'évaluation des réponses d'un étudiant ;</li>
             <li className="text-text2 leading-relaxed mb-1"><strong>Sujet</strong> : fichier ou contenu numérique représentant un sujet d'examen.</li>
           </ul>
@@ -257,14 +257,14 @@ export default function CGUPage() {
             3.2 Système de crédits
           </h3>
           <p className="text-text2 leading-relaxed mb-4">
-            La plateforme fonctionne sur la base d'un système de crédits internes. Les crédits sont acquis exclusivement via le service de paiement mobile <strong>MVola</strong> (Orange Madagascar). Les crédits ne sont ni remboursables ni échangeables contre de l'argent réel, sauf mention contraire.
+            La plateforme fonctionne sur la base d'un système de crédits internes. Les crédits sont acquis via les services de paiement mobile <strong>MVola</strong>, <strong>Orange Money</strong> et <strong>Airtel Money</strong>. Les crédits ne sont ni remboursables ni échangeables contre de l'argent réel, sauf mention contraire.
           </p>
           <table className="w-full border-collapse my-4">
             <thead>
               <tr>
                 <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text3 py-3 px-4 text-left border-b border-b1">Pack</th>
                 <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text3 py-3 px-4 text-left border-b border-b1">Crédits</th>
-                <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text3 py-3 px-4 text-left border-b border-b1">Prix MVola</th>
+                <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text3 py-3 px-4 text-left border-b border-b1">Prix Mobile Money</th>
                 <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text3 py-3 px-4 text-left border-b border-b1">Validité</th>
               </tr>
             </thead>
@@ -330,7 +330,7 @@ export default function CGUPage() {
             </tbody>
           </table>
           <p className="text-text2 leading-relaxed mb-4">
-            Les gains sont versés mensuellement sur le compte MVola du contributeur, dès que le solde accumulé atteint le minimum de <strong>5 000 Ar</strong>.
+            Les gains sont versés mensuellement sur le compte Mobile Money du contributeur (MVola, Orange Money ou Airtel Money), dès que le solde accumulé atteint le minimum de <strong>5 000 Ar</strong>.
           </p>
 
           {/* Article 5 */}
@@ -355,13 +355,13 @@ export default function CGUPage() {
           {/* Article 6 */}
           <span className="section-anchor" id="art6"></span>
           <h2 className="font-display font-normal text-4xl text-text tracking-[-0.03em] mt-12 mb-4 pt-8 border-t border-b2 leading-[1.1]">
-            6. Paiement <em className="text-gold">MVola</em>
+            6. Paiement <em className="text-gold">Mobile Money</em>
           </h2>
           <p className="text-text2 leading-relaxed mb-4">
-            Les paiements sur la plateforme sont traités exclusivement via MVola, service de paiement mobile d'Orange Madagascar. En effectuant un paiement, l'utilisateur accepte également les conditions d'utilisation de MVola.
+            Les paiements sur la plateforme sont traités via Mobile Money : MVola, Orange Money et Airtel Money. En effectuant un paiement, l'utilisateur accepte également les conditions d'utilisation de l'opérateur choisi.
           </p>
           <p className="text-text2 leading-relaxed mb-4">
-            Mah.AI ne conserve aucune information bancaire ni de paiement. Les transactions sont traitées directement par le système MVola. Tout litige relatif à un paiement MVola doit être signalé dans les <strong>48 heures</strong> suivant la transaction.
+            Mah.AI ne conserve aucune information bancaire ni de paiement. Les transactions sont traitées directement par les systèmes Mobile Money partenaires. Tout litige relatif à un paiement Mobile Money doit être signalé dans les <strong>48 heures</strong> suivant la transaction.
           </p>
 
           {/* Article 7 */}

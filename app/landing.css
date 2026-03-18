@@ -653,20 +653,42 @@
 .price-x { color: var(--text-4); font-size: .7rem; flex-shrink: 0; }
 .price-features li.muted { color: var(--text-4); }
 
-.mvola-note {
+.payment-note {
   margin-top: 4rem; text-align: center;
-  display: flex; align-items: center; justify-content: center;
-  gap: 1rem; flex-wrap: wrap;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 1rem;
 }
-.mvola-badge {
-  display: inline-flex; align-items: center; gap: .5rem;
-  font-family: var(--mono); font-size: .65rem;
-  text-transform: uppercase; letter-spacing: .12em;
-  color: var(--gold); background: var(--gold-dim);
+.payment-provider-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+.payment-provider-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-family: var(--mono);
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--gold);
+  background: color-mix(in srgb, var(--card) 85%, transparent);
   border: 1px solid var(--gold-line);
-  padding: .5rem 1.1rem; border-radius: 2px;
+  padding: .45rem .7rem;
+  border-radius: 999px;
 }
-.mvola-note-text { font-size: .82rem; color: var(--text-3); }
+.payment-provider-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--void) 78%, transparent);
+  border: 1px solid var(--b3);
+}
+.payment-note-text { font-size: .82rem; color: var(--text-3); }
 
 /* ═══════════════════════════════════════════════
    CTA
