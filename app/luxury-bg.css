@@ -46,29 +46,37 @@ body::after {
 }
 
 /* Dot field animé global (petits points subtils) */
-html::before {
-  content: '';
+.global-dot-noise {
   position: fixed;
   inset: 0;
   z-index: 9995;
   pointer-events: none;
+  will-change: transform, opacity;
+  mix-blend-mode: screen;
   background-image:
-    radial-gradient(circle at 10% 20%, rgba(201, 168, 76, 0.2) 0 1px, transparent 1.3px),
-    radial-gradient(circle at 70% 35%, rgba(201, 168, 76, 0.18) 0 1px, transparent 1.3px),
-    radial-gradient(circle at 35% 75%, rgba(201, 168, 76, 0.16) 0 1px, transparent 1.3px),
-    radial-gradient(circle at 85% 65%, rgba(201, 168, 76, 0.16) 0 1px, transparent 1.3px);
-  background-size: 180px 180px, 220px 220px, 160px 160px, 240px 240px;
-  opacity: 0.16;
-  animation: dotDrift 34s linear infinite;
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.95) 0 1.2px, transparent 1.9px),
+    radial-gradient(circle at 70% 32%, rgba(255, 255, 255, 0.86) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 30% 75%, rgba(255, 255, 255, 0.75) 0 0.9px, transparent 1.6px),
+    radial-gradient(circle at 86% 64%, rgba(255, 255, 255, 0.82) 0 1.1px, transparent 1.8px),
+    radial-gradient(circle at 54% 48%, rgba(255, 255, 255, 0.72) 0 0.8px, transparent 1.5px);
+  background-size: 130px 130px, 170px 170px, 120px 120px, 190px 190px, 160px 160px;
+  opacity: 0.38;
+  animation: dotDrift 26s linear infinite;
 }
 
-[data-theme='light'] html::before {
-  opacity: 0.11;
+[data-theme='light'] .global-dot-noise {
+  mix-blend-mode: normal;
+  opacity: 0.2;
   background-image:
-    radial-gradient(circle at 10% 20%, rgba(168, 120, 42, 0.14) 0 1px, transparent 1.3px),
-    radial-gradient(circle at 70% 35%, rgba(168, 120, 42, 0.12) 0 1px, transparent 1.3px),
-    radial-gradient(circle at 35% 75%, rgba(168, 120, 42, 0.1) 0 1px, transparent 1.3px),
-    radial-gradient(circle at 85% 65%, rgba(168, 120, 42, 0.1) 0 1px, transparent 1.3px);
+    radial-gradient(circle at 12% 18%, rgba(168, 120, 42, 0.22) 0 1.1px, transparent 1.8px),
+    radial-gradient(circle at 70% 32%, rgba(168, 120, 42, 0.18) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 30% 75%, rgba(168, 120, 42, 0.16) 0 0.9px, transparent 1.6px),
+    radial-gradient(circle at 86% 64%, rgba(168, 120, 42, 0.16) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 54% 48%, rgba(168, 120, 42, 0.14) 0 0.8px, transparent 1.5px);
+}
+
+[data-theme='dark'] .global-dot-noise {
+  opacity: 0.44;
 }
 
 /* ═══════════════════════════════════════════════
@@ -111,20 +119,20 @@ html::before {
 
 @keyframes dotDrift {
   0% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    transform: translate3d(-18px, 14px, 0);
+    transform: translate3d(-24px, 18px, 0) scale(1.02);
   }
   100% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   body::before,
   body::after,
-  html::before {
+  .global-dot-noise {
     animation: none !important;
   }
 }

@@ -76,6 +76,7 @@
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 2rem;
+  scroll-behavior: smooth;
 }
 
 /* ─── LUXURY CARDS ─── */
@@ -1056,6 +1057,123 @@
   border-color: rgba(201, 168, 76, 0.25);
 }
 
+/* ─── PUBLIC PROFILE NAV ─── */
+.public-nav-menu {
+  margin: 0 0 2.2rem;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.public-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--luxury-text-muted);
+  border: 1px solid transparent;
+  transition: all 0.25s ease;
+}
+
+.public-nav-link:hover {
+  color: var(--luxury-text);
+  border-color: var(--luxury-gold-line);
+  background: var(--luxury-gold-dim);
+  transform: translateY(-1px);
+}
+
+/* ─── PUBLIC INFO CARDS ─── */
+.public-info-card {
+  scroll-margin-top: 140px;
+}
+
+.public-field-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.public-field-item {
+  background: color-mix(in srgb, var(--luxury-card-solid) 86%, transparent);
+  border: 1px solid var(--luxury-border);
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
+  transition: all 0.25s ease;
+}
+
+[data-theme='dark'] .public-field-item {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.public-field-item:hover {
+  border-color: var(--luxury-gold-line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.public-field-item.with-icon {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.public-field-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--luxury-gold-line);
+  background: var(--luxury-gold-dim);
+  color: var(--luxury-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.public-field-content {
+  min-width: 0;
+}
+
+.public-field-label {
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--luxury-text-dim);
+  margin-bottom: 0.35rem;
+}
+
+.public-field-value {
+  font-family: var(--body);
+  font-size: 0.92rem;
+  color: var(--luxury-text);
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.public-bio {
+  font-family: var(--body);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--luxury-text-muted);
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--luxury-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--luxury-card-solid) 86%, transparent);
+}
+
+[data-theme='dark'] .public-bio {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .nav-tab {
   display: flex;
   align-items: center;
@@ -1192,6 +1310,7 @@
   .ph-left { flex-direction: column; }
   .ph-right { align-items: center; }
   .info-row { grid-template-columns: 1fr 1fr 30px; }
+  .public-nav-menu { justify-content: flex-start; }
 }
 
 /* ─── LOADING ─── */

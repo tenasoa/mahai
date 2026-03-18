@@ -1,12 +1,12 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
-import { MapPin, GraduationCap, Calendar, BookOpen, Award, Zap } from 'lucide-react'
+import { MapPin, GraduationCap, Calendar, BookOpen, Award, Zap, UserRound, School, Trophy } from 'lucide-react'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import '../profil.css'
 
-// On utilise le Service Role pour lire le profil public et outrepasser les politiques RLS
+// Lecture restreinte au sous-ensemble de champs réellement publics.
 async function getPublicProfile(userId: string) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -16,17 +16,32 @@ async function getPublicProfile(userId: string) {
 
     const { data: profile, error } = await supabase
       .from('User')
-      .select('*')
+      .select(`
+        id,
+        prenom,
+        nom,
+        nomComplet,
+        pseudo,
+        userType,
+        customUserType,
+        region,
+        district,
+        createdAt,
+        educationLevel,
+        gradeLevel,
+        etablissement,
+        showEtablissement,
+        filiere,
+        bio,
+        matieresPreferees,
+        objectifsEtude,
+        profilePublic
+      `)
       .eq('id', userId)
       .single()
 
     if (error) {
-      console.error('Erreur Supabase détaillée:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      })
+      console.error('Erreur chargement profil public:', error.message)
       return null
     }
     
@@ -34,22 +49,18 @@ async function getPublicProfile(userId: string) {
     
     // Sécurité de visibilité
     if (profile.profilePublic === false) {
-      console.log('Profil trouvé mais marqué comme privé.')
       return null
     }
 
     return profile
   } catch (e) {
-    console.error('Exception lors du fetch profil:', e)
+    console.error('Exception lors du fetch profil public:', e)
     return null
   }
 }
 
 export default async function PublicProfilePage({ params }: { params: { userId: string } }) {
   const { userId } = await params;
-  
-  console.log('Chargement du profil public pour:', userId)
-  
   const profile = await getPublicProfile(userId)
 
   if (!profile) {
@@ -83,7 +94,7 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
             </div>
             <div className="ph-info">
               <div className="ph-name-wrap">
-                <h1 className="ph-name">{profile.prenom} {profile.nom}</h1>
+                <h1 className="ph-name">{profile.nomComplet || `${profile.prenom} ${profile.nom || ''}`.trim()}</h1>
               </div>
               <div className="ph-badges">
                 <span className="ph-badge student">{displayUserType()}</span>
@@ -108,45 +119,116 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
           </div>
         </div>
 
+        <nav className="luxury-card public-nav-menu" aria-label="Navigation des sections du profil public">
+          <a href="#section-identity" className="public-nav-link">
+            <UserRound size={14} />
+            Identité
+          </a>
+          <a href="#section-parcours" className="public-nav-link">
+            <GraduationCap size={14} />
+            Parcours
+          </a>
+          <a href="#section-bio" className="public-nav-link">
+            <BookOpen size={14} />
+            À propos
+          </a>
+          <a href="#section-matieres" className="public-nav-link">
+            <Zap size={14} />
+            Matières
+          </a>
+          <a href="#section-objectifs" className="public-nav-link">
+            <Trophy size={14} />
+            Objectifs
+          </a>
+        </nav>
+
         <div className="public-grid">
           <div className="grid-column">
-            <div className="luxury-card settings-card">
+            <section id="section-identity" className="luxury-card settings-card public-info-card">
+              <div className="sc-header">
+                <h3 className="sc-title">Identité <em>Publique</em></h3>
+                <UserRound size={14} className="opacity-50" />
+              </div>
+              <div className="public-field-grid">
+                <div className="public-field-item">
+                  <div className="public-field-label">Nom affiché</div>
+                  <div className="public-field-value">
+                    {profile.nomComplet || `${profile.prenom} ${profile.nom || ''}`.trim() || 'Non renseigné'}
+                  </div>
+                </div>
+                <div className="public-field-item">
+                  <div className="public-field-label">Pseudo</div>
+                  <div className="public-field-value">{profile.pseudo || 'Non renseigné'}</div>
+                </div>
+                <div className="public-field-item">
+                  <div className="public-field-label">Type de profil</div>
+                  <div className="public-field-value">{displayUserType()}</div>
+                </div>
+                <div className="public-field-item">
+                  <div className="public-field-label">Localisation</div>
+                  <div className="public-field-value">
+                    {profile.region ? `${profile.district || '—'}, ${profile.region}` : 'Non renseigné'}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="section-parcours" className="luxury-card settings-card public-info-card">
               <div className="sc-header">
                 <h3 className="sc-title">Parcours <em>Académique</em></h3>
                 <GraduationCap size={14} className="opacity-50" />
               </div>
-              
-              <div className="public-info-row">
-                <div className="p-label">Niveau & Classe</div>
-                <div className="p-val">{profile.educationLevel || 'Non renseigné'} — {profile.gradeLevel || '—'}</div>
-              </div>
-              
-              {profile.etablissement && (
-                <div className="public-info-row">
-                  <div className="p-label">Établissement</div>
-                  <div className="p-val">{profile.etablissement}</div>
-                </div>
-              )}
-              
-              {profile.filiere && (
-                <div className="public-info-row">
-                  <div className="p-label">Filière / Mention</div>
-                  <div className="p-val">{profile.filiere}</div>
-                </div>
-              )}
-            </div>
 
-            <div className="luxury-card settings-card">
+              <div className="public-field-grid">
+                <div className="public-field-item with-icon">
+                  <div className="public-field-icon">
+                    <GraduationCap size={14} />
+                  </div>
+                  <div className="public-field-content">
+                    <div className="public-field-label">Niveau & Classe</div>
+                    <div className="public-field-value">
+                      {profile.educationLevel || 'Non renseigné'} — {profile.gradeLevel || '—'}
+                    </div>
+                  </div>
+                </div>
+
+                {profile.showEtablissement && profile.etablissement && (
+                  <div className="public-field-item with-icon">
+                    <div className="public-field-icon">
+                      <School size={14} />
+                    </div>
+                    <div className="public-field-content">
+                      <div className="public-field-label">Établissement</div>
+                      <div className="public-field-value">{profile.etablissement}</div>
+                    </div>
+                  </div>
+                )}
+
+                {profile.filiere && (
+                  <div className="public-field-item with-icon">
+                    <div className="public-field-icon">
+                      <BookOpen size={14} />
+                    </div>
+                    <div className="public-field-content">
+                      <div className="public-field-label">Filière / Mention</div>
+                      <div className="public-field-value">{profile.filiere}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section id="section-bio" className="luxury-card settings-card">
               <div className="sc-header">
                 <h3 className="sc-title">À propos de <em>{profile.prenom}</em></h3>
                 <BookOpen size={14} className="opacity-50" />
               </div>
               <p className="public-bio">{profile.bio || "Cet utilisateur n'a pas encore rédigé de biographie."}</p>
-            </div>
+            </section>
           </div>
 
           <div className="grid-column">
-            <div className="luxury-card settings-card">
+            <section id="section-matieres" className="luxury-card settings-card">
               <div className="sc-header">
                 <h3 className="sc-title">Matières <em>Favorites</em></h3>
                 <Zap size={14} className="opacity-50" />
@@ -158,9 +240,9 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
                   <span className="luxury-tag-empty">Aucune matière favorite</span>
                 )}
               </div>
-            </div>
+            </section>
 
-            <div className="luxury-card settings-card">
+            <section id="section-objectifs" className="luxury-card settings-card">
               <div className="sc-header">
                 <h3 className="sc-title">Objectifs <em>Visés</em></h3>
                 <Award size={14} className="opacity-50" />
@@ -172,7 +254,7 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
                   <span className="luxury-tag-empty">Aucun objectif public</span>
                 )}
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>

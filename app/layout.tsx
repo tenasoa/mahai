@@ -67,6 +67,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${cormorant.variable} ${outfit.variable} ${dmMono.variable} min-h-screen bg-void text-text antialiased font-body font-[family-name:var(--body)]`}>
+        <div className="global-dot-noise" aria-hidden="true" />
         <LuxuryCursor />
         <ScrollToTop />
         <LuxuryNavbar />
