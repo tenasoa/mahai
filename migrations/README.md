@@ -52,6 +52,27 @@ WHERE table_name = 'User' AND column_name = 'birthDate';
 - **Colonnes ajoutées** :
   - `birthDate` (TEXT) : Date de naissance au format ISO (YYYY-MM-DD)
 
+### 002_add_nomComplet_pseudo_to_user.sql
+- **Date** : 2026-03-18
+- **Description** : Ajoute les colonnes `nomComplet` et `pseudo` pour l'affichage personnalisé
+- **Colonnes ajoutées** :
+  - `nomComplet` (TEXT) : Nom complet affiché publiquement
+  - `pseudo` (TEXT) : Pseudonyme pour l'interface
+- **Migration automatique** : Remplit les données existantes
+
+### 003_separate_nom_prenom.sql
+- **Date** : 2026-03-18
+- **Description** : Séparation de nomComplet en champs nom et prenom distincts
+- **Index ajoutés** :
+  - `idx_user_nom` : Pour les recherches par nom
+  - `idx_user_prenom` : Pour les recherches par prénom
+
+### 004_add_profilePicture_to_user.sql
+- **Date** : 2026-03-18
+- **Description** : Ajoute la colonne `profilePicture` pour stocker l'URL de l'avatar
+- **Colonnes ajoutées** :
+  - `profilePicture` (TEXT) : URL de l'avatar (Vercel Blob)
+
 ### 003_add_user_security_settings.sql
 - **Date** : 2026-03-18
 - **Description** : Ajoute les paramètres de sécurité utilisateur pour la section Profil > Sécurité

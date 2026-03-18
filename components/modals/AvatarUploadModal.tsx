@@ -34,8 +34,15 @@ export function AvatarUploadModal({
 
   const validateFile = (file: File): string | null => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
+    
+    // Check MIME type
     if (!allowedTypes.includes(file.type)) {
-      return 'Type de fichier non supporté'
+      // Fallback: check file extension if MIME type is not reliable
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+      if (!allowedExtensions.includes(fileExtension)) {
+        return 'Type de fichier non supporté'
+      }
     }
 
     if (file.size > 5 * 1024 * 1024) {
@@ -90,9 +97,14 @@ export function AvatarUploadModal({
 
     const file = e.dataTransfer.files[0]
     if (file && file.type.startsWith('image/')) {
-      handleFileSelect(file)
+      const error = validateFile(file)
+      if (error) {
+        onError(error)
+      } else {
+        handleFileSelect(file)
+      }
     } else {
-      setError('Veuillez déposer une image valide')
+      onError('Veuillez déposer une image valide (JPG, PNG, WebP, GIF)')
     }
   }
 
