@@ -230,15 +230,11 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
   // Create password reset token (6 digits)
   const token = generate6DigitCode()
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
-  
-  console.log('🔐 Password Reset Token Generated:', { token, email, expiresAt })
 
   await createPasswordReset(email, token, expiresAt)
 
   // Send password reset email
   try {
-    console.log('📧 Sending email with token:', token)
-    
     await resend.emails.send({
       from: 'onboarding@resend.dev',
       to: email,
@@ -296,15 +292,10 @@ export async function resetPassword(formData: ResetPasswordFormData) {
 
   const { token, password } = validation.data
 
-  console.log('🔍 Reset Password Attempt:', { token, password })
-
   // Find valid reset token
   const resetToken = await findValidPasswordReset(token)
 
-  console.log('🔍 Found Token:', resetToken)
-
   if (!resetToken) {
-    console.log('❌ Token validation failed')
     return { error: 'Token invalide ou expiré' }
   }
 
@@ -320,30 +311,31 @@ export async function resetPassword(formData: ResetPasswordFormData) {
   
   // Find Supabase Auth user by email to be 100% sure of the ID
   const { data: { users }, error: listError } = await supabase.auth.admin.listUsers()
+
+  if (listError) {
+    console.error('Erreur récupération utilisateurs auth:', listError)
+    return { error: 'Erreur lors de la récupération du compte' }
+  }
+
   const supabaseUser = users.find(u => u.email === resetToken.email)
 
   if (!supabaseUser) {
-    console.error('❌ User not found in Supabase Auth:', resetToken.email)
     return { error: 'Compte non trouvé dans le système d\'authentification' }
   }
-
-  console.log('🚀 Attempting to update Supabase password for ID:', supabaseUser.id)
   
-  const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
+  const { error: updateError } = await supabase.auth.admin.updateUserById(
     supabaseUser.id,
     { password }
   )
 
   if (updateError) {
-    console.error('❌ Supabase Admin Update Error:', {
+    console.error('Erreur mise à jour mot de passe Supabase:', {
       message: updateError.message,
       status: updateError.status,
       code: updateError.code
     })
     return { error: `Erreur Supabase: ${updateError.message}` }
   }
-
-  console.log('✅ Supabase password updated successfully')
 
   // Update user timestamp in database
   await query(
@@ -472,13 +464,29 @@ export async function resendVerificationEmail(email: string) {
   }
 }
 
-// Get user data from database by ID
-export async function getUserData(userId: string) {
+// Get current authenticated user data from the application database
+export async function getCurrentUserData() {
   try {
-    const result = await query('SELECT * FROM "User" WHERE id = $1', [userId])
-    return result.rows[0] || null
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return null
+    }
+
+    const result = await query('SELECT * FROM "User" WHERE id = $1 LIMIT 1', [user.id])
+    const data = result.rows[0] ?? null
+
+    if (!data) {
+      return null
+    }
+
+    return data
   } catch (error) {
-    console.error('Error fetching user data:', error)
+    console.error('Error fetching current user data:', error)
     return null
   }
 }

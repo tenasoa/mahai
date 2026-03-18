@@ -3,7 +3,7 @@
  * Toutes les requêtes utilisent directement le pool 'pg'.
  */
 
-import { query, transaction } from './db'
+import { query } from './db'
 
 // Helper pour convertir snake_case en camelCase
 function toCamelCase(row: any) {
@@ -216,17 +216,5 @@ export const db = {
       const result = await query(sql, [where.id, ...values])
       return result.rows[0]
     }
-  },
-  
-  async $transaction(queries: Promise<any>[]) {
-    return await transaction(async (client) => {
-      const results = []
-      for (const queryPromise of queries) {
-        // Exécuter chaque requête - version simplifiée
-        const result = await queryPromise
-        results.push(result)
-      }
-      return results
-    })
   }
 }

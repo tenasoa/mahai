@@ -46,15 +46,9 @@ export interface WishlistItem {
 export interface CatalogueFilters {
   types?: ExamenType[]
   matieres?: string[]
-  annees?: string[]
-  difficultes?: Difficulte[]
-  langues?: Langue[]
-  formats?: Format[]
-  badges?: Badge[]
   minRating?: number
   maxCredits?: number
   search?: string
-  featured?: boolean
 }
 
 export interface CatalogueQueryParams extends CatalogueFilters {

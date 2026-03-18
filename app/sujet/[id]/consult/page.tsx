@@ -1,4 +1,5 @@
 import { db } from '@/lib/db-client'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 
 interface ConsultPageProps {
@@ -7,15 +8,21 @@ interface ConsultPageProps {
 
 export default async function ConsultPage({ params }: ConsultPageProps) {
   const { id } = await params
-  
-  // In production, get userId from session
-  const userId = 'demo-user-id'
 
   try {
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      redirect('/auth/login')
+    }
+
     // Verify user has purchased this subject
     const purchase = await db.purchase.findFirst({
       where: {
-        userId,
+        userId: user.id,
         subjectId: id,
         status: 'COMPLETED',
       },
@@ -44,12 +51,9 @@ export default async function ConsultPage({ params }: ConsultPageProps) {
               <p className="text-sm text-gray-400">{subject.matiere} - {subject.annee}</p>
             </div>
             <div className="flex items-center gap-4">
-              <a
-                href={`/api/subjects/${id}/download`}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
-              >
-                Télécharger le PDF
-              </a>
+              <div className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium">
+                Téléchargement PDF bientôt disponible
+              </div>
               <a
                 href={`/sujet/${id}`}
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium"
@@ -74,7 +78,7 @@ export default async function ConsultPage({ params }: ConsultPageProps) {
                   Le document de {subject.pages} pages est prêt à être consulté
                 </p>
                 <p className="text-xs mt-4 text-gray-400">
-                  En production: intégration avec react-pdf ou viewer PDF
+                  Le téléchargement sera réactivé quand le stockage signé sera branché
                 </p>
               </div>
             </div>

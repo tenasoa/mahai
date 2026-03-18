@@ -372,63 +372,63 @@ export default function ProfilePage() {
           </div>
 
           <div className={`ptab-panel ${activeTab === 'mes-sujets' ? 'active' : ''}`}>
-            <div className="luxury-card settings-card">
-              <div className="sc-header">
-                <h3 className="sc-title">Mes <em>Sujets</em></h3>
-                <BookOpen size={14} className="sc-info-icon" />
-              </div>
+            <div className="section-header">
+              <h3 className="section-title-with-icon">
+                <BookOpen size={18} />
+                Mes <em>Sujets</em>
+              </h3>
+            </div>
 
-              {purchasedSubjectsLoading ? (
+            {purchasedSubjectsLoading ? (
+              <div className="subjects-grid">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="subject-card-skeleton">
+                    <div className="subject-line w-70"></div>
+                    <div className="subject-line w-45"></div>
+                    <div className="subject-line w-30"></div>
+                  </div>
+                ))}
+              </div>
+            ) : purchasedSubjects.length > 0 ? (
+              <>
+                <div className="subjects-summary">
+                  <span>
+                    <strong>{purchasedSubjects.length}</strong> sujet{purchasedSubjects.length > 1 ? 's' : ''} débloqué{purchasedSubjects.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+
                 <div className="subjects-grid">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div key={index} className="subject-card-skeleton">
-                      <div className="subject-line w-70"></div>
-                      <div className="subject-line w-45"></div>
-                      <div className="subject-line w-30"></div>
-                    </div>
+                  {purchasedSubjects.map((subject) => (
+                    <article key={`${subject.id}-${subject.purchasedAt}`} className="subject-card">
+                      <div className="subject-card-head">
+                        <span className="subject-badge">{subject.type}</span>
+                        <span className="subject-credits">-{subject.creditsAmount} cr</span>
+                      </div>
+                      <h4 className="subject-title">{subject.titre}</h4>
+                      <p className="subject-meta">
+                        {subject.matiere} · {subject.annee}{subject.serie ? ` · ${subject.serie}` : ''}
+                      </p>
+                      <p className="subject-date">
+                        Débloqué le {new Date(subject.purchasedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                      </p>
+                      <button className="btn-card-action mt-4" onClick={() => router.push(`/sujet/${subject.id}`)}>
+                        Ouvrir le sujet
+                      </button>
+                    </article>
                   ))}
                 </div>
-              ) : purchasedSubjects.length > 0 ? (
-                <>
-                  <div className="subjects-summary">
-                    <span>
-                      <strong>{purchasedSubjects.length}</strong> sujet{purchasedSubjects.length > 1 ? 's' : ''} débloqué{purchasedSubjects.length > 1 ? 's' : ''}
-                    </span>
-                  </div>
-
-                  <div className="subjects-grid">
-                    {purchasedSubjects.map((subject) => (
-                      <article key={`${subject.id}-${subject.purchasedAt}`} className="subject-card">
-                        <div className="subject-card-head">
-                          <span className="subject-badge">{subject.type}</span>
-                          <span className="subject-credits">-{subject.creditsAmount} cr</span>
-                        </div>
-                        <h4 className="subject-title">{subject.titre}</h4>
-                        <p className="subject-meta">
-                          {subject.matiere} · {subject.annee}{subject.serie ? ` · ${subject.serie}` : ''}
-                        </p>
-                        <p className="subject-date">
-                          Débloqué le {new Date(subject.purchasedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                        </p>
-                        <button className="btn-card-action mt-4" onClick={() => router.push(`/sujet/${subject.id}`)}>
-                          Ouvrir le sujet
-                        </button>
-                      </article>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="empty-section-title">Aucun sujet débloqué pour le moment.</p>
-                  <p className="empty-section-text">
-                    Quand vous achetez un sujet avec vos crédits, il apparaît automatiquement ici.
-                  </p>
-                  <button className="btn-card-action mt-4" onClick={() => router.push('/catalogue')}>
-                    Explorer le catalogue
-                  </button>
-                </>
-              )}
-            </div>
+              </>
+            ) : (
+              <>
+                <p className="empty-section-title">Aucun sujet débloqué pour le moment.</p>
+                <p className="empty-section-text">
+                  Quand vous achetez un sujet avec vos crédits, il apparaît automatiquement ici.
+                </p>
+                <button className="btn-card-action mt-4" onClick={() => router.push('/catalogue')}>
+                  Explorer le catalogue
+                </button>
+              </>
+            )}
           </div>
 
           <div className={`ptab-panel ${activeTab === 'coffre-fort' ? 'active' : ''}`}>
@@ -445,13 +445,14 @@ export default function ProfilePage() {
           </div>
 
           <div className={`ptab-panel ${activeTab === 'securite' ? 'active' : ''}`}>
-            <div className="luxury-card settings-card">
-              <div className="sc-header">
-                <h3 className="sc-title">Paramètres <em>Sécurité</em></h3>
-                <Shield size={14} className="sc-info-icon" />
-              </div>
+            <div className="section-header">
+              <h3 className="section-title-with-icon">
+                <Shield size={18} />
+                Paramètres <em>Sécurité</em>
+              </h3>
+            </div>
 
-              <div className="security-grid">
+            <div className="security-grid">
                 <div className="security-card">
                   <div className="security-card-head">
                     <BellRing size={16} className="sc-info-icon" />
@@ -584,7 +585,6 @@ export default function ProfilePage() {
                   Dernière mise à jour: {new Date(appUser.securitySettingsUpdatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
                 </p>
               )}
-            </div>
           </div>
         </div>
       </div>

@@ -1,26 +1,51 @@
 'use server'
 
-import { transaction } from '@/lib/db'
-import { getUserById, updateUserCredits, createPurchase, findExistingPurchase, createCreditTransaction } from '@/lib/sql-queries'
+import { revalidatePath } from 'next/cache'
+import { query, transaction } from '@/lib/db'
+import { findExistingPurchase } from '@/lib/sql-queries'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
-export async function getUserCredits(userId: string) {
+async function getAuthenticatedUserId() {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    return null
+  }
+
+  return user.id
+}
+
+export async function getCurrentUserCredits() {
   try {
-    const user = await getUserById(userId)
-    return user?.credits || 0
+    const userId = await getAuthenticatedUserId()
+
+    if (!userId) {
+      return 0
+    }
+
+    const result = await query('SELECT credits FROM "User" WHERE id = $1', [userId])
+    return result.rows[0]?.credits || 0
   } catch (error) {
-    console.error('Error fetching user credits:', error)
+    console.error('Error fetching current user credits:', error)
     return 0
   }
 }
 
-export async function purchaseSubject(subjectId: string, userId: string) {
+export async function purchaseCurrentUserSubject(subjectId: string) {
   try {
-    // Get subject and user in parallel using raw SQL
-    const { query } = await import('@/lib/db')
-    
+    const userId = await getAuthenticatedUserId()
+
+    if (!userId) {
+      return { success: false, error: 'Vous devez être connecté pour acheter un sujet' }
+    }
+
     const [subjectResult, userResult] = await Promise.all([
-      query('SELECT * FROM "Subject" WHERE id = $1', [subjectId]),
-      query('SELECT * FROM "User" WHERE id = $1', [userId])
+      query('SELECT id, titre, credits FROM "Subject" WHERE id = $1', [subjectId]),
+      query('SELECT id, credits FROM "User" WHERE id = $1', [userId]),
     ])
 
     const subject = subjectResult.rows[0]
@@ -30,41 +55,49 @@ export async function purchaseSubject(subjectId: string, userId: string) {
       return { success: false, error: 'Sujet ou utilisateur introuvable' }
     }
 
-    // Check if already purchased
     const existingPurchase = await findExistingPurchase(userId, subjectId)
     if (existingPurchase) {
-      return { success: true, alreadyOwned: true }
+      return {
+        success: true,
+        alreadyOwned: true,
+        remainingCredits: user.credits,
+      }
     }
 
-    // Check credits
     if (user.credits < subject.credits) {
       return { success: false, error: 'Crédits insuffisants' }
     }
 
-    // Perform transaction
+    const remainingCredits = user.credits - subject.credits
+
     await transaction(async (client) => {
-      // Update user credits
       await client.query(
         'UPDATE "User" SET credits = credits - $1, "updatedAt" = NOW() WHERE id = $2',
         [subject.credits, userId]
       )
 
-      // Create purchase
       await client.query(
-        `INSERT INTO "Purchase" ("userId", "subjectId", "creditsAmount", amount, status) 
+        `INSERT INTO "Purchase" ("userId", "subjectId", "creditsAmount", amount, status)
          VALUES ($1, $2, $3, $4, $5)`,
         [userId, subjectId, subject.credits, 0, 'COMPLETED']
       )
 
-      // Create credit transaction
       await client.query(
-        `INSERT INTO "CreditTransaction" ("userId", amount, type, description, status) 
+        `INSERT INTO "CreditTransaction" ("userId", amount, type, description, status)
          VALUES ($1, $2, $3, $4, $5)`,
         [userId, -subject.credits, 'SPEND', `Achat du sujet: ${subject.titre}`, 'COMPLETED']
       )
     })
 
-    return { success: true }
+    revalidatePath('/catalogue')
+    revalidatePath(`/sujet/${subjectId}`)
+    revalidatePath('/profil')
+    revalidatePath('/dashboard')
+
+    return {
+      success: true,
+      remainingCredits,
+    }
   } catch (error) {
     console.error('Error purchasing subject:', error)
     return { success: false, error: 'Erreur lors de la transaction' }

@@ -71,7 +71,6 @@ export function useCatalogue({
       const result = await getSubjects({
         ...activeFilters,
         limit: pageSize,
-        userId, // Pass userId to get unlock status
       })
 
       setSubjects(result.data)
@@ -89,7 +88,7 @@ export function useCatalogue({
     if (!userId) return
 
     try {
-      const items = await getWishlist(userId)
+      const items = await getWishlist()
       const ids = new Set(items.map((item) => item.subjectId))
       setWishedIds(ids)
     } catch (err) {
@@ -157,7 +156,7 @@ export function useCatalogue({
         return
       }
 
-      const result = await toggleWishlistApi(userId, subjectId)
+      const result = await toggleWishlistApi(subjectId)
 
       if (result.success) {
         setWishedIds((prev) => {
