@@ -368,6 +368,23 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
             <div className="modal-section">
               <h3 className="section-title">
                 <BookOpen size={18} />
+                À Propos & Biographie
+              </h3>
+
+              <div className="form-group">
+                <label className="form-label">Biographie</label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  className="form-textarea"
+                  placeholder="Parlez-nous de vous, de vos passions, de vos objectifs..."
+                  rows={4}
+                />
+              </div>
+
+              <h3 className="section-title" style={{ marginTop: '1.5rem' }}>
+                <BookOpen size={18} />
                 Objectifs & Matières
               </h3>
               

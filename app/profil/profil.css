@@ -446,6 +446,22 @@
   gap: 0.75rem;
 }
 
+/* ─── BIO SECTION ─── */
+.bio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.bio-text {
+  font-family: var(--body);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--luxury-text-muted);
+  min-height: 60px;
+}
+
 .luxury-tags {
   display: flex;
   flex-wrap: wrap;

@@ -356,3 +356,64 @@ export async function deleteCurrentUserProfilePictureAction() {
     return { success: false, error: 'Erreur serveur' }
   }
 }
+
+// Schema pour le changement de mot de passe
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(6, 'Le mot de passe actuel doit contenir au moins 6 caractères'),
+  newPassword: z.string().min(6, 'Le nouveau mot de passe doit contenir au moins 6 caractères'),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Les mots de passe ne correspondent pas",
+  path: ['confirmPassword'],
+})
+
+export async function changeUserPasswordAction(data: unknown) {
+  const context = await getAuthenticatedContext()
+
+  if ('error' in context) {
+    return { success: false, error: context.error }
+  }
+
+  try {
+    const validatedData = changePasswordSchema.parse(data)
+    const supabase = context.supabase
+
+    // Récupérer l'email de l'utilisateur
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { success: false, error: 'Utilisateur non trouvé' }
+    }
+
+    // Vérifier le mot de passe actuel
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email!,
+      password: validatedData.currentPassword,
+    })
+
+    if (signInError) {
+      return { success: false, error: 'Le mot de passe actuel est incorrect' }
+    }
+
+    // Changer le mot de passe
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: validatedData.newPassword,
+    })
+
+    if (updateError) {
+      return { success: false, error: updateError.message }
+    }
+
+    revalidatePath('/profil')
+
+    return { success: true, message: 'Mot de passe mis à jour avec succès' }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.errors[0]?.message || 'Validation échouée',
+      }
+    }
+    console.error('Erreur serveur:', error)
+    return { success: false, error: 'Erreur serveur' }
+  }
+}

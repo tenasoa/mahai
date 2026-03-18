@@ -12,13 +12,14 @@ import {
   updateCurrentUserProfileAction,
   getCurrentUserPurchasedSubjectsAction,
   updateCurrentUserSecuritySettingsAction,
+  changeUserPasswordAction,
   type PurchasedSubjectItem,
 } from '@/actions/profile'
 import { uploadAvatarAction } from '@/actions/avatar'
 import {
   MapPin, GraduationCap, Building, Phone, Calendar,
   User as UserIcon, BookOpen, Shield, BellRing, Clock3, KeyRound,
-  Eye, EyeOff, CheckCircle, Info, Zap, Camera
+  Eye, EyeOff, CheckCircle, Info, Zap, Camera, X
 } from 'lucide-react'
 import './profil.css'
 import '@/components/modals/ProfileEditModal.css'
@@ -69,6 +70,30 @@ export default function ProfilePage() {
   const [saveLoading, setSaveLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'profil' | 'mes-sujets' | 'coffre-fort' | 'securite'>('profil')
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+  const [notificationTimeout, setNotificationTimeout] = useState<NodeJS.Timeout | null>(null)
+
+  // Auto-dismiss notification après 5 secondes
+  useEffect(() => {
+    if (notification) {
+      // Clear any existing timeout
+      if (notificationTimeout) {
+        clearTimeout(notificationTimeout)
+      }
+      
+      // Set new timeout
+      const timeout = setTimeout(() => {
+        setNotification(null)
+      }, 5000)
+      
+      setNotificationTimeout(timeout)
+    }
+    
+    return () => {
+      if (notificationTimeout) {
+        clearTimeout(notificationTimeout)
+      }
+    }
+  }, [notification])
   const [purchasedSubjects, setPurchasedSubjects] = useState<PurchasedSubjectItem[]>([])
   const [purchasedSubjectsLoading, setPurchasedSubjectsLoading] = useState(false)
   const [purchasedSubjectsLoaded, setPurchasedSubjectsLoaded] = useState(false)
@@ -84,6 +109,14 @@ export default function ProfilePage() {
   const [showEmail, setShowEmail] = useState(appUser?.showEmail ?? false)
   const [showPhone, setShowPhone] = useState(appUser?.showPhone ?? false)
   const [showEtablissement, setShowEtablissement] = useState(appUser?.showEtablissement ?? true)
+  // États pour le changement de mot de passe
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false)
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [passwordChanging, setPasswordChanging] = useState(false)
 
   const handleAvatarChange = async (file: File) => {
     if (!userId) return
@@ -126,6 +159,28 @@ export default function ProfilePage() {
       await updateCurrentUserProfileAction(updateData)
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la visibilité:', error)
+    }
+  }
+
+  // Gestion du changement de mot de passe
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordChanging(true)
+    
+    try {
+      const result = await changeUserPasswordAction(passwordData)
+      
+      if (result.success) {
+        setNotification({ type: 'success', message: 'Mot de passe mis à jour avec succès !' })
+        setPasswordModalOpen(false)
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      } else {
+        setNotification({ type: 'error', message: result.error || 'Erreur lors du changement de mot de passe' })
+      }
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Erreur serveur' })
+    } finally {
+      setPasswordChanging(false)
     }
   }
 
@@ -403,6 +458,17 @@ export default function ProfilePage() {
               <div className="grid-column">
                 <div className="luxury-card settings-card">
                   <div className="sc-header">
+                    <h3 className="sc-title">À <em>Propos</em></h3>
+                    <BookOpen size={14} className="sc-info-icon" />
+                  </div>
+                  <div className="bio-content">
+                    <p className="bio-text">{appUser?.bio || "Vous n'avez pas encore rédigé de biographie."}</p>
+                    <button className="btn-card-action" onClick={() => setEditModalOpen(true)}>Éditer</button>
+                  </div>
+                </div>
+
+                <div className="luxury-card settings-card">
+                  <div className="sc-header">
                     <h3 className="sc-title">Parcours <em>Académique</em></h3>
                     <GraduationCap size={14} className="sc-info-icon" />
                   </div>
@@ -662,10 +728,69 @@ export default function ProfilePage() {
                 <button className="btn-card-action" onClick={handleSecuritySave} disabled={securitySaving}>
                   {securitySaving ? 'Enregistrement...' : 'Enregistrer les paramètres sécurité'}
                 </button>
-                <button className="btn-card-action ghost" onClick={() => router.push('/auth/forgot-password')}>
-                  Mettre à jour mon mot de passe
+                <button className="btn-card-action ghost" onClick={() => setPasswordModalOpen(true)}>
+                  Changer le mot de passe
                 </button>
               </div>
+
+              {/* Modal Changement de mot de passe */}
+              {passwordModalOpen && (
+                <div className="modal-overlay" onClick={() => setPasswordModalOpen(false)}>
+                  <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+                    <div className="modal-header">
+                      <h2 className="modal-title">Changer le <em>mot de passe</em></h2>
+                      <button onClick={() => setPasswordModalOpen(false)} className="modal-close">
+                        <X size={20} />
+                      </button>
+                    </div>
+                    <form onSubmit={handlePasswordChange} className="modal-content">
+                      <div className="form-group">
+                        <label className="form-label">Mot de passe actuel</label>
+                        <input
+                          type="password"
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                          className="form-input"
+                          placeholder="••••••••"
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Nouveau mot de passe</label>
+                        <input
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                          className="form-input"
+                          placeholder="••••••••"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Confirmer le mot de passe</label>
+                        <input
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                          className="form-input"
+                          placeholder="••••••••"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                      <div className="modal-footer">
+                        <button type="button" onClick={() => setPasswordModalOpen(false)} className="btn-secondary">
+                          Annuler
+                        </button>
+                        <button type="submit" className="btn-primary" disabled={passwordChanging}>
+                          {passwordChanging ? 'Changement...' : 'Changer le mot de passe'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
 
               {appUser?.securitySettingsUpdatedAt && (
                 <p className="security-footnote">
