@@ -17,6 +17,7 @@ export const updateProfileSchema = z.object({
   // Informations personnelles
   userType: z.union([z.literal('ETUDIANT'), z.literal('PROFESSIONNEL'), z.literal('ENSEIGNANT'), z.literal('PARENT'), z.literal('AUTRE')]).optional(),
   customUserType: z.string().optional(),
+  birthDate: z.string().optional(),
   phone: z.string().optional(),
 
   // Informations académiques

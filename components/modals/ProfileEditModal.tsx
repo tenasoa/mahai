@@ -25,6 +25,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
     nom: userData?.nom || '',
     userType: userData?.userType || 'ETUDIANT',
     customUserType: userData?.customUserType || '',
+    birthDate: userData?.birthDate || '',
     phone: userData?.phone || '',
 
     // Informations académiques
@@ -192,6 +193,19 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                   />
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">Date de naissance</label>
+                  <input
+                    type="date"
+                    name="birthDate"
+                    value={formData.birthDate}
+                    onChange={handleChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">
                     <Phone size={16} style={{ display: 'inline', marginRight: '8px' }} />

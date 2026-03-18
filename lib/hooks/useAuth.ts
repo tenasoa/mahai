@@ -25,6 +25,7 @@ export interface AppUser {
   // Profil étendu
   userType?: string
   customUserType?: string
+  birthDate?: string
   etablissement?: string
   filiere?: string
   matieresPreferees?: string[]
