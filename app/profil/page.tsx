@@ -151,10 +151,13 @@ export default function ProfilePage() {
             
             <div className="ph-info">
               <div className="ph-name-wrap">
-                <h1 className="ph-name">{appUser?.prenom} {appUser?.nom}</h1>
+                <h1 className="ph-name">{appUser?.nomComplet || `${appUser?.prenom} ${appUser?.nom || ''}`.trim()}</h1>
+                {appUser?.pseudo && (
+                  <span className="ph-badge" style={{ marginLeft: '0.5rem' }}>@{appUser.pseudo}</span>
+                )}
                 <CheckCircle size={22} className="ph-verified-icon" />
               </div>
-              
+
               <div className="ph-badges">
                 <span className="ph-badge student">{displayUserType()}</span>
                 {appUser?.role === 'CONTRIBUTEUR' && <span className="ph-badge contrib">Contributeur Or</span>}
@@ -228,7 +231,8 @@ export default function ProfilePage() {
                     <Info size={14} className="sc-info-icon" />
                   </div>
                   <div className="info-rows">
-                    <ProfileInfoRow label="Identité" value={`${appUser?.prenom} ${appUser?.nom || ''}`} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
+                    <ProfileInfoRow label="Nom complet" value={appUser?.nomComplet || `${appUser?.prenom} ${appUser?.nom || ''}`.trim()} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
+                    <ProfileInfoRow label="Pseudo" value={appUser?.pseudo || 'Non renseigné'} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
                     <ProfileInfoRow label="Âge" value={appUser?.birthDate ? `${calculateAge(appUser.birthDate)} ans` : null} icon={<Calendar size={14} />} showVisibilityIcon={false} />
                     <ProfileInfoRow label="E-mail" value={user?.email} icon={<Shield size={14} />} isPublic={appUser?.showEmail} />
                     <ProfileInfoRow label="Téléphone" value={appUser?.phone} icon={<Phone size={14} />} isPublic={appUser?.showPhone} />
