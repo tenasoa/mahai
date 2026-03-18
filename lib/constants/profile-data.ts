@@ -17,6 +17,19 @@ export const EDUCATION_LEVELS = [
   { value: 'FORMATION', label: 'Formation' }
 ];
 
+export const GRADE_LEVELS = [
+  // Primaire
+  '11EME', '10EME', '9EME', '8EME', '7EME',
+  // Collège
+  '6EME', '5EME', '4EME', '3EME',
+  // Lycée
+  'SECONDE', 'PREMIERE', 'TERMINALE',
+  // Supérieur
+  'L1', 'L2', 'L3', 'M1', 'M2',
+  // Autre
+  'AUTRE'
+] as const;
+
 export const GRADE_LEVELS_MAP = {
   PRIMAIRE: [
     { value: '11EME', label: '11ème' },

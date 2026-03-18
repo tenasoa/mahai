@@ -81,17 +81,27 @@ export default function ProfilePage() {
   const handleProfileUpdate = async (data: any) => {
     setSaveLoading(true)
     try {
-      const result = await updateProfileAction(userId!, data)
-      
+      // Nettoyer les données avant envoi
+      const cleanedData = Object.fromEntries(
+        Object.entries(data).filter(([_, value]) => value !== null && value !== '')
+      )
+
+      const result = await updateProfileAction(userId!, cleanedData)
+
       if (result.success) {
         setNotification({ type: 'success', message: 'Profil sublimé avec succès !' })
         setEditModalOpen(false)
         setTimeout(() => window.location.reload(), 1500)
       } else {
-        setNotification({ type: 'error', message: result.error || 'Dissonance lors de la mise à jour' })
+        console.error('Erreur mise à jour:', result)
+        const errorMsg = result.details 
+          ? `Validation échouée: ${JSON.stringify(result.details)}`
+          : (result.error || 'Dissonance lors de la mise à jour')
+        setNotification({ type: 'error', message: errorMsg })
       }
     } catch (error) {
-      setNotification({ type: 'error', message: 'Erreur mystique du serveur' })
+      console.error('Erreur exceptionnelle:', error)
+      setNotification({ type: 'error', message: error instanceof Error ? error.message : 'Erreur mystique du serveur' })
     } finally {
       setSaveLoading(false)
     }
@@ -259,12 +269,12 @@ export default function ProfilePage() {
                     <h3 className="sc-title">Ambitions <em>& Goûts</em></h3>
                     <Zap size={14} className="sc-info-icon" />
                   </div>
-                  
+
                   <div className="pref-group">
                     <span className="ir-label">Matières de Prédilection</span>
                     <div className="luxury-tags">
-                      {appUser?.matieresPreferees?.length > 0 ? (
-                        appUser.matieresPreferees.map((m: string) => <span key={m} className="luxury-tag">{m}</span>)
+                      {(appUser?.matieresPreferees?.length ?? 0) > 0 ? (
+                        appUser?.matieresPreferees?.map((m: string) => <span key={m} className="luxury-tag">{m}</span>)
                       ) : (
                         <span className="luxury-tag-empty">Aucune matière favorite</span>
                       )}
@@ -274,8 +284,8 @@ export default function ProfilePage() {
                   <div className="pref-group mt-6">
                     <span className="ir-label">Objectifs Visés</span>
                     <div className="luxury-tags">
-                      {appUser?.objectifsEtude?.length > 0 ? (
-                        appUser.objectifsEtude.map((o: string) => <span key={o} className="luxury-tag gold">{o}</span>)
+                      {(appUser?.objectifsEtude?.length ?? 0) > 0 ? (
+                        appUser?.objectifsEtude?.map((o: string) => <span key={o} className="luxury-tag gold">{o}</span>)
                       ) : (
                         <span className="luxury-tag-empty">Aucun objectif défini</span>
                       )}

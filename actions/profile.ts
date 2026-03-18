@@ -34,6 +34,8 @@ export async function updateProfileAction(userId: string, data: UpdateProfileDat
     // Valider les données avec Zod
     const validatedData = updateProfileSchema.parse(data)
 
+    console.log('Données validées:', validatedData)
+
     const { data: profile, error } = await supabase
       .from('User')
       .update({
@@ -45,22 +47,33 @@ export async function updateProfileAction(userId: string, data: UpdateProfileDat
       .single()
 
     if (error) {
-      console.error('Erreur mise à jour profil:', error)
-      return { success: false, error: 'Erreur lors de la mise à jour du profil' }
+      console.error('Erreur Supabase mise à jour profil:', error)
+      return { 
+        success: false, 
+        error: 'Erreur lors de la mise à jour du profil',
+        details: error 
+      }
     }
 
     return { success: true, data: profile }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { 
-        success: false, 
+      console.error('Erreur validation Zod:', error.errors)
+      return {
+        success: false,
         error: 'Données invalides',
-        details: error.errors 
+        details: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
       }
     }
 
-    console.error('Erreur serveur:', error)
-    return { success: false, error: 'Erreur serveur' }
+    console.error('Erreur serveur inattendue:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Erreur serveur inattendue' 
+    }
   }
 }
 

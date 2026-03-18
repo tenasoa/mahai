@@ -22,6 +22,18 @@ export interface AppUser {
   bio?: string
   createdAt?: string
   emailVerified: boolean
+  // Profil étendu
+  userType?: string
+  customUserType?: string
+  etablissement?: string
+  filiere?: string
+  matieresPreferees?: string[]
+  objectifsEtude?: string[]
+  profilePublic?: boolean
+  showEmail?: boolean
+  showPhone?: boolean
+  showEtablissement?: boolean
+  birthDate?: string
 }
 
 export function useAuth() {
