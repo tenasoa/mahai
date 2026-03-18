@@ -61,6 +61,49 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
   const [availableDistricts, setAvailableDistricts] = useState<string[]>([])
   const [availableGrades, setAvailableGrades] = useState<{value: string, label: string}[]>([])
 
+  // Mettre à jour formData quand userData change (à l'ouverture du modal)
+  useEffect(() => {
+    if (userData && isOpen) {
+      setFormData({
+        // Informations personnelles
+        prenom: userData?.prenom || '',
+        nom: userData?.nom || '',
+        pseudo: userData?.pseudo || '',
+        userType: userData?.userType || 'ETUDIANT',
+        customUserType: userData?.customUserType || '',
+        birthDate: userData?.birthDate || '',
+        phone: userData?.phone || '',
+
+        // Informations académiques
+        etablissement: userData?.etablissement || '',
+        educationLevel: userData?.educationLevel || '',
+        gradeLevel: userData?.gradeLevel || '',
+        filiere: userData?.filiere || '',
+
+        // Localisation
+        region: userData?.region || '',
+        district: userData?.district || '',
+
+        // Préférences
+        bio: userData?.bio || '',
+        matieresPreferees: userData?.matieresPreferees || [],
+        objectifsEtude: userData?.objectifsEtude || [],
+
+        // Paramètres de confidentialité
+        profilePublic: userData?.profilePublic ?? true,
+        showEmail: userData?.showEmail ?? false,
+        showPhone: userData?.showPhone ?? false,
+        showEtablissement: userData?.showEtablissement ?? true,
+
+        // Paramètres de notification
+        notifCorrections: userData?.notifCorrections ?? true,
+        notifSujets: userData?.notifSujets ?? true,
+        notifPromos: userData?.notifPromos ?? false,
+        notifRappels: userData?.notifRappels ?? true
+      })
+    }
+  }, [userData, isOpen])
+
   // Mettre à jour les districts quand la région change
   useEffect(() => {
     if (formData.region) {

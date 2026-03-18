@@ -30,9 +30,10 @@ interface InfoRowProps {
   icon?: React.ReactNode
   isPublic?: boolean
   showVisibilityIcon?: boolean
+  onToggleVisibility?: () => void
 }
 
-function ProfileInfoRow({ label, value, icon, isPublic, showVisibilityIcon = true }: InfoRowProps) {
+function ProfileInfoRow({ label, value, icon, isPublic, showVisibilityIcon = true, onToggleVisibility }: InfoRowProps) {
   const isEmpty = !value || value === ''
   const displayValue = isEmpty ? 'Non renseigné' : value
 
@@ -45,7 +46,12 @@ function ProfileInfoRow({ label, value, icon, isPublic, showVisibilityIcon = tru
       </div>
       <div className="ir-visibility-cell">
         {showVisibilityIcon && (
-          <div className={`ir-visibility ${isPublic ? 'public' : 'private'}`} title={isPublic ? 'Visible sur votre profil public' : 'Masqué sur votre profil public'}>
+          <div 
+            className={`ir-visibility ${isPublic ? 'public' : 'private'}`} 
+            title={isPublic ? 'Visible sur votre profil public' : 'Masqué sur votre profil public'}
+            onClick={onToggleVisibility}
+            style={{ cursor: 'pointer' }}
+          >
             {isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
           </div>
         )}
@@ -56,7 +62,7 @@ function ProfileInfoRow({ label, value, icon, isPublic, showVisibilityIcon = tru
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { userId, user, appUser, loading: authLoading } = useAuth()
+  const { userId, user, appUser, setAppUser, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [avatarModalOpen, setAvatarModalOpen] = useState(false)
@@ -74,6 +80,10 @@ export default function ProfilePage() {
     securityRecoveryEmailEnabled: true,
     securitySessionTimeoutMinutes: 120,
   })
+  // États pour masquer/afficher les informations
+  const [showEmail, setShowEmail] = useState(appUser?.showEmail ?? false)
+  const [showPhone, setShowPhone] = useState(appUser?.showPhone ?? false)
+  const [showEtablissement, setShowEtablissement] = useState(appUser?.showEtablissement ?? true)
 
   const handleAvatarChange = async (file: File) => {
     if (!userId) return
@@ -85,7 +95,10 @@ export default function ProfilePage() {
       if (result.success) {
         setNotification({ type: 'success', message: 'Avatar mis à jour avec succès !' })
         setAvatarModalOpen(false)
-        setTimeout(() => window.location.reload(), 1500)
+        // Mettre à jour l'état local au lieu de recharger la page
+        if (appUser) {
+          setAppUser({ ...appUser, profilePicture: result.url })
+        }
       } else {
         setNotification({ type: 'error', message: result.error || 'Erreur lors de l\'upload' })
       }
@@ -93,6 +106,26 @@ export default function ProfilePage() {
       setNotification({ type: 'error', message: 'Erreur lors de l\'upload de l\'avatar' })
     } finally {
       setSaveLoading(false)
+    }
+  }
+
+  // Fonction pour basculer la visibilité des champs
+  const toggleVisibility = async (field: 'showEmail' | 'showPhone' | 'showEtablissement') => {
+    if (!userId) return
+    
+    try {
+      const newValue = field === 'showEmail' ? !showEmail : field === 'showPhone' ? !showPhone : !showEtablissement
+      
+      // Mettre à jour l'état local immédiatement
+      if (field === 'showEmail') setShowEmail(newValue)
+      if (field === 'showPhone') setShowPhone(newValue)
+      if (field === 'showEtablissement') setShowEtablissement(newValue)
+
+      // Mettre à jour dans la base de données
+      const updateData = { [field]: newValue }
+      await updateCurrentUserProfileAction(updateData)
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la visibilité:', error)
     }
   }
 
@@ -184,10 +217,13 @@ export default function ProfilePage() {
       if (result.success) {
         setNotification({ type: 'success', message: 'Profil sublimé avec succès !' })
         setEditModalOpen(false)
-        setTimeout(() => window.location.reload(), 1500)
+        // Mettre à jour l'état local au lieu de recharger la page
+        if (appUser) {
+          setAppUser({ ...appUser, ...cleanedData })
+        }
       } else {
         console.error('Erreur mise à jour:', result)
-        const errorMsg = result.details 
+        const errorMsg = result.details
           ? `Validation échouée: ${JSON.stringify(result.details)}`
           : (result.error || 'Dissonance lors de la mise à jour')
         setNotification({ type: 'error', message: errorMsg })
@@ -332,8 +368,22 @@ export default function ProfilePage() {
                     <ProfileInfoRow label="Prénom" value={appUser?.prenom || 'Non renseigné'} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
                     <ProfileInfoRow label="Nom" value={appUser?.nom || 'Non renseigné'} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
                     <ProfileInfoRow label="Âge" value={appUser?.birthDate ? `${calculateAge(appUser.birthDate)} ans` : null} icon={<Calendar size={14} />} showVisibilityIcon={false} />
-                    <ProfileInfoRow label="E-mail" value={user?.email} icon={<Shield size={14} />} isPublic={appUser?.showEmail} />
-                    <ProfileInfoRow label="Téléphone" value={appUser?.phone} icon={<Phone size={14} />} isPublic={appUser?.showPhone} />
+                    <ProfileInfoRow 
+                      label="E-mail" 
+                      value={user?.email} 
+                      icon={<Shield size={14} />} 
+                      isPublic={showEmail} 
+                      showVisibilityIcon={true}
+                      onToggleVisibility={() => toggleVisibility('showEmail')}
+                    />
+                    <ProfileInfoRow 
+                      label="Téléphone" 
+                      value={appUser?.phone} 
+                      icon={<Phone size={14} />} 
+                      isPublic={showPhone} 
+                      showVisibilityIcon={true}
+                      onToggleVisibility={() => toggleVisibility('showPhone')}
+                    />
                   </div>
                   <button className="btn-card-action" onClick={() => setEditModalOpen(true)}>Éditer le profil</button>
                 </div>
