@@ -252,9 +252,12 @@ export default function ProfilePage() {
 
             <div className="ph-info">
               <div className="ph-name-wrap">
-                <h1 className="ph-name">{appUser?.nomComplet || appUser?.prenom}</h1>
+                <div className="ph-name-block">
+                  <h1 className="ph-name">{appUser?.prenom}</h1>
+                  <p className="ph-surname">{appUser?.nom}</p>
+                </div>
                 {appUser?.pseudo && (
-                  <span className="ph-badge" style={{ marginLeft: '0.5rem' }}>@{appUser.pseudo}</span>
+                  <span className="ph-badge">@{appUser.pseudo}</span>
                 )}
                 <CheckCircle size={22} className="ph-verified-icon" />
               </div>
@@ -325,8 +328,9 @@ export default function ProfilePage() {
                     <Info size={14} className="sc-info-icon" />
                   </div>
                   <div className="info-rows">
-                    <ProfileInfoRow label="Nom complet" value={appUser?.nomComplet || appUser?.prenom || 'Non renseigné'} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
                     <ProfileInfoRow label="Pseudo" value={appUser?.pseudo || 'Non renseigné'} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
+                    <ProfileInfoRow label="Prénom" value={appUser?.prenom || 'Non renseigné'} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
+                    <ProfileInfoRow label="Nom" value={appUser?.nom || 'Non renseigné'} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
                     <ProfileInfoRow label="Âge" value={appUser?.birthDate ? `${calculateAge(appUser.birthDate)} ans` : null} icon={<Calendar size={14} />} showVisibilityIcon={false} />
                     <ProfileInfoRow label="E-mail" value={user?.email} icon={<Shield size={14} />} isPublic={appUser?.showEmail} />
                     <ProfileInfoRow label="Téléphone" value={appUser?.phone} icon={<Phone size={14} />} isPublic={appUser?.showPhone} />
@@ -657,6 +661,7 @@ export default function ProfilePage() {
         userId={userId!}
         currentAvatarUrl={appUser?.profilePicture}
         onAvatarChange={() => window.location.reload()}
+        onError={(message) => setNotification({ type: 'error', message })}
       />
 
       <style jsx>{`

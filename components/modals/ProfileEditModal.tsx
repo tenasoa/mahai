@@ -21,9 +21,10 @@ interface ProfileEditModalProps {
 
 export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = false }: ProfileEditModalProps) {
   const [formData, setFormData] = useState({
-    // Informations personnelles
-    nomComplet: userData?.nomComplet || `${userData?.prenom || ''} ${userData?.nom || ''}`.trim() || '',
-    pseudo: userData?.pseudo || userData?.prenom || '',
+    // Informations personnelles - TOUT pré-rempli avec les données existantes
+    prenom: userData?.prenom || '',
+    nom: userData?.nom || '',
+    pseudo: userData?.pseudo || '',
     userType: userData?.userType || 'ETUDIANT',
     customUserType: userData?.customUserType || '',
     birthDate: userData?.birthDate || '',
@@ -151,17 +152,31 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Nom complet</label>
+                  <label className="form-label">Prénom</label>
                   <input
                     type="text"
-                    name="nomComplet"
-                    value={formData.nomComplet}
+                    name="prenom"
+                    value={formData.prenom}
                     onChange={handleChange}
                     className="form-input"
-                    placeholder="Ex: Jean Rakoto"
+                    placeholder="Votre prénom"
                   />
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">Nom</label>
+                  <input
+                    type="text"
+                    name="nom"
+                    value={formData.nom}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="Votre nom de famille"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Pseudo (affiché dans la navbar)</label>
                   <input
@@ -173,9 +188,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     placeholder="Ex: Jean, Jiko, ..."
                   />
                 </div>
-              </div>
 
-              <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Date de naissance</label>
                   <input
@@ -184,21 +197,6 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     value={formData.birthDate}
                     onChange={handleChange}
                     className="form-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">
-                    <Phone size={16} style={{ display: 'inline', marginRight: '8px' }} />
-                    Téléphone
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="034 XX XXX XX"
                   />
                 </div>
               </div>

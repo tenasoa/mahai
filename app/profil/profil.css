@@ -155,6 +155,24 @@
   font-weight: 300;
   letter-spacing: -0.02em;
   color: var(--luxury-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ph-surname {
+  font-family: var(--display);
+  font-size: 1.8rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--luxury-text-muted);
+  margin: 0.25rem 0 0 0;
+}
+
+.ph-name-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .ph-badge {

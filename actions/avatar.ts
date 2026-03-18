@@ -49,7 +49,7 @@ export async function uploadAvatarAction(userId: string, file: File) {
       access: 'public',
       token,
       contentType: file.type,
-      addRandomSuffix: false, // On garde le même nom pour overwrite
+      allowOverwrite: true, // Permet de remplacer l'ancien avatar
     })
 
     // Mettre à jour le profil utilisateur dans Supabase

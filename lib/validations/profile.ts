@@ -15,7 +15,8 @@ export const GRADE_LEVELS = GRADE_LEVEL_VALUES
 // Schéma de validation pour la mise à jour du profil
 export const updateProfileSchema = z.object({
   // Informations personnelles
-  nomComplet: z.string().optional(),
+  prenom: z.string().min(1, 'Le prénom est requis').optional(),
+  nom: z.string().optional(),
   pseudo: z.string().optional(),
   userType: z.union([z.literal('ETUDIANT'), z.literal('PROFESSIONNEL'), z.literal('ENSEIGNANT'), z.literal('PARENT'), z.literal('AUTRE')]).optional(),
   customUserType: z.string().optional(),

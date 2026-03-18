@@ -9,6 +9,7 @@ export interface AppUser {
   id: string
   email: string
   prenom: string
+  nom?: string
   nomComplet?: string
   pseudo?: string
   role: string

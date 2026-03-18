@@ -10,6 +10,7 @@ interface AvatarUploadModalProps {
   userId: string
   currentAvatarUrl?: string | null
   onAvatarChange: (url: string) => void
+  onError: (message: string) => void
 }
 
 export function AvatarUploadModal({ 
@@ -17,30 +18,37 @@ export function AvatarUploadModal({
   onClose, 
   userId, 
   currentAvatarUrl,
-  onAvatarChange 
+  onAvatarChange,
+  onError
 }: AvatarUploadModalProps) {
   const [preview, setPreview] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const dropZoneRef = useRef<HTMLDivElement>(null)
 
   if (!isOpen) return null
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Validation
+  const validateFile = (file: File): string | null => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     if (!allowedTypes.includes(file.type)) {
-      setError('Type de fichier non supporté')
-      return
+      return 'Type de fichier non supporté'
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('Fichier trop volumineux (max 5MB)')
+      return 'Fichier trop volumineux (max 5MB)'
+    }
+
+    return null
+  }
+
+  const handleFileSelect = (file: File) => {
+    const error = validateFile(file)
+    if (error) {
+      setError(error)
       return
     }
 
@@ -55,6 +63,39 @@ export function AvatarUploadModal({
     reader.readAsDataURL(file)
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      handleFileSelect(file)
+    }
+  }
+
+  // Drag and Drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    const file = e.dataTransfer.files[0]
+    if (file && file.type.startsWith('image/')) {
+      handleFileSelect(file)
+    } else {
+      setError('Veuillez déposer une image valide')
+    }
+  }
+
   const handleUpload = async () => {
     if (!selectedFile) return
 
@@ -67,7 +108,8 @@ export function AvatarUploadModal({
       onAvatarChange(result.url)
       handleClose()
     } else {
-      setError(result.error || 'Erreur lors de l\'upload')
+      onError(result.error || 'Erreur lors de l\'upload de l\'avatar')
+      handleClose()
     }
 
     setUploading(false)
@@ -85,7 +127,8 @@ export function AvatarUploadModal({
       onAvatarChange('')
       handleClose()
     } else {
-      setError(result.error || 'Erreur lors de la suppression')
+      onError(result.error || 'Erreur lors de la suppression de l\'avatar')
+      handleClose()
     }
 
     setDeleting(false)
@@ -105,21 +148,23 @@ export function AvatarUploadModal({
   return (
     <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-container avatar-upload-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">Modifier mon avatar</h2>
-          <button onClick={handleClose} className="modal-close">
-            <X size={20} />
-          </button>
-        </div>
-
+        <button onClick={handleClose} className="modal-close" style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--luxury-text)', zIndex: 10 }}>
+          <X size={20} />
+        </button>
         <div className="modal-content">
-          {/* Preview */}
-          <div className="avatar-preview-section">
+          {/* Preview avec Drag & Drop */}
+          <div 
+            className="avatar-preview-section"
+            ref={dropZoneRef}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <div className="avatar-preview">
               {preview || (currentAvatarUrl && currentAvatarUrl !== null) ? (
-                <img 
-                  src={preview || (currentAvatarUrl as string)} 
-                  alt="Avatar" 
+                <img
+                  src={preview || (currentAvatarUrl as string)}
+                  alt="Avatar"
                   className="avatar-preview-image"
                 />
               ) : (
@@ -142,7 +187,7 @@ export function AvatarUploadModal({
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={handleFileSelect}
+            onChange={handleInputChange}
             className="hidden-input"
           />
 
