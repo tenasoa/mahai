@@ -23,6 +23,7 @@ export interface AppUser {
   bio?: string
   createdAt?: string
   emailVerified: boolean
+  profilePicture?: string | null
   // Profil étendu
   userType?: string
   customUserType?: string

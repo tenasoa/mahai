@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal'
+import { AvatarUploadModal } from '@/components/modals/AvatarUploadModal'
 import { ProfilePageSkeleton } from '@/components/ui/PageSkeletons'
 import {
   updateCurrentUserProfileAction,
@@ -13,13 +14,15 @@ import {
   updateCurrentUserSecuritySettingsAction,
   type PurchasedSubjectItem,
 } from '@/actions/profile'
-import { 
-  MapPin, GraduationCap, Building, Phone, Calendar, 
+import { uploadAvatarAction } from '@/actions/avatar'
+import {
+  MapPin, GraduationCap, Building, Phone, Calendar,
   User as UserIcon, BookOpen, Shield, BellRing, Clock3, KeyRound,
-  Eye, EyeOff, CheckCircle, Info, Zap
+  Eye, EyeOff, CheckCircle, Info, Zap, Camera
 } from 'lucide-react'
 import './profil.css'
 import '@/components/modals/ProfileEditModal.css'
+import '@/components/modals/AvatarUploadModal.css'
 
 interface InfoRowProps {
   label: string
@@ -56,6 +59,7 @@ export default function ProfilePage() {
   const { userId, user, appUser, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'profil' | 'mes-sujets' | 'coffre-fort' | 'securite'>('profil')
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
@@ -70,6 +74,27 @@ export default function ProfilePage() {
     securityRecoveryEmailEnabled: true,
     securitySessionTimeoutMinutes: 120,
   })
+
+  const handleAvatarChange = async (file: File) => {
+    if (!userId) return
+
+    try {
+      setSaveLoading(true)
+      const result = await uploadAvatarAction(userId, file)
+
+      if (result.success) {
+        setNotification({ type: 'success', message: 'Avatar mis à jour avec succès !' })
+        setAvatarModalOpen(false)
+        setTimeout(() => window.location.reload(), 1500)
+      } else {
+        setNotification({ type: 'error', message: result.error || 'Erreur lors de l\'upload' })
+      }
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Erreur lors de l\'upload de l\'avatar' })
+    } finally {
+      setSaveLoading(false)
+    }
+  }
 
   const loadPurchasedSubjects = async () => {
     if (purchasedSubjectsLoading) return
@@ -210,13 +235,21 @@ export default function ProfilePage() {
         <div className="profile-header luxury-card">
           <div className="ph-left">
             <div className="ph-avatar-wrap">
-              <div className="ph-avatar">
-                <span className="ph-avatar-glow"></span>
-                {userInitial}
-              </div>
-              <button className="ph-edit-btn" onClick={() => setEditModalOpen(true)}>✏️</button>
+              {appUser?.profilePicture ? (
+                <div className="ph-avatar-image">
+                  <img src={appUser.profilePicture} alt="Avatar" />
+                </div>
+              ) : (
+                <div className="ph-avatar">
+                  <span className="ph-avatar-glow"></span>
+                  {userInitial}
+                </div>
+              )}
+              <button className="ph-edit-btn ph-camera-btn" onClick={() => setAvatarModalOpen(true)} title="Changer l'avatar">
+                <Camera size={16} />
+              </button>
             </div>
-            
+
             <div className="ph-info">
               <div className="ph-name-wrap">
                 <h1 className="ph-name">{appUser?.nomComplet || appUser?.prenom}</h1>
@@ -615,6 +648,15 @@ export default function ProfilePage() {
         userData={appUser}
         onSave={handleProfileUpdate}
         loading={saveLoading}
+      />
+
+      {/* MODALE UPLOAD AVATAR */}
+      <AvatarUploadModal
+        isOpen={avatarModalOpen}
+        onClose={() => setAvatarModalOpen(false)}
+        userId={userId!}
+        currentAvatarUrl={appUser?.profilePicture}
+        onAvatarChange={() => window.location.reload()}
       />
 
       <style jsx>{`
