@@ -123,34 +123,42 @@ export default function DashboardPage() {
         <div className="dashboard-container">
           <section className="hero-card">
             <div className="hero-content">
-              <div className="hero-greeting">
-                <span className="hero-icon">✦</span>
-                <div>
-                  <h1 className="hero-title">
-                    {greeting}, <em>{appUser?.pseudo || appUser?.prenom || 'Utilisateur'}</em>
-                  </h1>
-                  <p className="hero-subtitle">
-                    Espace de pilotage minimal pendant l'intégration du profil.
-                  </p>
-                  <p
-                    className="hero-time"
-                    style={{
-                      fontFamily: 'var(--mono)',
-                      fontSize: '0.65rem',
-                      color: 'var(--text-3)',
-                      marginTop: '0.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                    }}
-                  >
-                    <span>🕐</span>
-                    <span>{currentTime}</span>
-                  </p>
+              <div className="hero-main-content">
+                <div className="hero-greeting">
+                  <span className="hero-icon">✦</span>
+                  <div>
+                    <h1 className="hero-title">
+                      {greeting}, <em>{appUser?.pseudo || appUser?.prenom || 'Utilisateur'}</em>
+                    </h1>
+                    <p className="hero-subtitle">
+                      Espace de pilotage minimal pendant l'intégration du profil.
+                    </p>
+                    <p
+                      className="hero-time"
+                      style={{
+                        fontFamily: 'var(--mono)',
+                        fontSize: '0.65rem',
+                        color: 'var(--text-3)',
+                        marginTop: '0.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <span>🕐</span>
+                      <span>{currentTime}</span>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="hero-meta">
+                  <span className="hero-meta-item">📅 {currentDate}</span>
+                  <span className="hero-meta-item">🎓 {appUser?.role || 'Compte étudiant'}</span>
+                  <span className="hero-meta-item">💎 {appUser?.credits ?? 0} crédits</span>
                 </div>
               </div>
               
-              {/* Citation de motivation */}
+              {/* Citation de motivation - Colonne de droite (25%) */}
               {motivationalQuote && (
                 <div className="hero-quote-card">
                   <div className="hero-quote-icon">💬</div>
@@ -165,12 +173,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )}
-              
-              <div className="hero-meta">
-                <span className="hero-meta-item">📅 {currentDate}</span>
-                <span className="hero-meta-item">🎓 {appUser?.role || 'Compte étudiant'}</span>
-                <span className="hero-meta-item">💎 {appUser?.credits ?? 0} crédits</span>
-              </div>
             </div>
           </section>
 

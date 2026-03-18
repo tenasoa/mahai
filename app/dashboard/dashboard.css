@@ -167,6 +167,14 @@ body {
 .hero-content {
   position: relative;
   z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 25%;
+  gap: 2rem;
+  align-items: start;
+}
+
+.hero-main-content {
+  min-width: 0;
 }
 
 .hero-greeting {
@@ -219,54 +227,59 @@ body {
 
 /* ═══════ HERO QUOTE CARD ═══════ */
 .hero-quote-card {
-  background: linear-gradient(135deg, rgba(168, 134, 58, 0.05) 0%, rgba(168, 134, 58, 0.02) 100%);
+  background: linear-gradient(135deg, rgba(168, 134, 58, 0.06) 0%, rgba(168, 134, 58, 0.03) 100%);
   border: 1px solid var(--gold-line);
   border-radius: var(--r-lg);
-  padding: 1.25rem 1.5rem;
-  margin: 1rem 0 1.5rem 0;
+  padding: 1rem 1.25rem;
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.75rem;
   align-items: flex-start;
   transition: all 0.3s ease;
+  height: fit-content;
+  position: sticky;
+  top: 6rem;
 }
 
 [data-theme='dark'] .hero-quote-card {
-  background: linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(201, 168, 76, 0.03) 100%);
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.1) 0%, rgba(201, 168, 76, 0.05) 100%);
+  border-color: rgba(201, 168, 76, 0.3);
 }
 
 .hero-quote-card:hover {
   border-color: var(--gold);
-  box-shadow: 0 4px 20px rgba(168, 134, 58, 0.12);
-  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(168, 134, 58, 0.15);
+  transform: translateY(-2px);
 }
 
 .hero-quote-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+  font-size: 1.75rem;
+  align-self: center;
   opacity: 0.8;
 }
 
 .hero-quote-content {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
 }
 
 .hero-quote-text {
   font-family: var(--body);
-  font-size: 0.85rem;
-  line-height: 1.6;
+  font-size: 0.78rem;
+  line-height: 1.5;
   color: var(--text);
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   font-style: italic;
 }
 
 .hero-quote-author {
   font-family: var(--mono);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin: 0;
+  margin: 0.5rem 0 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--b2);
 }
 
 /* ═══════ SECTIONS ═══════ */
@@ -930,13 +943,15 @@ body {
     gap: 0.75rem;
   }
 
-  .hero-quote-card {
-    flex-direction: column;
-    padding: 1rem;
+  /* Mobile: quote card below main content, full width */
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
-  .hero-quote-icon {
-    font-size: 1.25rem;
+  .hero-quote-card {
+    position: static;
+    width: 100%;
   }
 }
 
