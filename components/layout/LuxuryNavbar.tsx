@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
-import { Sun, Moon, User, LogOut, ChevronDown, Bell, CreditCard, RefreshCw, Settings } from "lucide-react"
+import { Sun, Moon, User, LogOut, ChevronDown, RefreshCw } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { logoutUser } from "@/actions/auth"
 
@@ -15,21 +15,16 @@ interface NavItem {
 
 export function LuxuryNavbar() {
   const pathname = usePathname()
-  const { userId, user, appUser } = useAuth()
+  const { userId, appUser } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [theme, setTheme] = useState('dark')
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const notifDropdownRef = useRef<HTMLDivElement>(null)
 
   // Menus centraux - différents pour connecté / non-connecté
   const centerNavItems: NavItem[] = userId ? [
     { label: 'Tableau de bord', href: '/dashboard' },
     { label: 'Catalogue', href: '/catalogue' },
-    { label: 'Mes Sujets', href: '/dashboard/achats' },
-    { label: 'Examens', href: '/examens' },
-    { label: 'Communauté', href: '/dashboard/communaute' }
   ] : [
     { label: 'Accueil', href: '/' },
     { label: 'Fonctionnalités', href: '/#features' },
@@ -39,7 +34,6 @@ export function LuxuryNavbar() {
   // Items du dropdown (uniquement menus supplémentaires)
   const dropdownNavItems: NavItem[] = [
     { label: 'Profil', href: '/profil', icon: User },
-    { label: 'Paramètres', href: '/parametres', icon: Settings }
   ]
 
   useEffect(() => {
@@ -52,7 +46,6 @@ export function LuxuryNavbar() {
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) setDropdownOpen(false)
-      if (notifDropdownRef.current && !notifDropdownRef.current.contains(event.target as Node)) setNotifDropdownOpen(false)
     }
     document.addEventListener("mousedown", handleClickOutside)
 
@@ -129,45 +122,8 @@ export function LuxuryNavbar() {
           ))}
         </ul>
 
-        {/* ACTIONS DROITE - Uniquement Notification + Avatar */}
+        {/* ACTIONS DROITE */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-
-          {/* NOTIFICATIONS */}
-          {userId && (
-            <div className="relative" ref={notifDropdownRef}>
-              <button onClick={() => setNotifDropdownOpen(!notifDropdownOpen)} style={{
-                width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(201, 168, 76, 0.05)',
-                border: '1px solid rgba(201, 168, 76, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'none', transition: 'all 0.2s', position: 'relative'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.12)'; e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.3)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.05)'; e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.15)' }}
-              >
-                <Bell size={18} style={{ color: 'var(--gold)' }} />
-                <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#FF4D4F', borderRadius: '50%', border: '2px solid var(--void)' }}></span>
-              </button>
-              {notifDropdownOpen && (
-                <div style={{
-                  position: 'absolute', right: 0, top: 'calc(100% + 0.75rem)', width: '300px',
-                  background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.3)', padding: '0.5rem 0', zIndex: 100, animation: 'fadeIn 0.2s ease'
-                }}>
-                  <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--b1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)' }}>Notifications</p>
-                    <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>3 nouvelles</span>
-                  </div>
-                  <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
-                    {[1, 2].map(i => (
-                      <div key={i} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--b3)' }}>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: '0.2rem' }}>{i === 1 ? 'Correction IA disponible' : 'Compte crédité de 50cr'}</p>
-                        <p style={{ fontSize: '0.65rem', color: 'var(--text-4)' }}>Il y a {i*2}h</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* AVATAR & NAVIGATION DROPDOWN */}
           {userId ? (
@@ -203,7 +159,9 @@ export function LuxuryNavbar() {
                     {appUser?.pseudo && (
                       <p style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 500 }}>@{appUser.pseudo}</p>
                     )}
-                    <p style={{ fontSize: '0.7rem', color: 'var(--text-4)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-4)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      @{appUser?.pseudo || appUser?.prenom || 'utilisateur'}
+                    </p>
                   </div>
 
                   {/* Navigation Links & Actions */}
@@ -212,19 +170,21 @@ export function LuxuryNavbar() {
                     <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--b3)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-4)' }}>Solde</span>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--gold)' }}>250 cr</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--gold)' }}>{appUser?.credits ?? 0} cr</span>
                       </div>
-                      <button style={{
+                      <Link href="/credits" style={{
                         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                         padding: '0.5rem', fontSize: '0.75rem', color: 'var(--gold)', background: 'rgba(201, 168, 76, 0.1)',
-                        border: '1px solid rgba(201, 168, 76, 0.2)', borderRadius: 'var(--r)', cursor: 'none', transition: 'all 0.2s'
+                        border: '1px solid rgba(201, 168, 76, 0.2)', borderRadius: 'var(--r)', cursor: 'none', transition: 'all 0.2s',
+                        textDecoration: 'none'
                       }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.2)'; e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.4)' }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(201, 168, 76, 0.1)'; e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.2)' }}
+                      onClick={() => setDropdownOpen(false)}
                       >
                         <RefreshCw size={14} />
                         Recharger
-                      </button>
+                      </Link>
                     </div>
                     
                     {/* Navigation Links */}

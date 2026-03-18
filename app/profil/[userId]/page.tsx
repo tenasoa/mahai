@@ -1,7 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
-import { MapPin, GraduationCap, Calendar, BookOpen, Award, Zap, UserRound, School, Trophy } from 'lucide-react'
+import { MapPin, GraduationCap, Calendar, BookOpen, Award, Zap, UserRound, School } from 'lucide-react'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import '../profil.css'
@@ -118,29 +118,6 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
              <Award size={64} className="text-gold opacity-10" />
           </div>
         </div>
-
-        <nav className="luxury-card public-nav-menu" aria-label="Navigation des sections du profil public">
-          <a href="#section-identity" className="public-nav-link">
-            <UserRound size={14} />
-            Identité
-          </a>
-          <a href="#section-parcours" className="public-nav-link">
-            <GraduationCap size={14} />
-            Parcours
-          </a>
-          <a href="#section-bio" className="public-nav-link">
-            <BookOpen size={14} />
-            À propos
-          </a>
-          <a href="#section-matieres" className="public-nav-link">
-            <Zap size={14} />
-            Matières
-          </a>
-          <a href="#section-objectifs" className="public-nav-link">
-            <Trophy size={14} />
-            Objectifs
-          </a>
-        </nav>
 
         <div className="public-grid">
           <div className="grid-column">

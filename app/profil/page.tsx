@@ -6,17 +6,14 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal'
-import { updateProfileAction } from '@/actions/profile'
+import { updateCurrentUserProfileAction } from '@/actions/profile'
 import { 
   MapPin, GraduationCap, Building, Phone, Calendar, 
-  User as UserIcon, BookOpen, Shield, ShoppingBag, 
-  Wallet, Eye, EyeOff, CheckCircle, Info, ArrowRight,
-  Lock, Trash2, Database, Zap
+  User as UserIcon, BookOpen, Shield,
+  Eye, EyeOff, CheckCircle, Info, Zap
 } from 'lucide-react'
 import './profil.css'
 import '@/components/modals/ProfileEditModal.css'
-
-type TabType = 'infos' | 'achats' | 'mvola' | 'securite'
 
 interface InfoRowProps {
   label: string
@@ -51,10 +48,10 @@ function ProfileInfoRow({ label, value, icon, isPublic, showVisibilityIcon = tru
 export default function ProfilePage() {
   const router = useRouter()
   const { userId, user, appUser, loading: authLoading } = useAuth()
-  const [activeTab, setActiveTab] = useState<TabType>('infos')
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'profil' | 'mes-sujets' | 'coffre-fort' | 'securite'>('profil')
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
   useEffect(() => {
@@ -86,7 +83,7 @@ export default function ProfilePage() {
         Object.entries(data).filter(([_, value]) => value !== null && value !== '')
       )
 
-      const result = await updateProfileAction(userId!, cleanedData)
+      const result = await updateCurrentUserProfileAction(cleanedData)
 
       if (result.success) {
         setNotification({ type: 'success', message: 'Profil sublimé avec succès !' })
@@ -181,16 +178,12 @@ export default function ProfilePage() {
           <div className="ph-right">
             <div className="ph-stats">
               <div className="ph-stat">
-                <div className="n">24</div>
-                <div className="l">Sujets</div>
-              </div>
-              <div className="ph-stat">
                 <div className="n gold-text">{appUser?.credits || 0}</div>
                 <div className="l">Crédits</div>
               </div>
               <div className="ph-stat">
-                <div className="n">4.8</div>
-                <div className="l">Note</div>
+                <div className="n">{appUser?.profilePublic ? 'Oui' : 'Non'}</div>
+                <div className="l">Profil public</div>
               </div>
             </div>
             <button className="btn-profile-public" onClick={() => router.push(`/profil/${userId}`)}>
@@ -199,30 +192,27 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* NAVIGATION TABS */}
-        <div className="profile-nav-tabs">
-          {[
-            { id: 'infos', label: 'Identité', icon: <UserIcon size={16} /> },
-            { id: 'achats', label: 'Bibliothèque', icon: <ShoppingBag size={16} /> },
-            { id: 'mvola', label: 'Finance', icon: <Wallet size={16} /> },
-            { id: 'securite', label: 'Coffre-fort', icon: <Shield size={16} /> }
-          ].map(tab => (
-            <button 
-              key={tab.id}
-              className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id as TabType)}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
+        <nav className="luxury-card profile-nav-tabs" aria-label="Navigation des sections du profil utilisateur">
+          <button type="button" className={`nav-tab ${activeTab === 'profil' ? 'active' : ''}`} onClick={() => setActiveTab('profil')}>
+            <UserIcon size={14} />
+            Profil
+          </button>
+          <button type="button" className={`nav-tab ${activeTab === 'mes-sujets' ? 'active' : ''}`} onClick={() => setActiveTab('mes-sujets')}>
+            <BookOpen size={14} />
+            Mes sujets
+          </button>
+          <button type="button" className={`nav-tab ${activeTab === 'coffre-fort' ? 'active' : ''}`} onClick={() => setActiveTab('coffre-fort')}>
+            <Zap size={14} />
+            Coffre-fort
+          </button>
+          <button type="button" className={`nav-tab ${activeTab === 'securite' ? 'active' : ''}`} onClick={() => setActiveTab('securite')}>
+            <Shield size={14} />
+            Sécurité
+          </button>
+        </nav>
 
-        {/* CONTENU DES ONGLETS */}
         <div className="tabs-content">
-          
-          {/* TAB: INFOS */}
-          <div className={`ptab-panel ${activeTab === 'infos' ? 'active' : ''}`}>
+          <div className={`ptab-panel ${activeTab === 'profil' ? 'active' : ''}`}>
             <div className="profile-grid">
               <div className="grid-column">
                 <div className="luxury-card settings-card">
@@ -296,112 +286,58 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* TAB: ACHATS (BIBLIOTHÈQUE) */}
-          <div className={`ptab-panel ${activeTab === 'achats' ? 'active' : ''}`}>
-            <div className="luxury-card p-10">
-              <div className="sc-header mb-8">
-                <h3 className="sc-title">Ma <em>Bibliothèque</em> de Sujets</h3>
-                <ShoppingBag size={18} className="text-gold opacity-50" />
-              </div>
-              <div className="purchase-modern-grid">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="modern-pur-card">
-                    <div className="mp-header">
-                      <span className="mp-tag">{i % 2 === 0 ? 'Maths BAC' : 'Physique BEPC'}</span>
-                      <span className="mp-price">-{i * 5} cr</span>
-                    </div>
-                    <h4 className="mp-title">{i % 2 === 0 ? 'Algèbre & Fonctions Complexes' : 'Mécanique & Électricité'}</h4>
-                    <div className="mp-footer">
-                      <span>Acheté le {i + 10} Mar 2026</span>
-                      <button className="mp-view">Consulter <ArrowRight size={12} /></button>
-                    </div>
+                <div className="luxury-card settings-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">Fonctionnalités <em>En Intégration</em></h3>
+                    <Info size={14} className="sc-info-icon" />
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* TAB: MVOLA (FINANCE) */}
-          <div className={`ptab-panel ${activeTab === 'mvola' ? 'active' : ''}`}>
-            <div className="finance-layout">
-              <div className="luxury-card mvola-premium">
-                <div className="mp-head">
-                  <div className="mp-logo">MVola</div>
-                  <div className="mp-status">ACTIF</div>
-                </div>
-                <div className="mp-number">{appUser?.phone || '034 XX XXX XX'}</div>
-                <div className="mp-balance">
-                  <span className="lbl">Solde Mah.AI</span>
-                  <span className="val">{appUser?.credits || 0} <em>cr</em></span>
-                </div>
-                <button className="btn-mp-topup" onClick={() => router.push('/credits')}>Recharger le compte</button>
-              </div>
-
-              <div className="luxury-card settings-card flex-1">
-                <div className="sc-header">
-                  <h3 className="sc-title">Dernières <em>Transactions</em></h3>
-                  <Wallet size={14} className="sc-info-icon" />
-                </div>
-                <div className="info-rows">
-                  <div className="transaction-row">
-                    <div className="tr-icon plus">+</div>
-                    <div className="tr-info">
-                      <div className="tr-title">Recharge MVola</div>
-                      <div className="tr-date">12 Mars 2026</div>
-                    </div>
-                    <div className="tr-amount positive">+150 cr</div>
-                  </div>
-                  <div className="transaction-row">
-                    <div className="tr-icon minus">-</div>
-                    <div className="tr-info">
-                      <div className="tr-title">Achat Sujet BAC</div>
-                      <div className="tr-date">10 Mars 2026</div>
-                    </div>
-                    <div className="tr-amount negative">-15 cr</div>
-                  </div>
+                  <p className="text-sm text-text-3">
+                    La bibliothèque d’achats, l’historique financier et les réglages avancés de sécurité seront réintroduits quand leurs vraies données seront connectées.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* TAB: SECURITE (COFFRE-FORT) */}
+          <div className={`ptab-panel ${activeTab === 'mes-sujets' ? 'active' : ''}`}>
+            <div className="luxury-card settings-card empty-section-card">
+              <div className="sc-header">
+                <h3 className="sc-title">Mes <em>Sujets</em></h3>
+                <BookOpen size={14} className="sc-info-icon" />
+              </div>
+              <p className="empty-section-title">Aucune donnée disponible pour le moment.</p>
+              <p className="empty-section-text">
+                Vos achats, téléchargements et progression apparaîtront ici dès que l’intégration des données sera finalisée.
+              </p>
+            </div>
+          </div>
+
+          <div className={`ptab-panel ${activeTab === 'coffre-fort' ? 'active' : ''}`}>
+            <div className="luxury-card settings-card empty-section-card">
+              <div className="sc-header">
+                <h3 className="sc-title">Coffre-<em>fort</em></h3>
+                <Zap size={14} className="sc-info-icon" />
+              </div>
+              <p className="empty-section-title">Aucune donnée disponible pour le moment.</p>
+              <p className="empty-section-text">
+                Le suivi des crédits, transactions et paiements sera affiché ici quand le module financier sera relié.
+              </p>
+            </div>
+          </div>
+
           <div className={`ptab-panel ${activeTab === 'securite' ? 'active' : ''}`}>
-            <div className="profile-grid">
-              <div className="luxury-card settings-card">
-                <div className="sc-header">
-                  <h3 className="sc-title">Accès <em>& Protection</em></h3>
-                  <Lock size={14} className="sc-info-icon" />
-                </div>
-                <p className="text-sm text-text-3 mb-8">Gérez vos identifiants et la sécurité de votre session.</p>
-                <div className="info-rows mb-8">
-                  <ProfileInfoRow label="Mot de passe" value="••••••••••••" showVisibilityIcon={false} />
-                  <ProfileInfoRow label="Double Auth" value="Désactivé" showVisibilityIcon={false} />
-                </div>
-                <button className="btn-card-action">Changer le mot de passe</button>
+            <div className="luxury-card settings-card empty-section-card">
+              <div className="sc-header">
+                <h3 className="sc-title">Paramètres <em>Sécurité</em></h3>
+                <Shield size={14} className="sc-info-icon" />
               </div>
-
-              <div className="luxury-card danger-zone-modern">
-                <div className="sc-header">
-                  <h3 className="sc-title text-rose">Zone de <em>Confiance</em></h3>
-                  <Trash2 size={14} className="text-rose opacity-50" />
-                </div>
-                <p className="text-sm text-text-3 mb-8">Action irréversibles concernant vos données personnelles.</p>
-                <div className="info-rows mb-8">
-                  <div className="info-row">
-                    <div className="ir-label">Données</div>
-                    <div className="ir-content"><span className="ir-value">Télécharger mon archive JSON</span></div>
-                    <div className="ir-visibility-cell"><Database size={14} className="opacity-30" /></div>
-                  </div>
-                </div>
-                <button className="btn-danger-modern">Supprimer mon compte définitivement</button>
-              </div>
+              <p className="empty-section-title">Aucune donnée disponible pour le moment.</p>
+              <p className="empty-section-text">
+                Les préférences de sécurité avancées (sessions, authentification renforcée, historiques) seront ajoutées dans cette section.
+              </p>
             </div>
           </div>
-
         </div>
       </div>
 
