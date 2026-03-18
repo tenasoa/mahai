@@ -182,7 +182,7 @@ export function LuxuryNavbar() {
               onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.3)'}
               >
                 <span style={{ fontFamily: 'var(--display)', fontSize: '0.9rem', fontWeight: 500, color: '#E8C96A' }}>
-                  {appUser?.prenom || 'Menu'}
+                  {appUser?.pseudo || appUser?.prenom || 'Menu'}
                 </span>
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <ChevronDown size={14} color="#E8C96A" style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
@@ -197,7 +197,12 @@ export function LuxuryNavbar() {
                 }}>
                   {/* User Info */}
                   <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--b1)' }}>
-                    <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.15rem' }}>{appUser?.prenom} {appUser?.nom}</p>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.15rem' }}>
+                      {appUser?.nomComplet || `${appUser?.prenom || ''} ${appUser?.nom || ''}`.trim()}
+                    </p>
+                    {appUser?.pseudo && (
+                      <p style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 500 }}>@{appUser.pseudo}</p>
+                    )}
                     <p style={{ fontSize: '0.7rem', color: 'var(--text-4)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
                   </div>
 

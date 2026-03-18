@@ -23,6 +23,8 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
   const [formData, setFormData] = useState({
     // Informations personnelles
     nom: userData?.nom || '',
+    nomComplet: userData?.nomComplet || '',
+    pseudo: userData?.pseudo || '',
     userType: userData?.userType || 'ETUDIANT',
     customUserType: userData?.customUserType || '',
     birthDate: userData?.birthDate || '',
@@ -147,12 +149,38 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                 <User size={18} />
                 Identité & Type
               </h3>
-              
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Nom complet</label>
+                  <input
+                    type="text"
+                    name="nomComplet"
+                    value={formData.nomComplet}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="Ex: Jean Rakoto"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Pseudo (affiché dans la navbar)</label>
+                  <input
+                    type="text"
+                    name="pseudo"
+                    value={formData.pseudo}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="Ex: Jean, Jiko, ..."
+                  />
+                </div>
+              </div>
+
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Vous êtes :</label>
-                  <select 
-                    name="userType" 
+                  <select
+                    name="userType"
                     value={formData.userType}
                     onChange={handleChange}
                     className="form-select"
@@ -164,7 +192,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     ))}
                   </select>
                 </div>
-                
+
                 {formData.userType === 'AUTRE' && (
                   <div className="form-group">
                     <label className="form-label">Précisez votre type</label>
