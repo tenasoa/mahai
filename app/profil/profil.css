@@ -223,8 +223,8 @@
   background: var(--luxury-card-solid);
   border: 1px solid var(--luxury-border);
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,6 +233,8 @@
   font-size: 1rem;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  opacity: 1;
+  visibility: visible;
 }
 
 [data-theme='light'] .ph-edit-btn {
@@ -247,19 +249,19 @@
 }
 
 .ph-camera-btn {
-  background: linear-gradient(135deg, var(--luxury-gold), #D4AF37);
-  border-color: var(--luxury-gold);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--luxury-gold), #D4AF37) !important;
+  border-color: var(--luxury-gold) !important;
+  color: #FFFFFF !important;
   width: 36px;
   height: 36px;
   bottom: 0;
   right: 0;
-  opacity: 1;
-  visibility: visible;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .ph-camera-btn:hover {
-  background: linear-gradient(135deg, #D4AF37, #E8C96A);
+  background: linear-gradient(135deg, #D4AF37, #E8C96A) !important;
   transform: scale(1.15);
   box-shadow: 0 4px 15px rgba(179, 142, 61, 0.4);
 }

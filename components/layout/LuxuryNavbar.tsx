@@ -152,16 +152,45 @@ export function LuxuryNavbar() {
                   boxShadow: '0 10px 40px rgba(0,0,0,0.3)', padding: '0.5rem 0', zIndex: 100, animation: 'fadeIn 0.2s ease'
                 }}>
                   {/* User Info */}
-                  <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--b1)' }}>
-                    <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.15rem' }}>
-                      {appUser?.nomComplet || appUser?.prenom || ''}
-                    </p>
-                    {appUser?.pseudo && (
-                      <p style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 500 }}>@{appUser.pseudo}</p>
+                  <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--b1)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {appUser?.profilePicture ? (
+                      <img 
+                        src={appUser.profilePicture} 
+                        alt="Avatar" 
+                        style={{ 
+                          width: '48px', 
+                          height: '48px', 
+                          borderRadius: '50%', 
+                          objectFit: 'cover',
+                          border: '2px solid var(--gold-line)'
+                        }} 
+                      />
+                    ) : (
+                      <div style={{ 
+                        width: '48px', 
+                        height: '48px', 
+                        borderRadius: '50%', 
+                        background: 'var(--gold-dim)',
+                        border: '2px solid var(--gold-line)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'var(--display)',
+                        fontSize: '1.2rem',
+                        color: 'var(--gold)',
+                        fontWeight: 600
+                      }}>
+                        {(appUser?.prenom?.charAt(0) || 'U').toUpperCase()}
+                      </div>
                     )}
-                    <p style={{ fontSize: '0.7rem', color: 'var(--text-4)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      @{appUser?.pseudo || appUser?.prenom || 'utilisateur'}
-                    </p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {appUser?.nom || appUser?.prenom || ''}
+                      </p>
+                      {appUser?.pseudo && (
+                        <p style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 500 }}>@{appUser.pseudo}</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Navigation Links & Actions */}
