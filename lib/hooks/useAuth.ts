@@ -33,7 +33,6 @@ export interface AppUser {
   showEmail?: boolean
   showPhone?: boolean
   showEtablissement?: boolean
-  birthDate?: string
 }
 
 export function useAuth() {

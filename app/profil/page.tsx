@@ -107,18 +107,6 @@ export default function ProfilePage() {
     }
   }
 
-  const calculateAge = (birthDate: string | null | undefined) => {
-    if (!birthDate) return null
-    const birth = new Date(birthDate)
-    const today = new Date()
-    let age = today.getFullYear() - birth.getFullYear()
-    const m = today.getMonth() - birth.getMonth()
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-      age--
-    }
-    return age
-  }
-
   const userInitial = (appUser?.prenom?.charAt(0) || user?.email?.charAt(0) || 'U').toUpperCase()
   
   const displayUserType = () => {
@@ -229,7 +217,6 @@ export default function ProfilePage() {
                   </div>
                   <div className="info-rows">
                     <ProfileInfoRow label="Identité" value={`${appUser?.prenom} ${appUser?.nom || ''}`} icon={<UserIcon size={14} />} showVisibilityIcon={false} />
-                    <ProfileInfoRow label="Âge" value={appUser?.birthDate ? `${calculateAge(appUser.birthDate)} ans` : null} icon={<Calendar size={14} />} showVisibilityIcon={false} />
                     <ProfileInfoRow label="E-mail" value={user?.email} icon={<Shield size={14} />} isPublic={appUser?.showEmail} />
                     <ProfileInfoRow label="Téléphone" value={appUser?.phone} icon={<Phone size={14} />} isPublic={appUser?.showPhone} />
                   </div>
@@ -401,11 +388,22 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* NOTIFICATION LUXURY */}
+      {/* NOTIFICATION TOAST */}
       {notification && (
-        <div className={`luxury-notif ${notification.type}`}>
-          <div className="ln-icon">{notification.type === 'success' ? '✓' : '✕'}</div>
-          <div className="ln-text">{notification.message}</div>
+        <div className="toast-container">
+          <div className={`toast ${notification.type}`}>
+            <div className="toast-icon">{notification.type === 'success' ? '✓' : '✕'}</div>
+            <div className="toast-content">
+              <div className="toast-title">{notification.type === 'success' ? 'Succès' : 'Erreur'}</div>
+              <div className="toast-msg">{notification.message}</div>
+            </div>
+            <button
+              className="toast-close"
+              onClick={() => setNotification(null)}
+            >
+              ×
+            </button>
+          </div>
         </div>
       )}
 

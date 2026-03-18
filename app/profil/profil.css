@@ -767,63 +767,118 @@
   border-bottom-color: rgba(255, 77, 79, 0.3);
 }
 
-/* ─── NOTIFICATION ─── */
-.luxury-notif {
+/* ─── NOTIFICATIONS (TOAST SYSTEM) ─── */
+/* Utilise le même design que les autres pages */
+.toast-container {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem 1.75rem;
-  border-radius: var(--luxury-radius);
-  font-family: var(--body);
-  font-size: 0.9rem;
   z-index: 1000;
-  animation: slideIn 0.4s ease;
-  border: 1px solid var(--luxury-gold-line);
-}
-
-[data-theme='light'] .luxury-notif {
-  background: #FFFFFF;
-}
-
-[data-theme='dark'] .luxury-notif {
-  background: #1A1A1A;
-}
-
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-.luxury-notif.success {
-  background: linear-gradient(135deg, #10B981, #059669);
-  color: #FFFFFF;
-  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
-  border-color: transparent;
-}
-
-.luxury-notif.error {
-  background: linear-gradient(135deg, #FF4D4F, #D93025);
-  color: #FFFFFF;
-  box-shadow: 0 10px 30px rgba(255, 77, 79, 0.3);
-  border-color: transparent;
-}
-
-.ln-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
 }
 
-.ln-text {
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  background: var(--luxury-card-solid);
+  border: 1px solid var(--luxury-border);
+  border-radius: var(--luxury-radius);
+  padding: 1rem 1.25rem;
+  min-width: 300px;
+  max-width: 380px;
+  box-shadow: var(--luxury-shadow);
+  pointer-events: all;
+  animation: toastIn 0.4s ease both;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.toast::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.toast.success::before {
+  background: linear-gradient(90deg, var(--luxury-gold), #D4AF37);
+}
+
+.toast.error::before {
+  background: linear-gradient(90deg, #FF4D4F, #E04060);
+}
+
+.toast-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.toast-title {
+  font-size: 0.82rem;
   font-weight: 500;
+  color: var(--luxury-text);
+  margin-bottom: 0.15rem;
+}
+
+.toast-msg {
+  font-size: 0.76rem;
+  color: var(--luxury-text-muted);
+  line-height: 1.5;
+}
+
+.toast-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: none;
+  color: var(--luxury-text-dim);
+  font-size: 0.9rem;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.toast-close:hover {
+  color: var(--luxury-text);
+}
+
+.toast.exit {
+  animation: toastOut 0.3s ease forwards;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 200px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 /* ─── SETTINGS CARD HEADER ─── */

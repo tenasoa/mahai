@@ -22,32 +22,32 @@ interface ProfileEditModalProps {
 export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = false }: ProfileEditModalProps) {
   const [formData, setFormData] = useState({
     // Informations personnelles
+    nom: userData?.nom || '',
     userType: userData?.userType || 'ETUDIANT',
     customUserType: userData?.customUserType || '',
-    birthDate: userData?.birthDate || '',
     phone: userData?.phone || '',
-    
+
     // Informations académiques
     etablissement: userData?.etablissement || '',
     educationLevel: userData?.educationLevel || '',
     gradeLevel: userData?.gradeLevel || '',
     filiere: userData?.filiere || '',
-    
+
     // Localisation
     region: userData?.region || '',
     district: userData?.district || '',
-    
+
     // Préférences
     bio: userData?.bio || '',
     matieresPreferees: userData?.matieresPreferees || [],
     objectifsEtude: userData?.objectifsEtude || [],
-    
+
     // Paramètres de confidentialité
     profilePublic: userData?.profilePublic ?? true,
     showEmail: userData?.showEmail ?? false,
     showPhone: userData?.showPhone ?? false,
     showEtablissement: userData?.showEtablissement ?? true,
-    
+
     // Paramètres de notification
     notifCorrections: userData?.notifCorrections ?? true,
     notifSujets: userData?.notifSujets ?? true,
@@ -181,16 +181,17 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Date de naissance</label>
+                  <label className="form-label">Nom</label>
                   <input
-                    type="date"
-                    name="birthDate"
-                    value={formData.birthDate}
+                    type="text"
+                    name="nom"
+                    value={formData.nom}
                     onChange={handleChange}
                     className="form-input"
+                    placeholder="Votre nom de famille"
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label className="form-label">
                     <Phone size={16} style={{ display: 'inline', marginRight: '8px' }} />
