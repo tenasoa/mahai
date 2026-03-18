@@ -7,10 +7,15 @@ import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal'
 import { ProfilePageSkeleton } from '@/components/ui/PageSkeletons'
-import { updateCurrentUserProfileAction } from '@/actions/profile'
+import {
+  updateCurrentUserProfileAction,
+  getCurrentUserPurchasedSubjectsAction,
+  updateCurrentUserSecuritySettingsAction,
+  type PurchasedSubjectItem,
+} from '@/actions/profile'
 import { 
   MapPin, GraduationCap, Building, Phone, Calendar, 
-  User as UserIcon, BookOpen, Shield,
+  User as UserIcon, BookOpen, Shield, BellRing, Clock3, KeyRound,
   Eye, EyeOff, CheckCircle, Info, Zap
 } from 'lucide-react'
 import './profil.css'
@@ -54,6 +59,54 @@ export default function ProfilePage() {
   const [saveLoading, setSaveLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'profil' | 'mes-sujets' | 'coffre-fort' | 'securite'>('profil')
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+  const [purchasedSubjects, setPurchasedSubjects] = useState<PurchasedSubjectItem[]>([])
+  const [purchasedSubjectsLoading, setPurchasedSubjectsLoading] = useState(false)
+  const [purchasedSubjectsLoaded, setPurchasedSubjectsLoaded] = useState(false)
+  const [securitySaving, setSecuritySaving] = useState(false)
+  const [securitySettings, setSecuritySettings] = useState({
+    securityTwoFactorEnabled: false,
+    securityLoginAlertEnabled: true,
+    securityUnknownDeviceBlock: false,
+    securityRecoveryEmailEnabled: true,
+    securitySessionTimeoutMinutes: 120,
+  })
+
+  const loadPurchasedSubjects = async () => {
+    if (purchasedSubjectsLoading) return
+
+    setPurchasedSubjectsLoading(true)
+    try {
+      const result = await getCurrentUserPurchasedSubjectsAction()
+      if (result.success) {
+        setPurchasedSubjects(result.data)
+      } else {
+        setNotification({ type: 'error', message: result.error || 'Impossible de charger vos sujets débloqués.' })
+      }
+    } catch (error) {
+      console.error('Erreur chargement mes sujets:', error)
+      setNotification({ type: 'error', message: 'Erreur serveur pendant le chargement de vos sujets.' })
+    } finally {
+      setPurchasedSubjectsLoading(false)
+      setPurchasedSubjectsLoaded(true)
+    }
+  }
+
+  const handleSecuritySave = async () => {
+    setSecuritySaving(true)
+    try {
+      const result = await updateCurrentUserSecuritySettingsAction(securitySettings)
+      if (result.success) {
+        setNotification({ type: 'success', message: 'Paramètres de sécurité enregistrés.' })
+      } else {
+        setNotification({ type: 'error', message: result.error || 'Échec de la sauvegarde des paramètres.' })
+      }
+    } catch (error) {
+      console.error('Erreur sauvegarde sécurité:', error)
+      setNotification({ type: 'error', message: 'Erreur serveur pendant la sauvegarde de la sécurité.' })
+    } finally {
+      setSecuritySaving(false)
+    }
+  }
 
   useEffect(() => {
     if (!authLoading) {
@@ -64,6 +117,24 @@ export default function ProfilePage() {
       }
     }
   }, [userId, authLoading, router])
+
+  useEffect(() => {
+    if (!appUser) return
+
+    setSecuritySettings({
+      securityTwoFactorEnabled: appUser.securityTwoFactorEnabled ?? false,
+      securityLoginAlertEnabled: appUser.securityLoginAlertEnabled ?? true,
+      securityUnknownDeviceBlock: appUser.securityUnknownDeviceBlock ?? false,
+      securityRecoveryEmailEnabled: appUser.securityRecoveryEmailEnabled ?? true,
+      securitySessionTimeoutMinutes: appUser.securitySessionTimeoutMinutes ?? 120,
+    })
+  }, [appUser])
+
+  useEffect(() => {
+    if (activeTab === 'mes-sujets' && !purchasedSubjectsLoaded) {
+      loadPurchasedSubjects()
+    }
+  }, [activeTab, purchasedSubjectsLoaded])
 
   if (loading || authLoading || !userId) {
     return (
@@ -301,15 +372,62 @@ export default function ProfilePage() {
           </div>
 
           <div className={`ptab-panel ${activeTab === 'mes-sujets' ? 'active' : ''}`}>
-            <div className="luxury-card settings-card empty-section-card">
+            <div className="luxury-card settings-card">
               <div className="sc-header">
                 <h3 className="sc-title">Mes <em>Sujets</em></h3>
                 <BookOpen size={14} className="sc-info-icon" />
               </div>
-              <p className="empty-section-title">Aucune donnée disponible pour le moment.</p>
-              <p className="empty-section-text">
-                Vos achats, téléchargements et progression apparaîtront ici dès que l’intégration des données sera finalisée.
-              </p>
+
+              {purchasedSubjectsLoading ? (
+                <div className="subjects-grid">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="subject-card-skeleton">
+                      <div className="subject-line w-70"></div>
+                      <div className="subject-line w-45"></div>
+                      <div className="subject-line w-30"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : purchasedSubjects.length > 0 ? (
+                <>
+                  <div className="subjects-summary">
+                    <span>
+                      <strong>{purchasedSubjects.length}</strong> sujet{purchasedSubjects.length > 1 ? 's' : ''} débloqué{purchasedSubjects.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  <div className="subjects-grid">
+                    {purchasedSubjects.map((subject) => (
+                      <article key={`${subject.id}-${subject.purchasedAt}`} className="subject-card">
+                        <div className="subject-card-head">
+                          <span className="subject-badge">{subject.type}</span>
+                          <span className="subject-credits">-{subject.creditsAmount} cr</span>
+                        </div>
+                        <h4 className="subject-title">{subject.titre}</h4>
+                        <p className="subject-meta">
+                          {subject.matiere} · {subject.annee}{subject.serie ? ` · ${subject.serie}` : ''}
+                        </p>
+                        <p className="subject-date">
+                          Débloqué le {new Date(subject.purchasedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </p>
+                        <button className="btn-card-action mt-4" onClick={() => router.push(`/sujet/${subject.id}`)}>
+                          Ouvrir le sujet
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="empty-section-title">Aucun sujet débloqué pour le moment.</p>
+                  <p className="empty-section-text">
+                    Quand vous achetez un sujet avec vos crédits, il apparaît automatiquement ici.
+                  </p>
+                  <button className="btn-card-action mt-4" onClick={() => router.push('/catalogue')}>
+                    Explorer le catalogue
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -327,15 +445,145 @@ export default function ProfilePage() {
           </div>
 
           <div className={`ptab-panel ${activeTab === 'securite' ? 'active' : ''}`}>
-            <div className="luxury-card settings-card empty-section-card">
+            <div className="luxury-card settings-card">
               <div className="sc-header">
                 <h3 className="sc-title">Paramètres <em>Sécurité</em></h3>
                 <Shield size={14} className="sc-info-icon" />
               </div>
-              <p className="empty-section-title">Aucune donnée disponible pour le moment.</p>
-              <p className="empty-section-text">
-                Les préférences de sécurité avancées (sessions, authentification renforcée, historiques) seront ajoutées dans cette section.
-              </p>
+
+              <div className="security-grid">
+                <div className="security-card">
+                  <div className="security-card-head">
+                    <BellRing size={16} className="sc-info-icon" />
+                    <div>
+                      <div className="security-title">Alertes de connexion</div>
+                      <div className="security-desc">Recevoir un email lors d’une nouvelle connexion.</div>
+                    </div>
+                  </div>
+                  <label className="security-switch">
+                    <input
+                      type="checkbox"
+                      checked={securitySettings.securityLoginAlertEnabled}
+                      onChange={(event) =>
+                        setSecuritySettings((previous) => ({
+                          ...previous,
+                          securityLoginAlertEnabled: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span>Activer</span>
+                  </label>
+                </div>
+
+                <div className="security-card">
+                  <div className="security-card-head">
+                    <Shield size={16} className="sc-info-icon" />
+                    <div>
+                      <div className="security-title">Blocage appareil inconnu</div>
+                      <div className="security-desc">Refuser les connexions depuis un appareil non reconnu.</div>
+                    </div>
+                  </div>
+                  <label className="security-switch">
+                    <input
+                      type="checkbox"
+                      checked={securitySettings.securityUnknownDeviceBlock}
+                      onChange={(event) =>
+                        setSecuritySettings((previous) => ({
+                          ...previous,
+                          securityUnknownDeviceBlock: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span>Activer</span>
+                  </label>
+                </div>
+
+                <div className="security-card">
+                  <div className="security-card-head">
+                    <KeyRound size={16} className="sc-info-icon" />
+                    <div>
+                      <div className="security-title">Authentification renforcée (2FA)</div>
+                      <div className="security-desc">Préférence stockée dès maintenant, activation finale au prochain sprint.</div>
+                    </div>
+                  </div>
+                  <label className="security-switch">
+                    <input
+                      type="checkbox"
+                      checked={securitySettings.securityTwoFactorEnabled}
+                      onChange={(event) =>
+                        setSecuritySettings((previous) => ({
+                          ...previous,
+                          securityTwoFactorEnabled: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span>Activer</span>
+                  </label>
+                </div>
+
+                <div className="security-card">
+                  <div className="security-card-head">
+                    <Clock3 size={16} className="sc-info-icon" />
+                    <div>
+                      <div className="security-title">Expiration automatique de session</div>
+                      <div className="security-desc">Déconnexion automatique après inactivité.</div>
+                    </div>
+                  </div>
+                  <select
+                    className="security-select"
+                    value={securitySettings.securitySessionTimeoutMinutes}
+                    onChange={(event) =>
+                      setSecuritySettings((previous) => ({
+                        ...previous,
+                        securitySessionTimeoutMinutes: Number(event.target.value),
+                      }))
+                    }
+                  >
+                    <option value={30}>30 minutes</option>
+                    <option value={60}>1 heure</option>
+                    <option value={120}>2 heures</option>
+                    <option value={240}>4 heures</option>
+                  </select>
+                </div>
+
+                <div className="security-card">
+                  <div className="security-card-head">
+                    <Shield size={16} className="sc-info-icon" />
+                    <div>
+                      <div className="security-title">Récupération par email</div>
+                      <div className="security-desc">Autoriser la réinitialisation de mot de passe via email.</div>
+                    </div>
+                  </div>
+                  <label className="security-switch">
+                    <input
+                      type="checkbox"
+                      checked={securitySettings.securityRecoveryEmailEnabled}
+                      onChange={(event) =>
+                        setSecuritySettings((previous) => ({
+                          ...previous,
+                          securityRecoveryEmailEnabled: event.target.checked,
+                        }))
+                      }
+                    />
+                    <span>Activer</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="security-actions">
+                <button className="btn-card-action" onClick={handleSecuritySave} disabled={securitySaving}>
+                  {securitySaving ? 'Enregistrement...' : 'Enregistrer les paramètres sécurité'}
+                </button>
+                <button className="btn-card-action ghost" onClick={() => router.push('/auth/forgot-password')}>
+                  Mettre à jour mon mot de passe
+                </button>
+              </div>
+
+              {appUser?.securitySettingsUpdatedAt && (
+                <p className="security-footnote">
+                  Dernière mise à jour: {new Date(appUser.securitySettingsUpdatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                </p>
+              )}
             </div>
           </div>
         </div>

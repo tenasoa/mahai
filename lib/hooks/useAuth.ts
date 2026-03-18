@@ -35,6 +35,13 @@ export interface AppUser {
   showEmail?: boolean
   showPhone?: boolean
   showEtablissement?: boolean
+  // Paramètres sécurité
+  securityTwoFactorEnabled?: boolean
+  securityLoginAlertEnabled?: boolean
+  securityUnknownDeviceBlock?: boolean
+  securityRecoveryEmailEnabled?: boolean
+  securitySessionTimeoutMinutes?: number
+  securitySettingsUpdatedAt?: string
 }
 
 export function useAuth() {
@@ -44,10 +51,10 @@ export function useAuth() {
   const [userId, setUserId] = useState<string | undefined>(undefined)
 
   // Fonction pour récupérer les données utilisateur depuis la DB
-  const fetchAppUser = async (uid: string) => {
+  const fetchAppUser = async () => {
     try {
-      const { getUserData } = await import('@/actions/auth')
-      const data = await getUserData(uid)
+      const { getCurrentUserData } = await import('@/actions/auth')
+      const data = await getCurrentUserData()
       setAppUser(data)
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -64,7 +71,7 @@ export function useAuth() {
       const uid = session?.user?.id
       setUserId(uid)
       if (uid) {
-        fetchAppUser(uid)
+        fetchAppUser()
       }
       setLoading(false)
     })
@@ -78,7 +85,7 @@ export function useAuth() {
       const uid = session?.user?.id
       setUserId(uid)
       if (uid) {
-        fetchAppUser(uid)
+        fetchAppUser()
       } else {
         setAppUser(null)
       }

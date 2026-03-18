@@ -1,24 +1,73 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
-import { updateProfileSchema, type UpdateProfileData } from '@/lib/validations/profile'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { query } from '@/lib/db'
+import { updateProfileSchema, type UpdateProfileData } from '@/lib/validations/profile'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+type AuthenticatedContext =
+  | {
+      supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>
+      userId: string
+    }
+  | {
+      error: string
+    }
 
-const supabase = createClient(supabaseUrl, supabaseKey)
+async function getAuthenticatedContext(): Promise<AuthenticatedContext> {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
 
-export async function getProfileAction(userId: string) {
+  if (error || !user) {
+    return { error: 'Vous devez être connecté pour effectuer cette action' }
+  }
+
+  return {
+    supabase,
+    userId: user.id,
+  }
+}
+
+function extractProfileStoragePath(profilePicture: string | null | undefined) {
+  if (!profilePicture) {
+    return null
+  }
+
   try {
-    const { data: profile, error } = await supabase
-      .from('User')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    const url = new URL(profilePicture)
+    const marker = '/object/public/profiles/'
+    const index = url.pathname.indexOf(marker)
 
-    if (error) {
-      console.error('Erreur récupération profil:', error)
+    if (index === -1) {
+      return null
+    }
+
+    return decodeURIComponent(url.pathname.slice(index + marker.length))
+  } catch {
+    return null
+  }
+}
+
+async function getProfileByUserId(userId: string) {
+  const result = await query('SELECT * FROM "User" WHERE id = $1 LIMIT 1', [userId])
+  return result.rows[0] ?? null
+}
+
+export async function getCurrentProfileAction() {
+  const context = await getAuthenticatedContext()
+
+  if ('error' in context) {
+    return { success: false, error: context.error }
+  }
+
+  try {
+    const profile = await getProfileByUserId(context.userId)
+
+    if (!profile) {
       return { success: false, error: 'Erreur lors de la récupération du profil' }
     }
 
@@ -29,59 +78,187 @@ export async function getProfileAction(userId: string) {
   }
 }
 
-export async function updateProfileAction(userId: string, data: UpdateProfileData) {
+export async function updateCurrentUserProfileAction(data: UpdateProfileData) {
+  const context = await getAuthenticatedContext()
+
+  if ('error' in context) {
+    return { success: false, error: context.error }
+  }
+
   try {
-    // Valider les données avec Zod
     const validatedData = updateProfileSchema.parse(data)
+    const entries = Object.entries(validatedData).filter(([, value]) => value !== undefined)
+    const updatedAt = new Date().toISOString()
+    const assignments: string[] = []
+    const values: unknown[] = []
 
-    console.log('Données validées:', validatedData)
+    entries.forEach(([field, value], index) => {
+      assignments.push(`"${field}" = $${index + 1}`)
+      values.push(value)
+    })
 
-    const { data: profile, error } = await supabase
-      .from('User')
-      .update({
-        ...validatedData,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('id', userId)
-      .select()
-      .single()
+    assignments.push(`"updatedAt" = $${entries.length + 1}`)
+    values.push(updatedAt)
+    values.push(context.userId)
 
-    if (error) {
-      console.error('Erreur Supabase mise à jour profil:', error)
-      return { 
-        success: false, 
+    const result = await query(
+      `UPDATE "User" SET ${assignments.join(', ')} WHERE id = $${entries.length + 2} RETURNING *`,
+      values
+    )
+
+    const profile = result.rows[0] ?? null
+
+    if (!profile) {
+      return {
+        success: false,
         error: 'Erreur lors de la mise à jour du profil',
-        details: error 
       }
     }
+
+    revalidatePath('/profil')
+    revalidatePath(`/profil/${context.userId}`)
 
     return { success: true, data: profile }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Erreur validation Zod:', error.errors)
       return {
         success: false,
         error: 'Données invalides',
-        details: error.errors.map(e => ({
-          field: e.path.join('.'),
-          message: e.message
-        }))
+        details: error.errors.map((issue) => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
       }
     }
 
     console.error('Erreur serveur inattendue:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur serveur inattendue' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur serveur inattendue',
     }
   }
 }
 
-export async function uploadProfilePictureAction(userId: string, file: File) {
+const securitySettingsSchema = z.object({
+  securityTwoFactorEnabled: z.boolean(),
+  securityLoginAlertEnabled: z.boolean(),
+  securityUnknownDeviceBlock: z.boolean(),
+  securityRecoveryEmailEnabled: z.boolean(),
+  securitySessionTimeoutMinutes: z.number().int().min(15).max(1440),
+})
+
+export interface PurchasedSubjectItem {
+  id: string
+  titre: string
+  type: string
+  matiere: string
+  annee: string
+  serie: string | null
+  credits: number
+  rating: number
+  reviewsCount: number
+  creditsAmount: number
+  purchasedAt: string
+}
+
+export async function getCurrentUserPurchasedSubjectsAction() {
+  const context = await getAuthenticatedContext()
+
+  if ('error' in context) {
+    return { success: false, error: context.error, data: [] as PurchasedSubjectItem[] }
+  }
+
   try {
-    // Validation du fichier
+    const result = await query(
+      `SELECT
+         s.id,
+         s.titre,
+         s.type,
+         s.matiere,
+         s.annee,
+         s.serie,
+         s.credits,
+         s.rating,
+         s."reviewsCount",
+         p."creditsAmount",
+         p."createdAt" AS "purchasedAt"
+       FROM "Purchase" p
+       JOIN "Subject" s ON s.id = p."subjectId"
+       WHERE p."userId" = $1
+         AND p.status = 'COMPLETED'
+       ORDER BY p."createdAt" DESC`,
+      [context.userId]
+    )
+
+    return { success: true, data: result.rows as PurchasedSubjectItem[] }
+  } catch (error) {
+    console.error('Erreur récupération sujets achetés:', error)
+    return { success: false, error: 'Impossible de récupérer vos sujets débloqués', data: [] as PurchasedSubjectItem[] }
+  }
+}
+
+export async function updateCurrentUserSecuritySettingsAction(data: unknown) {
+  const context = await getAuthenticatedContext()
+
+  if ('error' in context) {
+    return { success: false, error: context.error }
+  }
+
+  try {
+    const validatedData = securitySettingsSchema.parse(data)
+    const now = new Date().toISOString()
+
+    const result = await query(
+      `UPDATE "User"
+       SET
+         "securityTwoFactorEnabled" = $1,
+         "securityLoginAlertEnabled" = $2,
+         "securityUnknownDeviceBlock" = $3,
+         "securityRecoveryEmailEnabled" = $4,
+         "securitySessionTimeoutMinutes" = $5,
+         "securitySettingsUpdatedAt" = $6,
+         "updatedAt" = $6
+       WHERE id = $7
+       RETURNING
+         "securityTwoFactorEnabled",
+         "securityLoginAlertEnabled",
+         "securityUnknownDeviceBlock",
+         "securityRecoveryEmailEnabled",
+         "securitySessionTimeoutMinutes",
+         "securitySettingsUpdatedAt"`,
+      [
+        validatedData.securityTwoFactorEnabled,
+        validatedData.securityLoginAlertEnabled,
+        validatedData.securityUnknownDeviceBlock,
+        validatedData.securityRecoveryEmailEnabled,
+        validatedData.securitySessionTimeoutMinutes,
+        now,
+        context.userId,
+      ]
+    )
+
+    revalidatePath('/profil')
+    return { success: true, data: result.rows[0] ?? null }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: 'Paramètres de sécurité invalides' }
+    }
+
+    console.error('Erreur mise à jour sécurité:', error)
+    return { success: false, error: 'Impossible de sauvegarder les paramètres de sécurité' }
+  }
+}
+
+export async function uploadCurrentUserProfilePictureAction(file: File) {
+  const context = await getAuthenticatedContext()
+
+  if ('error' in context) {
+    return { success: false, error: context.error }
+  }
+
+  try {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    const maxSize = 5 * 1024 * 1024
 
     if (!allowedTypes.includes(file.type)) {
       return { success: false, error: 'Type de fichier non supporté' }
@@ -91,15 +268,14 @@ export async function uploadProfilePictureAction(userId: string, file: File) {
       return { success: false, error: 'Fichier trop volumineux (max 5MB)' }
     }
 
-    // Upload vers Supabase Storage
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${userId}/profile.${fileExt}`
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const fileExt = file.name.split('.').pop() || 'webp'
+    const fileName = `${context.userId}/profile.${fileExt}`
+
+    const { error: uploadError } = await context.supabase.storage
       .from('profiles')
       .upload(fileName, file, {
         upsert: true,
-        contentType: file.type
+        contentType: file.type,
       })
 
     if (uploadError) {
@@ -107,26 +283,23 @@ export async function uploadProfilePictureAction(userId: string, file: File) {
       return { success: false, error: 'Erreur lors du téléchargement' }
     }
 
-    // Obtenir l'URL publique
-    const { data: { publicUrl } } = supabase.storage
-      .from('profiles')
-      .getPublicUrl(fileName)
+    const {
+      data: { publicUrl },
+    } = context.supabase.storage.from('profiles').getPublicUrl(fileName)
 
-    // Mettre à jour le profil avec l'URL de l'image
-    const { data: profile, error: updateError } = await supabase
-      .from('User')
-      .update({
-        profilePicture: publicUrl,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('id', userId)
-      .select()
-      .single()
+    const updateResult = await query(
+      'UPDATE "User" SET "profilePicture" = $1, "updatedAt" = $2 WHERE id = $3 RETURNING *',
+      [publicUrl, new Date().toISOString(), context.userId]
+    )
 
-    if (updateError) {
-      console.error('Erreur mise à jour profil:', updateError)
+    const profile = updateResult.rows[0] ?? null
+
+    if (!profile) {
       return { success: false, error: 'Erreur lors de la mise à jour du profil' }
     }
+
+    revalidatePath('/profil')
+    revalidatePath(`/profil/${context.userId}`)
 
     return { success: true, data: profile }
   } catch (error) {
@@ -135,35 +308,49 @@ export async function uploadProfilePictureAction(userId: string, file: File) {
   }
 }
 
-export async function deleteProfilePictureAction(userId: string) {
-  try {
-    // Supprimer l'ancienne image
-    const { error: deleteError } = await supabase.storage
-      .from('profiles')
-      .remove([`${userId}/profile`])
+export async function deleteCurrentUserProfilePictureAction() {
+  const context = await getAuthenticatedContext()
 
-    if (deleteError) {
-      console.error('Erreur suppression image:', deleteError)
-      // Continuer même si la suppression échoue
+  if ('error' in context) {
+    return { success: false, error: context.error }
+  }
+
+  try {
+    const profileResult = await query('SELECT "profilePicture" FROM "User" WHERE id = $1 LIMIT 1', [
+      context.userId,
+    ])
+    const profile = profileResult.rows[0] ?? null
+
+    if (!profile) {
+      return { success: false, error: 'Erreur lors de la récupération du profil' }
     }
 
-    // Mettre à jour le profil
-    const { data: profile, error: updateError } = await supabase
-      .from('User')
-      .update({
-        profilePicture: null,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('id', userId)
-      .select()
-      .single()
+    const storagePath = extractProfileStoragePath(profile?.profilePicture)
 
-    if (updateError) {
-      console.error('Erreur mise à jour profil:', updateError)
+    if (storagePath) {
+      const { error: deleteError } = await context.supabase.storage
+        .from('profiles')
+        .remove([storagePath])
+
+      if (deleteError) {
+        console.error('Erreur suppression image:', deleteError)
+      }
+    }
+
+    const updateResult = await query(
+      'UPDATE "User" SET "profilePicture" = NULL, "updatedAt" = $1 WHERE id = $2 RETURNING *',
+      [new Date().toISOString(), context.userId]
+    )
+    const updatedProfile = updateResult.rows[0] ?? null
+
+    if (!updatedProfile) {
       return { success: false, error: 'Erreur lors de la mise à jour du profil' }
     }
 
-    return { success: true, data: profile }
+    revalidatePath('/profil')
+    revalidatePath(`/profil/${context.userId}`)
+
+    return { success: true, data: updatedProfile }
   } catch (error) {
     console.error('Erreur serveur:', error)
     return { success: false, error: 'Erreur serveur' }

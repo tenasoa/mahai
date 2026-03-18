@@ -52,6 +52,17 @@ WHERE table_name = 'User' AND column_name = 'birthDate';
 - **Colonnes ajoutées** :
   - `birthDate` (TEXT) : Date de naissance au format ISO (YYYY-MM-DD)
 
+### 003_add_user_security_settings.sql
+- **Date** : 2026-03-18
+- **Description** : Ajoute les paramètres de sécurité utilisateur pour la section Profil > Sécurité
+- **Colonnes ajoutées** :
+  - `securityTwoFactorEnabled` (BOOLEAN, défaut `false`)
+  - `securityLoginAlertEnabled` (BOOLEAN, défaut `true`)
+  - `securityUnknownDeviceBlock` (BOOLEAN, défaut `false`)
+  - `securityRecoveryEmailEnabled` (BOOLEAN, défaut `true`)
+  - `securitySessionTimeoutMinutes` (INTEGER, défaut `120`, borné entre `15` et `1440`)
+  - `securitySettingsUpdatedAt` (TIMESTAMPTZ, nullable)
+
 ## Vérification
 
 Après avoir exécuté la migration, vous pouvez vérifier que tout fonctionne avec cette requête :

@@ -1204,6 +1204,207 @@
   line-height: 1.7;
 }
 
+.subjects-summary {
+  margin-bottom: 1rem;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--luxury-text-dim);
+}
+
+.subjects-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.subject-card {
+  border: 1px solid var(--luxury-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--luxury-card-solid) 86%, transparent);
+  padding: 1rem 1.1rem;
+  transition: all 0.25s ease;
+}
+
+[data-theme='dark'] .subject-card {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.subject-card:hover {
+  border-color: var(--luxury-gold-line);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+}
+
+.subject-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.subject-badge {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--luxury-gold);
+  border: 1px solid var(--luxury-gold-line);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  background: var(--luxury-gold-dim);
+}
+
+.subject-credits {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--luxury-gold);
+}
+
+.subject-title {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  color: var(--luxury-text);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.subject-meta {
+  margin-top: 0.3rem;
+  font-family: var(--body);
+  font-size: 0.86rem;
+  color: var(--luxury-text-muted);
+}
+
+.subject-date {
+  margin-top: 0.45rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--luxury-text-dim);
+}
+
+.subject-card-skeleton {
+  border: 1px solid var(--luxury-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--luxury-card-solid) 86%, transparent);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+[data-theme='dark'] .subject-card-skeleton {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.subject-line {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--luxury-gold-dim), rgba(255, 255, 255, 0.05), var(--luxury-gold-dim));
+  background-size: 220% 100%;
+  animation: subjectLinePulse 1.5s ease-in-out infinite;
+}
+
+.subject-line.w-70 { width: 70%; }
+.subject-line.w-45 { width: 45%; }
+.subject-line.w-30 { width: 30%; }
+
+@keyframes subjectLinePulse {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+.security-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.security-card {
+  border: 1px solid var(--luxury-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--luxury-card-solid) 86%, transparent);
+  padding: 1rem 1.1rem;
+}
+
+[data-theme='dark'] .security-card {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.security-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.security-title {
+  font-family: var(--body);
+  font-size: 0.95rem;
+  color: var(--luxury-text);
+  font-weight: 600;
+}
+
+.security-desc {
+  margin-top: 0.25rem;
+  font-family: var(--body);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--luxury-text-muted);
+}
+
+.security-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--luxury-text-dim);
+}
+
+.security-switch input {
+  accent-color: var(--luxury-gold);
+}
+
+.security-select {
+  width: 100%;
+  padding: 0.62rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--luxury-border);
+  background: transparent;
+  color: var(--luxury-text);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+
+.security-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn-card-action.ghost {
+  background: transparent;
+  border-color: var(--luxury-gold-line);
+  color: var(--luxury-text);
+}
+
+.btn-card-action.ghost:hover {
+  background: var(--luxury-gold-dim);
+}
+
+.security-footnote {
+  margin-top: 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--luxury-text-dim);
+}
+
 /* ─── INFO ROWS ─── */
 .settings-card {
   padding: 2.5rem;
