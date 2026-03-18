@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { AuthModal } from '@/components/ui/AuthModal'
-import { getSubjectById } from '@/actions/subjects'
-import { getUserCredits, purchaseSubject } from '@/actions/user'
-import { SkeletonCard, Skeleton } from '@/components/ui/Skeleton'
+import { getSubjectById } from '@/lib/supabase/subjects'
+import { getCurrentUserCredits, purchaseCurrentUserSubject } from '@/actions/user'
+import { SubjectDetailSkeleton } from '@/components/ui/PageSkeletons'
 import { AIFeedbackNarrative } from '@/components/ui/AIFeedbackNarrative'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Check, Info, FileText, Zap, Star, LucideIcon, Search, Sparkles, FileSearch, Scale, CheckCircle } from 'lucide-react'
@@ -44,34 +44,6 @@ interface Subject {
   ecole?: string
 }
 
-// Mock data (à remplacer par Supabase)
-const MOCK_SUBJECT: Subject = {
-  id: '1',
-  titre: 'Mathématiques — BAC Série C Épreuve officielle 2024',
-  type: 'BAC Officiel',
-  matiere: 'Mathématiques',
-  annee: '2024',
-  serie: 'Série C',
-  difficulte: 'Difficile',
-  langue: 'Français',
-  credits: 15,
-  rating: 4.9,
-  reviews: 142,
-  pages: 18,
-  description: 'Sujet officiel du Baccalauréat Série C session 2024 — épreuve de mathématiques. Ce sujet couvre l\'intégralité du programme de Terminale Série C : équations différentielles, calcul intégral, géométrie dans l\'espace, étude de fonctions et probabilités.',
-  glyph: '∫',
-  hasCorrectionIa: true,
-  hasCorrectionProf: false,
-  authorName: 'Rabe Andry',
-  createdAt: '2024-03-01',
-  coefficient: 7,
-  bareme: 20,
-  duree: '3 heures',
-  nbExercices: 5,
-  authentifie: true,
-  ecole: 'République de Madagascar · Ministère de l\'Éducation Nationale'
-}
-
 export default function SujetDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -104,8 +76,8 @@ export default function SujetDetailPage() {
       try {
         // Charger le sujet et les crédits en parallèle
         const [subjectData, userCredits] = await Promise.all([
-          getSubjectById(params.id as string, userId || undefined),
-          userId ? getUserCredits(userId) : 0
+          getSubjectById(params.id as string),
+          userId ? getCurrentUserCredits() : 0
         ])
         
         if (subjectData) {
@@ -171,11 +143,10 @@ export default function SujetDetailPage() {
     setIsPurchasing(true)
     setShowPurchaseModal(false)
     try {
-      const result = await purchaseSubject(subject.id, userId)
+      const result = await purchaseCurrentUserSubject(subject.id)
       if (result.success) {
         showToast('success', 'Débloqué !', `Accès permanent accordé — ${subject.credits} crédits débités`)
-        // Mettre à jour les crédits depuis la base de données
-        const updatedCredits = await getUserCredits(userId)
+        const updatedCredits = result.remainingCredits ?? (await getCurrentUserCredits())
         setCredits(updatedCredits)
         setState('unlocked')
       } else {
@@ -205,27 +176,7 @@ export default function SujetDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="p-8 max-w-[1300px] mx-auto space-y-8 min-h-screen bg-void">
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-2/3" />
-          <div className="flex gap-2">
-            <Skeleton className="h-6 w-24 rounded-full" />
-            <Skeleton className="h-6 w-24 rounded-full" />
-            <Skeleton className="h-6 w-24 rounded-full" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-[600px] w-full rounded-[32px]" />
-          </div>
-          <div className="space-y-6">
-            <Skeleton className="h-[200px] w-full rounded-[24px]" />
-            <Skeleton className="h-[300px] w-full rounded-[24px]" />
-          </div>
-        </div>
-      </div>
-    )
+    return <SubjectDetailSkeleton />
   }
 
   if (!subject) {
@@ -287,7 +238,7 @@ export default function SujetDetailPage() {
                 <ul>
                   <li>✅ Accès permanent au sujet complet</li>
                   <li>✅ Correction IA détaillée</li>
-                  <li>✅ Téléchargement PDF</li>
+                  <li>✅ Consultation complète dans Mah.AI</li>
                   <li>✅ Suivi de progression</li>
                 </ul>
               </div>
@@ -444,7 +395,7 @@ export default function SujetDetailPage() {
                     <div><span className="lb-price-lbl">crédits</span><div style={{ fontFamily: 'var(--mono)', fontSize: '.58rem', color: 'var(--text-4)' }}>≈ 750 Ar</div></div>
                   </div>
                   <button className="btn-unlock" onClick={unlockSubject}>Débloquer pour {subject.credits} crédits →</button>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '.58rem', color: 'var(--text-4)', marginTop: '.85rem' }}>Accès permanent · Correction IA incluse · Téléchargement PDF</div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '.58rem', color: 'var(--text-4)', marginTop: '.85rem' }}>Accès permanent · Correction IA incluse · Consultation dans Mah.AI</div>
                 </div>
 
                 <div className="sec-label" style={{ marginTop: '1.75rem' }}>Description du sujet</div>
@@ -466,7 +417,7 @@ export default function SujetDetailPage() {
                 <div className="reader-toolbar">
                   <span className="rt-label">Mode lecture</span>
                   <button className={`rt-btn ${!isReadOnly ? 'active' : ''}`} onClick={toggleMode}>{!isReadOnly ? '✎ Mode réponse' : '👁 Mode lecture'}</button>
-                  <button className="rt-btn" onClick={() => showToast('info', 'PDF', 'Génération du PDF en cours…')}>⬇ PDF</button>
+                  <button className="rt-btn" onClick={() => showToast('info', 'PDF', 'Le téléchargement PDF sera activé quand le stockage signé sera prêt.')}>⬇ PDF bientôt</button>
                   <button className="rt-btn" onClick={() => showToast('info', 'Plein écran', 'Mode plein écran activé')}>⛶ Plein écran</button>
                   <button className="rt-btn" onClick={() => showToast('info', 'Signet', 'Sujet mis en favori')}>♡ Favori</button>
                 </div>
@@ -609,17 +560,17 @@ export default function SujetDetailPage() {
           {/* ══ SIMILAIRES PANEL ══ */}
           <div className={`tab-panel ${activeTab === 'similaires' ? 'active' : ''}`}>
             <div style={{ display: 'grid', gap: '.75rem' }}>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)', padding: '1rem', display: 'flex', alignItems: 'center', gap: '.85rem', cursor: 'pointer', transition: 'all .2s' }} onClick={() => router.push('/sujet/1')}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)', padding: '1rem', display: 'flex', alignItems: 'center', gap: '.85rem', cursor: 'pointer', transition: 'all .2s' }} onClick={() => showToast('info', 'Sujets similaires', 'La navigation vers les sujets similaires sera disponible après raccordement des données.')}>
                 <div style={{ width: '44px', height: '52px', background: 'var(--surface)', border: '1px solid var(--b2)', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--display)', fontSize: '1.2rem', color: 'var(--gold-lo)', flexShrink: 0 }}>Σ</div>
                 <div style={{ flex: 1 }}><div style={{ fontSize: '.85rem', fontWeight: 500, color: 'var(--text)', marginBottom: '.2rem' }}>BAC Maths Série C — 2023</div><div style={{ fontFamily: 'var(--mono)', fontSize: '.6rem', color: 'var(--text-3)' }}>BAC · Série C · 2023</div></div>
                 <div style={{ textAlign: 'right' }}><div style={{ fontFamily: 'var(--display)', fontSize: '1.1rem', color: 'var(--gold)' }}>12 cr</div><div style={{ fontSize: '.6rem', color: 'var(--gold)', marginTop: '.1rem' }}>★★★★☆</div></div>
               </div>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)', padding: '1rem', display: 'flex', alignItems: 'center', gap: '.85rem', cursor: 'pointer', transition: 'all .2s' }} onClick={() => router.push('/sujet/1')}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)', padding: '1rem', display: 'flex', alignItems: 'center', gap: '.85rem', cursor: 'pointer', transition: 'all .2s' }} onClick={() => showToast('info', 'Sujets similaires', 'La navigation vers les sujets similaires sera disponible après raccordement des données.')}>
                 <div style={{ width: '44px', height: '52px', background: 'var(--surface)', border: '1px solid var(--b2)', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--display)', fontSize: '1.2rem', color: 'var(--gold-lo)', flexShrink: 0 }}>π</div>
                 <div style={{ flex: 1 }}><div style={{ fontSize: '.85rem', fontWeight: 500, color: 'var(--text)', marginBottom: '.2rem' }}>Rattrapage BAC Maths C — 2024</div><div style={{ fontFamily: 'var(--mono)', fontSize: '.6rem', color: 'var(--text-3)' }}>Rattrapage · Série C · 2024</div></div>
                 <div style={{ textAlign: 'right' }}><div style={{ fontFamily: 'var(--display)', fontSize: '1.1rem', color: '#8ECAAC' }}>Gratuit</div><div style={{ fontSize: '.6rem', color: 'var(--gold)', marginTop: '.1rem' }}>★★★★★</div></div>
               </div>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)', padding: '1rem', display: 'flex', alignItems: 'center', gap: '.85rem', cursor: 'pointer', transition: 'all .2s' }} onClick={() => router.push('/sujet/1')}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)', padding: '1rem', display: 'flex', alignItems: 'center', gap: '.85rem', cursor: 'pointer', transition: 'all .2s' }} onClick={() => showToast('info', 'Sujets similaires', 'La navigation vers les sujets similaires sera disponible après raccordement des données.')}>
                 <div style={{ width: '44px', height: '52px', background: 'var(--surface)', border: '1px solid var(--b2)', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--display)', fontSize: '1.2rem', color: 'var(--gold-lo)', flexShrink: 0 }}>∞</div>
                 <div style={{ flex: 1 }}><div style={{ fontSize: '.85rem', fontWeight: 500, color: 'var(--text)', marginBottom: '.2rem' }}>DS Analyse — Lycée Andohalo 2024</div><div style={{ fontFamily: 'var(--mono)', fontSize: '.6rem', color: 'var(--text-3)' }}>DS · Terminale C · 2024</div></div>
                 <div style={{ textAlign: 'right' }}><div style={{ fontFamily: 'var(--display)', fontSize: '1.1rem', color: 'var(--gold)' }}>8 cr</div><div style={{ fontSize: '.6rem', color: 'var(--gold)', marginTop: '.1rem' }}>★★★★★</div></div>
@@ -639,7 +590,7 @@ export default function SujetDetailPage() {
                 <div className="pc-unit">crédits · accès permanent</div>
                 <div className="pc-balance">Votre solde : <span className="pc-balance-val">{credits} cr</span></div>
                 <button className="btn-buy" onClick={unlockSubject}>🔓 Débloquer ce sujet</button>
-                <div className="pc-note">Accès permanent après achat · Correction IA incluse · PDF téléchargeable</div>
+                <div className="pc-note">Accès permanent après achat · Correction IA incluse · Consultation complète</div>
               </div>
               <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                 <button 
@@ -710,7 +661,7 @@ export default function SujetDetailPage() {
               <div className="info-row"><span className="ir-key">Durée</span><span className="ir-val">{subject.duree}</span></div>
               <div className="info-row"><span className="ir-key">Exercices</span><span className="ir-val">{subject.nbExercices} exercices</span></div>
               <div className="info-row"><span className="ir-key">Barème</span><span className="ir-val">{subject.bareme} points</span></div>
-              <div className="info-row"><span className="ir-key">Téléchargements</span><span className="ir-val">1 284</span></div>
+              <div className="info-row"><span className="ir-key">Accès</span><span className="ir-val">Consultation web après achat</span></div>
               <div className="info-row"><span className="ir-key">Authentifié</span><span className="ir-val gold">✓ Officiel</span></div>
             </div>
           </div>

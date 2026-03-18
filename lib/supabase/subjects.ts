@@ -1,6 +1,8 @@
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { query as dbQuery } from '@/lib/db'
 import type { CatalogueQueryParams, PaginatedResponse, Subject } from '@/types/catalogue'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -8,8 +10,22 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+async function getCurrentUserId() {
+  const supabaseServer = await createSupabaseServerClient()
+  const {
+    data: { user },
+    error,
+  } = await supabaseServer.auth.getUser()
+
+  if (error || !user) {
+    return null
+  }
+
+  return user.id
+}
+
 export async function getSubjects(
-  params: CatalogueQueryParams & { userId?: string }
+  params: CatalogueQueryParams
 ): Promise<PaginatedResponse<Subject>> {
   const {
     page = 1,
@@ -18,19 +34,14 @@ export async function getSubjects(
     sortOrder = 'desc',
     types,
     matieres,
-    annees,
-    difficultes,
-    langues,
-    formats,
-    badges,
     minRating,
     maxCredits,
     search,
-    featured,
-    userId,
   } = params
 
   try {
+    const currentUserId = await getCurrentUserId()
+
     // Construction de la query avec une jointure pour vérifier les achats
     let query = supabase
       .from('Subject')
@@ -52,36 +63,12 @@ export async function getSubjects(
       query = query.in('matiere', matieres)
     }
 
-    if (annees && annees.length > 0) {
-      query = query.in('annee', annees)
-    }
-
-    if (difficultes && difficultes.length > 0) {
-      query = query.in('difficulte', difficultes)
-    }
-
-    if (langues && langues.length > 0) {
-      query = query.in('langue', langues)
-    }
-
-    if (formats && formats.length > 0) {
-      query = query.in('format', formats)
-    }
-
-    if (badges && badges.length > 0) {
-      query = query.in('badge', badges)
-    }
-
     if (minRating !== undefined && minRating > 0) {
       query = query.gte('rating', minRating)
     }
 
     if (maxCredits !== undefined && maxCredits < 999) {
       query = query.lte('credits', maxCredits)
-    }
-
-    if (featured !== undefined) {
-      query = query.eq('featured', featured)
     }
 
     // Recherche textuelle multi-critères
@@ -137,8 +124,8 @@ export async function getSubjects(
     // Transformer les données pour ajouter isUnlocked
     const subjectsWithUnlockStatus = (data || []).map((subject: any) => {
       // Vérifier si l'utilisateur a acheté ce sujet
-      const hasPurchase = userId && Array.isArray(subject.Purchase) && 
-        subject.Purchase.some((p: any) => p.userId === userId && p.status === 'COMPLETED')
+      const hasPurchase = currentUserId && Array.isArray(subject.Purchase) &&
+        subject.Purchase.some((p: any) => p.userId === currentUserId && p.status === 'COMPLETED')
       
       // Return subject with isUnlocked flag
       const { Purchase, ...subjectData } = subject
@@ -169,6 +156,8 @@ export async function getSubjects(
 }
 
 export async function getSubjectById(id: string): Promise<Subject | null> {
+  const currentUserId = await getCurrentUserId()
+
   const { data, error } = await supabase
     .from('Subject')
     .select('*')
@@ -180,7 +169,46 @@ export async function getSubjectById(id: string): Promise<Subject | null> {
     return null
   }
 
-  return data as Subject
+  let isUnlocked = false
+
+  if (currentUserId && data?.id) {
+    try {
+      const purchaseById = await dbQuery(
+        `SELECT 1
+         FROM "Purchase"
+         WHERE "userId" = $1
+           AND "subjectId" = $2
+           AND status = 'COMPLETED'
+         LIMIT 1`,
+        [currentUserId, data.id]
+      )
+
+      if ((purchaseById.rowCount ?? 0) > 0) {
+        isUnlocked = true
+      } else if (data.titre) {
+        // Fallback demandé: considérer le sujet comme débloqué si un achat COMPLETED existe sur un sujet au même titre.
+        const purchaseByTitle = await dbQuery(
+          `SELECT 1
+           FROM "Purchase" p
+           JOIN "Subject" s ON s.id = p."subjectId"
+           WHERE p."userId" = $1
+             AND p.status = 'COMPLETED'
+             AND LOWER(TRIM(s.titre)) = LOWER(TRIM($2))
+           LIMIT 1`,
+          [currentUserId, data.titre]
+        )
+
+        isUnlocked = (purchaseByTitle.rowCount ?? 0) > 0
+      }
+    } catch (purchaseCheckError) {
+      console.error('Erreur vérification achat sujet:', purchaseCheckError)
+    }
+  }
+
+  return {
+    ...(data as Subject),
+    isUnlocked,
+  }
 }
 
 export async function getSubjectSuggestions(query: string, limit = 5) {

@@ -2,12 +2,13 @@
 
 import { Suspense } from 'react'
 import { VerifyEmailForm } from '@/components/auth/VerifyEmailForm'
+import { AuthPageSkeleton } from '@/components/ui/PageSkeletons'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+    <Suspense fallback={<AuthPageSkeleton />}>
       <VerifyEmailContent />
     </Suspense>
   )

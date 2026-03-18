@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { ProfileEditModal } from '@/components/modals/ProfileEditModal'
+import { ProfilePageSkeleton } from '@/components/ui/PageSkeletons'
 import { updateCurrentUserProfileAction } from '@/actions/profile'
 import { 
   MapPin, GraduationCap, Building, Phone, Calendar, 
@@ -66,12 +67,11 @@ export default function ProfilePage() {
 
   if (loading || authLoading || !userId) {
     return (
-      <div className="loading-screen" style={{ background: 'var(--void)', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>
-        <div className="loading-content">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Symphonie de vos données...</p>
-        </div>
-      </div>
+      <>
+        <LuxuryNavbar />
+        <LuxuryCursor />
+        <ProfilePageSkeleton />
+      </>
     )
   }
 

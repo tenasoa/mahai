@@ -8,11 +8,12 @@ import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { useCatalogue } from '@/lib/hooks/useCatalogue'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { AuthModal } from '@/components/ui/AuthModal'
-import type { ExamenType, Difficulte, Langue, Badge } from '@/types/catalogue'
+import { CataloguePageSkeleton } from '@/components/ui/PageSkeletons'
+import type { Difficulte, Badge } from '@/types/catalogue'
 import { BADGE_LABELS, DIFFICULTE_LABELS, MATIERE_GLYPHS } from '@/types/catalogue'
 import './catalogue.css'
 
-import { purchaseSubject } from '@/actions/subjects'
+import { purchaseCurrentUserSubject } from '@/actions/user'
 
 function CatalogueContent() {
   const router = useRouter()
@@ -121,7 +122,7 @@ function CatalogueContent() {
     
     setIsPurchasing(true)
     try {
-      const result = await purchaseSubject(currentSubject.id, userId)
+      const result = await purchaseCurrentUserSubject(currentSubject.id)
       
       if (result.success) {
         showToast('success', 'Achat réussi', `${currentSubject.titre} est maintenant débloqué !`)
@@ -460,5 +461,9 @@ function ToastContainer() {
 }
 
 export default function CataloguePage() {
-  return (<Suspense fallback={<div className="loading-screen">Chargement...</div>}><CatalogueContent /></Suspense>)
+  return (
+    <Suspense fallback={<CataloguePageSkeleton />}>
+      <CatalogueContent />
+    </Suspense>
+  )
 }

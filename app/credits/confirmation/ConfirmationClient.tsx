@@ -3,6 +3,7 @@
 import { use, useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { CheckCircle, Loader2, ArrowRight } from 'lucide-react'
+import { PaymentConfirmationSkeleton } from '@/components/ui/PageSkeletons'
 
 function ConfirmationContent() {
   const searchParams = useSearchParams()
@@ -30,14 +31,7 @@ function ConfirmationContent() {
   }, [transactionId])
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-16 h-16 text-teal animate-spin mx-auto mb-4" />
-          <p className="text-text-muted">Chargement...</p>
-        </div>
-      </div>
-    )
+    return <PaymentConfirmationSkeleton />
   }
 
   return (
@@ -141,14 +135,7 @@ function ConfirmationContent() {
 }
 
 function LoadingFallback() {
-  return (
-    <div className="min-h-screen bg-bg flex items-center justify-center">
-      <div className="text-center">
-        <Loader2 className="w-16 h-16 text-teal animate-spin mx-auto mb-4" />
-        <p className="text-text-muted">Chargement...</p>
-      </div>
-    </div>
-  )
+  return <PaymentConfirmationSkeleton />
 }
 
 export default function ConfirmationClient() {
