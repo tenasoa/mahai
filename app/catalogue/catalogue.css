@@ -108,7 +108,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--gold-lo);
-  border-radius: 2px;
+  border-radius: var(--r);
 }
 
 /* ═══════════════════════════════════════════════
@@ -308,7 +308,7 @@ body {
 
 .sidebar::-webkit-scrollbar-thumb {
   background: var(--gold-lo);
-  border-radius: 2px;
+  border-radius: var(--r);
 }
 
 .filter-panel {
@@ -381,7 +381,7 @@ body {
 
 .filter-body::-webkit-scrollbar-thumb {
   background: var(--gold-lo);
-  border-radius: 2px;
+  border-radius: var(--r);
 }
 
 .filter-section {
@@ -414,7 +414,7 @@ body {
   letter-spacing: 0.08em;
   padding: 0.26rem 0.65rem;
   border: 1px solid var(--b1);
-  border-radius: 2px;
+  border-radius: var(--r);
   background: transparent;
   color: var(--text-3);
   cursor: none;
@@ -465,7 +465,7 @@ body {
   -webkit-appearance: none;
   height: 2px;
   background: var(--b1);
-  border-radius: 1px;
+  border-radius: var(--r);
   outline: none;
 }
 
@@ -499,7 +499,7 @@ body {
   font-size: 0.7rem;
   padding: 0.35rem 0.25rem;
   border: 1px solid var(--b1);
-  border-radius: 2px;
+  border-radius: var(--r);
   cursor: none;
   background: transparent;
   color: var(--text-3);
@@ -713,7 +713,7 @@ body {
   gap: 0.35rem;
   background: var(--gold-dim);
   border: 1px solid var(--gold-line);
-  border-radius: 2px;
+  border-radius: var(--r);
   padding: 0.22rem 0.65rem;
   font-family: var(--mono);
   font-size: 0.62rem;
@@ -803,7 +803,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   padding: 0.2rem 0.55rem;
-  border-radius: 2px;
+  border-radius: var(--r);
   z-index: 2;
 }
 
@@ -820,7 +820,7 @@ body {
 
 .pc-badge.free {
   background: rgba(74, 107, 90, 0.9);
-  color: #8ECAAC;
+  color: var(--sage);
   border: 1px solid rgba(74, 107, 90, 0.5);
 }
 
@@ -849,7 +849,7 @@ body {
   height: 32px;
   background: rgba(8, 7, 5, 0.7);
   border: 1px solid var(--b1);
-  border-radius: 4px;
+  border-radius: var(--r);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1408,7 +1408,7 @@ body {
   background: #fff;
   width: 240px;
   height: 300px;
-  border-radius: 2px;
+  border-radius: var(--r);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   padding: 1.5rem;
   display: flex;
@@ -1418,7 +1418,7 @@ body {
 
 .pp-line {
   height: 2.5px;
-  border-radius: 1px;
+  border-radius: var(--r);
   background: #E8E3DC;
 }
 
@@ -1445,7 +1445,7 @@ body {
 .prev-nav-btn {
   background: var(--card);
   border: 1px solid var(--b1);
-  border-radius: 2px;
+  border-radius: var(--r);
   width: 30px;
   height: 30px;
   display: flex;

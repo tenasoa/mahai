@@ -87,7 +87,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--gold-lo);
-  border-radius: 2px;
+  border-radius: var(--r);
 }
 
 /* Loading Screen */
@@ -484,7 +484,7 @@ body {
   background: var(--gold-dim);
   border: 1px solid var(--gold-line);
   padding: 0.18rem 0.5rem;
-  border-radius: 2px;
+  border-radius: var(--r);
 }
 
 .prog-title {
@@ -509,13 +509,13 @@ body {
 .prog-bar-track {
   height: 4px;
   background: var(--b2);
-  border-radius: 2px;
+  border-radius: var(--r);
   overflow: hidden;
 }
 
 .prog-bar-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: var(--r);
   background: linear-gradient(90deg, var(--gold), var(--gold-hi));
   transition: width 1s ease;
 }
