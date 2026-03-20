@@ -40,8 +40,8 @@
   --display: 'Cormorant Garamond', serif;
   --body: 'Outfit', sans-serif;
   --mono: 'DM Mono', monospace;
-  --r: 6px;
-  --r-lg: 12px;
+  --r: 8px;
+  --r-lg: 16px;
   --sh-gold: 0 4px 24px -4px rgba(201, 168, 76, 0.15);
   --sh-ruby: 0 4px 24px -4px rgba(155, 35, 53, 0.15);
 }
@@ -96,7 +96,7 @@
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: var(--void); }
-::-webkit-scrollbar-thumb { background: var(--gold-lo); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--gold-lo); border-radius: var(--r); }
 
 /* ——— NOISE OVERLAY ——— */
 .admin-noise {
@@ -288,7 +288,7 @@
   font-family: var(--mono);
   font-size: 0.52rem;
   padding: 0.15rem 0.45rem;
-  border-radius: 10px;
+  border-radius: var(--r);
 }
 
 /* Badge de notification pour les transactions en attente */
@@ -305,7 +305,7 @@
   font-family: var(--mono);
   font-size: 0.6rem;
   font-weight: 700;
-  border-radius: 10px;
+  border-radius: var(--r);
   animation: sbBadgePulse 2s ease-in-out infinite;
 }
 
@@ -602,7 +602,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 0.18rem 0.52rem;
-  border-radius: 2px;
+  border-radius: var(--r);
   border: 1px solid;
 }
 .cnt-red { background: rgba(155, 35, 53, 0.15); color: #E06070; border-color: var(--ruby-line); }
@@ -687,7 +687,7 @@
   font-family: var(--mono);
   font-size: 0.54rem;
   padding: 0.22rem 0.65rem;
-  border-radius: 2px;
+  border-radius: var(--r);
   background: var(--sage-dim);
   border: 1px solid var(--sage-line);
   color: #8ECAAC;
@@ -702,7 +702,7 @@
   font-family: var(--mono);
   font-size: 0.54rem;
   padding: 0.22rem 0.65rem;
-  border-radius: 2px;
+  border-radius: var(--r);
   background: var(--ruby-dim);
   border: 1px solid var(--ruby-line);
   color: #E06070;
@@ -760,7 +760,7 @@
   font-family: var(--mono);
   font-size: 0.54rem;
   padding: 0.18rem 0.52rem;
-  border-radius: 2px;
+  border-radius: var(--r);
   background: transparent;
   border: 1px solid var(--b1);
   color: var(--text-3);
@@ -917,7 +917,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 0.14rem 0.5rem;
-  border-radius: 2px;
+  border-radius: var(--r);
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -939,6 +939,7 @@
   padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--b3);
   transition: background 0.2s;
+  border-radius: var(--r);
 }
 .alert-item:last-child { border-bottom: none; }
 .alert-item:hover { background: var(--card-hover); }
@@ -969,8 +970,8 @@
 .bar-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
 .bar-row:last-child { margin-bottom: 0; }
 .bar-lbl { font-family: var(--mono); font-size: 0.54rem; color: var(--text-3); width: 52px; flex-shrink: 0; }
-.bar-track { flex: 1; height: 5px; background: var(--b2); border-radius: 2px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 2px; }
+.bar-track { flex: 1; height: 5px; background: var(--b2); border-radius: var(--r); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: var(--r); }
 .bf-gold { background: linear-gradient(90deg, var(--gold-lo), var(--gold)); }
 .bf-blue { background: linear-gradient(90deg, #3A6EA8, #5B9BD5); }
 .bf-green { background: linear-gradient(90deg, var(--sage), #6AAB8A); }
@@ -990,7 +991,7 @@
 .chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 75px; margin-top: 1rem; }
 .cbar {
   flex: 1;
-  border-radius: 2px 2px 0 0;
+  border-radius: var(--r) var(--r) 0 0;
   background: linear-gradient(180deg, var(--gold), var(--gold-lo));
   min-height: 3px;
   cursor: pointer;
@@ -1133,7 +1134,7 @@
   letter-spacing: 0.08em;
   padding: 0.25rem 0.65rem;
   border: 1px solid var(--b1);
-  border-radius: 2px;
+  border-radius: var(--r);
   background: transparent;
   color: var(--text-3);
   cursor: pointer;
