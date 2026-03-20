@@ -1331,6 +1331,13 @@ body {
   max-height: 90vh;
   overflow-y: auto;
   animation: mIn 0.35s ease both;
+  box-sizing: border-box;
+}
+
+/* Modal Confirmation (smaller) */
+.modal-confirm {
+  max-width: 520px;
+  width: 90%;
 }
 
 @keyframes mIn {

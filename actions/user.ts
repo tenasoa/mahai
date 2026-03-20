@@ -77,15 +77,15 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
       )
 
       await client.query(
-        `INSERT INTO "Purchase" ("userId", "subjectId", "creditsAmount", amount, status)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [userId, subjectId, subject.credits, 0, 'COMPLETED']
+        `INSERT INTO "Purchase" ("id", "userId", "subjectId", "creditsAmount", amount, status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [crypto.randomUUID(), userId, subjectId, subject.credits, 0, 'COMPLETED']
       )
 
       await client.query(
-        `INSERT INTO "CreditTransaction" ("userId", amount, type, description, status)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [userId, -subject.credits, 'SPEND', `Achat du sujet: ${subject.titre}`, 'COMPLETED']
+        `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [crypto.randomUUID(), userId, -subject.credits, 'SPEND', `Achat du sujet: ${subject.titre}`, 'COMPLETED']
       )
     })
 

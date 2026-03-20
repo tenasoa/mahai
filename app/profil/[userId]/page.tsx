@@ -1,9 +1,11 @@
 
+import { Suspense } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import { MapPin, GraduationCap, Calendar, BookOpen, Award, Zap, UserRound, School } from 'lucide-react'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
+import { PublicProfileSkeleton } from '@/components/ui/PageSkeletons'
 import '../profil.css'
 
 // Lecture restreinte au sous-ensemble de champs réellement publics.
@@ -82,7 +84,8 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
   }
 
   return (
-    <div className="profile-page public">
+    <Suspense fallback={<PublicProfileSkeleton />}>
+      <div className="profile-page public">
       <LuxuryCursor />
       <LuxuryNavbar />
 
@@ -252,5 +255,6 @@ export default async function PublicProfilePage({ params }: { params: { userId: 
         </div>
       </div>
     </div>
+    </Suspense>
   );
 }

@@ -387,9 +387,9 @@ export async function verifyEmail(formData: VerifyEmailFormData) {
 
     // Create credit transaction
     await query(
-      `INSERT INTO "CreditTransaction" ("userId", amount, type, description, status) 
-       VALUES ($1, $2, $3, $4, $5)`,
-      [user.id, 10, 'EARN', 'Crédits de bienvenue', 'COMPLETED']
+      `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status) 
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [crypto.randomUUID(), user.id, 10, 'EARN', 'Crédits de bienvenue', 'COMPLETED']
     )
   }
 

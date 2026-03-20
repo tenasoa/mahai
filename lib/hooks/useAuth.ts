@@ -37,6 +37,8 @@ export interface AppUser {
   showEmail?: boolean
   showPhone?: boolean
   showEtablissement?: boolean
+  // Préférences de paiement
+  defaultOperator?: string
   // Paramètres sécurité
   securityTwoFactorEnabled?: boolean
   securityLoginAlertEnabled?: boolean

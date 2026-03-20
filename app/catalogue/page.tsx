@@ -416,7 +416,7 @@ function CatalogueContent() {
 
       {buyModalOpen && currentSubject && (
         <div className="modal-overlay open" onClick={() => setBuyModalOpen(false)}>
-          <div className="modal" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal modal-confirm" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
               <div><div className="modal-title">Confirmer l'achat</div><div className="modal-sub">{currentSubject.titre}</div></div>
               <button className="modal-close" onClick={() => setBuyModalOpen(false)}>✕</button>

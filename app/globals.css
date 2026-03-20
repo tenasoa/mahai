@@ -33,6 +33,23 @@
   --lift: #FBF9F6;
   --card-hover: #FFFFFF;
   --cursor-blend: multiply;
+
+  /* --- LUXURY DESIGN SYSTEM (Shared) --- */
+  --luxury-gold: #B38E3D;
+  --luxury-gold-dim: rgba(179, 142, 61, 0.08);
+  --luxury-gold-line: rgba(179, 142, 61, 0.25);
+  --luxury-void: #FDFCF9;
+  --luxury-card-bg: rgba(255, 255, 255, 0.85);
+  --luxury-card-solid: #FFFFFF;
+  --luxury-border: rgba(179, 142, 61, 0.15);
+  --luxury-text: #1C1917;
+  --luxury-text-muted: #57534E;
+  --luxury-text-dim: #A8A29E;
+  --luxury-shadow: 0 10px 40px rgba(179, 142, 61, 0.08);
+  --luxury-shadow-hover: 0 20px 60px rgba(179, 142, 61, 0.15);
+  --luxury-radius: 16px;
+  --luxury-gap: 2.5rem;
+  
   /* Font families are set by Next.js in layout.tsx */
 }
 
@@ -59,6 +76,20 @@
   --lift: #12100E;
   --card-hover: #1E1B18;
   --cursor-blend: screen;
+
+  /* --- LUXURY DESIGN SYSTEM (Shared) --- */
+  --luxury-gold: #C9A84C;
+  --luxury-gold-dim: rgba(201, 168, 76, 0.12);
+  --luxury-gold-line: rgba(201, 168, 76, 0.25);
+  --luxury-void: #0A0A0A;
+  --luxury-card-bg: rgba(20, 20, 20, 0.7);
+  --luxury-card-solid: #141414;
+  --luxury-border: rgba(255, 255, 255, 0.08);
+  --luxury-text: #F5F5F4;
+  --luxury-text-muted: #A8A29E;
+  --luxury-text-dim: #57534E;
+  --luxury-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  --luxury-shadow-hover: 0 25px 80px rgba(0, 0, 0, 0.8);
 }
 
 @layer base {

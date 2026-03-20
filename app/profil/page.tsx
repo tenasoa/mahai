@@ -13,13 +13,17 @@ import {
   getCurrentUserPurchasedSubjectsAction,
   updateCurrentUserSecuritySettingsAction,
   changeUserPasswordAction,
+  requestPasswordChangeCodeAction,
+  getUserTransactionsAction,
+  updatePaymentPreferencesAction,
   type PurchasedSubjectItem,
 } from '@/actions/profile'
 import { uploadAvatarAction } from '@/actions/avatar'
 import {
   MapPin, GraduationCap, Building, Phone, Calendar,
   User as UserIcon, BookOpen, Shield, BellRing, Clock3, KeyRound,
-  Eye, EyeOff, CheckCircle, Info, Zap, Camera, X
+  Eye, EyeOff, CheckCircle, Info, Zap, Camera, X,
+  ArrowUpRight, ArrowDownLeft, PlusCircle, Smartphone, CreditCard
 } from 'lucide-react'
 import './profil.css'
 import '@/components/modals/ProfileEditModal.css'
@@ -111,12 +115,58 @@ export default function ProfilePage() {
   const [showEtablissement, setShowEtablissement] = useState(appUser?.showEtablissement ?? true)
   // États pour le changement de mot de passe
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
+  const [passwordStep, setPasswordStep] = useState<'form' | 'code'>('form')
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+    code: '',
   })
   const [passwordChanging, setPasswordChanging] = useState(false)
+
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [transactionsLoading, setTransactionsLoading] = useState(false)
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false)
+  const [mobileMoneySettings, setMobileMoneySettings] = useState({
+    operator: appUser?.defaultOperator || 'MVOLA',
+    phoneNumber: appUser?.phone || '',
+  })
+  const [mobileMoneySaving, setMobileMoneySaving] = useState(false)
+
+  // Mettre à jour mobileMoneySettings quand appUser change
+  useEffect(() => {
+    if (appUser) {
+      setMobileMoneySettings({
+        operator: appUser.defaultOperator || 'MVOLA',
+        phoneNumber: appUser.phone || '',
+      })
+    }
+  }, [appUser])
+
+  // Gestion sauvegarde Mobile Money
+  const handleMobileMoneySave = async () => {
+    setMobileMoneySaving(true)
+    try {
+      const result = await updatePaymentPreferencesAction(mobileMoneySettings)
+      if (result.success) {
+        setNotification({ type: 'success', message: 'Préférences de paiement enregistrées !' })
+        // Mettre à jour l'état local
+        if (appUser) {
+          setAppUser({ 
+            ...appUser, 
+            defaultOperator: mobileMoneySettings.operator,
+            phone: mobileMoneySettings.phoneNumber 
+          })
+        }
+      } else {
+        setNotification({ type: 'error', message: result.error || 'Erreur lors de la sauvegarde' })
+      }
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Erreur serveur' })
+    } finally {
+      setMobileMoneySaving(false)
+    }
+  }
 
   const handleAvatarChange = async (file: File) => {
     if (!userId) return
@@ -168,14 +218,26 @@ export default function ProfilePage() {
     setPasswordChanging(true)
     
     try {
-      const result = await changeUserPasswordAction(passwordData)
-      
-      if (result.success) {
-        setNotification({ type: 'success', message: 'Mot de passe mis à jour avec succès !' })
-        setPasswordModalOpen(false)
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      if (passwordStep === 'form') {
+        // Étape 1 : Demander le code
+        const result = await requestPasswordChangeCodeAction(passwordData)
+        if (result.success) {
+          setNotification({ type: 'success', message: 'Code de confirmation envoyé à votre adresse email !' })
+          setPasswordStep('code')
+        } else {
+          setNotification({ type: 'error', message: result.error || 'Erreur lors de la demande de code' })
+        }
       } else {
-        setNotification({ type: 'error', message: result.error || 'Erreur lors du changement de mot de passe' })
+        // Étape 2 : Valider le code et changer le mot de passe
+        const result = await changeUserPasswordAction(passwordData)
+        if (result.success) {
+          setNotification({ type: 'success', message: 'Mot de passe mis à jour avec succès !' })
+          setPasswordModalOpen(false)
+          setPasswordStep('form')
+          setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '', code: '' })
+        } else {
+          setNotification({ type: 'error', message: result.error || 'Code invalide ou erreur lors du changement' })
+        }
       }
     } catch (error) {
       setNotification({ type: 'error', message: 'Erreur serveur' })
@@ -201,6 +263,24 @@ export default function ProfilePage() {
     } finally {
       setPurchasedSubjectsLoading(false)
       setPurchasedSubjectsLoaded(true)
+    }
+  }
+
+  const loadTransactions = async () => {
+    if (transactionsLoading) return
+    setTransactionsLoading(true)
+    try {
+      const result = await getUserTransactionsAction()
+      if (result.success) {
+        setTransactions(result.data || [])
+      } else {
+        setNotification({ type: 'error', message: result.error || 'Erreur lors du chargement des transactions.' })
+      }
+    } catch (error) {
+      console.error('Erreur chargement transactions:', error)
+    } finally {
+      setTransactionsLoading(false)
+      setTransactionsLoaded(true)
     }
   }
 
@@ -247,7 +327,10 @@ export default function ProfilePage() {
     if (activeTab === 'mes-sujets' && !purchasedSubjectsLoaded) {
       loadPurchasedSubjects()
     }
-  }, [activeTab, purchasedSubjectsLoaded])
+    if (activeTab === 'coffre-fort' && !transactionsLoaded) {
+      loadTransactions()
+    }
+  }, [activeTab, purchasedSubjectsLoaded, transactionsLoaded])
 
   if (loading || authLoading || !userId) {
     return (
@@ -585,15 +668,121 @@ export default function ProfilePage() {
           </div>
 
           <div className={`ptab-panel ${activeTab === 'coffre-fort' ? 'active' : ''}`}>
-            <div className="luxury-card settings-card empty-section-card">
-              <div className="sc-header">
-                <h3 className="sc-title">Coffre-<em>fort</em></h3>
-                <Zap size={14} className="sc-info-icon" />
+            <div className="section-header">
+              <h3 className="section-title-with-icon">
+                <Zap size={18} />
+                Mon <em>Coffre-fort</em>
+              </h3>
+            </div>
+
+            <div className="safe-grid">
+              <div className="safe-main-content">
+                {/* Balance Card Luxury */}
+                <div className="luxury-balance-card">
+                  <div className="lbc-bg"></div>
+                  <div className="lbc-header">
+                    <div className="lbc-label">Solde actuel</div>
+                    <Zap size={20} className="lbc-icon" />
+                  </div>
+                  <div className="lbc-amount">
+                    {appUser?.credits ?? 0} <span>crédits</span>
+                  </div>
+                  <div className="lbc-footer">
+                    <button className="btn-lbc-action" onClick={() => router.push('/recharge')}>
+                      <PlusCircle size={16} />
+                      Recharger
+                    </button>
+                  </div>
+                </div>
+
+                {/* Transactions Table */}
+                <div className="luxury-card settings-card safe-transactions-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">Historique des <em>Transactions</em></h3>
+                    <Clock3 size={14} className="sc-info-icon" />
+                  </div>
+                  
+                  {transactionsLoading ? (
+                    <div className="transactions-loading">Chargement de vos transactions...</div>
+                  ) : transactions.length > 0 ? (
+                    <div className="transactions-list">
+                      {transactions.map((tx) => (
+                        <div key={tx.id} className="transaction-item">
+                          <div className={`tx-icon-wrap ${tx.type === 'ACHAT' ? 'spend' : 'receive'}`}>
+                            {tx.type === 'ACHAT' ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
+                          </div>
+                          <div className="tx-details">
+                            <div className="tx-desc">{tx.description || (tx.type === 'ACHAT' ? 'Achat de sujet' : 'Recharge de crédits')}</div>
+                            <div className="tx-date">{new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                          </div>
+                          <div className={`tx-amount ${tx.type === 'ACHAT' ? 'minus' : 'plus'}`}>
+                            {tx.type === 'ACHAT' ? '-' : '+'}{tx.amount} cr
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="transactions-empty">
+                      <p>Aucune transaction enregistrée pour le moment.</p>
+                      <span className="text-xs text-text-4">Vos futurs achats et recharges apparaîtront ici.</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <p className="empty-section-title">Aucune donnée disponible pour le moment.</p>
-              <p className="empty-section-text">
-                Le suivi des crédits, transactions et paiements sera affiché ici quand le module financier sera relié.
-              </p>
+
+              <div className="safe-sidebar-content">
+                {/* Mobile Money Settings */}
+                <div className="luxury-card settings-card mm-settings-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">Mobile <em>Banking</em></h3>
+                    <Smartphone size={14} className="sc-info-icon" />
+                  </div>
+                  <div className="mm-settings-form">
+                    <div className="form-group">
+                      <label className="form-label">Opérateur par défaut</label>
+                      <select 
+                        className="form-input"
+                        value={mobileMoneySettings.operator}
+                        onChange={(e) => setMobileMoneySettings({...mobileMoneySettings, operator: e.target.value})}
+                      >
+                        <option value="MVOLA">MVola</option>
+                        <option value="ORANGE">Orange Money</option>
+                        <option value="AIRTEL">Airtel Money</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Numéro de téléphone</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        value={mobileMoneySettings.phoneNumber}
+                        onChange={(e) => setMobileMoneySettings({...mobileMoneySettings, phoneNumber: e.target.value})}
+                        placeholder="034 XX XXX XX"
+                      />
+                    </div>
+                    <button 
+                      className="btn-card-action" 
+                      onClick={handleMobileMoneySave}
+                      disabled={mobileMoneySaving}
+                    >
+                      {mobileMoneySaving ? 'Enregistrement...' : 'Enregistrer'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Credit Perks Card */}
+                <div className="luxury-card settings-card perks-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">Avantages <em>Premium</em></h3>
+                    <CreditCard size={14} className="sc-info-icon" />
+                  </div>
+                  <ul className="perks-list">
+                    <li><CheckCircle size={12} className="perk-icon" /> Corrections IA illimitées</li>
+                    <li><CheckCircle size={12} className="perk-icon" /> Téléchargement PDF HD</li>
+                    <li><CheckCircle size={12} className="perk-icon" /> Accès prioritaire 24/7</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -735,56 +924,101 @@ export default function ProfilePage() {
 
               {/* Modal Changement de mot de passe */}
               {passwordModalOpen && (
-                <div className={`modal-overlay open`} onClick={() => setPasswordModalOpen(false)}>
-                  <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+                <div className={`modal-overlay open`} onClick={() => {
+                  setPasswordModalOpen(false)
+                  setPasswordStep('form')
+                }}>
+                  <div className="modal-container password-modal" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
-                      <h2 className="modal-title">Changer le <em>mot de passe</em></h2>
-                      <button onClick={() => setPasswordModalOpen(false)} className="modal-close">
+                      <h2 className="modal-title">
+                        {passwordStep === 'form' ? <>Changer le <em>mot de passe</em></> : <>Confirmer le <em>changement</em></>}
+                      </h2>
+                      <button onClick={() => {
+                        setPasswordModalOpen(false)
+                        setPasswordStep('form')
+                      }} className="modal-close">
                         <X size={20} />
                       </button>
                     </div>
                     <form onSubmit={handlePasswordChange} className="modal-content">
-                      <div className="form-group">
-                        <label className="form-label">Mot de passe actuel</label>
-                        <input
-                          type="password"
-                          value={passwordData.currentPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                          className="form-input"
-                          placeholder="••••••••"
-                          required
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Nouveau mot de passe</label>
-                        <input
-                          type="password"
-                          value={passwordData.newPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                          className="form-input"
-                          placeholder="••••••••"
-                          required
-                          minLength={6}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Confirmer le mot de passe</label>
-                        <input
-                          type="password"
-                          value={passwordData.confirmPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                          className="form-input"
-                          placeholder="••••••••"
-                          required
-                          minLength={6}
-                        />
-                      </div>
-                      <div className="modal-footer">
-                        <button type="button" onClick={() => setPasswordModalOpen(false)} className="btn-secondary">
-                          Annuler
+                      {passwordStep === 'form' ? (
+                        <>
+                          <div className="form-group">
+                            <label className="form-label">Mot de passe actuel</label>
+                            <input
+                              type="password"
+                              value={passwordData.currentPassword}
+                              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                              className="form-input"
+                              placeholder="••••••••"
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Nouveau mot de passe</label>
+                            <input
+                              type="password"
+                              value={passwordData.newPassword}
+                              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                              className="form-input"
+                              placeholder="••••••••"
+                              required
+                              minLength={6}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Confirmer le mot de passe</label>
+                            <input
+                              type="password"
+                              value={passwordData.confirmPassword}
+                              onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                              className="form-input"
+                              placeholder="••••••••"
+                              required
+                              minLength={6}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', lineHeight: '1.5' }}>
+                              Un code à 6 chiffres a été envoyé à <strong>{user?.email}</strong>. 
+                              Veuillez le saisir ci-dessous pour valider votre nouveau mot de passe.
+                            </p>
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Code de confirmation</label>
+                            <input
+                              type="text"
+                              value={passwordData.code}
+                              onChange={(e) => setPasswordData({ ...passwordData, code: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                              className="form-input"
+                              style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem', fontFamily: 'var(--mono)' }}
+                              placeholder="000000"
+                              required
+                              maxLength={6}
+                            />
+                          </div>
+                        </>
+                      )}
+                      
+                      <div className="modal-footer password-modal-footer">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            if (passwordStep === 'code') {
+                              setPasswordStep('form')
+                            } else {
+                              setPasswordModalOpen(false)
+                            }
+                          }} 
+                          className="btn-secondary"
+                        >
+                          {passwordStep === 'code' ? 'Retour' : 'Annuler'}
                         </button>
                         <button type="submit" className="btn-primary" disabled={passwordChanging}>
-                          {passwordChanging ? 'Changement...' : 'Changer le mot de passe'}
+                          {passwordChanging ? 'Validation...' : 'Valider'}
                         </button>
                       </div>
                     </form>

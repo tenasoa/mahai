@@ -25,6 +25,7 @@ export function LuxuryNavbar() {
   const centerNavItems: NavItem[] = userId ? [
     { label: 'Tableau de bord', href: '/dashboard' },
     { label: 'Catalogue', href: '/catalogue' },
+    { label: 'Crédits', href: '/recharge' },
   ] : [
     { label: 'Accueil', href: '/' },
     { label: 'Fonctionnalités', href: '/#features' },
@@ -201,7 +202,7 @@ export function LuxuryNavbar() {
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-4)' }}>Solde</span>
                         <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--gold)' }}>{appUser?.credits ?? 0} cr</span>
                       </div>
-                      <Link href="/credits" style={{
+                      <Link href="/recharge" style={{
                         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                         padding: '0.5rem', fontSize: '0.75rem', color: 'var(--gold)', background: 'rgba(201, 168, 76, 0.1)',
                         border: '1px solid rgba(201, 168, 76, 0.2)', borderRadius: 'var(--r)', cursor: 'none', transition: 'all 0.2s',

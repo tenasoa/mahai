@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import { db } from '@/lib/db-client'
 import ExamTakingClient from './page.client'
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { ExamenDetailSkeleton } from '@/components/ui/PageSkeletons'
 
 interface ExamPageProps {
   params: Promise<{ id: string }>
@@ -55,5 +57,9 @@ export default async function ExamPage({ params }: ExamPageProps) {
     },
   ]
 
-  return <ExamTakingClient exam={{ ...exam, questions }} />
+  return (
+    <Suspense fallback={<ExamenDetailSkeleton />}>
+      <ExamTakingClient exam={{ ...exam, questions }} />
+    </Suspense>
+  )
 }

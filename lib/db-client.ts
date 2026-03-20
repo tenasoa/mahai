@@ -105,6 +105,11 @@ export const db = {
       const values: any[] = []
       const placeholders: string[] = []
       
+      // S'assurer qu'un ID est présent si la table le requiert et qu'il n'est pas fourni
+      if (!data.id) {
+        data.id = crypto.randomUUID()
+      }
+
       let paramIndex = 1
       for (const [key, value] of Object.entries(data)) {
         const dbKey = key // Utiliser directement la clé camelCase
@@ -135,9 +140,10 @@ export const db = {
         return existing.rows[0]
       } else {
         // Création
+        const id = crypto.randomUUID()
         const result = await query(
-          'INSERT INTO "Wishlist" ("userId", "subjectId") VALUES ($1, $2) RETURNING *',
-          [userId, subjectId]
+          'INSERT INTO "Wishlist" (id, "userId", "subjectId") VALUES ($1, $2, $3) RETURNING *',
+          [id, userId, subjectId]
         )
         return result.rows[0]
       }
@@ -159,6 +165,11 @@ export const db = {
       const values: any[] = []
       const placeholders: string[] = []
       
+      // S'assurer qu'un ID est présent si la table le requiert et qu'il n'est pas fourni
+      if (!data.id) {
+        data.id = crypto.randomUUID()
+      }
+
       let paramIndex = 1
       for (const [key, value] of Object.entries(data)) {
         const dbKey = key
@@ -187,9 +198,10 @@ export const db = {
     },
     
     async create({ data }: { data: { email: string; token: string; expiresAt: Date } }) {
+      const id = crypto.randomUUID()
       await query(
-        'INSERT INTO "EmailVerification" (email, token, "expiresAt") VALUES ($1, $2, $3)',
-        [data.email, data.token, data.expiresAt]
+        'INSERT INTO "EmailVerification" (id, email, token, "expiresAt") VALUES ($1, $2, $3, $4)',
+        [id, data.email, data.token, data.expiresAt]
       )
     }
   },

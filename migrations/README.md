@@ -84,6 +84,27 @@ WHERE table_name = 'User' AND column_name = 'birthDate';
   - `securitySessionTimeoutMinutes` (INTEGER, défaut `120`, borné entre `15` et `1440`)
   - `securitySettingsUpdatedAt` (TIMESTAMPTZ, nullable)
 
+### 006_add_default_operator_to_user.sql
+- **Date** : 2026-03-19
+- **Description** : Ajoute la préférence d'opérateur de paiement par défaut
+- **Colonnes ajoutées** :
+  - `defaultOperator` (TEXT, défaut `'MVOLA'`) : Opérateur Mobile Money préféré (MVOLA, ORANGE, AIRTEL)
+
+### 007_add_credit_transaction_table.sql
+- **Date** : 2026-03-19
+- **Description** : Crée la table pour l'historique des transactions de crédits
+- **Table créée** :
+  - `CreditTransaction` : Historique complet des crédits (achats, recharges, bonus)
+- **Colonnes** :
+  - `id` (UUID) : Identifiant unique
+  - `userId` (UUID) : Référence utilisateur
+  - `type` (TEXT) : Type (ACHAT, RECHARGE, REMBOURSEMENT, BONUS)
+  - `amount` (INTEGER) : Montant en crédits
+  - `description` (TEXT) : Description optionnelle
+  - `metadata` (JSONB) : Métadonnées additionnelles
+  - `subjectId` (UUID) : Sujet associé (si achat)
+  - `createdAt` (TIMESTAMPTZ) : Date de création
+
 ## Vérification
 
 Après avoir exécuté la migration, vous pouvez vérifier que tout fonctionne avec cette requête :

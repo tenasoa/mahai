@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { AuthModal } from '@/components/ui/AuthModal'
 import { getSubjectById } from '@/lib/supabase/subjects'
 import { getCurrentUserCredits, purchaseCurrentUserSubject } from '@/actions/user'
-import { SubjectDetailSkeleton } from '@/components/ui/PageSkeletons'
+import { SujetDetailSkeleton } from '@/components/ui/PageSkeletons'
 import { AIFeedbackNarrative } from '@/components/ui/AIFeedbackNarrative'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Check, Info, FileText, Zap, Star, LucideIcon, Search, Sparkles, FileSearch, Scale, CheckCircle } from 'lucide-react'
@@ -176,7 +176,7 @@ export default function SujetDetailPage() {
   }
 
   if (loading) {
-    return <SubjectDetailSkeleton />
+    return <SujetDetailSkeleton />
   }
 
   if (!subject) {

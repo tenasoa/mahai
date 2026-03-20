@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Info, AlertTriangle, ArrowLeft } from 'lucide-react'
+import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 
 export default function CGUPage() {
   const router = useRouter()
@@ -11,6 +12,13 @@ export default function CGUPage() {
   const [activeSection, setActiveSection] = useState('')
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
+  const [loading, setLoading] = useState(true)
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Mouse tracking for custom cursor
   useEffect(() => {
@@ -96,6 +104,10 @@ export default function CGUPage() {
 
   const handleAccept = () => {
     router.push('/auth/register')
+  }
+
+  if (loading) {
+    return <LegalPageSkeleton />
   }
 
   return (

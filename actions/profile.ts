@@ -4,7 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
+import { db } from '@/lib/db-client'
+import { Resend } from 'resend'
 import { updateProfileSchema, type UpdateProfileData } from '@/lib/validations/profile'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 type AuthenticatedContext =
   | {
@@ -357,8 +361,8 @@ export async function deleteCurrentUserProfilePictureAction() {
   }
 }
 
-// Schema pour le changement de mot de passe
-const changePasswordSchema = z.object({
+// Schema pour la demande de code de changement de mot de passe
+const requestPasswordCodeSchema = z.object({
   currentPassword: z.string().min(6, 'Le mot de passe actuel doit contenir au moins 6 caractères'),
   newPassword: z.string().min(6, 'Le nouveau mot de passe doit contenir au moins 6 caractères'),
   confirmPassword: z.string(),
@@ -367,53 +371,247 @@ const changePasswordSchema = z.object({
   path: ['confirmPassword'],
 })
 
-export async function changeUserPasswordAction(data: unknown) {
-  const context = await getAuthenticatedContext()
+// Schema pour la validation finale du mot de passe avec code
+const changePasswordSchema = z.object({
+  currentPassword: z.string(),
+  newPassword: z.string(),
+  confirmPassword: z.string(),
+  code: z.string().length(6, 'Le code doit contenir 6 chiffres'),
+})
 
-  if ('error' in context) {
-    return { success: false, error: context.error }
-  }
+/**
+ * Étape 1 : Vérifier le mot de passe actuel et envoyer un code par email
+ */
+export async function requestPasswordChangeCodeAction(data: unknown) {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
 
   try {
-    const validatedData = changePasswordSchema.parse(data)
-    const supabase = context.supabase
+    const validatedData = requestPasswordCodeSchema.parse(data)
+    const { data: { user } } = await context.supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Utilisateur non trouvé' }
 
-    // Récupérer l'email de l'utilisateur
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return { success: false, error: 'Utilisateur non trouvé' }
-    }
-
-    // Vérifier le mot de passe actuel
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    // Vérifier le mot de passe actuel via Supabase Auth
+    const { error: signInError } = await context.supabase.auth.signInWithPassword({
       email: user.email!,
       password: validatedData.currentPassword,
     })
 
-    if (signInError) {
-      return { success: false, error: 'Le mot de passe actuel est incorrect' }
+    if (signInError) return { success: false, error: 'Le mot de passe actuel est incorrect' }
+
+    // Générer un code à 6 chiffres
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // Expire dans 15 minutes
+
+    // Supprimer les anciens codes pour cet email
+    await db.emailVerification.deleteMany({ where: { email: user.email! } })
+
+    // Enregistrer le nouveau code
+    await db.emailVerification.create({
+      data: {
+        email: user.email!,
+        token: code,
+        expiresAt,
+      },
+    })
+
+    // Récupérer le prénom pour l'email
+    const userResult = await query('SELECT prenom FROM "User" WHERE id = $1', [user.id])
+    const prenom = userResult.rows[0]?.prenom || 'Utilisateur'
+
+    // Envoyer l'email via Resend
+    console.log(`📧 Tentative d'envoi du code à ${user.email}...`)
+    const emailResult = await resend.emails.send({
+      from: 'onboarding@resend.dev', // Utilisation de l'adresse de test par défaut
+      to: user.email!,
+      subject: '🔐 Code de confirmation - Changement de mot de passe',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #0AFFE0; text-align: center;">Mah.AI - Sécurité</h2>
+          <p>Bonjour ${prenom},</p>
+          <p>Vous avez demandé à changer votre mot de passe sur Mah.AI.</p>
+          <div style="background: #f4f4f4; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 14px; color: #666;">Votre code de confirmation est :</p>
+            <h1 style="margin: 10px 0; letter-spacing: 5px; color: #333;">${code}</h1>
+          </div>
+          <p style="font-size: 12px; color: #999;">Ce code est valable pendant 15 minutes. Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet email et sécuriser votre compte.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p style="font-size: 10px; color: #ccc; text-align: center;">© 2024 Mah.AI - Plateforme d'éducation</p>
+        </div>
+      `,
+    })
+
+    if (emailResult.error) {
+      console.error('❌ Erreur Resend détaillée:', emailResult.error)
+      return { success: false, error: "L'envoi de l'email a échoué" }
     }
 
-    // Changer le mot de passe
-    const { error: updateError } = await supabase.auth.updateUser({
+    console.log('✅ Email envoyé avec succès, ID:', emailResult.data?.id)
+    return { success: true, message: 'Code envoyé par email' }
+  } catch (error) {
+    if (error instanceof z.ZodError) return { success: false, error: error.errors[0]?.message || 'Validation échouée' }
+    console.error('Erreur requestPasswordChangeCodeAction:', error)
+    return { success: false, error: 'Erreur lors de l\'envoi du code' }
+  }
+}
+
+/**
+ * Étape 2 : Vérifier le code et changer le mot de passe
+ */
+export async function changeUserPasswordAction(data: unknown) {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    const validatedData = changePasswordSchema.parse(data)
+    const { data: { user } } = await context.supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Utilisateur non trouvé' }
+
+    // 1. Vérifier le code dans la base de données
+    const verificationResult = await query(
+      'SELECT * FROM "EmailVerification" WHERE email = $1 AND token = $2 AND "expiresAt" > NOW()',
+      [user.email!, validatedData.code]
+    )
+
+    if (verificationResult.rows.length === 0) {
+      return { success: false, error: 'Code invalide ou expiré' }
+    }
+
+    // 2. Supprimer le code utilisé
+    await db.emailVerification.deleteMany({ where: { email: user.email! } })
+
+    // 3. Procéder au changement de mot de passe via Supabase Auth
+    const { error: updateError } = await context.supabase.auth.updateUser({
       password: validatedData.newPassword,
     })
 
-    if (updateError) {
-      return { success: false, error: updateError.message }
-    }
+    if (updateError) return { success: false, error: updateError.message }
+
+    // Optionnel : Mettre à jour securitySettingsUpdatedAt si le champ existe
+    await query('UPDATE "User" SET "securitySettingsUpdatedAt" = NOW() WHERE id = $1', [user.id])
 
     revalidatePath('/profil')
-
     return { success: true, message: 'Mot de passe mis à jour avec succès' }
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof z.ZodError) return { success: false, error: error.errors[0]?.message || 'Validation échouée' }
+    console.error('Erreur changeUserPasswordAction:', error)
+    return { success: false, error: 'Erreur serveur' }
+  }
+}
+
+/**
+ * Récupérer l'historique des transactions de crédits de l'utilisateur
+ */
+export async function getUserTransactionsAction() {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    const result = await query(
+      'SELECT * FROM "CreditTransaction" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 20',
+      [context.userId]
+    )
+    
+    return { success: true, data: result.rows }
+  } catch (error) {
+    console.error('Erreur getUserTransactionsAction:', error)
+    return { success: false, error: 'Erreur lors du chargement des transactions' }
+  }
+}
+
+/**
+ * Mettre à jour les préférences de paiement (opérateur et téléphone)
+ */
+export async function updatePaymentPreferencesAction(data: { operator: string, phoneNumber: string }) {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    // Validation simple
+    if (!data.operator || !data.phoneNumber) {
+      return { success: false, error: 'Veuillez remplir tous les champs' }
+    }
+
+    await db.user.update({
+      where: { id: context.userId },
+      data: {
+        defaultOperator: data.operator,
+        phone: data.phoneNumber,
+      }
+    })
+
+    revalidatePath('/profil')
+    return { success: true, message: 'Préférences de paiement mises à jour' }
+  } catch (error) {
+    console.error('Erreur updatePaymentPreferencesAction:', error)
+    return { success: false, error: 'Erreur lors de la sauvegarde des préférences' }
+  }
+}
+
+/**
+ * Recharger des crédits via Mobile Money (Paiement manuel avec validation admin)
+ * NOTE: Pour la production, intégrer l'API MVola/Orange/Airtel pour paiement automatique.
+ */
+export async function rechargeCreditsAction(data: {
+  packCredits: number
+  packPrice: number
+  operator: string
+  phoneNumber: string
+  transferCode?: string
+  status?: 'PENDING' | 'COMPLETED'
+}) {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    // Validation
+    if (!data.packCredits || !data.packPrice || !data.operator || !data.phoneNumber) {
+      return { success: false, error: 'Tous les champs sont requis' }
+    }
+
+    const isPending = data.status === 'PENDING'
+
+    // 1. Créer la transaction
+    await query(
+      `INSERT INTO "CreditTransaction" ("id", "userId", "type", "amount", "description", "paymentMethod", "transactionId", "status")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        crypto.randomUUID(),
+        context.userId,
+        'RECHARGE',
+        data.packCredits,
+        `Recharge ${data.operator} — Pack ${data.packCredits} crédits — ${data.phoneNumber}`,
+        data.operator,
+        data.transferCode || null,
+        isPending ? 'PENDING' : 'COMPLETED',
+      ]
+    )
+
+    // 2. Mettre à jour le solde de crédits (seulement si validé immédiatement)
+    // Si status = PENDING, les crédits seront ajoutés après validation admin
+    if (!isPending) {
+      await query(
+        `UPDATE "User" SET "credits" = "credits" + $1 WHERE "id" = $2`,
+        [data.packCredits, context.userId]
+      )
+    }
+
+    revalidatePath('/recharge')
+    revalidatePath('/profil')
+
+    if (isPending) {
       return {
-        success: false,
-        error: error.errors[0]?.message || 'Validation échouée',
+        success: true,
+        message: `Votre demande de recharge de ${data.packCredits} crédits a été enregistrée. Validation par l'administrateur sous 12h.`
       }
     }
-    console.error('Erreur serveur:', error)
-    return { success: false, error: 'Erreur serveur' }
+
+    return {
+      success: true,
+      message: `Recharge de ${data.packCredits} crédits effectuée avec succès`
+    }
+  } catch (error) {
+    console.error('Erreur rechargeCreditsAction:', error)
+    return { success: false, error: 'Erreur lors de la recharge' }
   }
 }

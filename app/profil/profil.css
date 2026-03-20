@@ -1648,6 +1648,228 @@
   box-shadow: 0 8px 20px rgba(201, 168, 76, 0.4);
 }
 
+/* ─── SAFE / WALLET ─── */
+.safe-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+}
+
+.luxury-balance-card {
+  position: relative;
+  background: var(--luxury-void);
+  border: 1px solid var(--luxury-gold-line);
+  border-radius: var(--luxury-radius);
+  padding: 2.5rem;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: var(--luxury-shadow);
+}
+
+.lbc-bg {
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--luxury-gold-glow) 0%, transparent 70%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.lbc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  z-index: 1;
+}
+
+.lbc-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--luxury-gold-dim);
+}
+
+.lbc-icon {
+  color: var(--luxury-gold);
+}
+
+.lbc-amount {
+  font-family: var(--display);
+  font-size: 4rem;
+  font-weight: 500;
+  color: var(--luxury-gold);
+  line-height: 1;
+  margin-bottom: 1.5rem;
+  z-index: 1;
+}
+
+.lbc-amount span {
+  font-size: 1.2rem;
+  font-family: var(--body);
+  letter-spacing: 0;
+  color: var(--luxury-text-muted);
+}
+
+.lbc-footer {
+  z-index: 1;
+}
+
+.btn-lbc-action {
+  background: linear-gradient(135deg, var(--luxury-gold), #D4AF37);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  font-family: var(--body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-lbc-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--b2);
+  gap: 1rem;
+}
+
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+.tx-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tx-icon-wrap.spend {
+  background: rgba(255, 107, 157, 0.1);
+  color: var(--ruby);
+  border: 1px solid rgba(255, 107, 157, 0.2);
+}
+
+.tx-icon-wrap.receive {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--sage);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.tx-details {
+  flex: 1;
+}
+
+.tx-desc {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--luxury-text);
+}
+
+.tx-date {
+  font-size: 0.7rem;
+  color: var(--luxury-text-muted);
+  margin-top: 0.2rem;
+}
+
+.tx-amount {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tx-amount.minus {
+  color: var(--ruby);
+}
+
+.tx-amount.plus {
+  color: var(--sage);
+}
+
+.transactions-empty, .transactions-loading {
+  padding: 3rem;
+  text-align: center;
+  color: var(--luxury-text-muted);
+  font-size: 0.85rem;
+}
+
+.mm-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.perks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.perks-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--luxury-text-muted);
+}
+
+.perk-icon {
+  color: var(--luxury-gold);
+}
+
+@media (max-width: 1024px) {
+  .safe-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── PASSWORD MODAL ─── */
+.password-modal {
+  max-width: 440px;
+  width: 95%;
+}
+
+.password-modal-footer {
+  margin-top: 1.5rem;
+}
+
+.password-modal-footer .btn-secondary,
+.password-modal-footer .btn-primary {
+  padding: 0.8rem 1.5rem; /* Padding horizontal augmenté */
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  flex: 1;
+  min-width: max-content; /* Ne rétrécit pas en dessous du texte */
+}
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 1024px) {
   .profile-grid { grid-template-columns: 1fr; }

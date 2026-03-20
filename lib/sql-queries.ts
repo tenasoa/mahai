@@ -230,8 +230,8 @@ export async function createCreditTransaction(transactionData: Partial<CreditTra
 // Email verification
 export async function createEmailVerification(email: string, token: string, expiresAt: Date) {
   await query(
-    'INSERT INTO "EmailVerification" (email, token, "expiresAt") VALUES ($1, $2, $3)',
-    [email, token, expiresAt]
+    'INSERT INTO "EmailVerification" (id, email, token, "expiresAt") VALUES ($1, $2, $3, $4)',
+    [crypto.randomUUID(), email, token, expiresAt]
   )
 }
 
@@ -260,8 +260,8 @@ export async function markEmailVerificationAsUsed(token: string) {
 // Password reset
 export async function createPasswordReset(email: string, token: string, expiresAt: Date) {
   await query(
-    'INSERT INTO "PasswordReset" (email, token, "expiresAt") VALUES ($1, $2, $3)',
-    [email, token, expiresAt]
+    'INSERT INTO "PasswordReset" (id, email, token, "expiresAt") VALUES ($1, $2, $3, $4)',
+    [crypto.randomUUID(), email, token, expiresAt]
   )
 }
 
