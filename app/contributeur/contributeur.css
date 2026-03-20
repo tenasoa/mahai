@@ -81,16 +81,61 @@
 }
 
 .sidebar.collapsed {
-  width: 0;
-  border-right: none;
+  width: 80px;
 }
 
-.sidebar.collapsed .sb-logo,
-.sidebar.collapsed .sb-user,
-.sidebar.collapsed .sb-earnings,
-.sidebar.collapsed .sb-nav,
-.sidebar.collapsed .sb-bottom {
+/* Masquer les éléments textuels quand collapsed */
+.sidebar.collapsed .sb-section,
+.sidebar.collapsed .sb-link-text,
+.sidebar.collapsed .sb-nb,
+.sidebar.collapsed .sb-e-label,
+.sidebar.collapsed .sb-e-val span,
+.sidebar.collapsed .sb-e-sub,
+.sidebar.collapsed .sb-name,
+.sidebar.collapsed .sb-badge,
+.sidebar.collapsed .btn-new {
   display: none;
+}
+
+/* Ajuster les éléments pour mode collapsed */
+.sidebar.collapsed .sb-logo {
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+.sidebar.collapsed .sb-logo span:last-child {
+  display: none;
+}
+
+.sidebar.collapsed .sb-gem {
+  display: none;
+}
+
+.sidebar.collapsed .sb-user {
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.sidebar.collapsed .sb-earnings {
+  margin: 1rem 0.5rem;
+  text-align: center;
+}
+
+.sidebar.collapsed .sb-link {
+  justify-content: center;
+  padding: 0.8rem 0;
+}
+
+.sidebar.collapsed .sb-icon {
+  margin: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar.collapsed .sb-bottom {
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
 }
 
 /* Toggle Button - Positionné à l'extérieur de la sidebar */
@@ -119,7 +164,7 @@
 }
 
 .sidebar-collapsed .sidebar-toggle {
-  left: 0;
+  left: 68px;
 }
 
 .sb-logo {
@@ -337,7 +382,7 @@
 }
 
 .sidebar-collapsed .main {
-  margin-left: 0;
+  margin-left: 80px;
 }
 
 .topbar {
