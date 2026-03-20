@@ -195,9 +195,9 @@ export function UserNotifications() {
           />
           <div style={{
             position: 'absolute',
-            right: 0,
+            right: '-10px',
             top: 'calc(100% + 0.5rem)',
-            width: '400px',
+            width: '320px',
             maxHeight: '500px',
             overflowY: 'auto',
             background: 'var(--card)',
