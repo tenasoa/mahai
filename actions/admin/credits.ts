@@ -21,7 +21,7 @@ export async function getCreditTransactionsAdmin(status?: string) {
   if (!user) throw new Error("Non autorisé")
 
   let sql = `
-    SELECT c.*, u.prenom, u.nom, u.email, u.telephone as "userPhone" 
+    SELECT c.*, u.prenom, u.nom, u.email, u.phone as "userPhone" 
     FROM "CreditTransaction" c
     JOIN "User" u ON c."userId" = u.id
   `
@@ -43,7 +43,7 @@ export async function getCreditTransactionDetail(id: string) {
   if (!user) throw new Error("Non autorisé")
 
   const result = await query(`
-    SELECT c.*, u.prenom, u.nom, u.email, u.telephone as "userPhone"
+    SELECT c.*, u.prenom, u.nom, u.email, u.phone as "userPhone"
     FROM "CreditTransaction" c
     JOIN "User" u ON c."userId" = u.id
     WHERE c.id = $1
@@ -74,10 +74,10 @@ export async function validateCreditTransaction(id: string) {
 
   // 3. Ajouter les crédits à l'utilisateur
   await query(`
-    UPDATE "User" 
-    SET credits = credits + $1 
+    UPDATE "User"
+    SET credits = credits + $1
     WHERE id = $2
-  `, [tx.amount, tx.userId])
+  `, [tx.creditsCount, tx.userId])
 
   revalidatePath('/admin/credits')
   revalidatePath('/admin/utilisateurs')

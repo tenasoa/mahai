@@ -22,11 +22,12 @@ export async function getSubjectsAdmin(status?: string, year?: string) {
   if (!adminUser) throw new Error("Non autorisé")
 
   let sql = `
-    SELECT 
-        s.id, s.titre as title, s.type, s.matiere as motiere, s.annee as year, 
+    SELECT
+        s.id, s.titre as title, s.type, s.matiere as motiere, s.annee as year,
         s.serie as series, s.pages, s.credits, s.difficulte, s.langue,
         s.format, s.badge, s.status, s."createdAt",
         u.prenom as "authorPrenom", u.nom as "authorNom", u.role as "authorRole",
+        u."profilePicture" as "authorAvatarUrl",
         u.id as "authorId"
     FROM "Subject" s
     LEFT JOIN "User" u ON s."authorId" = u.id
@@ -58,12 +59,12 @@ export async function getSubjectDetailAdmin(id: string) {
 
   // Récupérer le sujet avec l'auteur
   const result = await query(`
-    SELECT s.*, u.prenom as "authorPrenom", u.nom as "authorNom", u.email as "authorEmail", u.role as "authorRole"
+    SELECT s.*, u.prenom as "authorPrenom", u.nom as "authorNom", u.email as "authorEmail", u.role as "authorRole", u."profilePicture" as "authorAvatarUrl"
     FROM "Subject" s
     LEFT JOIN "User" u ON s."authorId" = u.id
     WHERE s.id = $1
   `, [id])
-  
+
   const subject = result.rows[0]
   if (!subject) return null
 

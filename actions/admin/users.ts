@@ -20,7 +20,7 @@ export async function getUsersAdmin(searchTerm?: string) {
   const isAdmin = await checkAdmin()
   if (!isAdmin) throw new Error("Non autorisé")
 
-  let sql = 'SELECT id, email, prenom, nom, telephone, role, "createdAt" FROM "User"'
+  let sql = 'SELECT id, email, prenom, nom, phone, role, "createdAt", "profilePicture" FROM "User"'
   const params: any[] = []
 
   if (searchTerm) {
