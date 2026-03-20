@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, LayoutDashboard, FileText, CreditCard, Users, User } from 'lucide-react'
+import { useAdminTransactionsRealtime } from '@/lib/hooks/useAdminTransactionsRealtime'
 
 const navItems = [
   {
@@ -60,6 +61,11 @@ interface AdminSidebarProps {
 export function AdminSidebar({ user, initials }: AdminSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
+  
+  // Hook Realtime pour les transactions en attente
+  const { pendingCount, resetCount } = useAdminTransactionsRealtime({
+    enabled: true
+  })
 
   return (
     <aside className={`admin-sidebar ${isCollapsed ? 'collapsed' : ''}`} id="adminSidebar">
@@ -103,18 +109,28 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
             <div className="sb-section">{section.section}</div>
             {section.links.map(link => {
               const isActive = pathname === link.href || (link.href !== '/admin' && pathname?.startsWith(link.href))
+              const showBadge = link.badge === 'credits' && pendingCount > 0
+              
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={`sb-link ${isActive ? 'active' : ''}`}
                   title={link.label}
+                  onClick={() => {
+                    // Réinitialiser le compteur quand on clique sur Mobile Banking
+                    if (link.href === '/admin/credits') {
+                      resetCount()
+                    }
+                  }}
                 >
                   <SidebarIcon type={link.icon} />
                   <span className="sb-link-text">{link.label}</span>
-                  {link.badgeType && (
+                  {showBadge ? (
+                    <span className="sb-notification-badge">{pendingCount}</span>
+                  ) : link.badgeType ? (
                     <span className={`sb-badge sb-badge-${link.badgeType}`}>•</span>
-                  )}
+                  ) : null}
                 </Link>
               )
             })}
@@ -125,8 +141,8 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
       <div className="sb-footer">
         <Link href="/dashboard" className="sb-user" style={{ textDecoration: 'none' }}>
           {user.profilePicture ? (
-            <img 
-              src={user.profilePicture} 
+            <img
+              src={user.profilePicture}
               alt={`${user.prenom} ${user.nom}`}
               className="sb-av"
               style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--ruby-line)' }}

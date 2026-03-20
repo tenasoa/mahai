@@ -91,17 +91,25 @@ export async function rejectCreditTransaction(id: string, reason: string) {
 
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
-  
+
   const txResult = await query('SELECT * FROM "CreditTransaction" WHERE id = $1 AND status = $2', [id, 'PENDING'])
   if (txResult.rows.length === 0) throw new Error("Transaction introuvable ou déjà traitée")
 
   await query(`
-    UPDATE "CreditTransaction" 
-    SET status = 'FAILED', "rejectionReason" = $1, "validatedAt" = NOW(), "validatedBy" = $2 
+    UPDATE "CreditTransaction"
+    SET status = 'FAILED', "rejectionReason" = $1, "validatedAt" = NOW(), "validatedBy" = $2
     WHERE id = $3
   `, [reason, session!.user.id, id])
 
   revalidatePath('/admin/credits')
-  
+
   return { success: true }
+}
+
+export async function getPendingTransactionsCount() {
+  const adminUser = await checkAdmin()
+  if (!adminUser) return 0
+
+  const result = await query('SELECT COUNT(*) FROM "CreditTransaction" WHERE status = $1', ['PENDING'])
+  return parseInt(result.rows[0]?.count || '0', 10)
 }
