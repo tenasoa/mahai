@@ -4,7 +4,7 @@
              Doc_Mah.AI/Design Luxury/admin/52-admin-retraits-dark.html
    ===================================================================== */
 
-/* ——— VARIABLES ——— */
+/* ——— VARIABLES DARK (Défaut) ——— */
 :root {
   --void: #080705;
   --depth: #0E0C0A;
@@ -44,6 +44,43 @@
   --r-lg: 12px;
   --sh-gold: 0 4px 24px -4px rgba(201, 168, 76, 0.15);
   --sh-ruby: 0 4px 24px -4px rgba(155, 35, 53, 0.15);
+}
+
+/* ——— VARIABLES LIGHT ——— */
+[data-theme="light"] {
+  --void: #F8F7F5;
+  --depth: #F0EFE9;
+  --surface: #E8E6DF;
+  --card: #E0DED5;
+  --card-hover: #D8D6CD;
+  --lift: #D0CFC6;
+  --gold: #B8963C;
+  --gold-hi: #D8B85A;
+  --gold-lo: #7A5E1A;
+  --gold-dim: rgba(184, 150, 60, 0.12);
+  --gold-glow: rgba(184, 150, 60, 0.22);
+  --gold-line: rgba(184, 150, 60, 0.28);
+  --text: #1A1816;
+  --text-2: rgba(26, 24, 22, 0.72);
+  --text-3: rgba(26, 24, 22, 0.48);
+  --text-4: rgba(26, 24, 22, 0.28);
+  --ruby: #C94050;
+  --ruby-dim: rgba(201, 64, 80, 0.12);
+  --ruby-line: rgba(201, 64, 80, 0.35);
+  --sage: #3A5B4A;
+  --sage-dim: rgba(58, 91, 74, 0.12);
+  --sage-line: rgba(58, 91, 74, 0.35);
+  --amber: #B9742C;
+  --amber-dim: rgba(185, 116, 44, 0.12);
+  --amber-line: rgba(185, 116, 44, 0.35);
+  --blue-dim: rgba(48, 90, 148, 0.18);
+  --blue-line: rgba(48, 90, 148, 0.35);
+  --b1: rgba(184, 150, 60, 0.22);
+  --b2: rgba(184, 150, 60, 0.15);
+  --b3: rgba(26, 24, 22, 0.12);
+  --glass: rgba(248, 247, 245, 0.85);
+  --sh-gold: 0 4px 24px -4px rgba(184, 150, 60, 0.25);
+  --sh-ruby: 0 4px 24px -4px rgba(201, 64, 80, 0.25);
 }
 
 /* ——— RESET ——— */

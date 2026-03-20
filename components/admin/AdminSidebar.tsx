@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, LayoutDashboard, FileText, CreditCard, Users, User } from 'lucide-react'
+import { Menu, X, LayoutDashboard, FileText, CreditCard, Users, User, Sun, Moon } from 'lucide-react'
 import { useAdminTransactionsRealtime } from '@/lib/hooks/useAdminTransactionsRealtime'
 
 const navItems = [
@@ -60,12 +60,30 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ user, initials }: AdminSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(true)
   const pathname = usePathname()
   
   // Hook Realtime pour les transactions en attente
   const { pendingCount, resetCount } = useAdminTransactionsRealtime({
     enabled: true
   })
+
+  // Charger le thème depuis localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('admin-theme')
+    if (savedTheme) {
+      const isDark = savedTheme === 'dark'
+      setIsDarkMode(isDark)
+      document.documentElement.setAttribute('data-theme', savedTheme)
+    }
+  }, [])
+
+  const toggleTheme = () => {
+    const newTheme = isDarkMode ? 'light' : 'dark'
+    setIsDarkMode(!isDarkMode)
+    localStorage.setItem('admin-theme', newTheme)
+    document.documentElement.setAttribute('data-theme', newTheme)
+  }
 
   return (
     <aside className={`admin-sidebar ${isCollapsed ? 'collapsed' : ''}`} id="adminSidebar">
@@ -139,6 +157,45 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
       </nav>
 
       <div className="sb-footer">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="sb-theme-toggle"
+          title={isDarkMode ? 'Mode Clair' : 'Mode Sombre'}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem',
+            marginBottom: '0.75rem',
+            background: 'var(--surface)',
+            border: '1px solid var(--b1)',
+            borderRadius: 'var(--r)',
+            color: 'var(--text-3)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            fontFamily: 'var(--mono)',
+            fontSize: '0.6rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--gold-dim)'
+            e.currentTarget.style.borderColor = 'var(--gold-line)'
+            e.currentTarget.style.color = 'var(--gold)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--surface)'
+            e.currentTarget.style.borderColor = 'var(--b1)'
+            e.currentTarget.style.color = 'var(--text-3)'
+          }}
+        >
+          {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+          {isDarkMode ? 'Mode Clair' : 'Mode Sombre'}
+        </button>
+
         <Link href="/dashboard" className="sb-user" style={{ textDecoration: 'none' }}>
           {user.profilePicture ? (
             <img
