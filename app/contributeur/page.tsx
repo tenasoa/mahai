@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import './contributeur.css'
 
 async function getContributorDashboard() {
   const supabase = await createSupabaseServerClient()
@@ -351,10 +352,6 @@ export default async function ContributorDashboard() {
           </div>
         </div>
       </main>
-
-      <style jsx global>{`
-        @import url('/contributeur/contributeur.css');
-      `}</style>
     </div>
   )
 }
