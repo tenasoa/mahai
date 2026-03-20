@@ -110,3 +110,6 @@ prisma/migrations/
 
 # Local development
 .local
+
+.vercel
+.env*.local
