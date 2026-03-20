@@ -93,10 +93,10 @@
   display: none;
 }
 
-/* Toggle Button */
+/* Toggle Button - Positionné à l'extérieur de la sidebar */
 .sidebar-toggle {
-  position: absolute;
-  right: -12px;
+  position: fixed;
+  left: 228px;
   top: 80px;
   width: 24px;
   height: 24px;
@@ -118,8 +118,8 @@
   transform: scale(1.1);
 }
 
-.sidebar.collapsed .sidebar-toggle {
-  right: -12px;
+.sidebar-collapsed .sidebar-toggle {
+  left: 0;
 }
 
 .sb-logo {

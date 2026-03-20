@@ -41,15 +41,6 @@ export default function ContributorDashboardClient({ user, kpi, topSubjects, all
         <Link href="/" className="sb-logo">
           Mah<span className="sb-gem" />AI
         </Link>
-
-        {/* Toggle Button */}
-        <button 
-          className="sidebar-toggle"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? 'Déployer le menu' : 'Réduire le menu'}
-        >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
         
         <div className="sb-user">
           <div className="sb-avatar">
@@ -124,6 +115,15 @@ export default function ContributorDashboardClient({ user, kpi, topSubjects, all
           </button>
         </div>
       </aside>
+
+      {/* Toggle Button - Outside Sidebar */}
+      <button 
+        className="sidebar-toggle"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        title={isCollapsed ? 'Déployer le menu' : 'Réduire le menu'}
+      >
+        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
 
       {/* Main */}
       <main className="main">
