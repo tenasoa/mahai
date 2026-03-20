@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
-import { Sun, Moon, User, LogOut, ChevronDown, RefreshCw } from "lucide-react"
+import { Sun, Moon, User, LogOut, ChevronDown, RefreshCw, Bell } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
+import { createClient } from '@/lib/supabase/client'
 import { logoutUser } from "@/actions/auth"
 
 interface NavItem {
@@ -19,7 +20,37 @@ export function LuxuryNavbar() {
   const [scrolled, setScrolled] = useState(false)
   const [theme, setTheme] = useState('dark')
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Écouter les notifications en temps réel
+  useEffect(() => {
+    if (!userId) return
+
+    const supabase = createClient()
+    
+    const channel = supabase
+      .channel('user-notifications-navbar')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'CreditTransaction',
+          filter: `userId=eq.${userId}`
+        },
+        () => {
+          setNotificationCount(prev => prev + 1)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId])
+
+  const resetNotificationCount = () => setNotificationCount(0)
 
   // Menus centraux - différents pour connecté / non-connecté
   const centerNavItems: NavItem[] = userId ? [
@@ -130,6 +161,63 @@ export function LuxuryNavbar() {
 
         {/* ACTIONS DROITE */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+
+          {/* NOTIFICATIONS */}
+          {userId && (
+            <button 
+              onClick={() => {
+                resetNotificationCount()
+                window.location.href = '/recharge'
+              }}
+              style={{
+                position: 'relative',
+                width: '36px',
+                height: '36px',
+                background: 'var(--card)',
+                border: '1px solid var(--b1)',
+                borderRadius: 'var(--r)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-3)',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--gold-line)'
+                e.currentTarget.style.color = 'var(--gold)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--b1)'
+                e.currentTarget.style.color = 'var(--text-3)'
+              }}
+              title="Notifications"
+            >
+              <Bell size={18} />
+              {notificationCount > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  minWidth: '18px',
+                  height: '18px',
+                  padding: '0 5px',
+                  background: 'linear-gradient(135deg, var(--ruby), #E04060)',
+                  color: '#fff',
+                  fontFamily: 'var(--mono)',
+                  fontSize: '0.55rem',
+                  fontWeight: 700,
+                  borderRadius: '9px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: 'badgePulse 2s ease-in-out infinite'
+                }}>
+                  {notificationCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {/* AVATAR & NAVIGATION DROPDOWN */}
           {userId ? (
@@ -278,6 +366,7 @@ export function LuxuryNavbar() {
       <style jsx global>{`
         @keyframes gp { 0%, 100% { box-shadow: 0 0 6px var(--gold-glow); } 50% { box-shadow: 0 0 18px rgba(201,168,76,0.4); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes badgePulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(155, 35, 53, 0.4); } 50% { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(155, 35, 53, 0); } }
       `}</style>
     </nav>
   )

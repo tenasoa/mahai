@@ -6,12 +6,11 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { useTransactionsRealtime } from '@/lib/hooks/useTransactionsRealtime'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
-import { UserTopbar } from '@/components/layout/UserTopbar'
 import { RechargePageSkeleton } from '@/components/ui/PageSkeletons'
 import {
   Zap, Smartphone, CreditCard, CheckCircle, ArrowRight,
   Info, Shield, Clock, TrendingUp, Gift, Star, Trophy,
-  X, AlertCircle, Copy, Send, Bell
+  X, AlertCircle, Copy, Send
 } from 'lucide-react'
 import { rechargeCreditsAction, getUserTransactionsAction } from '@/actions/profile'
 import './recharge.css'
@@ -251,7 +250,7 @@ export default function RechargePage() {
   return (
     <div className="credits-page">
       <LuxuryCursor />
-      <UserTopbar />
+      <LuxuryNavbar />
 
       {/* HERO */}
       <div className="hero">
