@@ -85,7 +85,7 @@
 }
 
 /* Masquer les éléments textuels quand collapsed */
-.sidebar.collapsed .sb-section,
+.sidebar.collapsed .sb-section-text,
 .sidebar.collapsed .sb-link-text,
 .sidebar.collapsed .sb-nb,
 .sidebar.collapsed .sb-e-label,
