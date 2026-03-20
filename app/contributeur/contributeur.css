@@ -279,7 +279,6 @@
 }
 
 .btn-new:hover {
-  transform: translateY(-1px);
   box-shadow: 0 4px 20px rgba(201, 168, 76, 0.32);
 }
 

@@ -313,7 +313,6 @@
   }
 
   .btn-submit:hover {
-    transform: translateY(-2px);
     box-shadow: 0 8px 25px var(--gold-glow);
     filter: brightness(1.1);
   }
@@ -453,7 +452,6 @@
 
   .role-card:hover {
     border-color: var(--gold-line);
-    transform: translateY(-2px);
     background: var(--depth);
   }
 

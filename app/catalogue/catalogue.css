@@ -691,7 +691,6 @@ body {
 
 .pcard:hover {
   border-color: var(--gold-line);
-  transform: translateY(-3px);
   box-shadow: var(--glow-md);
 }
 
@@ -945,7 +944,6 @@ body {
 }
 
 .btn-buy:hover {
-  transform: translateY(-1px);
   box-shadow: 0 3px 14px rgba(201, 168, 76, 0.28);
 }
 
@@ -964,7 +962,6 @@ body {
 }
 
 .btn-consult:hover {
-  transform: translateY(-1px);
   box-shadow: 0 3px 14px rgba(74, 107, 90, 0.28);
 }
 
@@ -1450,7 +1447,6 @@ body {
 }
 
 .btn-modal-buy:hover:not(:disabled) {
-  transform: translateY(-1px);
   box-shadow: 0 4px 20px rgba(201, 168, 76, 0.32);
 }
 
@@ -1648,7 +1644,6 @@ body {
 }
 
 .btn-request:hover {
-  transform: translateY(-1px);
   box-shadow: 0 3px 14px rgba(74, 107, 90, 0.3);
 }
 

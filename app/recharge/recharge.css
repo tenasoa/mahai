@@ -96,7 +96,6 @@
 }
 
 .balance-card:hover {
-  transform: translateY(-2px);
   border-color: var(--luxury-gold-line);
   box-shadow: var(--luxury-shadow-hover);
 }
@@ -188,7 +187,6 @@
 }
 
 .btn-recharge:hover {
-  transform: translateY(-1px);
   box-shadow: 0 8px 28px rgba(201, 168, 76, 0.35);
 }
 
@@ -488,7 +486,6 @@
 
 .pack-card:hover {
   border-color: var(--luxury-gold-line);
-  transform: translateY(-5px);
   box-shadow: var(--luxury-shadow-hover);
 }
 
@@ -683,7 +680,6 @@
 
 .operator-card:hover {
   border-color: var(--luxury-gold-line);
-  transform: translateY(-2px);
   color: var(--luxury-text);
 }
 
@@ -841,7 +837,6 @@
 }
 
 .btn-pay:hover:not(:disabled) {
-  transform: translateY(-2px);
   box-shadow: 0 8px 32px rgba(201, 168, 76, 0.35);
 }
 
@@ -1033,7 +1028,6 @@
 }
 
 .btn-earn-more:hover {
-  transform: translateY(-1px);
   box-shadow: 0 4px 15px rgba(201, 168, 76, 0.3);
 }
 
@@ -1424,7 +1418,6 @@
 .btn-copy:hover {
   background: var(--luxury-gold);
   color: #FFFFFF;
-  transform: translateY(-1px);
 }
 
 .admin-description {

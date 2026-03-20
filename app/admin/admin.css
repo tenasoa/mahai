@@ -566,13 +566,11 @@
 }
 
 .hover-glow:hover {
-  transform: translateY(-2px);
   border-color: var(--gold-line);
   box-shadow: var(--sh-gold);
 }
 
 .hover-glow-ruby:hover {
-  transform: translateY(-2px);
   border-color: var(--ruby-line);
   box-shadow: var(--sh-ruby);
 }
@@ -739,7 +737,6 @@
   background: linear-gradient(135deg, var(--gold), var(--gold-hi));
   color: var(--void);
 }
-.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 3px 12px rgba(201, 168, 76, 0.25); }
 .btn-gold:disabled { opacity: 0.5; transform: none; }
 
 .btn-ruby {
@@ -754,7 +751,6 @@
   background: linear-gradient(135deg, var(--ruby), #C04060);
   color: #fff;
 }
-.btn-ruby:hover { transform: translateY(-1px); }
 
 .btn-tbl {
   font-family: var(--mono);
@@ -1362,7 +1358,6 @@
   box-shadow: 0 2px 8px rgba(201, 168, 76, 0.2);
 }
 .admin-btn-primary:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(201, 168, 76, 0.35);
 }
 .admin-btn-primary:active { transform: translateY(0); }
@@ -1391,7 +1386,6 @@
   border: none;
 }
 .admin-btn-success:hover {
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(74, 107, 90, 0.3);
 }
 
@@ -1429,7 +1423,6 @@
 .kpi-card:nth-child(3)::before { background: linear-gradient(90deg, var(--sage), #8ECAAC, transparent); }
 .kpi-card:nth-child(4)::before { background: linear-gradient(90deg, var(--amber), #E89A3C, transparent); }
 .kpi-card:hover {
-  transform: translateY(-4px);
   border-color: var(--gold-line);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), var(--sh-gold);
 }

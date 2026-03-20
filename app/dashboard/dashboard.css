@@ -107,7 +107,6 @@ body {
 .hero-card:hover {
   border-color: var(--gold);
   box-shadow: 0 4px 24px rgba(168, 134, 58, 0.15);
-  transform: translateY(-2px);
 }
 
 .hero-content {
@@ -195,7 +194,6 @@ body {
 .hero-quote-card:hover {
   border-color: var(--gold);
   box-shadow: 0 6px 24px rgba(168, 134, 58, 0.15);
-  transform: translateY(-2px);
 }
 
 .hero-quote-icon {
@@ -315,7 +313,6 @@ body {
 
 .stat-card:hover {
   border-color: var(--gold-line);
-  transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(168, 134, 58, 0.15);
 }
 
@@ -409,7 +406,6 @@ body {
 
 .prog-card:hover {
   border-color: var(--gold-line);
-  transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(168, 134, 58, 0.12);
 }
 
@@ -643,7 +639,6 @@ body {
 
 .streak-card:hover {
   border-color: var(--gold);
-  transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(168, 134, 58, 0.15);
 }
 
@@ -726,7 +721,6 @@ body {
 
 .rec-item:hover {
   border-color: var(--gold-line);
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(168, 134, 58, 0.1);
 }
 

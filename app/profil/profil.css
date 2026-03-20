@@ -93,7 +93,6 @@
 
 .luxury-card:hover {
   border-color: var(--luxury-gold-line);
-  transform: translateY(-3px);
   box-shadow: var(--luxury-shadow-hover);
 }
 
@@ -340,7 +339,6 @@
   background: var(--luxury-gold);
   border-color: var(--luxury-gold);
   color: #FFFFFF;
-  transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(179, 142, 61, 0.25);
 }
 
@@ -498,7 +496,6 @@
 }
 
 .luxury-tag:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(179, 142, 61, 0.2);
 }
 
@@ -543,7 +540,6 @@
 }
 
 .btn-card-action:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(179, 142, 61, 0.3);
 }
 
@@ -568,7 +564,6 @@
 }
 
 .modern-pur-card:hover {
-  transform: translateY(-4px);
   box-shadow: var(--luxury-shadow-hover);
 }
 
@@ -912,7 +907,6 @@
   border-color: #FF4D4F;
   color: #FFFFFF;
   box-shadow: 0 8px 30px rgba(255, 77, 79, 0.4);
-  transform: translateY(-2px);
 }
 
 [data-theme='dark'] .btn-danger-modern:hover {
@@ -1254,7 +1248,6 @@
   color: var(--luxury-text);
   border-color: var(--luxury-gold-line);
   background: var(--luxury-gold-dim);
-  transform: translateY(-1px);
 }
 
 .nav-tab.active {
@@ -1603,7 +1596,6 @@
 }
 
 .mvola-premium:hover {
-  transform: translateY(-3px);
   box-shadow: var(--luxury-shadow-hover);
 }
 
@@ -1640,7 +1632,6 @@
 
 .btn-mp-topup:hover {
   background: var(--luxury-gold);
-  transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(179, 142, 61, 0.3);
 }
 
@@ -1738,7 +1729,6 @@
 }
 
 .btn-lbc-action:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
 }
 
