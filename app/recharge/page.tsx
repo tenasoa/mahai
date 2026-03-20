@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { useTransactionsRealtime } from '@/lib/hooks/useTransactionsRealtime'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { RechargePageSkeleton } from '@/components/ui/PageSkeletons'
 import {
   Zap, Smartphone, CreditCard, CheckCircle, ArrowRight,
   Info, Shield, Clock, TrendingUp, Gift, Star, Trophy,
-  X, AlertCircle, Copy, Send
+  X, AlertCircle, Copy, Send, Bell
 } from 'lucide-react'
 import { rechargeCreditsAction, getUserTransactionsAction } from '@/actions/profile'
 import './recharge.css'
@@ -64,10 +65,16 @@ export default function RechargePage() {
   const [transactions, setTransactions] = useState<any[]>([])
   const [transactionsLoading, setTransactionsLoading] = useState(false)
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
-  
+
   // États pour le modal de paiement manuel
   const [showManualModal, setShowManualModal] = useState(false)
   const [transferCode, setTransferCode] = useState('')
+
+  // Hook Realtime pour les transactions
+  const { newTransactionCount, lastTransaction, resetCount } = useTransactionsRealtime({
+    userId,
+    enabled: true
+  })
 
   // Charger les transactions
   const loadTransactions = async () => {
@@ -77,6 +84,8 @@ export default function RechargePage() {
       const result = await getUserTransactionsAction()
       if (result.success) {
         setTransactions(result.data || [])
+        // Réinitialiser le compteur de nouvelles transactions après chargement
+        resetCount()
       }
     } catch (error) {
       console.error('Erreur chargement transactions:', error)
@@ -104,6 +113,28 @@ export default function RechargePage() {
       loadTransactions()
     }
   }, [activeTab])
+
+  // Recharger les transactions quand une nouvelle arrive en temps réel
+  useEffect(() => {
+    if (newTransactionCount > 0 && lastTransaction) {
+      // Recharger les transactions pour afficher la nouvelle
+      loadTransactions()
+      
+      // Afficher une notification
+      const txType = lastTransaction.type === 'RECHARGE' ? 'Recharge' : lastTransaction.type === 'ACHAT' ? 'Achat' : 'Transaction'
+      const status = lastTransaction.status === 'PENDING' ? 'en attente de validation' : lastTransaction.status === 'COMPLETED' ? 'validée' : 'refusée'
+      
+      setNotification({
+        type: lastTransaction.status === 'COMPLETED' ? 'success' : 'error',
+        message: `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`
+      })
+      
+      // Auto-dismiss après 5 secondes
+      setTimeout(() => {
+        setNotification(null)
+      }, 5000)
+    }
+  }, [newTransactionCount])
 
   // Grouper les transactions par mois
   const groupTransactionsByMonth = (txs: any[]) => {
@@ -271,13 +302,16 @@ export default function RechargePage() {
         {/* LEFT */}
         <div>
           <div className="tabs">
-            <button 
+            <button
               className={`tab ${activeTab === 'historique' ? 'active' : ''}`}
               onClick={() => setActiveTab('historique')}
             >
               Historique
+              {newTransactionCount > 0 && (
+                <span className="tab-badge">{newTransactionCount}</span>
+              )}
             </button>
-            <button 
+            <button
               className={`tab ${activeTab === 'recharger' ? 'active' : ''}`}
               onClick={() => setActiveTab('recharger')}
             >
