@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -26,6 +26,7 @@ export function UserNotifications() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Écouter les notifications en temps réel
   useEffect(() => {
@@ -137,6 +138,7 @@ export function UserNotifications() {
       {/* Bouton Bell dans la navbar */}
       <button 
         onClick={() => setDropdownOpen(!dropdownOpen)}
+        ref={buttonRef}
         style={{
           position: 'relative',
           width: '36px',
@@ -197,7 +199,8 @@ export function UserNotifications() {
             position: 'absolute',
             right: '0',
             top: 'calc(100% + 0.5rem)',
-            width: '320px',
+            width: '340px',
+            maxWidth: 'calc(100vw - 2rem)',
             maxHeight: '500px',
             overflowY: 'auto',
             background: 'var(--card)',
