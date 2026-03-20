@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import './contributeur.css'
 
 interface ContributorDashboardProps {
@@ -30,13 +32,24 @@ function formatStatus(status: string) {
 }
 
 export default function ContributorDashboardClient({ user, kpi, topSubjects, allSubjects }: ContributorDashboardProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
   return (
-    <div className="contributor-dashboard-page">
+    <div className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* Sidebar */}
-      <aside className="sidebar" id="sidebar">
+      <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} id="sidebar">
         <Link href="/" className="sb-logo">
           Mah<span className="sb-gem" />AI
         </Link>
+
+        {/* Toggle Button */}
+        <button 
+          className="sidebar-toggle"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title={isCollapsed ? 'Déployer le menu' : 'Réduire le menu'}
+        >
+          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
         
         <div className="sb-user">
           <div className="sb-avatar">
