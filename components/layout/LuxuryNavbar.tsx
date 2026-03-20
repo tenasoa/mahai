@@ -149,6 +149,36 @@ export function LuxuryNavbar() {
               onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.6)'}
               onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.3)'}
               >
+                {appUser?.profilePicture ? (
+                  <img
+                    src={appUser.profilePicture}
+                    alt="Avatar"
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '2px solid rgba(201, 168, 76, 0.5)'
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: 'var(--gold-dim)',
+                    border: '2px solid var(--gold-line)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'var(--display)',
+                    fontSize: '0.9rem',
+                    color: 'var(--gold)',
+                    fontWeight: 600
+                  }}>
+                    {(appUser?.prenom?.charAt(0) || 'U').toUpperCase()}
+                  </div>
+                )}
                 <span style={{ fontFamily: 'var(--display)', fontSize: '0.9rem', fontWeight: 500, color: '#E8C96A' }}>
                   {appUser?.pseudo || appUser?.prenom || 'Menu'}
                 </span>

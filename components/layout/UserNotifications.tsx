@@ -48,7 +48,7 @@ export function UserNotifications() {
             id: payload.new.id,
             type: payload.new.type === 'RECHARGE' ? 'credit' : 'alert',
             title: payload.new.type === 'RECHARGE' ? 'Recharge créditée' : 'Transaction mise à jour',
-            body: `${Math.abs(payload.new.amount)} crédits ${payload.new.status === 'COMPLETED' ? 'validés' : 'en attente'}`,
+            body: `${Math.abs(payload.new.creditsCount || payload.new.amount)} crédits ${payload.new.status === 'COMPLETED' ? 'validés' : 'en attente'}`,
             createdAt: payload.new.createdAt,
             read: false,
             link: '/recharge'
@@ -59,49 +59,39 @@ export function UserNotifications() {
       )
       .subscribe()
 
-    // Charger les notifications initiales
-    loadNotifications()
+    // Charger les notifications réelles depuis la base
+    loadRealNotifications()
 
     return () => {
       supabase.removeChannel(channel)
     }
   }, [userId])
 
-  const loadNotifications = async () => {
-    // Simuler le chargement depuis la base
-    const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        type: 'credit',
-        title: 'Recharge MVola confirmée',
-        body: 'Votre rechargement de 150 crédits (7 500 Ar) a été validé.',
-        createdAt: new Date().toISOString(),
-        read: false,
-        link: '/recharge'
-      },
-      {
-        id: '2',
-        type: 'sujet',
-        title: '3 nouveaux sujets disponibles',
-        body: 'Des sujets de Physique-Chimie Terminale viennent d\'être publiés.',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        read: false,
-        link: '/catalogue'
-      },
-      {
-        id: '3',
-        type: 'correction',
-        title: 'Correction IA disponible',
-        body: 'Votre réponse au sujet BAC Maths Série C 2024 a été corrigée.',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        read: false,
-        score: 15.5,
-        maxScore: 20,
-        link: '/examens'
+  const loadRealNotifications = async () => {
+    try {
+      const { getUserTransactionsAction } = await import('@/actions/profile')
+      const result = await getUserTransactionsAction()
+      
+      if (result.success && result.data) {
+        const realNotifications: Notification[] = result.data.slice(0, 10).map((tx: any) => ({
+          id: tx.id,
+          type: tx.type === 'RECHARGE' ? 'credit' : tx.type === 'ACHAT' ? 'sujet' : 'alert',
+          title: tx.type === 'RECHARGE' 
+            ? 'Recharge Mobile Money' 
+            : tx.type === 'ACHAT'
+            ? 'Achat de sujet'
+            : 'Transaction',
+          body: tx.description || `${tx.type === 'RECHARGE' ? '+' : ''}${tx.creditsCount || Math.abs(tx.amount)} crédits`,
+          createdAt: tx.createdAt,
+          read: tx.status === 'COMPLETED',
+          link: '/recharge'
+        }))
+        setNotifications(realNotifications)
+        setNotificationCount(realNotifications.filter(n => !n.read).length)
       }
-    ]
-    setNotifications(mockNotifications)
-    setNotificationCount(mockNotifications.filter(n => !n.read).length)
+    } catch (error) {
+      console.error('Erreur chargement notifications:', error)
+    }
   }
 
   const resetNotificationCount = () => setNotificationCount(0)

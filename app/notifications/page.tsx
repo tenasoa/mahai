@@ -33,104 +33,34 @@ export default function NotificationsPage() {
   }, [userId, loading, router])
 
   useEffect(() => {
-    // Charger les notifications (mock pour l'instant)
-    const mockNotifications: Notification[] = [
-      // Aujourd'hui
-      {
-        id: '1',
-        type: 'correction',
-        title: 'Correction IA disponible',
-        body: 'Votre réponse au sujet BAC Maths Série C 2024 a été corrigée.',
-        createdAt: new Date(Date.now() - 12 * 60000).toISOString(),
-        read: false,
-        score: 15.5,
-        maxScore: 20,
-        link: '/examens',
-        linkText: 'Voir le détail'
-      },
-      {
-        id: '2',
-        type: 'mvola',
-        title: 'Paiement MVola confirmé',
-        body: 'Votre rechargement de 150 crédits (7 500 Ar) a été validé. Réf. MAH-482999.',
-        createdAt: new Date(Date.now() - 28 * 60000).toISOString(),
-        read: false,
-        link: '/recharge',
-        linkText: 'Utiliser mes crédits'
-      },
-      {
-        id: '3',
-        type: 'sujet',
-        title: '3 nouveaux sujets dans votre filière',
-        body: 'Des sujets de Physique-Chimie Terminale C viennent d\'être publiés.',
-        createdAt: new Date(Date.now() - 60 * 60000).toISOString(),
-        read: false,
-        link: '/catalogue',
-        linkText: 'Voir les sujets'
-      },
-      {
-        id: '4',
-        type: 'correction',
-        title: 'Correction IA disponible',
-        body: 'Votre réponse au sujet Physique-Chimie DS 2023 a été analysée.',
-        createdAt: new Date(Date.now() - 3 * 60 * 60000).toISOString(),
-        read: false,
-        score: 11,
-        maxScore: 20,
-        link: '/examens',
-        linkText: 'Voir le détail'
-      },
-      // Cette semaine
-      {
-        id: '5',
-        type: 'credit',
-        title: 'Bonus de fidélité crédité',
-        body: 'Vous avez utilisé Mah.AI 7 jours consécutifs. +5 crédits bonus ajoutés.',
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60000).toISOString(),
-        read: false,
-        link: '/recharge'
-      },
-      {
-        id: '6',
-        type: 'sujet',
-        title: 'Sujet épinglé maintenant disponible',
-        body: 'BAC Maths Série C 2020 que vous aviez mis en favori est maintenant accessible.',
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60000).toISOString(),
-        read: true,
-        link: '/catalogue'
-      },
-      {
-        id: '7',
-        type: 'correction',
-        title: 'Rapport hebdomadaire',
-        body: 'Cette semaine : 4 sujets traités, score moyen 13.8/20. Vos progrès : +2.5 pts.',
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60000).toISOString(),
-        read: false,
-        link: '/dashboard'
-      },
-      // Plus ancien
-      {
-        id: '8',
-        type: 'system',
-        title: 'Mise à jour de l\'application',
-        body: 'Mah.AI v2.4 est disponible. Nouveautés : correction IA améliorée, mode hors-ligne.',
-        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60000).toISOString(),
-        read: true,
-        link: '/dashboard'
-      },
-      {
-        id: '9',
-        type: 'alert',
-        title: 'Crédits bientôt épuisés',
-        body: 'Il ne vous reste que 12 crédits. Rechargez pour continuer à accéder aux sujets premium.',
-        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60000).toISOString(),
-        read: true,
-        link: '/recharge',
-        linkText: 'Recharger'
-      }
-    ]
-    setNotifications(mockNotifications)
+    loadRealNotifications()
   }, [])
+
+  const loadRealNotifications = async () => {
+    try {
+      const { getUserTransactionsAction } = await import('@/actions/profile')
+      const result = await getUserTransactionsAction()
+      
+      if (result.success && result.data) {
+        const realNotifications: Notification[] = result.data.map((tx: any) => ({
+          id: tx.id,
+          type: tx.type === 'RECHARGE' ? 'credit' : tx.type === 'ACHAT' ? 'sujet' : 'alert',
+          title: tx.type === 'RECHARGE' 
+            ? (tx.status === 'PENDING' ? 'Recharge en attente' : 'Recharge créditée')
+            : tx.type === 'ACHAT'
+            ? 'Achat de sujet'
+            : 'Transaction',
+          body: tx.description || `${tx.type === 'RECHARGE' ? '+' : ''}${tx.creditsCount || Math.abs(tx.amount)} crédits ${tx.status === 'PENDING' ? '(en attente)' : ''}`,
+          createdAt: tx.createdAt,
+          read: tx.status === 'COMPLETED',
+          link: '/recharge'
+        }))
+        setNotifications(realNotifications)
+      }
+    } catch (error) {
+      console.error('Erreur chargement notifications:', error)
+    }
+  }
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -142,11 +72,8 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'correction': return { icon: '🤖', class: 'ni-correction' }
       case 'credit': return { icon: '✦', class: 'ni-credit' }
       case 'sujet': return { icon: '📚', class: 'ni-sujet' }
-      case 'system': return { icon: '⚙', class: 'ni-system' }
-      case 'mvola': return { icon: '📱', class: 'ni-mvola' }
       case 'alert': return { icon: '⚠', class: 'ni-alert' }
       default: return { icon: '🔔', class: 'ni-system' }
     }
@@ -247,28 +174,22 @@ export default function NotificationsPage() {
             {unreadCount > 0 && <span className="tab-count">{unreadCount}</span>}
           </button>
           <button 
-            className={`tab ${activeTab === 'corrections' ? 'active' : ''}`}
-            onClick={() => setActiveTab('corrections')}
-          >
-            Corrections
-          </button>
-          <button 
-            className={`tab ${activeTab === 'credits' ? 'active' : ''}`}
-            onClick={() => setActiveTab('credits')}
+            className={`tab ${activeTab === 'credit' ? 'active' : ''}`}
+            onClick={() => setActiveTab('credit')}
           >
             Crédits
           </button>
           <button 
-            className={`tab ${activeTab === 'sujets' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sujets')}
+            className={`tab ${activeTab === 'sujet' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sujet')}
           >
             Sujets
           </button>
           <button 
-            className={`tab ${activeTab === 'system' ? 'active' : ''}`}
-            onClick={() => setActiveTab('system')}
+            className={`tab ${activeTab === 'alert' ? 'active' : ''}`}
+            onClick={() => setActiveTab('alert')}
           >
-            Système
+            Alertes
           </button>
         </div>
 
