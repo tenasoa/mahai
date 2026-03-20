@@ -1,3 +1,5 @@
+'use client'
+
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
 import { redirect } from 'next/navigation'
