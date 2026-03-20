@@ -714,9 +714,17 @@ export default function ProfilePage() {
                           <div className="tx-details">
                             <div className="tx-desc">{tx.description || (tx.type === 'ACHAT' ? 'Achat de sujet' : 'Recharge de crédits')}</div>
                             <div className="tx-date">{new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                            {tx.type === 'RECHARGE' && tx.amount && (
+                              <div className="tx-payment-amount" style={{ fontSize: '0.7rem', color: 'var(--luxury-text-muted)', marginTop: '0.2rem', fontFamily: 'var(--mono)' }}>
+                                {tx.amount} Ar
+                              </div>
+                            )}
                           </div>
                           <div className={`tx-amount ${tx.type === 'ACHAT' ? 'minus' : 'plus'}`}>
-                            {tx.type === 'ACHAT' ? '-' : '+'}{tx.amount} cr
+                            {tx.type === 'ACHAT' 
+                              ? `-${tx.amount} cr`
+                              : `+${tx.creditsCount || tx.amount} cr`
+                            }
                           </div>
                         </div>
                       ))}
