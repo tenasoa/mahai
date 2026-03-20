@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { Sun, Moon, User, LogOut, ChevronDown, RefreshCw, Bell } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
@@ -16,6 +16,7 @@ interface NavItem {
 
 export function LuxuryNavbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { userId, appUser } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [theme, setTheme] = useState('dark')
@@ -167,7 +168,7 @@ export function LuxuryNavbar() {
             <button 
               onClick={() => {
                 resetNotificationCount()
-                window.location.href = '/recharge'
+                router.push('/recharge')
               }}
               style={{
                 position: 'relative',
