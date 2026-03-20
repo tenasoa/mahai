@@ -350,8 +350,11 @@ export default function RechargePage() {
                           </div>
                         </div>
                         <div>
-                          <div className={`tx-amount mono ${tx.amount >= 0 ? 'positive' : 'negative'}`}>
-                            {tx.amount >= 0 ? '+' : ''}{tx.amount} cr
+                          <div className={`tx-amount mono ${tx.type === 'RECHARGE' ? 'positive' : 'negative'}`}>
+                            {tx.type === 'RECHARGE' 
+                              ? `+${tx.creditsCount || tx.amount} cr`
+                              : `${tx.amount >= 0 ? '+' : ''}${tx.amount} cr`
+                            }
                           </div>
                         </div>
                       </div>
