@@ -1101,3 +1101,70 @@
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .admin-page { padding: 1rem; }
 }
+
+/* ==========================================================================
+   REACT ADAPTER CLASSES (Mappings HTML classique -> Design System Admin)
+   ========================================================================== */
+
+/* Headers */
+.admin-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; padding: 0 1rem; }
+.admin-title { font-family: var(--display); font-size: 2.2rem; font-weight: 500; color: var(--text); letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+.admin-subtitle { font-family: var(--mono); font-size: 0.85rem; color: var(--text-3); }
+
+/* Buttons */
+.admin-btn { font-family: var(--body); font-size: 0.75rem; font-weight: 500; padding: 0.4rem 1rem; border-radius: var(--r); cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; }
+.admin-btn-primary { background: linear-gradient(135deg, var(--gold), var(--gold-hi)); color: var(--void); }
+.admin-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 3px 12px rgba(201, 168, 76, 0.25); }
+.admin-btn-outline { background: transparent; border: 1px solid var(--b1); color: var(--text-2); }
+.admin-btn-outline:hover { border-color: var(--gold-line); color: var(--text); }
+.admin-btn-danger { background: transparent; border: 1px solid var(--ruby-line); color: var(--ruby); }
+.admin-btn-danger:hover { background: var(--ruby-dim); }
+
+/* KPI Grid */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; padding: 0 1rem;}
+.kpi-card { background: var(--card); padding: 1.25rem; border-radius: var(--r-lg); border: 1px solid var(--b1); position: relative; overflow: hidden; }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.kpi-card:nth-child(1)::before { background: linear-gradient(90deg, #3A6EA8, transparent); }
+.kpi-card:nth-child(2)::before { background: linear-gradient(90deg, var(--ruby), transparent); }
+.kpi-card:nth-child(3)::before { background: linear-gradient(90deg, var(--sage), transparent); }
+.kpi-card:nth-child(4)::before { background: linear-gradient(90deg, var(--amber), transparent); }
+.kpi-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+.kpi-title { font-family: var(--mono); font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-3); }
+.kpi-icon { padding: 0.4rem; border-radius: 50%; opacity: 0.8; }
+.kpi-icon-blue { background: var(--blue-dim); color: #5B9BD5; }
+.kpi-icon-ruby { background: var(--ruby-dim); color: #E06070; }
+.kpi-icon-emerald { background: var(--sage-dim); color: #8ECAAC; }
+.kpi-icon-amber { background: var(--amber-dim); color: var(--amber); }
+.kpi-value { font-family: var(--display); font-size: 2rem; font-weight: 300; color: var(--text); line-height: 1; letter-spacing: -0.04em; margin-bottom: 0.5rem; }
+.kpi-trend { font-family: var(--mono); font-size: 0.54rem; }
+.kpi-trend-up { color: #8ECAAC; }
+
+/* Admin Cards (Listes) */
+.admin-card-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--b1); display: flex; align-items: center; justify-content: space-between; }
+.admin-card-title { font-family: var(--display); font-size: 1.15rem; color: var(--text); font-weight: 500; }
+.admin-list-item { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--b3); transition: background 0.2s; }
+.admin-list-item:hover { background: var(--card-hover); }
+.admin-list-item:last-child { border-bottom: none; }
+.admin-list-icon { width: 36px; height: 36px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.admin-list-content { flex: 1; min-width: 0; }
+.admin-list-title { font-size: 0.85rem; color: var(--text); margin-bottom: 0.2rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-list-desc { font-family: var(--mono); font-size: 0.6rem; color: var(--text-3); }
+.admin-list-actions { flex-shrink: 0; }
+
+/* Tables standardisées */
+.table-wrapper { overflow-x: auto; padding: 0 1rem 1rem; }
+table.admin-table { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-table th { padding: 1rem 1.25rem; font-family: var(--mono); font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); background: var(--surface); border-bottom: 1px solid var(--b1); }
+.admin-table td { padding: 1rem 1.25rem; border-bottom: 1px solid var(--b3); font-size: 0.8rem; color: var(--text-2); transition: background 0.2s; }
+.admin-table tbody tr:hover td { background: var(--card-hover); }
+
+/* Badges Status Supplementaires */
+.status-gray { background: rgba(240, 235, 227, 0.08); color: var(--text-2); border: 1px solid var(--b2); }
+.status-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-line); }
+.status-ruby { background: var(--ruby-dim); color: #E06070; border: 1px solid var(--ruby-line); }
+.status-emerald { background: var(--sage-dim); color: #8ECAAC; border: 1px solid var(--sage-line); }
+.status-blue { background: var(--blue-dim); color: #5B9BD5; border: 1px solid var(--blue-line); }
+
+/* Tabs Adapter */
+.admin-tab-active { color: var(--gold) !important; border-bottom-color: var(--gold) !important; }
+

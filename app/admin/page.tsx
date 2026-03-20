@@ -6,18 +6,18 @@ import { FileText, Users, CreditCard, TrendingUp, AlertCircle, CheckCircle2, Clo
 
 async function getDashboardData() {
   // 1. KPIs
-  const usersCountReq = query('SELECT COUNT(*) FROM "User"')
-  const subjectsCountReq = query('SELECT COUNT(*) FROM "Subject" WHERE status = $1', ['PUBLISHED'])
-  const reviewsCountReq = query('SELECT COUNT(*) FROM "Subject" WHERE status = $1', ['PENDING'])
-  const mvolaCountReq = query('SELECT COUNT(*) FROM "CreditTransaction" WHERE status = $1', ['PENDING'])
-  const salesCountReq = query('SELECT COUNT(*) FROM "Purchase"')
-  const revenueReq = query('SELECT COALESCE(SUM(amount), 0) as total FROM "CreditTransaction" WHERE status = $1', ['COMPLETED'])
+  const usersCountRes = await query('SELECT COUNT(*) FROM "User"')
+  const subjectsCountRes = await query('SELECT COUNT(*) FROM "Subject" WHERE status = $1', ['PUBLISHED'])
+  const reviewsCountRes = await query('SELECT COUNT(*) FROM "Subject" WHERE status = $1', ['PENDING'])
+  const mvolaCountRes = await query('SELECT COUNT(*) FROM "CreditTransaction" WHERE status = $1', ['PENDING'])
+  const salesCountRes = await query('SELECT COUNT(*) FROM "Purchase"')
+  const revenueRes = await query('SELECT COALESCE(SUM(amount), 0) as total FROM "CreditTransaction" WHERE status = $1', ['COMPLETED'])
 
   // 2. Derniers utilisateurs inscrits
-  const recentUsersReq = query('SELECT id, prenom, nom, email, role, "createdAt" FROM "User" ORDER BY "createdAt" DESC LIMIT 5')
+  const recentUsersRes = await query('SELECT id, prenom, nom, email, role, "createdAt" FROM "User" ORDER BY "createdAt" DESC LIMIT 5')
   
   // 3. Derniers paiements MVola en attente
-  const recentMvolaReq = query(`
+  const recentMvolaRes = await query(`
     SELECT c.*, u.prenom, u.nom, u.email 
     FROM "CreditTransaction" c 
     JOIN "User" u ON c."userId" = u.id 
@@ -26,21 +26,13 @@ async function getDashboardData() {
   `)
 
   // 4. Derniers sujets en attente
-  const recentSubjectsReq = query(`
+  const recentSubjectsRes = await query(`
     SELECT s.id, s.titre as title, s."createdAt", u.prenom, u.nom
     FROM "Subject" s
     LEFT JOIN "User" u ON s."authorId" = u.id
     WHERE s.status = 'PENDING'
     ORDER BY s."createdAt" DESC LIMIT 4
   `)
-
-  const [
-    usersCountRes, subjectsCountRes, reviewsCountRes, mvolaCountRes, salesCountRes, revenueRes,
-    recentUsersRes, recentMvolaRes, recentSubjectsRes
-  ] = await Promise.all([
-    usersCountReq, subjectsCountReq, reviewsCountReq, mvolaCountReq, salesCountReq, revenueReq,
-    recentUsersReq, recentMvolaReq, recentSubjectsReq
-  ])
 
   return {
     kpi: {
