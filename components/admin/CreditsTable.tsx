@@ -33,8 +33,8 @@ function formatMoney(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' Ar'
 }
 
-function formatCredits(credits: number) {
-  return credits + ' crédit' + (credits > 1 ? 's' : '')
+function formatCreditsDisplay(credits: number) {
+  return credits + ' cr' + (credits > 1 ? 's' : '')
 }
 
 export function CreditsTable({
@@ -251,15 +251,20 @@ export function CreditsTable({
                   </span>
                 </div>
               </div>
-              {selectedTx.senderCode && (
-                <div className="tx-detail-item" style={{ marginTop: '1rem' }}>
-                  <span className="tx-detail-label">Code de confirmation</span>
-                  <span className="tx-detail-value tx-code">
-                    <Hash size={14} />
-                    {selectedTx.senderCode}
+              
+              {/* Code de confirmation - Toujours affiché */}
+              <div className="tx-detail-item" style={{ marginTop: '1rem' }}>
+                <span className="tx-detail-label">Code de confirmation</span>
+                <span className="tx-detail-value tx-code">
+                  <Hash size={14} />
+                  {selectedTx.senderCode || 'Non renseigné'}
+                </span>
+                {selectedTx.senderCode && (
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-4)', marginTop: '0.25rem', display: 'block' }}>
+                    ✓ Code fourni par l'utilisateur
                   </span>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Utilisateur */}

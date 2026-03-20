@@ -1,0 +1,231 @@
+/* ═══════════════════════════════════════════════
+   USER TOPBAR — Mah.AI
+   Topbar pour les pages utilisateur (profil, recharge, etc.)
+═══════════════════════════════════════════════ */
+
+.user-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8, 7, 5, 0.92);
+  border-bottom: 1px solid rgba(155, 35, 53, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0 2rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.topbar-logo {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  transition: opacity 0.2s;
+}
+
+.topbar-logo:hover {
+  opacity: 0.8;
+}
+
+.topbar-gem {
+  color: var(--ruby);
+  animation: topbarPulse 2s ease-in-out infinite;
+}
+
+@keyframes topbarPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.topbar-link {
+  font-family: var(--body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-3);
+  text-decoration: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--r);
+  transition: all 0.2s;
+}
+
+.topbar-link:hover {
+  color: var(--text);
+  background: var(--card);
+}
+
+.topbar-link.active {
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+
+/* RIGHT SIDE */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Notifications */
+.topbar-notification-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.topbar-notification-btn:hover {
+  border-color: var(--gold-line);
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+
+.topbar-notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: linear-gradient(135deg, var(--ruby), #E04060);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: topbarBadgePulse 2s ease-in-out infinite;
+}
+
+@keyframes topbarBadgePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(155, 35, 53, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 4px rgba(155, 35, 53, 0);
+  }
+}
+
+/* User Menu */
+.topbar-user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 1rem;
+  margin-left: 0.5rem;
+  border-left: 1px solid var(--b1);
+}
+
+.topbar-user-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.topbar-user-link:hover {
+  opacity: 0.8;
+}
+
+.topbar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-dim), var(--amber-dim));
+  border: 1px solid var(--gold-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 0.85rem;
+  color: var(--gold);
+  font-weight: 600;
+  object-fit: cover;
+}
+
+.topbar-user-name {
+  font-family: var(--body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.topbar-logout {
+  width: 32px;
+  height: 32px;
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.topbar-logout:hover {
+  border-color: var(--ruby-line);
+  color: var(--ruby);
+  background: var(--ruby-dim);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .user-topbar {
+    padding: 0 1rem;
+    height: 52px;
+  }
+
+  .topbar-left {
+    gap: 1rem;
+  }
+
+  .topbar-nav {
+    display: none;
+  }
+
+  .topbar-user-name {
+    display: none;
+  }
+
+  .topbar-user-menu {
+    padding-left: 0.75rem;
+    margin-left: 0;
+  }
+}

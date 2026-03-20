@@ -58,30 +58,30 @@ export async function validateCreditTransaction(id: string) {
 
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
-  
+
   // 1. Récupérer la transaction
   const txResult = await query('SELECT * FROM "CreditTransaction" WHERE id = $1 AND status = $2', [id, 'PENDING'])
   const tx = txResult.rows[0]
-  
+
   if (!tx) throw new Error("Transaction introuvable ou déjà traitée")
 
   // 2. Mettre à jour la transaction
   await query(`
-    UPDATE "CreditTransaction" 
-    SET status = 'COMPLETED', "validatedAt" = NOW(), "validatedBy" = $1 
+    UPDATE "CreditTransaction"
+    SET status = 'COMPLETED', "validatedAt" = NOW(), "validatedBy" = $1
     WHERE id = $2
   `, [session!.user.id, id])
 
-  // 3. Ajouter les crédits à l'utilisateur
+  // 3. Ajouter les crédits à l'utilisateur (utiliser creditsCount et non amount)
   await query(`
     UPDATE "User"
     SET credits = credits + $1
     WHERE id = $2
-  `, [tx.creditsCount, tx.userId])
+  `, [tx.creditsCount || tx.amount, tx.userId])
 
   revalidatePath('/admin/credits')
   revalidatePath('/admin/utilisateurs')
-  
+
   return { success: true }
 }
 

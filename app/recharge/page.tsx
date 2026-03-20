@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { useTransactionsRealtime } from '@/lib/hooks/useTransactionsRealtime'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
+import { UserTopbar } from '@/components/layout/UserTopbar'
 import { RechargePageSkeleton } from '@/components/ui/PageSkeletons'
 import {
   Zap, Smartphone, CreditCard, CheckCircle, ArrowRight,
@@ -250,7 +251,7 @@ export default function RechargePage() {
   return (
     <div className="credits-page">
       <LuxuryCursor />
-      <LuxuryNavbar />
+      <UserTopbar />
 
       {/* HERO */}
       <div className="hero">

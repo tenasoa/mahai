@@ -573,16 +573,18 @@ export async function rechargeCreditsAction(data: {
 
     // 1. Créer la transaction
     await query(
-      `INSERT INTO "CreditTransaction" ("id", "userId", "type", "amount", "description", "paymentMethod", "transactionId", "status")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      `INSERT INTO "CreditTransaction" ("id", "userId", "type", "amount", "creditsCount", "description", "paymentMethod", "phoneNumber", "senderCode", "status")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         crypto.randomUUID(),
         context.userId,
         'RECHARGE',
-        data.packCredits,
+        data.packPrice,           // Montant en Ariary (ex: 15000 Ar)
+        data.packCredits,         // Nombre de crédits (ex: 300 cr)
         `Recharge ${data.operator} — Pack ${data.packCredits} crédits — ${data.phoneNumber}`,
         data.operator,
-        data.transferCode || null,
+        data.phoneNumber,
+        data.transferCode || null,  // Code de transfert dans senderCode
         isPending ? 'PENDING' : 'COMPLETED',
       ]
     )
