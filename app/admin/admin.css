@@ -1466,7 +1466,7 @@
 }
 .kpi-icon-blue { background: var(--blue-dim); color: #5B9BD5; }
 .kpi-icon-ruby { background: var(--ruby-dim); color: #E06070; }
-.kpi-icon-emerald { background: var(--sage-dim); color: #8ECAAC; }
+.kpi-icon-emerald { background: var(--sage-dim); color: #2D4A3A; }
 .kpi-icon-amber { background: var(--amber-dim); color: var(--amber); }
 .kpi-value {
   font-family: var(--display);
@@ -1484,7 +1484,7 @@
   align-items: center;
   gap: 0.3rem;
 }
-.kpi-trend-up { color: #8ECAAC; }
+.kpi-trend-up { color: #2D4A3A; }
 .kpi-trend-down { color: #E06070; }
 
 /* Admin Cards (Listes) */
