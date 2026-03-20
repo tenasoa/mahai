@@ -141,48 +141,46 @@ export function LuxuryNavbar() {
           {userId ? (
             <div className="relative" ref={dropdownRef}>
               <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
-                height: '38px', padding: '0', borderRadius: '2rem',
+                width: '42px',
+                height: '42px',
+                padding: '0',
+                borderRadius: '50%',
                 background: 'transparent',
-                border: 'none',
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                cursor: 'none', transition: 'all 0.3s'
+                border: '2px solid var(--gold-line)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'none', transition: 'all 0.3s',
+                overflow: 'hidden'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(201, 168, 76, 0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--gold)'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--gold-line)'}
               >
                 {appUser?.profilePicture ? (
                   <img
                     src={appUser.profilePicture}
                     alt="Avatar"
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '100%',
+                      height: '100%',
                       borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '2px solid var(--gold-line)'
+                      objectFit: 'cover'
                     }}
                   />
                 ) : (
                   <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
+                    width: '100%',
+                    height: '100%',
                     background: 'var(--gold-dim)',
-                    border: '2px solid var(--gold-line)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontFamily: 'var(--display)',
-                    fontSize: '0.9rem',
+                    fontSize: '1.1rem',
                     color: 'var(--gold)',
                     fontWeight: 600
                   }}>
                     {(appUser?.prenom?.charAt(0) || 'U').toUpperCase()}
                   </div>
                 )}
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <ChevronDown size={12} color="#E8C96A" style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
-                </div>
               </button>
 
               {dropdownOpen && (
@@ -191,48 +189,6 @@ export function LuxuryNavbar() {
                   background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: 'var(--r-lg)',
                   boxShadow: '0 10px 40px rgba(0,0,0,0.3)', padding: '0.5rem 0', zIndex: 100, animation: 'fadeIn 0.2s ease'
                 }}>
-                  {/* User Info */}
-                  <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--b1)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    {appUser?.profilePicture ? (
-                      <img 
-                        src={appUser.profilePicture} 
-                        alt="Avatar" 
-                        style={{ 
-                          width: '48px', 
-                          height: '48px', 
-                          borderRadius: '50%', 
-                          objectFit: 'cover',
-                          border: '2px solid var(--gold-line)'
-                        }} 
-                      />
-                    ) : (
-                      <div style={{ 
-                        width: '48px', 
-                        height: '48px', 
-                        borderRadius: '50%', 
-                        background: 'var(--gold-dim)',
-                        border: '2px solid var(--gold-line)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontFamily: 'var(--display)',
-                        fontSize: '1.2rem',
-                        color: 'var(--gold)',
-                        fontWeight: 600
-                      }}>
-                        {(appUser?.prenom?.charAt(0) || 'U').toUpperCase()}
-                      </div>
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {appUser?.nom || appUser?.prenom || ''}
-                      </p>
-                      {appUser?.pseudo && (
-                        <p style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 500 }}>@{appUser.pseudo}</p>
-                      )}
-                    </div>
-                  </div>
-
                   {/* Navigation Links & Actions */}
                   <div style={{ padding: '0.5rem 0' }}>
                     {/* Crédits + Recharger (fusionné) */}
