@@ -1,5 +1,8 @@
+'use client'
+
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Outfit, DM_Mono } from 'next/font/google'
+import { usePathname } from 'next/navigation'
 import './globals.css'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { ScrollToTop } from '@/components/layout/ScrollToTop'
@@ -46,6 +49,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
+  
+  // Masquer LuxuryNavbar pour les pages contributeur
+  const isContributorPage = pathname?.startsWith('/contributeur')
+
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
@@ -66,10 +74,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${cormorant.variable} ${outfit.variable} ${dmMono.variable} min-h-screen bg-void text-text antialiased font-body font-[family-name:var(--body)]`}>
+      <body className={`${cormorant.variable} ${outfit.variable} ${dmMono.variable} min-h-screen bg-void text-text antialiased font-[family-name:var(--body)]`}>
         <LuxuryCursor />
         <ScrollToTop />
-        <LuxuryNavbar />
+        {!isContributorPage && <LuxuryNavbar />}
         {children}
       </body>
     </html>
