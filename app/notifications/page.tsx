@@ -256,42 +256,6 @@ export default function NotificationsPage() {
       </div>
 
       <style jsx global>{`
-        :root {
-          --void: #080705;
-          --depth: #0E0C0A;
-          --surface: #141210;
-          --card: #1A1714;
-          --card-hover: #201D19;
-          --lift: #252118;
-          --gold: #C9A84C;
-          --gold-hi: #E8C96A;
-          --gold-lo: #8A6E2A;
-          --gold-dim: rgba(201, 168, 76, 0.08);
-          --gold-glow: rgba(201, 168, 76, 0.18);
-          --gold-line: rgba(201, 168, 76, 0.22);
-          --text: #F0EBE3;
-          --text-2: rgba(240, 235, 227, 0.62);
-          --text-3: rgba(240, 235, 227, 0.32);
-          --text-4: rgba(240, 235, 227, 0.14);
-          --ruby: #9B2335;
-          --ruby-dim: rgba(155, 35, 53, 0.12);
-          --ruby-line: rgba(155, 35, 53, 0.3);
-          --sage: #4A6B5A;
-          --sage-dim: rgba(74, 107, 90, 0.12);
-          --sage-line: rgba(74, 107, 90, 0.3);
-          --amber: #C9843C;
-          --amber-dim: rgba(201, 132, 60, 0.12);
-          --amber-line: rgba(201, 132, 60, 0.3);
-          --b1: rgba(201, 168, 76, 0.14);
-          --b2: rgba(201, 168, 76, 0.08);
-          --b3: rgba(240, 235, 227, 0.06);
-          --display: 'Cormorant Garamond', serif;
-          --body: 'Outfit', sans-serif;
-          --mono: 'DM Mono', monospace;
-          --r: 4px;
-          --r-lg: 8px;
-        }
-
         .credits-page {
           min-height: 100vh;
           background-color: var(--void);

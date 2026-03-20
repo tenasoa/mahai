@@ -2,80 +2,8 @@
    CATALOGUE PAGE — LUXURY DESIGN (Pixel Perfect)
 ═══════════════════════════════════════════════ */
 
-:root {
-  --void: #080705;
-  --depth: #0E0C0A;
-  --surface: #141210;
-  --card: #1A1714;
-  --card-hover: #201D19;
-  --lift: #252118;
-  --gold: #C9A84C;
-  --gold-hi: #E8C96A;
-  --gold-lo: #8A6E2A;
-  --gold-dim: rgba(201, 168, 76, 0.08);
-  --gold-glow: rgba(201, 168, 76, 0.18);
-  --gold-line: rgba(201, 168, 76, 0.22);
-  --text: #F0EBE3;
-  --text-2: rgba(240, 235, 227, 0.62);
-  --text-3: rgba(240, 235, 227, 0.32);
-  --text-4: rgba(240, 235, 227, 0.14);
-  --ruby: #9B2335;
-  --sage: #4A6B5A;
-  --b1: rgba(201, 168, 76, 0.14);
-  --b2: rgba(201, 168, 76, 0.08);
-  --b3: rgba(240, 235, 227, 0.06);
-  --glow-sm: 0 0 20px rgba(201, 168, 76, 0.08);
-  --glow-md: 0 0 40px rgba(201, 168, 76, 0.12);
-  --display: 'Cormorant Garamond', serif;
-  --body: 'Outfit', sans-serif;
-  --mono: 'DM Mono', monospace;
-  --r: 4px;
-  --r-lg: 8px;
-}
 
-[data-theme='dark'] {
-  --void: #080705;
-  --depth: #0E0C0A;
-  --surface: #141210;
-  --card: #1A1714;
-  --card-hover: #201D19;
-  --lift: #252118;
-  --gold: #C9A84C;
-  --gold-hi: #E8C96A;
-  --gold-lo: #8A6E2A;
-  --gold-dim: rgba(201, 168, 76, 0.08);
-  --gold-glow: rgba(201, 168, 76, 0.18);
-  --gold-line: rgba(201, 168, 76, 0.22);
-  --text: #F0EBE3;
-  --text-2: rgba(240, 235, 227, 0.62);
-  --text-3: rgba(240, 235, 227, 0.32);
-  --text-4: rgba(240, 235, 227, 0.14);
-  --b1: rgba(201, 168, 76, 0.14);
-  --b2: rgba(201, 168, 76, 0.08);
-  --b3: rgba(240, 235, 227, 0.06);
-}
 
-[data-theme='light'] {
-  --void: #F8F4EE;
-  --depth: #F2EDE4;
-  --surface: #EDE6DA;
-  --card: #FFFFFF;
-  --card-hover: #F5F0E9;
-  --lift: #FBF9F6;
-  --gold: #A8782A;
-  --gold-hi: #C9A84C;
-  --gold-lo: #8A6E2A;
-  --gold-dim: rgba(168, 120, 42, 0.08);
-  --gold-glow: rgba(168, 120, 42, 0.12);
-  --gold-line: rgba(168, 120, 42, 0.22);
-  --text: #1A1714;
-  --text-2: rgba(26, 23, 20, 0.62);
-  --text-3: rgba(26, 23, 20, 0.32);
-  --text-4: rgba(26, 23, 20, 0.14);
-  --b1: rgba(168, 120, 42, 0.14);
-  --b2: rgba(168, 120, 42, 0.08);
-  --b3: rgba(26, 23, 20, 0.06);
-}
 
 /* Base */
 * {
