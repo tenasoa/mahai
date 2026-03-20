@@ -197,7 +197,7 @@ export function UserNotifications() {
           />
           <div style={{
             position: 'absolute',
-            right: '-80px',
+            right: '80px',
             top: 'calc(100% + 0.5rem)',
             width: '340px',
             maxWidth: 'calc(100vw - 2rem)',
