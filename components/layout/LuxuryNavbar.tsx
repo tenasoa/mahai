@@ -141,30 +141,31 @@ export function LuxuryNavbar() {
           {userId ? (
             <div className="relative" ref={dropdownRef}>
               <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
-                height: '38px', padding: '0 0.35rem 0 1rem', borderRadius: '2rem',
-                background: 'linear-gradient(135deg, #A8782A 0%, #453517 100%)',
-                border: '1px solid rgba(201, 168, 76, 0.3)', display: 'flex', alignItems: 'center', gap: '0.65rem',
-                cursor: 'none', transition: 'all 0.3s', boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                height: '38px', padding: '0', borderRadius: '2rem',
+                background: 'transparent',
+                border: 'none',
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                cursor: 'none', transition: 'all 0.3s'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.6)'}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.3)'}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(201, 168, 76, 0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 {appUser?.profilePicture ? (
                   <img
                     src={appUser.profilePicture}
                     alt="Avatar"
                     style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '32px',
+                      height: '32px',
                       borderRadius: '50%',
                       objectFit: 'cover',
-                      border: '2px solid rgba(201, 168, 76, 0.5)'
+                      border: '2px solid var(--gold-line)'
                     }}
                   />
                 ) : (
                   <div style={{
-                    width: '28px',
-                    height: '28px',
+                    width: '32px',
+                    height: '32px',
                     borderRadius: '50%',
                     background: 'var(--gold-dim)',
                     border: '2px solid var(--gold-line)',
@@ -179,11 +180,8 @@ export function LuxuryNavbar() {
                     {(appUser?.prenom?.charAt(0) || 'U').toUpperCase()}
                   </div>
                 )}
-                <span style={{ fontFamily: 'var(--display)', fontSize: '0.9rem', fontWeight: 500, color: '#E8C96A' }}>
-                  {appUser?.pseudo || appUser?.prenom || 'Menu'}
-                </span>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <ChevronDown size={14} color="#E8C96A" style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ChevronDown size={12} color="#E8C96A" style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
                 </div>
               </button>
 
