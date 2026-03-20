@@ -927,7 +927,7 @@
   vertical-align: middle;
 }
 .sb-pending { background: var(--amber-dim); border-color: var(--amber-line); color: var(--amber); }
-.sb-done { background: var(--sage-dim); border-color: var(--sage-line); color: #8ECAAC; }
+.sb-done { background: var(--sage-dim); border-color: var(--sage-line); color: #5A8A6A; }
 .sb-rejected { background: var(--ruby-dim); border-color: var(--ruby-line); color: #E06070; }
 .sb-published { background: var(--gold-dim); border-color: var(--gold-line); color: var(--gold); }
 
@@ -1653,7 +1653,7 @@ table.admin-table {
 .status-gray { background: rgba(240, 235, 227, 0.08); color: var(--text-2); border-color: var(--b2); }
 .status-amber { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-line); }
 .status-ruby { background: var(--ruby-dim); color: #E06070; border-color: var(--ruby-line); }
-.status-emerald { background: var(--sage-dim); color: #8ECAAC; border-color: var(--sage-line); }
+.status-emerald { background: var(--sage-dim); color: #2D4A3A; border-color: var(--sage-line); }
 .status-blue { background: var(--blue-dim); color: #5B9BD5; border-color: var(--blue-line); }
 
 /* Badges Sidebar Améliorés */
