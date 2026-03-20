@@ -27,39 +27,38 @@ export default async function ExamPage({ params }: ExamPageProps) {
     redirect('/examens')
   }
 
-  const questions = [
-    {
-      id: 'q1',
-      numero: 1,
-      texte: 'Calculer la dérivée de f(x) = x³ + 2x² - 5x + 1',
-      type: '郎答' as const,
+  // Charger les vraies questions depuis la DB
+  let questions = await db.questionExamen.findMany({
+    where: { examenId: id },
+    orderBy: { numero: 'asc' },
+  })
+
+  // Si aucune question en DB, générer des questions de fallback basées sur le sujet
+  if (!questions || questions.length === 0) {
+    const nbQuestions = 3
+    questions = Array.from({ length: nbQuestions }, (_, i) => ({
+      id: `fallback-q${i + 1}`,
+      numero: i + 1,
+      texte: `Question ${i + 1} — ${exam.matiere || 'Exercice'} (${exam.annee || ''})`,
+      type: 'réponse',
       points: 5,
-    },
-    {
-      id: 'q2',
-      numero: 2,
-      texte: 'Quelle est la primitive de g(x) = 2x + 1 ?',
-      type: 'qcm' as const,
-      options: [
-        'x² + x + C',
-        '2x² + x + C',
-        'x² + 1 + C',
-        '2x + C',
-      ],
-      points: 3,
-    },
-    {
-      id: 'q3',
-      numero: 3,
-      texte: 'Résoudre l\'équation: 2x + 5 = 13',
-      type: 'numérique' as const,
-      points: 2,
-    },
-  ]
+      examenId: id,
+    }))
+  }
+
+  // Normaliser le type pour le client
+  const normalizedQuestions = questions.map((q: any) => ({
+    id: q.id,
+    numero: q.numero,
+    texte: q.texte,
+    type: (q.type === 'réponse' || q.type === 'rponse' || q.type === 'libre') ? '郎答' : q.type,
+    options: q.options ? (Array.isArray(q.options) ? q.options : JSON.parse(q.options)) : undefined,
+    points: q.points,
+  }))
 
   return (
     <Suspense fallback={<ExamenDetailSkeleton />}>
-      <ExamTakingClient exam={{ ...exam, questions }} />
+      <ExamTakingClient exam={{ ...exam, questions: normalizedQuestions }} />
     </Suspense>
   )
 }

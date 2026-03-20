@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { AuthModal } from '@/components/ui/AuthModal'
 import { getSubjectById } from '@/lib/supabase/subjects'
 import { getCurrentUserCredits, purchaseCurrentUserSubject } from '@/actions/user'
+import { convertSubjectToExamAction } from '@/actions/examen'
 import { SujetDetailSkeleton } from '@/components/ui/PageSkeletons'
 import { AIFeedbackNarrative } from '@/components/ui/AIFeedbackNarrative'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -63,6 +64,7 @@ export default function SujetDetailPage() {
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [isConverting, setIsConverting] = useState(false)
 
   // Vérifier si l'utilisateur est connecté
   const isGuest = !userId
@@ -173,6 +175,35 @@ export default function SujetDetailPage() {
 
   const toggleMode = () => {
     setIsReadOnly(!isReadOnly)
+  }
+
+  const handleConvertToExam = async () => {
+    if (!userId) {
+      setShowAuthModal(true)
+      return
+    }
+
+    if (!subject) return
+
+    setIsConverting(true)
+    try {
+      const result = await convertSubjectToExamAction(subject.id, userId)
+      
+      if (result.success && result.examId) {
+        showToast('success', 'Examen créé !', 'Redirection vers l\'examen blanc...')
+        // Attendre un court instant pour que le toast soit visible
+        setTimeout(() => {
+          router.push(`/examens/${result.examId}`)
+        }, 800)
+      } else {
+        showToast('error', 'Erreur', result.error || 'Impossible de créer l\'examen')
+      }
+    } catch (error) {
+      console.error('Erreur lors de la conversion:', error)
+      showToast('error', 'Erreur', 'Une erreur est survenue lors de la conversion')
+    } finally {
+      setIsConverting(false)
+    }
   }
 
   if (loading) {
@@ -420,6 +451,20 @@ export default function SujetDetailPage() {
                   <button className="rt-btn" onClick={() => showToast('info', 'PDF', 'Le téléchargement PDF sera activé quand le stockage signé sera prêt.')}>⬇ PDF bientôt</button>
                   <button className="rt-btn" onClick={() => showToast('info', 'Plein écran', 'Mode plein écran activé')}>⛶ Plein écran</button>
                   <button className="rt-btn" onClick={() => showToast('info', 'Signet', 'Sujet mis en favori')}>♡ Favori</button>
+                  <button 
+                    className="rt-btn exam-convert-btn" 
+                    onClick={handleConvertToExam}
+                    disabled={isConverting}
+                    title="Convertir ce sujet en examen blanc chronométré"
+                    style={{
+                      background: isConverting ? 'transparent' : 'rgba(10,255,224,0.1)',
+                      border: '1px solid rgba(10,255,224,0.35)',
+                      color: isConverting ? 'var(--text-3)' : 'var(--teal)',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {isConverting ? '⏳ Création...' : '✦ Examen blanc'}
+                  </button>
                 </div>
                 <div className="subject-doc" id="subjectDoc">
                   <div className="doc-header">
@@ -610,6 +655,38 @@ export default function SujetDetailPage() {
                 <div className="unlocked-label">Accès débloqué</div>
                 <div className="unlocked-sub">Vous avez accès à ce sujet. Répondez aux questions puis soumettez pour une correction IA détaillée.</div>
                 <button className="btn-buy" style={{ background: 'linear-gradient(135deg,var(--sage),#6AAB8A)' }} onClick={submitAnswers}>Soumettre mes réponses →</button>
+                <div style={{ marginTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.75rem' }}>
+                  <button
+                    onClick={handleConvertToExam}
+                    disabled={isConverting}
+                    style={{
+                      width: '100%',
+                      padding: '.6rem 1rem',
+                      background: isConverting
+                        ? 'rgba(10,255,224,0.05)'
+                        : 'linear-gradient(135deg, rgba(10,255,224,0.15), rgba(10,255,224,0.05))',
+                      border: '1px solid rgba(10,255,224,0.3)',
+                      borderRadius: 'var(--r)',
+                      fontFamily: 'var(--mono)',
+                      fontSize: '.65rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '.1em',
+                      color: isConverting ? 'var(--text-3)' : 'var(--teal)',
+                      cursor: isConverting ? 'not-allowed' : 'pointer',
+                      transition: 'all .2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '.4rem',
+                    }}
+                    title="Convertir ce sujet en examen blanc chronométré"
+                  >
+                    {isConverting ? '⏳ Création de l\'examen...' : '✦ Passer en examen blanc'}
+                  </button>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '.55rem', color: 'var(--text-4)', marginTop: '.4rem', textAlign: 'center' }}>
+                    Chronomètre activé · Conditions réelles
+                  </div>
+                </div>
               </div>
             </div>
           )}

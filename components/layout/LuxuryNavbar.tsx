@@ -21,6 +21,11 @@ export function LuxuryNavbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // Ne pas afficher la navbar sur les pages d'administration
+  if (pathname?.startsWith('/admin')) {
+    return null
+  }
+
   // Menus centraux - différents pour connecté / non-connecté
   const centerNavItems: NavItem[] = userId ? [
     { label: 'Tableau de bord', href: '/dashboard' },

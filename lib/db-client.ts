@@ -206,6 +206,17 @@ export const db = {
     }
   },
   
+  questionExamen: {
+    async findMany({ where, orderBy }: { where: { examenId: string }; orderBy?: { numero?: 'asc' | 'desc' } }) {
+      let sql = 'SELECT * FROM "QuestionExamen" WHERE "examenId" = $1'
+      if (orderBy?.numero) {
+        sql += ` ORDER BY numero ${orderBy.numero === 'desc' ? 'DESC' : 'ASC'}`
+      }
+      const result = await query(sql, [where.examenId])
+      return result.rows
+    }
+  },
+
   examenBlanc: {
     async findUnique({ where }: { where: { id: string } }) {
       const result = await query('SELECT * FROM "ExamenBlanc" WHERE id = $1', [where.id])
