@@ -66,6 +66,11 @@ export default function RechargePage() {
   const [transactionsLoading, setTransactionsLoading] = useState(false)
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(10)
+  const [totalTransactions, setTotalTransactions] = useState(0)
+
   // États pour le modal de paiement manuel
   const [showManualModal, setShowManualModal] = useState(false)
   const [transferCode, setTransferCode] = useState('')
@@ -76,14 +81,16 @@ export default function RechargePage() {
     enabled: true
   })
 
-  // Charger les transactions
-  const loadTransactions = async () => {
+  // Charger les transactions avec pagination
+  const loadTransactions = async (page: number = currentPage) => {
     if (transactionsLoading) return
     setTransactionsLoading(true)
     try {
-      const result = await getUserTransactionsAction()
-      if (result.success) {
-        setTransactions(result.data || [])
+      const { getUserCreditHistoryAction } = await import('@/actions/profile')
+      const result = await getUserCreditHistoryAction(page, pageSize)
+      if (result.success && result.data) {
+        setTransactions(result.data)
+        setTotalTransactions(result.pagination?.total || 0)
         // Réinitialiser le compteur de nouvelles transactions après chargement
         resetCount()
       }
@@ -102,33 +109,41 @@ export default function RechargePage() {
         setLoading(false)
         // Charger les transactions si on est sur l'onglet historique
         if (activeTab === 'historique') {
-          loadTransactions()
+          loadTransactions(1)
         }
       }
     }
-  }, [userId, authLoading, router, activeTab])
+  }, [userId, authLoading, router])
 
   useEffect(() => {
     if (activeTab === 'historique' && transactions.length === 0 && !transactionsLoading) {
-      loadTransactions()
+      loadTransactions(1)
     }
   }, [activeTab])
+
+  // Recharger quand la page change
+  useEffect(() => {
+    if (activeTab === 'historique') {
+      loadTransactions(currentPage)
+    }
+  }, [currentPage])
 
   // Recharger les transactions quand une nouvelle arrive en temps réel
   useEffect(() => {
     if (newTransactionCount > 0 && lastTransaction) {
       // Recharger les transactions pour afficher la nouvelle
-      loadTransactions()
-      
+      loadTransactions(1)
+      setCurrentPage(1)
+
       // Afficher une notification
       const txType = lastTransaction.type === 'RECHARGE' ? 'Recharge' : lastTransaction.type === 'ACHAT' ? 'Achat' : 'Transaction'
       const status = lastTransaction.status === 'PENDING' ? 'en attente de validation' : lastTransaction.status === 'COMPLETED' ? 'validée' : 'refusée'
-      
+
       setNotification({
         type: lastTransaction.status === 'COMPLETED' ? 'success' : 'error',
         message: `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`
       })
-      
+
       // Auto-dismiss après 5 secondes
       setTimeout(() => {
         setNotification(null)
@@ -337,46 +352,71 @@ export default function RechargePage() {
               {transactionsLoading ? (
                 <div className="transactions-loading">Chargement de vos transactions...</div>
               ) : transactions.length > 0 ? (
-                Object.entries(transactionGroups).map(([month, txs]) => (
-                  <div key={month}>
-                    <div className="month-label">{month}</div>
-                    {txs.map((tx) => (
-                      <div key={tx.id} className="tx-row card-noise">
-                        <div className={`tx-icon ${tx.type === 'ACHAT' ? 'out' : tx.type === 'RECHARGE' ? 'in' : 'bonus'}`}>
-                          {tx.type === 'ACHAT' ? '🔓' : tx.type === 'RECHARGE' ? '💳' : '🎁'}
+                <div>
+                  {transactions.map((tx) => (
+                    <div key={tx.id} className="tx-row card-noise">
+                      <div className={`tx-icon ${tx.type === 'ACHAT' ? 'out' : tx.type === 'RECHARGE' ? 'in' : 'bonus'}`}>
+                        {tx.type === 'ACHAT' ? '🔓' : tx.type === 'RECHARGE' ? '💳' : '🎁'}
+                      </div>
+                      <div className="tx-body">
+                        <div className="tx-title serif">
+                          {tx.type === 'ACHAT' ? 'Déblocage — ' : tx.type === 'RECHARGE' ? 'Recharge Mobile Money — ' : ''}
+                          {tx.description || `${tx.type} de crédits`}
                         </div>
-                        <div className="tx-body">
-                          <div className="tx-title serif">
-                            {tx.type === 'ACHAT' ? 'Déblocage — ' : tx.type === 'RECHARGE' ? 'Recharge Mobile Money — ' : ''}
-                            {tx.description || `${tx.type} de crédits`}
-                          </div>
-                          <div className="tx-meta mono">
-                            {new Date(tx.createdAt).toLocaleDateString('fr-FR', { 
-                              day: 'numeric', 
-                              month: 'long', 
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                            {tx.id && ` · Réf. ${tx.id.slice(0, 8).toUpperCase()}`}
-                          </div>
-                        </div>
-                        <div>
-                          <div className={`tx-amount mono ${tx.type === 'RECHARGE' ? 'positive' : 'negative'}`}>
-                            {tx.type === 'RECHARGE' 
-                              ? `+${tx.creditsCount || tx.amount} cr`
-                              : `${tx.amount >= 0 ? '+' : ''}${tx.amount} cr`
-                            }
-                          </div>
+                        <div className="tx-meta mono">
+                          {new Date(tx.createdAt).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                          {tx.id && ` · Réf. ${tx.id.slice(0, 8).toUpperCase()}`}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ))
+                      <div>
+                        <div className={`tx-amount mono ${tx.type === 'RECHARGE' ? 'positive' : 'negative'}`}>
+                          {tx.type === 'RECHARGE'
+                            ? `+${tx.creditsCount || tx.amount} cr`
+                            : `${tx.amount >= 0 ? '+' : ''}${tx.amount} cr`
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="transactions-empty">
                   <p>Aucune transaction enregistrée pour le moment.</p>
                   <span className="text-xs text-text-4">Vos futurs achats et recharges apparaîtront ici.</span>
+                </div>
+              )}
+
+              {/* Pagination */}
+              {totalTransactions > pageSize && (
+                <div className="pagination">
+                  <div className="pagination-info">
+                    {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalTransactions)} sur {totalTransactions}
+                  </div>
+                  <div className="pagination-controls">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="pagination-btn"
+                    >
+                      Précédent
+                    </button>
+                    <span className="pagination-current">
+                      Page {currentPage} sur {Math.ceil(totalTransactions / pageSize)}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(Math.min(Math.ceil(totalTransactions / pageSize), currentPage + 1))}
+                      disabled={currentPage === Math.ceil(totalTransactions / pageSize)}
+                      className="pagination-btn"
+                    >
+                      Suivant
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

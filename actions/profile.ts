@@ -700,9 +700,9 @@ export async function getUserActiveTransactionsAction() {
 
   try {
     const result = await query(
-      `SELECT * FROM "CreditTransaction" 
-       WHERE "userId" = $1 AND "isDismissed" = false 
-       ORDER BY "createdAt" DESC 
+      `SELECT * FROM "CreditTransaction"
+       WHERE "userId" = $1 AND "isDismissed" = false
+       ORDER BY "createdAt" DESC
        LIMIT 20`,
       [context.userId]
     )
@@ -711,5 +711,49 @@ export async function getUserActiveTransactionsAction() {
   } catch (error) {
     console.error('Erreur getUserActiveTransactionsAction:', error)
     return { success: false, error: 'Erreur lors du chargement des transactions' }
+  }
+}
+
+/**
+ * Récupérer l'historique complet des transactions de l'utilisateur (pour la page crédits)
+ */
+export async function getUserCreditHistoryAction(page?: number, pageSize?: number) {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    const safePage = page || 1
+    const safePageSize = pageSize || 10
+
+    // Count total
+    const countResult = await query(
+      `SELECT COUNT(*) FROM "CreditTransaction" WHERE "userId" = $1`,
+      [context.userId]
+    )
+    const total = parseInt(countResult.rows[0]?.count || '0', 10)
+
+    // Get transactions with pagination
+    const offset = (safePage - 1) * safePageSize
+    const result = await query(
+      `SELECT * FROM "CreditTransaction"
+       WHERE "userId" = $1
+       ORDER BY "createdAt" DESC
+       LIMIT $2 OFFSET $3`,
+      [context.userId, safePageSize, offset]
+    )
+
+    return {
+      success: true,
+      data: result.rows,
+      pagination: {
+        total,
+        page: safePage,
+        pageSize: safePageSize,
+        totalPages: Math.ceil(total / safePageSize)
+      }
+    }
+  } catch (error) {
+    console.error('Erreur getUserCreditHistoryAction:', error)
+    return { success: false, error: 'Erreur lors du chargement de l\'historique' }
   }
 }
