@@ -1,0 +1,156 @@
+'use server'
+
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { query } from '@/lib/db'
+
+async function getAuthenticatedContributor() {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) return null
+
+  const result = await query('SELECT id, role FROM "User" WHERE id = $1', [session.user.id])
+  const user = result.rows[0]
+
+  // Seuls les contributeurs et admins peuvent accéder
+  if (!user || !['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR'].includes(user.role)) {
+    return null
+  }
+
+  return { userId: user.id, role: user.role }
+}
+
+export async function getContributorWithdrawals() {
+  const contributor = await getAuthenticatedContributor()
+  if (!contributor) {
+    return {
+      user: { prenom: 'Utilisateur', nom: '', role: 'CONTRIBUTEUR' },
+      withdrawals: [],
+      stats: {
+        totalWithdrawn: 0,
+        pending: 0,
+        thisMonth: 0,
+        averageWithdrawal: 0
+      },
+      balance: {
+        available: 0,
+        pending: 0
+      }
+    }
+  }
+
+  // Récupérer les retraits
+  const withdrawalsResult = await query(`
+    SELECT w.*, u.prenom, u.nom, u.phone
+    FROM "Withdrawal" w
+    JOIN "User" u ON w."userId" = u.id
+    WHERE w."userId" = $1
+    ORDER BY w."createdAt" DESC
+    LIMIT 50
+  `, [contributor.userId])
+
+  // Stats
+  const statsResult = await query(`
+    SELECT 
+      COALESCE(SUM(amount), 0) as total,
+      COALESCE(SUM(CASE WHEN status = 'PENDING' THEN amount ELSE 0 END), 0) as pending,
+      COALESCE(SUM(CASE WHEN EXTRACT(MONTH FROM "createdAt") = EXTRACT(MONTH FROM NOW()) THEN amount ELSE 0 END), 0) as thisMonth,
+      COUNT(*) as count
+    FROM "Withdrawal"
+    WHERE "userId" = $1
+  `, [contributor.userId])
+
+  // Solde disponible (revenus totaux - retraits)
+  const earningsResult = await query(`
+    SELECT COALESCE(SUM("creditsAmount" * 50), 0) as totalEarnings
+    FROM "Purchase" p
+    JOIN "Subject" s ON p."subjectId" = s.id
+    WHERE s."authorId" = $1
+  `, [contributor.userId])
+
+  const withdrawnResult = await query(`
+    SELECT COALESCE(SUM(amount), 0) as totalWithdrawn
+    FROM "Withdrawal"
+    WHERE "userId" = $1 AND status = 'COMPLETED'
+  `, [contributor.userId])
+
+  const totalEarnings = earningsResult.rows[0]?.totalEarnings || 0
+  const totalWithdrawn = withdrawnResult.rows[0]?.totalWithdrawn || 0
+  const available = totalEarnings - totalWithdrawn
+
+  return {
+    user: { prenom: 'Contributeur', nom: '', role: 'CONTRIBUTEUR' },
+    withdrawals: withdrawalsResult.rows || [],
+    stats: {
+      totalWithdrawn: statsResult.rows[0]?.total || 0,
+      pending: statsResult.rows[0]?.pending || 0,
+      thisMonth: statsResult.rows[0]?.thisMonth || 0,
+      averageWithdrawal: statsResult.rows[0]?.count > 0 
+        ? statsResult.rows[0]?.total / statsResult.rows[0]?.count 
+        : 0
+    },
+    balance: {
+      available,
+      pending: statsResult.rows[0]?.pending || 0
+    }
+  }
+}
+
+export async function requestWithdrawal(amount: number, phoneNumber: string) {
+  const contributor = await getAuthenticatedContributor()
+  if (!contributor) {
+    return { success: false, error: 'Non autorisé' }
+  }
+
+  if (amount <= 0) {
+    return { success: false, error: 'Le montant doit être supérieur à 0' }
+  }
+
+  if (amount < 5000) {
+    return { success: false, error: 'Le montant minimum est de 5 000 Ar' }
+  }
+
+  // Vérifier le solde disponible
+  const earningsResult = await query(`
+    SELECT COALESCE(SUM("creditsAmount" * 50), 0) as totalEarnings
+    FROM "Purchase" p
+    JOIN "Subject" s ON p."subjectId" = s.id
+    WHERE s."authorId" = $1
+  `, [contributor.userId])
+
+  const withdrawnResult = await query(`
+    SELECT COALESCE(SUM(amount), 0) as totalWithdrawn
+    FROM "Withdrawal"
+    WHERE "userId" = $1 AND status = 'COMPLETED'
+  `, [contributor.userId])
+
+  const pendingResult = await query(`
+    SELECT COALESCE(SUM(amount), 0) as pending
+    FROM "Withdrawal"
+    WHERE "userId" = $1 AND status IN ('PENDING', 'PROCESSING')
+  `, [contributor.userId])
+
+  const totalEarnings = earningsResult.rows[0]?.totalEarnings || 0
+  const totalWithdrawn = withdrawnResult.rows[0]?.totalWithdrawn || 0
+  const pending = pendingResult.rows[0]?.pending || 0
+  const available = totalEarnings - totalWithdrawn - pending
+
+  if (amount > available) {
+    return { success: false, error: 'Solde insuffisant' }
+  }
+
+  // Créer la demande de retrait
+  await query(`
+    INSERT INTO "Withdrawal" ("id", "userId", "amount", "phoneNumber", "status", "paymentMethod")
+    VALUES ($1, $2, $3, $4, $5, $6)
+  `, [
+    crypto.randomUUID(),
+    contributor.userId,
+    amount,
+    phoneNumber,
+    'PENDING',
+    'MVOLA'
+  ])
+
+  return { success: true, message: 'Demande de retrait envoyée' }
+}
