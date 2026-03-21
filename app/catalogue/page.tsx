@@ -40,7 +40,7 @@ function CatalogueContent() {
     toggleWishlist,
     isWished,
   } = useCatalogue({
-    userId,
+    userId: userId ?? undefined,
     pageSize: pageSize,
     initialFilters: {
       sortBy: 'createdAt',

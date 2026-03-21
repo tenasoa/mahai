@@ -6,6 +6,11 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { Bell, Check, X, Zap, CreditCard, BookOpen, Settings, AlertTriangle } from 'lucide-react'
+import { 
+  markAllNotificationsAsReadAction, 
+  dismissNotificationAction,
+  getUserActiveTransactionsAction 
+} from '@/actions/profile'
 
 interface Notification {
   id: string
@@ -38,21 +43,20 @@ export default function NotificationsPage() {
 
   const loadRealNotifications = async () => {
     try {
-      const { getUserTransactionsAction } = await import('@/actions/profile')
-      const result = await getUserTransactionsAction()
-      
+      const result = await getUserActiveTransactionsAction()
+
       if (result.success && result.data) {
         const realNotifications: Notification[] = result.data.map((tx: any) => ({
           id: tx.id,
           type: tx.type === 'RECHARGE' ? 'credit' : tx.type === 'ACHAT' ? 'sujet' : 'alert',
-          title: tx.type === 'RECHARGE' 
+          title: tx.type === 'RECHARGE'
             ? (tx.status === 'PENDING' ? 'Recharge en attente' : 'Recharge créditée')
             : tx.type === 'ACHAT'
             ? 'Achat de sujet'
             : 'Transaction',
           body: tx.description || `${tx.type === 'RECHARGE' ? '+' : ''}${tx.creditsCount || Math.abs(tx.amount)} crédits ${tx.status === 'PENDING' ? '(en attente)' : ''}`,
           createdAt: tx.createdAt,
-          read: tx.status === 'COMPLETED',
+          read: tx.isRead || false,
           link: '/recharge'
         }))
         setNotifications(realNotifications)
@@ -62,12 +66,22 @@ export default function NotificationsPage() {
     }
   }
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+  const markAllAsRead = async () => {
+    const result = await markAllNotificationsAsReadAction()
+    
+    if (result.success) {
+      // Recharger les notifications pour avoir l'état à jour
+      await loadRealNotifications()
+    }
   }
 
-  const dismissNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
+  const dismissNotification = async (id: string) => {
+    const result = await dismissNotificationAction(id)
+    
+    if (result.success) {
+      // Recharger les notifications pour avoir l'état à jour
+      await loadRealNotifications()
+    }
   }
 
   const getNotificationIcon = (type: string) => {

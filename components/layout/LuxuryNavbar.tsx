@@ -59,6 +59,11 @@ export function LuxuryNavbar() {
     }
   }, [])
 
+  // Force re-render when userId changes to update nav items
+  useEffect(() => {
+    // This effect runs when userId changes to trigger a re-render
+  }, [userId])
+
   // Ne pas afficher la navbar sur les pages d'administration
   if (pathname?.startsWith('/admin')) {
     return null

@@ -617,3 +617,89 @@ export async function rechargeCreditsAction(data: {
     return { success: false, error: 'Erreur lors de la recharge' }
   }
 }
+
+/**
+ * Marquer toutes les notifications comme lues pour l'utilisateur connecté
+ */
+export async function markAllNotificationsAsReadAction() {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    await query(
+      `UPDATE "CreditTransaction" SET "isRead" = true WHERE "userId" = $1 AND "isRead" = false`,
+      [context.userId]
+    )
+
+    revalidatePath('/notifications')
+    return { success: true, message: 'Toutes les notifications ont été marquées comme lues' }
+  } catch (error) {
+    console.error('Erreur markAllNotificationsAsReadAction:', error)
+    return { success: false, error: 'Erreur lors de la mise à jour des notifications' }
+  }
+}
+
+/**
+ * Marquer une notification spécifique comme lue
+ */
+export async function markNotificationAsReadAction(notificationId: string) {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    await query(
+      `UPDATE "CreditTransaction" SET "isRead" = true WHERE "id" = $1 AND "userId" = $2`,
+      [notificationId, context.userId]
+    )
+
+    revalidatePath('/notifications')
+    return { success: true }
+  } catch (error) {
+    console.error('Erreur markNotificationAsReadAction:', error)
+    return { success: false, error: 'Erreur lors de la mise à jour de la notification' }
+  }
+}
+
+/**
+ * Ignorer/masquer une notification spécifique
+ */
+export async function dismissNotificationAction(notificationId: string) {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    await query(
+      `UPDATE "CreditTransaction" SET "isDismissed" = true WHERE "id" = $1 AND "userId" = $2`,
+      [notificationId, context.userId]
+    )
+
+    revalidatePath('/notifications')
+    return { success: true }
+  } catch (error) {
+    console.error('Erreur dismissNotificationAction:', error)
+    return { success: false, error: 'Erreur lors de la suppression de la notification' }
+  }
+}
+
+/**
+ * Récupérer les transactions non ignorées de l'utilisateur
+ */
+export async function getUserActiveTransactionsAction() {
+  const context = await getAuthenticatedContext()
+  if ('error' in context) return { success: false, error: context.error }
+
+  try {
+    const result = await query(
+      `SELECT * FROM "CreditTransaction" 
+       WHERE "userId" = $1 AND "isDismissed" = false 
+       ORDER BY "createdAt" DESC 
+       LIMIT 20`,
+      [context.userId]
+    )
+
+    return { success: true, data: result.rows }
+  } catch (error) {
+    console.error('Erreur getUserActiveTransactionsAction:', error)
+    return { success: false, error: 'Erreur lors du chargement des transactions' }
+  }
+}

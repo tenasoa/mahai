@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { Bell, Check, X, ChevronRight } from 'lucide-react'
+import { 
+  markAllNotificationsAsReadAction, 
+  dismissNotificationAction,
+  getUserActiveTransactionsAction 
+} from '@/actions/profile'
 
 interface Notification {
   id: string
@@ -26,6 +31,8 @@ export function UserNotifications() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Écouter les notifications en temps réel
@@ -33,7 +40,7 @@ export function UserNotifications() {
     if (!userId) return
 
     const supabase = createClient()
-    
+
     const channel = supabase
       .channel('user-notifications-dropdown')
       .on(
@@ -51,11 +58,13 @@ export function UserNotifications() {
             title: payload.new.type === 'RECHARGE' ? 'Recharge créditée' : 'Transaction mise à jour',
             body: `${Math.abs(payload.new.creditsCount || payload.new.amount)} crédits ${payload.new.status === 'COMPLETED' ? 'validés' : 'en attente'}`,
             createdAt: payload.new.createdAt,
-            read: false,
+            read: payload.new.isRead || false,
             link: '/recharge'
           }
           setNotifications(prev => [newNotif, ...prev])
-          setNotificationCount(prev => prev + 1)
+          if (!payload.new.isRead) {
+            setNotificationCount(prev => prev + 1)
+          }
         }
       )
       .subscribe()
@@ -68,23 +77,42 @@ export function UserNotifications() {
     }
   }, [userId])
 
+  // Gestion du clic dehors pour fermer le dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [dropdownOpen])
+
   const loadRealNotifications = async () => {
     try {
-      const { getUserTransactionsAction } = await import('@/actions/profile')
-      const result = await getUserTransactionsAction()
-      
+      const result = await getUserActiveTransactionsAction()
+
       if (result.success && result.data) {
         const realNotifications: Notification[] = result.data.slice(0, 10).map((tx: any) => ({
           id: tx.id,
           type: tx.type === 'RECHARGE' ? 'credit' : tx.type === 'ACHAT' ? 'sujet' : 'alert',
-          title: tx.type === 'RECHARGE' 
-            ? 'Recharge Mobile Money' 
+          title: tx.type === 'RECHARGE'
+            ? 'Recharge Mobile Money'
             : tx.type === 'ACHAT'
             ? 'Achat de sujet'
             : 'Transaction',
           body: tx.description || `${tx.type === 'RECHARGE' ? '+' : ''}${tx.creditsCount || Math.abs(tx.amount)} crédits`,
           createdAt: tx.createdAt,
-          read: tx.status === 'COMPLETED',
+          read: tx.isRead || false,
           link: '/recharge'
         }))
         setNotifications(realNotifications)
@@ -97,14 +125,44 @@ export function UserNotifications() {
 
   const resetNotificationCount = () => setNotificationCount(0)
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-    setNotificationCount(0)
+  const markAllAsRead = async () => {
+    if (isLoading) return
+    setIsLoading(true)
+    
+    try {
+      const result = await markAllNotificationsAsReadAction()
+      
+      if (result.success) {
+        // Mettre à jour l'état local immédiatement
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+        setNotificationCount(0)
+      }
+    } catch (error) {
+      console.error('Erreur markAllAsRead:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const dismissNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
-    if (notificationCount > 0) setNotificationCount(prev => prev - 1)
+  const dismissNotification = async (id: string) => {
+    if (isLoading) return
+    setIsLoading(true)
+    
+    try {
+      const result = await dismissNotificationAction(id)
+      
+      if (result.success) {
+        // Mettre à jour l'état local immédiatement
+        setNotifications(prev => prev.filter(n => n.id !== id))
+        if (notificationCount > 0) {
+          setNotificationCount(prev => Math.max(0, prev - 1))
+        }
+      }
+    } catch (error) {
+      console.error('Erreur dismissNotification:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const getNotificationIcon = (type: string) => {
@@ -136,7 +194,7 @@ export function UserNotifications() {
   return (
     <>
       {/* Bouton Bell dans la navbar */}
-      <button 
+      <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
         ref={buttonRef}
         style={{
@@ -190,12 +248,9 @@ export function UserNotifications() {
 
       {/* Dropdown */}
       {dropdownOpen && (
-        <>
-          <div 
-            style={{ position: 'fixed', inset: 0, zIndex: 998 }} 
-            onClick={() => setDropdownOpen(false)}
-          />
-          <div style={{
+        <div
+          ref={dropdownRef}
+          style={{
             position: 'absolute',
             right: '80px',
             top: 'calc(100% + 0.5rem)',
@@ -426,7 +481,6 @@ export function UserNotifications() {
               <ChevronRight size={14} />
             </Link>
           </div>
-        </>
       )}
 
       <style jsx global>{`

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -52,10 +52,10 @@ export function useAuth() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [appUser, setAppUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
-  const [userId, setUserId] = useState<string | undefined>(undefined)
+  const [userId, setUserId] = useState<string | null>(null)
 
   // Fonction pour récupérer les données utilisateur depuis la DB
-  const fetchAppUser = async () => {
+  const fetchAppUser = useCallback(async (uid: string) => {
     try {
       const { getCurrentUserData } = await import('@/actions/auth')
       const data = await getCurrentUserData()
@@ -63,19 +63,23 @@ export function useAuth() {
     } catch (error) {
       console.error('Error fetching user data:', error)
     }
-  }
+  }, [])
 
   useEffect(() => {
     const supabase = createClient()
+    let isMounted = true
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return
+      
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      const uid = session?.user?.id
+      const uid = session?.user?.id ?? null
       setUserId(uid)
+      
       if (uid) {
-        fetchAppUser()
+        fetchAppUser(uid)
       }
       setLoading(false)
     })
@@ -84,20 +88,26 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return
+      
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      const uid = session?.user?.id
+      const uid = session?.user?.id ?? null
       setUserId(uid)
+      
       if (uid) {
-        fetchAppUser()
+        fetchAppUser(uid)
       } else {
         setAppUser(null)
       }
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [fetchAppUser])
 
   return { user, appUser, setAppUser, userId, loading, isAuthenticated: !!user }
 }

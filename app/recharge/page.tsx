@@ -72,7 +72,7 @@ export default function RechargePage() {
 
   // Hook Realtime pour les transactions
   const { newTransactionCount, lastTransaction, resetCount } = useTransactionsRealtime({
-    userId,
+    userId: userId ?? undefined,
     enabled: true
   })
 
