@@ -37,13 +37,12 @@ export async function getContributorAnalytics() {
   }
 
   try {
-    // Stats globales
+    // Stats globales - sans downloadCount car la colonne peut ne pas exister
     const statsResult = await query(`
       SELECT 
         COALESCE(SUM(p."creditsAmount" * 50), 0) as totalEarnings,
         COUNT(DISTINCT p.id) as totalSales,
-        COALESCE(AVG(s.rating), 0) as averageRating,
-        COALESCE(SUM(COALESCE(s."downloadCount", 0)), 0) as totalDownloads
+        COALESCE(AVG(s.rating), 0) as averageRating
       FROM "Subject" s
       LEFT JOIN "Purchase" p ON s.id = p."subjectId"
       WHERE s."authorId" = $1
@@ -80,7 +79,7 @@ export async function getContributorAnalytics() {
       LIMIT 5
     `, [contributor.userId])
 
-    // Stats par sujet
+    // Stats par sujet - sans downloadCount
     const subjectStatsResult = await query(`
       SELECT 
         s.id,
@@ -90,7 +89,7 @@ export async function getContributorAnalytics() {
         s.annee,
         s.rating,
         s."reviewsCount",
-        COALESCE(s."downloadCount", 0) as "downloadCount",
+        0 as "downloadCount",
         COUNT(p.id) as sales,
         COALESCE(SUM(p."creditsAmount"), 0) as revenue
       FROM "Subject" s
@@ -106,7 +105,7 @@ export async function getContributorAnalytics() {
         totalEarnings: statsResult.rows[0]?.totalEarnings || 0,
         totalSales: statsResult.rows[0]?.totalSales || 0,
         averageRating: statsResult.rows[0]?.averageRating || 0,
-        totalDownloads: statsResult.rows[0]?.totalDownloads || 0
+        totalDownloads: 0
       },
       earningsHistory: earningsHistoryResult.rows || [],
       topSubjects: topSubjectsResult.rows || [],

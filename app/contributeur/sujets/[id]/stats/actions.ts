@@ -58,13 +58,13 @@ export async function getSubjectStats(subjectId: string) {
       }
     }
 
-    // Stats du sujet
+    // Stats du sujet - sans downloadCount
     const statsResult = await query(`
       SELECT 
         COUNT(p.id) as totalSales,
         COALESCE(SUM(p."creditsAmount" * 50), 0) as totalRevenue,
         COALESCE(s.rating, 0) as averageRating,
-        COALESCE(s."downloadCount", 0) as totalDownloads
+        0 as totalDownloads
       FROM "Subject" s
       LEFT JOIN "Purchase" p ON s.id = p."subjectId"
       WHERE s.id = $1
