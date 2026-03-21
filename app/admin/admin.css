@@ -1611,13 +1611,14 @@
 
 /* Tables standardisées */
 .table-wrapper {
-  overflow-x: auto;
+  overflow-x: hidden;
   margin: 0;
 }
 table.admin-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  table-layout: fixed;
 }
 .admin-table th {
   padding: 1.25rem 1.5rem;
@@ -1631,6 +1632,9 @@ table.admin-table {
   position: sticky;
   top: 0;
   z-index: 10;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .admin-table td {
   padding: 1.25rem 1.5rem;
@@ -1638,6 +1642,8 @@ table.admin-table {
   font-size: 0.85rem;
   color: var(--text-2);
   transition: background 0.2s;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 .admin-table tbody tr {
   transition: all 0.2s;
@@ -1817,22 +1823,6 @@ table.admin-table {
 .kpi-card:nth-child(2) { animation-delay: 0.1s; }
 .kpi-card:nth-child(3) { animation-delay: 0.15s; }
 .kpi-card:nth-child(4) { animation-delay: 0.2s; }
-
-/* Scrollbar personnalisé */
-.table-wrapper::-webkit-scrollbar {
-  height: 6px;
-}
-.table-wrapper::-webkit-scrollbar-track {
-  background: var(--surface);
-  border-radius: 3px;
-}
-.table-wrapper::-webkit-scrollbar-thumb {
-  background: var(--gold-lo);
-  border-radius: 3px;
-}
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: var(--gold);
-}
 
 /* Empty State */
 .admin-empty-state {
