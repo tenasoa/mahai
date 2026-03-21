@@ -569,6 +569,16 @@ export async function rechargeCreditsAction(data: {
       return { success: false, error: 'Tous les champs sont requis' }
     }
 
+    // Bloquer les achats à 0 Ar
+    if (data.packPrice <= 0) {
+      return { success: false, error: 'Le montant de la recharge doit être supérieur à 0 Ar' }
+    }
+
+    // Bloquer les crédits à 0
+    if (data.packCredits <= 0) {
+      return { success: false, error: 'Le nombre de crédits doit être supérieur à 0' }
+    }
+
     const isPending = data.status === 'PENDING'
 
     // 1. Créer la transaction

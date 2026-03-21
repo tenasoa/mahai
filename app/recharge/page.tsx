@@ -172,6 +172,18 @@ export default function RechargePage() {
       return
     }
 
+    // Bloquer les achats à 0 Ar
+    if (selectedPack.price <= 0) {
+      setNotification({ type: 'error', message: 'Le montant de la recharge doit être supérieur à 0 Ar' })
+      return
+    }
+
+    // Bloquer les crédits à 0
+    if (selectedPack.credits <= 0) {
+      setNotification({ type: 'error', message: 'Le nombre de crédits doit être supérieur à 0' })
+      return
+    }
+
     setProcessing(true)
     try {
       const result = await rechargeCreditsAction({
@@ -184,9 +196,9 @@ export default function RechargePage() {
       })
 
       if (result.success) {
-        setNotification({ 
-          type: 'success', 
-          message: `Votre demande d'achat de ${selectedPack.credits} crédits a été enregistrée. L'administrateur validera votre transfert sous 12h.` 
+        setNotification({
+          type: 'success',
+          message: `Votre demande d'achat de ${selectedPack.credits} crédits a été enregistrée. L'administrateur validera votre transfert sous 12h.`
         })
         setShowManualModal(false)
         setTransferCode('')
