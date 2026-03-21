@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
-import { Sun, Moon, User, LogOut, ChevronDown, RefreshCw, Settings } from "lucide-react"
+import { Sun, Moon, User, LogOut, ChevronDown, RefreshCw, Settings, FolderOpen } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { UserNotifications } from './UserNotifications'
 import { logoutUser } from "@/actions/auth"
@@ -38,6 +38,7 @@ export function LuxuryNavbar() {
   const dropdownNavItems: NavItem[] = userId ? [
     { label: 'Profil', href: '/profil', icon: User },
     ...(appUser?.role === 'ADMIN' ? [{ label: 'Administration', href: '/admin', icon: Settings }] : []),
+    ...((appUser?.role === 'CONTRIBUTEUR' || appUser?.role === 'ADMIN') ? [{ label: 'Espace Contributeur', href: '/contributeur', icon: FolderOpen }] : []),
   ] : []
 
   useEffect(() => {
