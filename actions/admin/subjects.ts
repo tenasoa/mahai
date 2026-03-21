@@ -17,10 +17,36 @@ async function checkAdmin() {
   return user?.role === 'ADMIN' ? user : null
 }
 
-export async function getSubjectsAdmin(status?: string, year?: string) {
+export async function getSubjectsAdmin(status?: string, year?: string, page?: number, pageSize?: number) {
   const adminUser = await checkAdmin()
   if (!adminUser) throw new Error("Non autorisé")
 
+  let whereClause = 'WHERE 1=1'
+  const params: any[] = []
+  let paramIndex = 1
+
+  if (status && status !== 'ALL') {
+    whereClause += ` AND s.status = $${paramIndex}`
+    params.push(status)
+    paramIndex++
+  }
+
+  if (year && year !== 'ALL') {
+    whereClause += ` AND s.year = $${paramIndex}`
+    params.push(year)
+    paramIndex++
+  }
+
+  // Count total for pagination
+  const countSql = `
+    SELECT COUNT(*) FROM "Subject" s
+    LEFT JOIN "User" u ON s."authorId" = u.id
+    ${whereClause}
+  `
+  const countResult = await query(countSql, params)
+  const total = parseInt(countResult.rows[0]?.count || '0', 10)
+
+  // Main query
   let sql = `
     SELECT
         s.id, s.titre as title, s.type, s.matiere as motiere, s.annee as year,
@@ -31,26 +57,29 @@ export async function getSubjectsAdmin(status?: string, year?: string) {
         u.id as "authorId"
     FROM "Subject" s
     LEFT JOIN "User" u ON s."authorId" = u.id
-    WHERE 1=1
+    ${whereClause}
   `
-  const params: any[] = []
-  let paramIndex = 1
 
-  if (status && status !== 'ALL') {
-    sql += ` AND s.status = $${paramIndex}`
-    params.push(status)
-    paramIndex++
+  // Add pagination
+  if (page && pageSize) {
+    const offset = (page - 1) * pageSize
+    sql += ` ORDER BY s."createdAt" DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`
+    params.push(pageSize, offset)
+  } else {
+    sql += ' ORDER BY s."createdAt" DESC'
   }
-
-  if (year && year !== 'ALL') {
-    sql += ` AND s.year = $${paramIndex}`
-    params.push(year)
-  }
-
-  sql += ' ORDER BY s."createdAt" DESC'
 
   const result = await query(sql, params)
-  return result.rows
+  
+  return {
+    subjects: result.rows,
+    pagination: {
+      total,
+      page: page || 1,
+      pageSize: pageSize || 100,
+      totalPages: pageSize ? Math.ceil(total / pageSize) : 1
+    }
+  }
 }
 
 export async function getSubjectDetailAdmin(id: string) {

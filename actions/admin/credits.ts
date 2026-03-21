@@ -16,26 +16,53 @@ async function checkAdmin() {
   return user?.role === 'ADMIN' ? user : null
 }
 
-export async function getCreditTransactionsAdmin(status?: string) {
+export async function getCreditTransactionsAdmin(status?: string, page?: number, pageSize?: number) {
   const user = await checkAdmin()
   if (!user) throw new Error("Non autorisé")
 
-  let sql = `
-    SELECT c.*, u.prenom, u.nom, u.email, u.phone as "userPhone" 
-    FROM "CreditTransaction" c
-    JOIN "User" u ON c."userId" = u.id
-  `
+  let whereClause = ''
   const params: any[] = []
 
   if (status && status !== 'ALL') {
-    sql += ' WHERE c.status = $1'
+    whereClause = 'WHERE c.status = $1'
     params.push(status)
   }
 
-  sql += ' ORDER BY c."createdAt" DESC'
+  // Count total for pagination
+  const countSql = `
+    SELECT COUNT(*) FROM "CreditTransaction" c
+    ${whereClause}
+  `
+  const countResult = await query(countSql, params)
+  const total = parseInt(countResult.rows[0]?.count || '0', 10)
+
+  // Main query with pagination
+  let sql = `
+    SELECT c.*, u.prenom, u.nom, u.email, u.phone as "userPhone"
+    FROM "CreditTransaction" c
+    JOIN "User" u ON c."userId" = u.id
+    ${whereClause}
+  `
+
+  if (page && pageSize) {
+    const offset = (page - 1) * pageSize
+    sql += ` ORDER BY c."createdAt" DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
+    params.push(pageSize, offset)
+  } else {
+    sql += ' ORDER BY c."createdAt" DESC'
+  }
 
   const result = await query(sql, params)
-  return result.rows
+  
+  return {
+    transactions: result.rows,
+    pagination: {
+      total,
+      page: page || 1,
+      pageSize: pageSize || 100,
+      totalPages: pageSize ? Math.ceil(total / pageSize) : 1
+    }
+  }
 }
 
 export async function getCreditTransactionDetail(id: string) {

@@ -16,22 +16,45 @@ async function checkAdmin() {
   return user?.role === 'ADMIN'
 }
 
-export async function getUsersAdmin(searchTerm?: string) {
+export async function getUsersAdmin(searchTerm?: string, page?: number, pageSize?: number) {
   const isAdmin = await checkAdmin()
   if (!isAdmin) throw new Error("Non autorisé")
 
-  let sql = 'SELECT id, email, prenom, nom, phone, role, "createdAt", "profilePicture" FROM "User"'
+  let whereClause = ''
   const params: any[] = []
 
   if (searchTerm) {
-    sql += ' WHERE (email ILIKE $1 OR prenom ILIKE $1 OR nom ILIKE $1)'
+    whereClause = 'WHERE (email ILIKE $1 OR prenom ILIKE $1 OR nom ILIKE $1)'
     params.push(`%${searchTerm}%`)
   }
 
-  sql += ' ORDER BY "createdAt" DESC'
+  // Count total for pagination
+  const countSql = `SELECT COUNT(*) FROM "User" ${whereClause}`
+  const countResult = await query(countSql, params)
+  const total = parseInt(countResult.rows[0]?.count || '0', 10)
+
+  // Main query with pagination
+  let sql = `SELECT id, email, prenom, nom, phone, role, "createdAt", "profilePicture" FROM "User" ${whereClause}`
+
+  if (page && pageSize) {
+    const offset = (page - 1) * pageSize
+    sql += ` ORDER BY "createdAt" DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`
+    params.push(pageSize, offset)
+  } else {
+    sql += ' ORDER BY "createdAt" DESC'
+  }
 
   const result = await query(sql, params)
-  return result.rows
+  
+  return {
+    users: result.rows,
+    pagination: {
+      total,
+      page: page || 1,
+      pageSize: pageSize || 100,
+      totalPages: pageSize ? Math.ceil(total / pageSize) : 1
+    }
+  }
 }
 
 export async function getUserDetailAdmin(userId: string) {

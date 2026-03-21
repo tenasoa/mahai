@@ -1,6 +1,8 @@
 import { getSubjectsAdmin } from '@/actions/admin/subjects'
 import Link from 'next/link'
 import { FileText, CheckCircle2, AlertCircle, XCircle, ArrowRight, FolderOpen } from 'lucide-react'
+import { Pagination } from '@/components/ui/Pagination'
+import { redirect } from 'next/navigation'
 
 export const metadata = {
   title: 'Gestion des Sujets — Admin Mah.AI'
@@ -20,15 +22,22 @@ function StatusBadge({ status }: { status: string }) {
   return <span className="status-badge status-gray">{status}</span>
 }
 
+const PAGE_SIZE = 15
+
 export default async function AdminSubjectsPage({
   searchParams
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ status?: string, page?: string }>
 }) {
   const sp = await searchParams
   const statusTab = sp.status || 'ALL'
+  const page = sp.page ? parseInt(sp.page, 10) : 1
 
-  const subjects = await getSubjectsAdmin(statusTab)
+  const { subjects, pagination } = await getSubjectsAdmin(statusTab, undefined, page, PAGE_SIZE)
+
+  if (page > pagination.totalPages && pagination.totalPages > 0) {
+    redirect(`/admin/sujets?status=${statusTab}&page=${pagination.totalPages}`)
+  }
 
   // Compter par statut pour les badges
   const pendingCount = statusTab === 'PENDING' ? subjects.length : 0
@@ -139,8 +148,8 @@ export default async function AdminSubjectsPage({
                       {subject.authorId ? (
                         <Link href={`/admin/utilisateurs/${subject.authorId}`} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
                           {subject.authorProfilePicture ? (
-                            <img 
-                              src={subject.authorProfilePicture} 
+                            <img
+                              src={subject.authorProfilePicture}
                               alt={`${subject.authorPrenom} ${subject.authorNom}`}
                               style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--gold-line)' }}
                             />
@@ -173,6 +182,40 @@ export default async function AdminSubjectsPage({
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            padding: '1rem 1.25rem',
+            background: 'var(--surface)',
+            borderTop: '1px solid var(--b1)',
+            borderRadius: '0 0 var(--r-lg) var(--r-lg)',
+            fontFamily: 'var(--mono)',
+            fontSize: '0.75rem',
+            color: 'var(--text-3)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Link
+                href={`/admin/sujets?status=${statusTab}&page=${Math.max(1, page - 1)}`}
+                className={`admin-btn admin-btn-outline ${page === 1 ? 'admin-btn-disabled' : ''}`}
+                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
+              >
+                Précédent
+              </Link>
+              <span>Page {page} sur {pagination.totalPages}</span>
+              <Link
+                href={`/admin/sujets?status=${statusTab}&page=${Math.min(pagination.totalPages, page + 1)}`}
+                className={`admin-btn admin-btn-outline ${page === pagination.totalPages ? 'admin-btn-disabled' : ''}`}
+                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
+              >
+                Suivant
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
