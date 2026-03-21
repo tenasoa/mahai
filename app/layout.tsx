@@ -49,29 +49,41 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('theme');
-                  var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
-                  if (!theme && supportDarkMode) theme = 'dark';
-                  if (!theme) theme = 'light';
-                  document.documentElement.setAttribute('data-theme', theme);
-                  document.documentElement.classList.add(theme);
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
       </head>
       <body className={`${cormorant.variable} ${outfit.variable} ${dmMono.variable} min-h-screen bg-void text-text antialiased font-[family-name:var(--body)]`}>
+        <ThemeInitializer />
         <LuxuryCursor />
         <ScrollToTop />
         <ConditionalNavbar />
         {children}
       </body>
     </html>
+  )
+}
+
+// Client-side theme initializer to avoid script tag warning
+function ThemeInitializer() {
+  return (
+    <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var theme = localStorage.getItem('theme');
+                var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+                if (!theme && supportDarkMode) theme = 'dark';
+                if (!theme) theme = 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                document.documentElement.classList.add(theme);
+              } catch (e) {}
+            })();
+          `,
+        }}
+      />
+    </>
   )
 }
