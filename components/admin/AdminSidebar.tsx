@@ -133,7 +133,7 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`sb-link ${isActive ? 'active' : ''}`}
+                  className={`sb-link ${isActive ? 'active' : ''} ${showBadge ? 'has-badge' : ''}`}
                   title={link.label}
                   onClick={() => {
                     // Réinitialiser le compteur quand on clique sur Mobile Banking

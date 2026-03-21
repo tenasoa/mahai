@@ -309,6 +309,29 @@
   animation: sbBadgePulse 2s ease-in-out infinite;
 }
 
+/* Correction pour sidebar rétractée - cacher le badge et éviter le décalage */
+.admin-sidebar.collapsed .sb-notification-badge,
+.admin-sidebar.collapsed .sb-badge {
+  display: none;
+}
+
+.admin-sidebar.collapsed .sb-link {
+  position: relative;
+}
+
+/* Afficher un petit indicateur sur l'icône quand la sidebar est rétractée */
+.admin-sidebar.collapsed .sb-link.has-badge::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background: var(--amber);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(201, 132, 60, 0.6);
+}
+
 @keyframes sbBadgePulse {
   0%, 100% {
     transform: scale(1);
