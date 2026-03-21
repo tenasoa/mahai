@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, FileText, CheckCircle2, AlertCircle, XCircle, File, Edit3, BarChart3, Eye, Trash2 } from 'lucide-react'
 import '../contributeur.css'
@@ -41,15 +41,20 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
 
-  const filteredSubjects = statusFilter === 'ALL' 
-    ? subjects 
+  // Appliquer le thème dark par défaut pour les pages contributeur
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'dark')
+  }, [])
+
+  const filteredSubjects = statusFilter === 'ALL'
+    ? subjects
     : subjects.filter(s => s.status === statusFilter)
 
   const totalSubjects = subjects.length
   const displayedSubjects = filteredSubjects.length
 
   return (
-    <div className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+    <div className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`} data-theme="dark">
       {/* Sidebar */}
       <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} id="sidebar">
         <Link href="/" className="sb-logo">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import './contributeur.css'
@@ -34,8 +34,13 @@ function formatStatus(status: string) {
 export default function ContributorDashboardClient({ user, kpi, topSubjects, allSubjects }: ContributorDashboardProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
 
+  // Appliquer le thème dark par défaut pour les pages contributeur
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'dark')
+  }, [])
+
   return (
-    <div className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+    <div className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`} data-theme="dark">
       {/* Sidebar */}
       <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} id="sidebar">
         <Link href="/" className="sb-logo">
