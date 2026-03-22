@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Download, FileText, Zap, CheckCircle, XCircle, AlertCircle, Clock, CreditCard, Smartphone, User, ChevronRight } from 'lucide-react'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { useToast } from '@/lib/hooks/useToast'
@@ -42,6 +43,7 @@ interface AdminWithdrawalsClientProps {
 }
 
 export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: AdminWithdrawalsClientProps) {
+  const router = useRouter()
   const toast = useToast()
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'failed' | 'history'>('pending')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -80,7 +82,7 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
       toast.success('Traitement réussi', `Le retrait a été ${action === 'approve' ? 'approuvé' : action === 'reject' ? 'rejeté' : 'envoyé'}`)
       setShowModal(false)
       setRejectReason('')
-      window.location.reload()
+      router.refresh()
     } else {
       toast.error('Erreur', result.error || 'Erreur lors du traitement')
     }
@@ -99,7 +101,7 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
     if (result.success) {
       toast.success('Paiements envoyés', `${result.message}`)
       setSelectedIds([])
-      window.location.reload()
+      router.refresh()
     } else {
       toast.error('Erreur', result.error || 'Erreur lors des paiements')
     }

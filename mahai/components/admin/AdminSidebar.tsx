@@ -148,8 +148,6 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
                   <span className="sb-link-text">{link.label}</span>
                   {showBadge ? (
                     <span className="sb-notification-badge">{pendingCount}</span>
-                  ) : link.badgeType ? (
-                    <span className={`sb-badge sb-badge-${link.badgeType}`}>•</span>
                   ) : null}
                 </Link>
               )
