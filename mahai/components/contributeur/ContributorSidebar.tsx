@@ -1,0 +1,130 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { LayoutDashboard, FileText, PlusCircle, CreditCard, BarChart3, User, Menu, X, ChevronRight, ChevronLeft } from 'lucide-react'
+
+interface ContributorSidebarProps {
+  user: {
+    prenom: string
+    nom: string
+    role: string
+    profilePicture?: string | null
+  }
+  stats?: {
+    earnings: number
+    monthEarnings: number
+    totalSubjects: number
+  }
+  isCollapsed: boolean
+  onToggle: () => void
+}
+
+export function ContributorSidebar({ user, stats, isCollapsed, onToggle }: ContributorSidebarProps) {
+  const pathname = usePathname()
+
+  const navItems = [
+    {
+      section: 'Tableau de bord',
+      links: [
+        { href: '/contributeur', label: "Vue d'ensemble", icon: LayoutDashboard },
+        { href: '/contributeur/sujets', label: 'Mes sujets', icon: FileText, badge: stats?.totalSubjects },
+        { href: '/contributeur/nouveau', label: 'Nouveau sujet', icon: PlusCircle },
+      ]
+    },
+    {
+      section: 'Finances',
+      links: [
+        { href: '/contributeur/retraits', label: 'Retraits Gains', icon: CreditCard },
+        { href: '/contributeur/analytiques', label: 'Analytiques', icon: BarChart3 },
+      ]
+    },
+    {
+      section: 'Compte',
+      links: [
+        { href: '/profil', label: 'Profil public', icon: User },
+      ]
+    }
+  ]
+
+  return (
+    <>
+      <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} id="sidebar">
+        <Link href="/" className="sb-logo">
+          Mah<span className="sb-gem" />AI
+        </Link>
+        
+        <div className="sb-user">
+          <div className="sb-avatar">
+            {user.profilePicture ? (
+              <img src={user.profilePicture} alt="Profile" />
+            ) : (
+              (user.prenom?.charAt(0) || 'C').toUpperCase()
+            )}
+          </div>
+          <div>
+            <div className="sb-name">{user.prenom} {user.nom}</div>
+            <div className="sb-badge">Contributeur certifié ✦</div>
+          </div>
+        </div>
+
+        {stats && (
+          <div className="sb-earnings">
+            <div className="sb-e-label">Revenus totaux</div>
+            <div className="sb-e-val">
+              {stats.earnings.toLocaleString('fr-FR')}
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '0.7rem', color: 'var(--gold-lo)' }}> Ar</span>
+            </div>
+            <div className="sb-e-sub">+{stats.monthEarnings.toLocaleString('fr-FR')} Ar ce mois</div>
+          </div>
+        )}
+
+        <nav className="sb-nav">
+          {navItems.map((section, idx) => (
+            <div key={idx}>
+              <div className="sb-section" style={{ marginTop: idx > 0 ? '0.75rem' : 0 }}>
+                <span className="sb-section-text">{section.section}</span>
+              </div>
+              {section.links.map(link => {
+                const isActive = pathname === link.href || (link.href !== '/contributeur' && pathname?.startsWith(link.href))
+                const Icon = link.icon
+                
+                return (
+                  <Link 
+                    key={link.href}
+                    className={`sb-link ${isActive ? 'active' : ''}`} 
+                    href={link.href}
+                    title={link.label}
+                  >
+                    <Icon size={18} strokeWidth={1.5} className="sb-icon" />
+                    <span className="sb-link-text">{link.label}</span>
+                    {link.badge !== undefined && (
+                      <span className="sb-nb">{link.badge}</span>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
+        </nav>
+
+        <div className="sb-bottom">
+          <Link href="/contributeur/nouveau" className="btn-new">
+            + Publier un sujet
+          </Link>
+        </div>
+      </aside>
+
+      {/* Toggle Button - Outside Sidebar */}
+      <button 
+        className="sidebar-toggle"
+        onClick={onToggle}
+        title={isCollapsed ? 'Déployer le menu' : 'Réduire le menu'}
+        aria-label={isCollapsed ? 'Déployer le menu' : 'Réduire le menu'}
+      >
+        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+    </>
+  )
+}

@@ -1,0 +1,146 @@
+/* =====================================================================
+   Mah.AI — Dashboard Theme (Shared)
+   Unified variables for Admin and Contributor panels
+   ===================================================================== */
+
+   :root {
+    /* ——— CORE PALETTE (DARK DEFAULT) ——— */
+    --void: #080705;
+    --depth: #0E0C0A;
+    --surface: #141210;
+    --card: #1A1714;
+    --card-hover: #201D19;
+    --lift: #252118;
+  
+    /* ——— ACCENTS ——— */
+    --gold: #C9A84C;
+    --gold-hi: #E8C96A;
+    --gold-lo: #8A6E2A;
+    --gold-dim: rgba(201, 168, 76, 0.08);
+    --gold-glow: rgba(201, 168, 76, 0.18);
+    --gold-line: rgba(201, 168, 76, 0.22);
+  
+    --ruby: #9B2335;
+    --ruby-dim: rgba(155, 35, 53, 0.12);
+    --ruby-line: rgba(155, 35, 53, 0.3);
+  
+    --sage: #4A6B5A;
+    --sage-dim: rgba(74, 107, 90, 0.12);
+    --sage-line: rgba(74, 107, 90, 0.3);
+  
+    --amber: #C9843C;
+    --amber-dim: rgba(201, 132, 60, 0.12);
+    --amber-line: rgba(201, 132, 60, 0.28);
+  
+    --blue: #3A6EA8;
+    --blue-dim: rgba(58, 110, 168, 0.18);
+    --blue-line: rgba(58, 110, 168, 0.28);
+  
+    /* ——— TEXT & BORDERS ——— */
+    --text: #F0EBE3;
+    --text-2: rgba(240, 235, 227, 0.62);
+    --text-3: rgba(240, 235, 227, 0.32);
+    --text-4: rgba(240, 235, 227, 0.14);
+  
+    --b1: rgba(201, 168, 76, 0.18);
+    --b2: rgba(201, 168, 76, 0.12);
+    --b3: rgba(240, 235, 227, 0.08);
+  
+    --glass: rgba(20, 18, 16, 0.72);
+  
+    /* ——— TYPOGRAPHY ——— */
+    --display: 'Cormorant Garamond', serif;
+    --body: 'Outfit', sans-serif;
+    --mono: 'DM Mono', monospace;
+  
+    /* ——— SPACING & RADII ——— */
+    --r: 8px;
+    --r-lg: 16px;
+    --r-xl: 24px;
+    
+    /* ——— SHADOWS ——— */
+    --sh-gold: 0 4px 24px -4px rgba(201, 168, 76, 0.15);
+    --sh-ruby: 0 4px 24px -4px rgba(155, 35, 53, 0.15);
+    
+    /* ——— ANIMATION ——— */
+    --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  /* ——— LIGHT MODE ——— */
+  [data-theme="light"] {
+    --void: #F8F7F5;
+    --depth: #F0EFE9;
+    --surface: #E8E6DF;
+    --card: #E0DED5;
+    --card-hover: #D8D6CD;
+    --lift: #D0CFC6;
+  
+    --gold: #B8963C;
+    --gold-hi: #D8B85A;
+    --gold-lo: #7A5E1A;
+    --gold-dim: rgba(184, 150, 60, 0.12);
+    --gold-glow: rgba(184, 150, 60, 0.22);
+    --gold-line: rgba(184, 150, 60, 0.28);
+  
+    --text: #1A1816;
+    --text-2: rgba(26, 24, 22, 0.72);
+    --text-3: rgba(26, 24, 22, 0.48);
+    --text-4: rgba(26, 24, 22, 0.28);
+  
+    --ruby: #C94050;
+    --ruby-dim: rgba(201, 64, 80, 0.15);
+    --ruby-line: rgba(201, 64, 80, 0.35);
+  
+    --sage: #2D4A3A;
+    --sage-dim: rgba(45, 74, 58, 0.15);
+    --sage-line: rgba(45, 74, 58, 0.4);
+  
+    --amber: #B9742C;
+    --amber-dim: rgba(185, 116, 44, 0.15);
+    --amber-line: rgba(185, 116, 44, 0.35);
+  
+    --blue: #3A6EA8;
+    --blue-dim: rgba(48, 90, 148, 0.2);
+    --blue-line: rgba(48, 90, 148, 0.4);
+  
+    --b1: rgba(184, 150, 60, 0.22);
+    --b2: rgba(184, 150, 60, 0.15);
+    --b3: rgba(26, 24, 22, 0.12);
+  
+    --glass: rgba(248, 247, 245, 0.85);
+  
+    --sh-gold: 0 4px 24px -4px rgba(184, 150, 60, 0.25);
+    --sh-ruby: 0 4px 24px -4px rgba(201, 64, 80, 0.25);
+  }
+  
+  /* ——— UTILITIES ——— */
+  .text-gold { color: var(--gold); }
+  .text-ruby { color: var(--ruby); }
+  .text-sage { color: var(--sage); }
+  .text-dim { color: var(--text-3); }
+  
+  .bg-void { background: var(--void); }
+  .bg-card { background: var(--card); }
+  
+  /* Flex Utils */
+  .flex-center { display: flex; align-items: center; justify-content: center; }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; }
+  .flex-col { display: flex; flex-direction: column; }
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--void); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-lo); border-radius: var(--r); }
+  
+  /* Focus States */
+  :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  
+  /* Responsive Helpers */
+  @media (max-width: 768px) {
+    .hide-mobile { display: none !important; }
+    .show-mobile { display: block !important; }
+  }
