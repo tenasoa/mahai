@@ -1,18 +1,15 @@
-'use client'
+"use client";
 
-import { usePathname } from 'next/navigation'
-import { LuxuryNavbar } from './LuxuryNavbar'
+import { usePathname } from "next/navigation";
+import { LuxuryNavbar } from "./LuxuryNavbar";
+import { shouldShowNavbar } from "./navbarVisibility";
 
 export function ConditionalNavbar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
-  // Masquer LuxuryNavbar pour les pages contributeur
-  const isContributorPage = pathname?.startsWith('/contributeur')
-  
-  // Debug log (à supprimer en prod)
-  if (typeof window !== 'undefined') {
-    console.log('[ConditionalNavbar] pathname:', pathname, 'isContributor:', isContributorPage)
+  if (!shouldShowNavbar(pathname)) {
+    return null;
   }
 
-  return isContributorPage ? null : <LuxuryNavbar />
+  return <LuxuryNavbar />;
 }

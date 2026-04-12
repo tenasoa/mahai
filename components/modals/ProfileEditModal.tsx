@@ -223,7 +223,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Pseudo (affiché dans la navbar)</label>
+                  <label className="form-label">Pseudo</label>
                   <input
                     type="text"
                     name="pseudo"
@@ -401,20 +401,46 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                       </span>
                     ))}
                   </div>
-                  <select 
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        addSubject(e.target.value)
-                        e.target.value = ''
-                      }
-                    }}
-                    className="form-select"
-                  >
-                    <option value="">Ajouter une matière...</option>
-                    {COMMON_SUBJECTS.filter(subject => !formData.matieresPreferees.includes(subject)).map(subject => (
-                      <option key={subject} value={subject}>{subject}</option>
-                    ))}
-                  </select>
+                  <div className="custom-add-group" style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      list="common-subjects"
+                      placeholder="Ex: SVT, Philosophie, Informatique..."
+                      className="form-input"
+                      id="custom-subject-input"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = e.currentTarget.value.trim();
+                          if (val && !formData.matieresPreferees.includes(val)) {
+                            addSubject(val);
+                            e.currentTarget.value = '';
+                          }
+                        }
+                      }}
+                    />
+                    <datalist id="common-subjects">
+                      {COMMON_SUBJECTS.filter(subject => !formData.matieresPreferees.includes(subject)).map(subject => (
+                        <option key={subject} value={subject} />
+                      ))}
+                    </datalist>
+                    <button 
+                      type="button" 
+                      className="btn-add-inline"
+                      onClick={() => {
+                        const input = document.getElementById('custom-subject-input') as HTMLInputElement;
+                        if (input) {
+                          const val = input.value.trim();
+                          if (val && !formData.matieresPreferees.includes(val)) {
+                            addSubject(val);
+                            input.value = '';
+                          }
+                        }
+                      }}
+                    >
+                      Ajouter
+                    </button>
+                  </div>
                 </div>
               </div>
 

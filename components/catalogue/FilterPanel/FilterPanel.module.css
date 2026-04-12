@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════
+   FILTER PANEL - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.filterPanel {
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+
+.filterHeader {
+  background: var(--surface);
+  padding: 0.75rem 1.1rem;
+  border-bottom: 1px solid var(--b1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.filterLabel {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.filterDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.resetButton {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.resetButton:hover {
+  opacity: 0.7;
+}
+
+.filterBody {
+  padding: 1.1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.filterSection {
+  margin-bottom: 1.25rem;
+}
+
+.filterSection:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+  margin-bottom: 0.65rem;
+}
+
+/* === OPTIONS GRID (for multiple select) === */
+
+.optionsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.optionPill {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.26rem 0.65rem;
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.optionPill:hover {
+  border-color: var(--gold-line);
+  color: var(--text);
+}
+
+.optionPill.selected {
+  background: var(--gold-dim);
+  border-color: var(--gold-line);
+  color: var(--gold);
+}
+
+.optionCount {
+  margin-left: 0.25rem;
+  font-size: 0.55rem;
+  opacity: 0.7;
+}
+
+/* === OPTIONS LIST (for single select) === */
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.optionItem {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--r);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.optionItem:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.optionItem.selected {
+  background: var(--gold-dim);
+  color: var(--gold);
+  border-color: var(--gold-line);
+}
+
+/* === COLLAPSE BUTTON === */
+
+.collapseButton {
+  position: fixed;
+  top: 100px;
+  left: 1rem;
+  z-index: 100;
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  padding: 0.75rem 1rem;
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.collapseButton:hover {
+  border-color: var(--gold-line);
+  color: var(--gold);
+}
+
+/* === ACCESSIBILITY === */
+
+.optionPill:focus-visible,
+.optionItem:focus-visible,
+.resetButton:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .optionPill,
+[data-reduced-motion="true"] .optionItem,
+[data-reduced-motion="true"] .resetButton {
+  transition: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .filterPanel {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+  }
+
+  .filterPanel.open {
+    transform: translateX(0);
+  }
+
+  .collapseButton {
+    top: auto;
+    bottom: 100px;
+  }
+}

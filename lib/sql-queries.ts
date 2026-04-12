@@ -1,5 +1,17 @@
 import { query } from '@/lib/db'
 
+function quoteIdentifier(identifier: string): string {
+  return `"${identifier.replace(/"/g, '""')}"`
+}
+
+function buildInsertParts(data: Record<string, unknown>) {
+  const keys = Object.keys(data)
+  const fields = keys.map(quoteIdentifier).join(', ')
+  const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ')
+  const values = Object.values(data)
+  return { fields, placeholders, values }
+}
+
 export interface User {
   id: string
   email: string
@@ -11,6 +23,25 @@ export interface User {
   phoneVerified: boolean
   schoolLevel?: string
   emailVerified: boolean
+  userType?: string
+  customUserType?: string
+  etablissement?: string
+  educationLevel?: string
+  gradeLevel?: string
+  filiere?: string
+  region?: string
+  district?: string
+  bio?: string
+  matieresPreferees?: string[]
+  objectifsEtude?: string[]
+  profilePublic?: boolean
+  showEmail?: boolean
+  showPhone?: boolean
+  showEtablissement?: boolean
+  notifCorrections?: boolean
+  notifSujets?: boolean
+  notifPromos?: boolean
+  notifRappels?: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -78,9 +109,7 @@ export async function updateUserCredits(userId: string, credits: number): Promis
 }
 
 export async function createUser(userData: Partial<User>): Promise<User> {
-  const fields = Object.keys(userData).join(', ')
-  const placeholders = Object.keys(userData).map((_, i) => `$${i + 1}`).join(', ')
-  const values = Object.values(userData)
+  const { fields, placeholders, values } = buildInsertParts(userData as Record<string, unknown>)
   
   const result = await query(
     `INSERT INTO "User" (${fields}) VALUES (${placeholders}) RETURNING *`,
@@ -195,9 +224,7 @@ export async function getSubjectById(id: string, userId?: string) {
 
 // Purchase queries
 export async function createPurchase(purchaseData: Partial<Purchase>): Promise<Purchase> {
-  const fields = Object.keys(purchaseData).join(', ')
-  const placeholders = Object.keys(purchaseData).map((_, i) => `$${i + 1}`).join(', ')
-  const values = Object.values(purchaseData)
+  const { fields, placeholders, values } = buildInsertParts(purchaseData as Record<string, unknown>)
   
   const result = await query(
     `INSERT INTO "Purchase" (${fields}) VALUES (${placeholders}) RETURNING *`,
@@ -216,9 +243,7 @@ export async function findExistingPurchase(userId: string, subjectId: string): P
 
 // Credit transaction queries
 export async function createCreditTransaction(transactionData: Partial<CreditTransaction>): Promise<CreditTransaction> {
-  const fields = Object.keys(transactionData).join(', ')
-  const placeholders = Object.keys(transactionData).map((_, i) => `$${i + 1}`).join(', ')
-  const values = Object.values(transactionData)
+  const { fields, placeholders, values } = buildInsertParts(transactionData as Record<string, unknown>)
   
   const result = await query(
     `INSERT INTO "CreditTransaction" (${fields}) VALUES (${placeholders}) RETURNING *`,

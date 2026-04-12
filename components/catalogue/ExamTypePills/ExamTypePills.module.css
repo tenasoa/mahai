@@ -1,0 +1,132 @@
+/* ═══════════════════════════════════════════════
+   EXAM TYPE PILLS - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.pillsContainer {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  min-height: 44px;
+  background: var(--surface);
+  border: 1px solid var(--b1);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-family: var(--body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.pill:hover {
+  background: var(--gold-dim);
+  border-color: var(--gold-line);
+  color: var(--gold);
+}
+
+.pill.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-hi));
+  border-color: var(--gold);
+  color: var(--void);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(168, 120, 42, 0.3);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.pillDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.pill.active .pillDot {
+  opacity: 1;
+}
+
+.pillCount {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  opacity: 0.7;
+  margin-left: 0.25rem;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.loadingPill {
+  width: 100px;
+  height: 40px;
+  background: var(--surface);
+  border-radius: 999px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* === ACCESSIBILITY === */
+
+.pill:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .pill,
+[data-reduced-motion="true"] .loadingPill {
+  transition: none;
+  animation: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .pillsContainer {
+    gap: 0.4rem;
+  }
+
+  .pill {
+    padding: 0.4rem 0.75rem;
+    font-size: var(--text-xs);
+    min-height: 40px;
+  }
+
+  .pillCount {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .pill {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.65rem;
+  }
+}

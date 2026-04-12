@@ -1,0 +1,273 @@
+/* ═══════════════════════════════════════════════
+   PROFILE HEADER - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.profileHeader {
+  padding: 3.5rem;
+  margin-bottom: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.profileHeader:hover {
+  border-color: var(--gold-line);
+  box-shadow: var(--shadow-lg);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  flex: 1;
+}
+
+/* === AVATAR === */
+
+.avatarContainer {
+  position: relative;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.avatarContainer:hover {
+  transform: scale(1.02);
+}
+
+.avatarImage,
+.avatarPlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--gold-line);
+  box-shadow: var(--shadow-md);
+}
+
+.avatarImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  background: linear-gradient(135deg, #ffffff 0%, #f9f7f2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 3rem;
+  color: var(--gold);
+}
+
+[data-theme="dark"] .avatarPlaceholder {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+}
+
+.cameraButton {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 36px;
+  height: 36px;
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(10px);
+}
+
+.cameraButton:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--void);
+  transform: scale(1.1);
+}
+
+/* === INFO === */
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.nameBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.firstName {
+  font-family: var(--display);
+  font-size: 2.4rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.lastName {
+  font-family: var(--display);
+  font-size: 1.8rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin: 0;
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--r);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-line);
+  color: var(--gold);
+}
+
+.badge.student {
+  background: var(--gold-dim);
+  border-color: var(--gold-line);
+}
+
+.badge.verified {
+  background: rgba(74, 107, 90, 0.15);
+  border-color: rgba(74, 107, 90, 0.4);
+  color: var(--sage);
+}
+
+.contact {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* === EDIT BUTTON === */
+
+.right {
+  flex-shrink: 0;
+}
+
+.editButton {
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(135deg, var(--gold), var(--gold-hi));
+  color: var(--void);
+  border: none;
+  border-radius: var(--r-lg);
+  font-family: var(--body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 0 4px 18px var(--gold-glow);
+  white-space: nowrap;
+}
+
+.editButton:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(201, 168, 76, 0.35);
+}
+
+.editButton:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === ACCESSIBILITY === */
+
+.editButton:focus-visible,
+.cameraButton:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .profileHeader,
+[data-reduced-motion="true"] .avatarContainer,
+[data-reduced-motion="true"] .cameraButton,
+[data-reduced-motion="true"] .editButton {
+  transition: none;
+}
+
+[data-reduced-motion="true"] .profileHeader:hover,
+[data-reduced-motion="true"] .avatarContainer:hover,
+[data-reduced-motion="true"] .cameraButton:hover,
+[data-reduced-motion="true"] .editButton:hover {
+  transform: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .profileHeader {
+    padding: 2rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+
+  .left {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .avatarImage,
+  .avatarPlaceholder {
+    width: 100px;
+    height: 100px;
+  }
+
+  .firstName {
+    font-size: 1.75rem;
+  }
+
+  .lastName {
+    font-size: 1.25rem;
+  }
+
+  .contact {
+    justify-content: center;
+  }
+
+  .right {
+    width: 100%;
+  }
+
+  .editButton {
+    width: 100%;
+  }
+}

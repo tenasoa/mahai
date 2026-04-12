@@ -4,20 +4,61 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { loginUser } from '@/actions/auth'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import Link from 'next/link'
 import { useToast, ToastContainer } from '@/components/ui/Toast'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
+
+const fieldLabelStyle = {
+  fontFamily: 'var(--mono)',
+  fontSize: '0.62rem',
+  textTransform: 'uppercase',
+  letterSpacing: '0.14em',
+  color: 'var(--text-3)',
+  display: 'block',
+  marginBottom: '0.55rem'
+} as const
+
+const fieldInputStyle = {
+  width: '100%',
+  background: 'var(--surface)',
+  border: '1px solid var(--b2)',
+  borderRadius: 'var(--r)',
+  padding: '0.75rem 1rem',
+  fontFamily: 'var(--body)',
+  fontSize: '0.88rem',
+  color: 'var(--text)',
+  outline: 'none',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
+  WebkitAppearance: 'none'
+} as const
+
+const fieldErrorStyle = {
+  marginTop: '0.5rem',
+  fontSize: '0.6rem',
+  color: 'var(--ruby)',
+  fontFamily: 'var(--mono)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em'
+} as const
+
+const inlineInteractiveStyle = {
+  transition: 'color 0.2s, border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s'
+} as const
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { toasts, addToast, removeToast } = useToast()
-  
+  const emailFieldId = useId()
+  const passwordFieldId = useId()
+  const emailErrorId = `${emailFieldId}-error`
+  const passwordErrorId = `${passwordFieldId}-error`
+
   useEffect(() => {
     setMounted(true)
   }, [])
-  
+
   const {
     register,
     handleSubmit,
@@ -42,156 +83,121 @@ export function LoginForm() {
   return (
     <div style={{ position: 'relative' }}>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
-      
-      <form onSubmit={handleSubmit(onSubmit)}>
+
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-          <label className="form-label" style={{ 
-            fontFamily: 'var(--mono)', 
-            fontSize: '0.62rem', 
-            textTransform: 'uppercase', 
-            letterSpacing: '0.14em', 
-            color: 'var(--text-3)', 
-            display: 'block', 
-            marginBottom: '0.55rem' 
-          }}>
+          <label htmlFor={emailFieldId} className="form-label" style={fieldLabelStyle}>
             Adresse e-mail
           </label>
           <div className="form-input-wrap" style={{ position: 'relative' }}>
             <input
+              id={emailFieldId}
               {...register('email')}
               type="email"
-              style={{ 
-                width: '100%', 
-                background: 'var(--surface)', 
-                border: '1px solid var(--b2)', 
-                borderRadius: 'var(--r)', 
-                padding: '0.75rem 1rem', 
-                fontFamily: 'var(--body)', 
-                fontSize: '0.88rem', 
-                color: 'var(--text)', 
-                outline: 'none', 
-                transition: 'border-color 0.2s, box-shadow 0.2s',
-                WebkitAppearance: 'none'
-              }}
+              className="form-input luxury-form-input"
+              style={fieldInputStyle}
               placeholder="votre@email.com"
+              autoComplete="email"
+              aria-invalid={errors.email ? 'true' : 'false'}
+              aria-describedby={errors.email ? emailErrorId : undefined}
             />
           </div>
           {errors.email && (
-            <p style={{ 
-              marginTop: '0.5rem', 
-              fontSize: '0.6rem', 
-              color: 'var(--ruby)', 
-              fontFamily: 'var(--mono)', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.05em' 
-            }}>
+            <p id={emailErrorId} role="alert" style={fieldErrorStyle}>
               {errors.email.message}
             </p>
           )}
         </div>
 
         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-          <label className="form-label" style={{ 
-            fontFamily: 'var(--mono)', 
-            fontSize: '0.62rem', 
-            textTransform: 'uppercase', 
-            letterSpacing: '0.14em', 
-            color: 'var(--text-3)', 
-            display: 'block', 
-            marginBottom: '0.55rem' 
-          }}>
+          <label htmlFor={passwordFieldId} className="form-label" style={fieldLabelStyle}>
             Mot de passe
           </label>
           <div className="form-input-wrap" style={{ position: 'relative' }}>
             <input
+              id={passwordFieldId}
               {...register('password')}
               type={showPassword ? 'text' : 'password'}
-              style={{ 
-                width: '100%', 
-                background: 'var(--surface)', 
-                border: '1px solid var(--b2)', 
-                borderRadius: 'var(--r)', 
-                padding: '0.75rem 1rem', 
-                fontFamily: 'var(--body)', 
-                fontSize: '0.88rem', 
-                color: 'var(--text)', 
-                outline: 'none', 
-                transition: 'border-color 0.2s, box-shadow 0.2s',
-                WebkitAppearance: 'none'
-              }}
+              className="form-input luxury-form-input luxury-form-input-with-action"
+              style={fieldInputStyle}
               placeholder="••••••••"
+              autoComplete="current-password"
+              aria-invalid={errors.password ? 'true' : 'false'}
+              aria-describedby={errors.password ? passwordErrorId : undefined}
             />
-            <button 
+            <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              style={{ 
-                position: 'absolute', 
-                right: '1rem', 
-                top: '50%', 
-                transform: 'translateY(-50%)', 
-                color: 'var(--text-3)', 
-                background: 'none', 
-                border: 'none', 
-                fontSize: '0.9rem', 
+              className="luxury-icon-button"
+              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              aria-pressed={showPassword}
+              style={{
+                position: 'absolute',
+                right: '1rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--text-3)',
+                background: 'none',
+                border: 'none',
+                fontSize: '0.9rem',
                 cursor: 'none',
-                transition: 'color 0.2s',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '4px'
+                padding: '4px',
+                ...inlineInteractiveStyle
               }}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
           {errors.password && (
-            <p style={{ 
-              marginTop: '0.5rem', 
-              fontSize: '0.6rem', 
-              color: 'var(--ruby)', 
-              fontFamily: 'var(--mono)', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.05em' 
-            }}>
+            <p id={passwordErrorId} role="alert" style={fieldErrorStyle}>
               {errors.password.message}
             </p>
           )}
         </div>
 
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          marginBottom: '1.5rem' 
-        }}>
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem', 
-            cursor: 'none', 
-            fontSize: '0.78rem', 
-            color: 'var(--text-2)' 
-          }}>
-            <input 
-              type="checkbox" 
-              style={{ 
-                accentColor: 'var(--gold)', 
-                width: '14px', 
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '1.5rem'
+          }}
+        >
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'none',
+              fontSize: '0.78rem',
+              color: 'var(--text-2)'
+            }}
+          >
+            <input
+              type="checkbox"
+              style={{
+                accentColor: 'var(--gold)',
+                width: '14px',
                 height: '14px',
                 cursor: 'none'
-              }} 
+              }}
             />
             Se souvenir de moi
           </label>
-          <Link 
-            href="/auth/forgot-password" 
-            style={{ 
-              fontFamily: 'var(--mono)', 
-              fontSize: '0.62rem', 
-              color: 'var(--gold)', 
-              textDecoration: 'none', 
-              textTransform: 'uppercase', 
-              letterSpacing: '0.1em' 
+          <Link
+            href="/auth/forgot-password"
+            className="luxury-inline-link"
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: '0.62rem',
+              color: 'var(--gold)',
+              textDecoration: 'none',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              ...inlineInteractiveStyle
             }}
           >
             Mot de passe oublié ?
@@ -201,33 +207,26 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          style={{ 
-            width: '100%', 
-            fontFamily: 'var(--body)', 
-            fontSize: '0.9rem', 
-            fontWeight: 500, 
-            padding: '0.9rem', 
-            borderRadius: 'var(--r)', 
-            background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))', 
-            color: 'var(--void)', 
-            border: 'none', 
-            cursor: 'none', 
-            letterSpacing: '0.04em', 
-            transition: 'all 0.25s', 
-            marginTop: '0.5rem', 
+          className="luxury-primary-button"
+          style={{
+            width: '100%',
+            fontFamily: 'var(--body)',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            padding: '0.9rem',
+            borderRadius: 'var(--r)',
+            background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
+            color: 'var(--void)',
+            border: 'none',
+            cursor: 'none',
+            letterSpacing: '0.04em',
+            marginTop: '0.5rem',
             boxShadow: '0 4px 20px rgba(201,168,76,0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)'
-            e.currentTarget.style.boxShadow = '0 8px 32px rgba(201,168,76,0.38)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'none'
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,168,76,0.25)'
+            gap: '8px',
+            ...inlineInteractiveStyle
           }}
         >
           {isSubmitting ? 'Connexion...' : (
@@ -237,73 +236,22 @@ export function LoginForm() {
           )}
         </button>
 
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '1rem', 
-          margin: '1.5rem 0' 
-        }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--b1)' }}></div>
-          <span style={{ 
-            fontFamily: 'var(--mono)', 
-            fontSize: '0.6rem', 
-            textTransform: 'uppercase', 
-            letterSpacing: '0.12em', 
-            color: 'var(--text-4)' 
-          }}>
-            ou
-          </span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--b1)' }}></div>
-        </div>
-        
-        <button
-          type="button"
-          style={{ 
-            width: '100%', 
-            fontFamily: 'var(--body)', 
-            fontSize: '0.85rem', 
-            fontWeight: 400, 
-            padding: '0.75rem', 
-            borderRadius: 'var(--r)', 
-            background: 'transparent', 
-            border: '1px solid var(--b1)', 
-            color: 'var(--text-2)', 
-            cursor: 'none', 
-            letterSpacing: '0.04em', 
-            transition: 'all 0.2s', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            gap: '0.65rem'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'var(--gold-line)'
-            e.currentTarget.style.color = 'var(--text)'
-            e.currentTarget.style.background = 'var(--gold-dim)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--b1)'
-            e.currentTarget.style.color = 'var(--text-2)'
-            e.currentTarget.style.background = 'transparent'
+        <div
+          style={{
+            marginTop: '1.5rem',
+            textAlign: 'center',
+            fontSize: '0.8rem',
+            color: 'var(--text-3)'
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          Continuer avec Google
-        </button>
-
-        <div style={{ 
-          marginTop: '1.5rem', 
-          textAlign: 'center', 
-          fontSize: '0.8rem', 
-          color: 'var(--text-3)' 
-        }}>
           Pas encore de compte ?{' '}
-          <Link 
+          <Link
             href="/auth/register"
-            style={{ 
-              color: 'var(--gold)', 
-              textDecoration: 'none', 
-              transition: 'color 0.2s' 
+            className="luxury-inline-link"
+            style={{
+              color: 'var(--gold)',
+              textDecoration: 'none',
+              ...inlineInteractiveStyle
             }}
           >
             Créer un compte gratuit →

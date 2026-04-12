@@ -5,19 +5,20 @@ import { registerSchema, type RegisterFormData } from '@/lib/validations/auth'
 import { registerUser } from '@/actions/auth'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { ToastContainer, useToast } from '@/components/ui/Toast'
 
 type Step = 1 | 2 | 3
 
 export function RegisterForm() {
   const [step, setStep] = useState<Step>(1)
-  const [serverError, setServerError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'CONTRIBUTOR'>('STUDENT')
+  const [selectedRole, setSelectedRole] = useState<'ETUDIANT' | 'CONTRIBUTEUR'>('ETUDIANT')
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('free')
   const [passwordStrength, setPasswordStrength] = useState(0)
   const [cgvChecked, setCgvChecked] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const { toasts, addToast, removeToast } = useToast()
   
   useEffect(() => {
     setMounted(true)
@@ -37,6 +38,9 @@ export function RegisterForm() {
       email: '',
       password: '',
       confirmPassword: '',
+      role: 'ETUDIANT',
+      etablissement: '',
+      newsletterOptIn: true,
     }
   })
 
@@ -52,6 +56,10 @@ export function RegisterForm() {
     setPasswordStrength(strength)
   }, [password])
 
+  useEffect(() => {
+    setValue('role', selectedRole)
+  }, [selectedRole, setValue])
+
   // Password hints status
   const hasLength = password.length >= 8
   const hasUpper = /[A-Z]/.test(password)
@@ -63,16 +71,15 @@ export function RegisterForm() {
       const email = watch('email')
       const prenom = watch('prenom')
       if (!email || !prenom) {
-        setServerError('Veuillez remplir prénom et e-mail')
+        addToast('Veuillez remplir prénom et e-mail', 'error')
         return
       }
     }
     setStep(n)
-    setServerError(null)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const selectRole = (role: 'STUDENT' | 'CONTRIBUTOR') => {
+  const selectRole = (role: 'ETUDIANT' | 'CONTRIBUTEUR') => {
     setSelectedRole(role)
   }
 
@@ -82,13 +89,16 @@ export function RegisterForm() {
 
   const onSubmit = async (data: RegisterFormData) => {
     if (!cgvChecked) {
-      setServerError('Veuillez accepter les conditions d\'utilisation')
+      addToast('Veuillez accepter les conditions d\'utilisation', 'error')
       return
     }
-    setServerError(null)
-    const result = await registerUser({ ...data, role: selectedRole } as any)
+    const result = await registerUser({
+      ...data,
+      role: selectedRole,
+      newsletterOptIn: Boolean(data.newsletterOptIn),
+    })
     if (result?.error) {
-      setServerError(result.error)
+      addToast(result.error, 'error')
       setStep(1)
     }
   }
@@ -124,6 +134,8 @@ export function RegisterForm() {
 
   return (
     <div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+
       {/* Stepper */}
       <div style={{ 
         display: 'flex', 
@@ -333,109 +345,22 @@ export function RegisterForm() {
 
             <div style={formGroupStyle}>
               <label style={formLabelStyle}>Établissement</label>
-              <input style={formInputStyle} placeholder="Université d'Antananarivo…" />
+              <input
+                {...register('etablissement')}
+                style={formInputStyle}
+                placeholder="Université d'Antananarivo…"
+              />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
-              <div style={formGroupStyle}>
-                <label style={formLabelStyle}>Filière</label>
-                <select style={{ 
-                  ...formInputStyle, 
-                  cursor: 'none',
-                  appearance: 'none' as const,
-                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(240,235,227,0.3)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 1rem center'
-                }}>
-                  <option value="">Sélectionner…</option>
-                  <option>Informatique</option>
-                  <option>Droit</option>
-                  <option>Médecine</option>
-                  <option>Économie &amp; Gestion</option>
-                  <option>Lettres &amp; Sciences Humaines</option>
-                  <option>Sciences</option>
-                  <option>Éducation</option>
-                  <option>Autre</option>
-                </select>
-              </div>
-              <div style={formGroupStyle}>
-                <label style={formLabelStyle}>Année d&apos;études</label>
-                <select style={{ 
-                  ...formInputStyle, 
-                  cursor: 'none',
-                  appearance: 'none' as const,
-                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(240,235,227,0.3)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 1rem center'
-                }}>
-                  <option value="">Sélectionner…</option>
-                  <option>L1 — 1ère année</option>
-                  <option>L2 — 2ème année</option>
-                  <option>L3 — 3ème année</option>
-                  <option>M1 — Master 1</option>
-                  <option>M2 — Master 2</option>
-                  <option>Doctorat</option>
-                  <option>Lycée</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Google Button */}
-            <button 
-              type="button"
-              style={{ 
-                width: '100%', 
-                fontFamily: 'var(--body)', 
-                fontSize: '0.85rem', 
-                fontWeight: 400, 
-                padding: '0.75rem', 
-                borderRadius: 'var(--r)', 
-                background: 'transparent', 
-                border: '1px solid var(--b1)', 
-                color: 'var(--text-2)', 
-                cursor: 'none', 
-                letterSpacing: '0.04em', 
-                transition: 'all 0.2s', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                gap: '0.65rem',
-                marginBottom: '0.85rem'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--gold-line)'
-                e.currentTarget.style.color = 'var(--text)'
-                e.currentTarget.style.background = 'var(--gold-dim)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--b1)'
-                e.currentTarget.style.color = 'var(--text-2)'
-                e.currentTarget.style.background = 'transparent'
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              Continuer avec Google
-            </button>
-
-            {/* Divider */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '1rem', 
-              margin: '1.5rem 0' 
+            <p style={{ 
+              marginTop: '-0.25rem',
+              marginBottom: '1.5rem',
+              fontSize: '0.74rem',
+              color: 'var(--text-3)',
+              lineHeight: 1.6
             }}>
-              <div style={{ flex: 1, height: '1px', background: 'var(--b1)' }}></div>
-              <span style={{ 
-                fontFamily: 'var(--mono)', 
-                fontSize: '0.6rem', 
-                textTransform: 'uppercase', 
-                letterSpacing: '0.12em', 
-                color: 'var(--text-4)' 
-              }}>
-                ou
-              </span>
-              <div style={{ flex: 1, height: '1px', background: 'var(--b1)' }}></div>
-            </div>
+              La filière et l&apos;année d&apos;étude se complètent plus tard depuis votre profil.
+            </p>
 
             {/* Continue Button */}
             <button
@@ -547,16 +472,16 @@ export function RegisterForm() {
             }}>
               {/* Student Card */}
               <div 
-                onClick={() => selectRole('STUDENT')}
+                onClick={() => selectRole('ETUDIANT')}
                 style={{ 
                   padding: '1.1rem', 
-                  background: selectedRole === 'STUDENT' ? 'var(--gold-dim)' : 'var(--surface)', 
-                  border: `1px solid ${selectedRole === 'STUDENT' ? 'var(--gold)' : 'var(--b2)'}`, 
+                  background: selectedRole === 'ETUDIANT' ? 'var(--gold-dim)' : 'var(--surface)', 
+                  border: `1px solid ${selectedRole === 'ETUDIANT' ? 'var(--gold)' : 'var(--b2)'}`, 
                   borderRadius: 'var(--r)', 
                   cursor: 'none', 
                   transition: 'all 0.2s', 
                   textAlign: 'center',
-                  boxShadow: selectedRole === 'STUDENT' ? '0 0 0 3px var(--gold-dim)' : 'none'
+                  boxShadow: selectedRole === 'ETUDIANT' ? '0 0 0 3px var(--gold-dim)' : 'none'
                 }}
               >
                 <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🎓</div>
@@ -570,16 +495,16 @@ export function RegisterForm() {
 
               {/* Contributor Card */}
               <div 
-                onClick={() => selectRole('CONTRIBUTOR')}
+                onClick={() => selectRole('CONTRIBUTEUR')}
                 style={{ 
                   padding: '1.1rem', 
-                  background: selectedRole === 'CONTRIBUTOR' ? 'var(--gold-dim)' : 'var(--surface)', 
-                  border: `1px solid ${selectedRole === 'CONTRIBUTOR' ? 'var(--gold)' : 'var(--b2)'}`, 
+                  background: selectedRole === 'CONTRIBUTEUR' ? 'var(--gold-dim)' : 'var(--surface)', 
+                  border: `1px solid ${selectedRole === 'CONTRIBUTEUR' ? 'var(--gold)' : 'var(--b2)'}`, 
                   borderRadius: 'var(--r)', 
                   cursor: 'none', 
                   transition: 'all 0.2s', 
                   textAlign: 'center',
-                  boxShadow: selectedRole === 'CONTRIBUTOR' ? '0 0 0 3px var(--gold-dim)' : 'none'
+                  boxShadow: selectedRole === 'CONTRIBUTEUR' ? '0 0 0 3px var(--gold-dim)' : 'none'
                 }}
               >
                 <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>✦</div>
@@ -925,9 +850,9 @@ export function RegisterForm() {
               marginBottom: '0.85rem' 
             }}>
               <input 
+                {...register('newsletterOptIn')}
                 type="checkbox" 
                 id="newsCheck"
-                defaultChecked
                 style={{ 
                   width: '16px', 
                   height: '16px', 

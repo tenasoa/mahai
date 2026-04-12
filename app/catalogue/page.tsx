@@ -1,35 +1,51 @@
 "use client";
 
-import { Suspense } from "react";
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { useCatalogue } from "@/lib/hooks/useCatalogue";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { AuthModal } from "@/components/ui/AuthModal";
 import { CataloguePageSkeleton } from "@/components/ui/PageSkeletons";
-import type { Difficulte, Badge } from "@/types/catalogue";
 import {
-  BADGE_LABELS,
-  DIFFICULTE_LABELS,
-  MATIERE_GLYPHS,
-} from "@/types/catalogue";
+  PaperCard,
+  ResultsBar,
+  ExamTypePills,
+  ActiveFilters,
+} from "@/components/catalogue";
+import { purchaseCurrentUserSubject } from "@/actions/user";
 import "./catalogue.css";
 
-import { purchaseCurrentUserSubject } from "@/actions/user";
+// Types d'examens disponibles
+const EXAM_TYPES = [
+  { id: "BAC", label: "BAC" },
+  { id: "BEPC", label: "BEPC" },
+  { id: "CEPE", label: "CEPE" },
+];
 
 function CatalogueContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { userId, appUser } = useAuth();
 
-  // Détection mode guest (non connecté)
   const isGuest = !userId;
   const guestMode = searchParams.get("guest") === "true" || isGuest;
 
-  // États locaux pour pagination
   const [pageSize, setPageSize] = useState(9);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [buyModalOpen, setBuyModalOpen] = useState(false);
+  const [currentSubject, setCurrentSubject] = useState<any | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [selectedExamType, setSelectedExamType] = useState<string | undefined>(
+    undefined,
+  );
+
+  const toastIdRef = useRef(0);
+  const lastToastTime = useRef<number>(0);
 
   const {
     subjects,
@@ -45,30 +61,12 @@ function CatalogueContent() {
     isWished,
   } = useCatalogue({
     userId: userId ?? undefined,
-    pageSize: pageSize,
+    pageSize,
     initialFilters: {
       sortBy: "createdAt",
       sortOrder: "desc",
     },
   });
-
-  const userCredits = appUser?.credits ?? 0;
-
-  // États locaux UI
-  const [isPurchasing, setIsPurchasing] = useState(false);
-  const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [buyModalOpen, setBuyModalOpen] = useState(false);
-  const [currentSubject, setCurrentSubject] = useState<any | null>(null);
-  const [previewPage, setPreviewPage] = useState(1);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [selectedExamType, setSelectedExamType] = useState<string | undefined>(
-    undefined,
-  );
-
-  const toastIdRef = useRef(0);
-  const lastToastTime = useRef<number>(0);
 
   // Toast helper
   const showToast = (
@@ -92,10 +90,8 @@ function CatalogueContent() {
   const handleToggleFav = async (id: string) => {
     const now = Date.now();
     if (now - lastToastTime.current < 500) return;
-
     const wasInWish = isWished(id);
     await toggleWishlist(id);
-
     if (!wasInWish) {
       lastToastTime.current = now;
       showToast("success", "Favori", "Sujet ajouté à vos favoris");
@@ -112,7 +108,6 @@ function CatalogueContent() {
       return;
     }
     setCurrentSubject(subject);
-    setPreviewPage(1);
     setPreviewModalOpen(true);
   };
 
@@ -125,21 +120,11 @@ function CatalogueContent() {
     setBuyModalOpen(true);
   };
 
-  const handleSubjectClick = (subjectId: string) => {
-    if (isGuest) {
-      setAuthModalOpen(true);
-      return;
-    }
-    router.push(`/sujet/${subjectId}`);
-  };
-
   const confirmBuy = async () => {
     if (!currentSubject || !userId) return;
-
     setIsPurchasing(true);
     try {
       const result = await purchaseCurrentUserSubject(currentSubject.id);
-
       if (result.success) {
         showToast(
           "success",
@@ -155,770 +140,306 @@ function CatalogueContent() {
           result.error || "Impossible de finaliser l'achat",
         );
       }
-    } catch (err) {
+    } catch {
       showToast("error", "Erreur", "Une erreur inattendue est survenue");
     } finally {
       setIsPurchasing(false);
     }
   };
 
-  // Preview pagination
-  const totalPages = 18;
-  const prevPage = () => setPreviewPage((p) => Math.max(1, p - 1));
-  const nextPage = () => setPreviewPage((p) => Math.min(totalPages, p + 1));
-
-  // Recherche (debounced)
+  // Recherche debounced
   useEffect(() => {
     const timer = setTimeout(() => {
       const filters: any = {};
-      if (search.trim()) {
-        filters.search = search.trim();
-      }
-      if (selectedExamType) {
-        filters.examType = selectedExamType;
-      }
+      if (search.trim()) filters.search = search.trim();
+      if (selectedExamType) filters.examType = selectedExamType;
       setFilters(filters);
     }, 500);
-
     return () => clearTimeout(timer);
   }, [search, selectedExamType, setFilters]);
 
-  // Mettre à jour pageSize dans useCatalogue via refresh si nécessaire ou recréer l'hook
-  // Ici on simplifie en rechargeant si pageSize change
   useEffect(() => {
     refresh();
   }, [pageSize]);
 
+  if (loading) return <CataloguePageSkeleton />;
+
+  // Mapper les sujets pour PaperCard
+  const mappedSubjects = subjects.map((subject: any) => ({
+    id: subject.id,
+    title: subject.titre,
+    examType: subject.type,
+    year: subject.annee,
+    subject: subject.matiere,
+    pages: subject.pages,
+    duration: undefined,
+    difficulty: subject.difficulte?.toLowerCase(),
+    rating: subject.rating,
+    reviews: subject.reviewsCount,
+    price: subject.credits ?? 0,
+    isFree: subject.badge === "FREE" || subject.credits === 0,
+    isPremium: subject.badge === "GOLD",
+    isAi: subject.hasCorrectionIa,
+    isUnlocked: subject.isUnlocked,
+    isWished: isWished(subject.id),
+  }));
+
+  // Filtres actifs
+  const activeFiltersList: Array<{
+    id: string;
+    label: string;
+    value: string;
+    onRemove: () => void;
+  }> = [];
+  if (selectedExamType) {
+    activeFiltersList.push({
+      id: "examType",
+      label: "Type",
+      value:
+        EXAM_TYPES.find((t) => t.id === selectedExamType)?.label ||
+        selectedExamType,
+      onRemove: () => setSelectedExamType(undefined),
+    });
+  }
+  if (search.trim()) {
+    activeFiltersList.push({
+      id: "search",
+      label: "Recherche",
+      value: search.trim(),
+      onRemove: () => setSearch(""),
+    });
+  }
+
   return (
     <>
       <LuxuryCursor />
-      <ToastContainer />
 
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        title="Authentification requise"
-        message="Connectez-vous ou créez un compte pour accéder à cette fonctionnalité"
-      />
+      {/* NAVBAR */}
+      <nav className="nav">
+        <div className="nav-inner">
+          <Link href="/" className="logo">
+            Mah<span className="logo-gem"></span>AI
+          </Link>
 
-      {/* Main Content - No sidebar for logged in users as requested */}
-      <main
-        className={`main-area ${guestMode ? "guest-mode" : "full-width"}`}
-        style={{ paddingLeft: guestMode ? undefined : "2rem" }}
-      >
-        <div
-          className={`main-content-wrapper ${guestMode ? "guest-mode" : "full-width"}`}
-          style={{ margin: "0 auto" }}
-        >
-          {/* Search Bar */}
-          <div className="main-search-wrap" style={{ marginBottom: "2rem" }}>
-            <div
-              className="nav-search"
-              style={{ maxWidth: "800px", margin: "0" }}
-            >
+          {/* Right actions */}
+          <div className="nav-right">
+            {userId ? (
+              <>
+                <div className="credit-badge">
+                  <span className="credit-icon">💎</span>
+                  {appUser?.credits ?? 0} cr
+                </div>
+                <Link href="/recharge" className="btn-sm btn-ghost">
+                  Recharger
+                </Link>
+                <div className="avatar">
+                  {(appUser?.prenom?.charAt(0) || "U").toUpperCase()}
+                </div>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login" className="btn-sm btn-ghost">
+                  Connexion
+                </Link>
+                <Link href="/auth/register" className="btn-sm btn-gold">
+                  Inscription
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* MAIN CONTENT */}
+      <div className={`page-layout ${guestMode ? "guest-mode" : ""}`}>
+        {/* MAIN AREA */}
+        <main className={`main-area ${guestMode ? "guest-mode" : ""}`}>
+          <div className="main-content-wrapper">
+            {/* Page Title */}
+            <h1 className="serif">
+              Catalogue <em>de sujets</em>
+            </h1>
+
+            {/* Exam Type Pills - Moved to main content for better UX */}
+            <div className="exam-type-filters-main">
+              <ExamTypePills
+                types={EXAM_TYPES}
+                selected={selectedExamType}
+                onSelect={setSelectedExamType}
+                isLoading={loading}
+              />
+            </div>
+
+            {/* Search */}
+            <div className="nav-search">
               <span className="nav-search-icon">🔍</span>
               <input
                 type="text"
-                placeholder="Chercher un sujet, matière, année, type (BAC, BEPC)..."
+                className="nav-search-input"
+                placeholder="Rechercher un sujet..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="nav-search-input"
               />
             </div>
-          </div>
 
-          {/* Header */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: ".85rem",
-              flexWrap: "wrap",
-              gap: ".65rem",
-            }}
-          >
-            <div>
-              <h1
-                style={{
-                  fontFamily: "var(--display)",
-                  fontSize: "1.6rem",
-                  fontWeight: 400,
-                  letterSpacing: "-.02em",
-                  color: "var(--text)",
-                  lineHeight: 1,
-                }}
-              >
-                Catalogue{" "}
-                <em
-                  style={{
-                    fontStyle: "italic",
-                    color: "var(--text-3)",
-                    fontSize: ".7em",
-                  }}
-                >
-                  des sujets
-                </em>
-              </h1>
-            </div>
-          </div>
-
-          {/* Filtres rapides par type d'examen */}
-          <div
-            className="exam-type-filters"
-            style={{
-              marginBottom: "1.25rem",
-              display: "flex",
-              gap: "0.5rem",
-              flexWrap: "wrap",
-            }}
-          >
-            <button
-              className={`exam-type-pill ${!selectedExamType ? "active" : ""}`}
-              onClick={() => setSelectedExamType(undefined)}
-              aria-pressed={!selectedExamType}
-            >
-              Tous
-            </button>
-            <button
-              className={`exam-type-pill ${selectedExamType === "BAC" ? "active" : ""}`}
-              onClick={() => setSelectedExamType("BAC")}
-              aria-pressed={selectedExamType === "BAC"}
-            >
-              BAC
-            </button>
-            <button
-              className={`exam-type-pill ${selectedExamType === "BEPC" ? "active" : ""}`}
-              onClick={() => setSelectedExamType("BEPC")}
-              aria-pressed={selectedExamType === "BEPC"}
-            >
-              BEPC
-            </button>
-            <button
-              className={`exam-type-pill ${selectedExamType === "CEPE" ? "active" : ""}`}
-              onClick={() => setSelectedExamType("CEPE")}
-              aria-pressed={selectedExamType === "CEPE"}
-            >
-              CEPE
-            </button>
-          </div>
-
-          {/* Guest Banner - Simplified (Removed register button as requested) */}
-          {guestMode && (
-            <div
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--b1)",
-                borderRadius: "var(--r)",
-                padding: "1rem 1.25rem",
-                marginBottom: "1.5rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                flexWrap: "wrap",
+            {/* Active Filters */}
+            <ActiveFilters
+              filters={activeFiltersList}
+              onClearAll={() => {
+                clearFilters();
+                setSelectedExamType(undefined);
+                setSearch("");
               }}
-            >
-              <span style={{ fontSize: "1.5rem" }}>👋</span>
-              <div style={{ flex: 1, minWidth: "200px" }}>
-                <div
-                  style={{
-                    fontFamily: "var(--body)",
-                    fontSize: "0.85rem",
-                    fontWeight: 500,
-                    color: "var(--text)",
-                    marginBottom: "0.25rem",
-                  }}
-                >
-                  Vous naviguez en mode visiteur
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.75rem",
-                    color: "var(--text-3)",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Connectez-vous pour acheter des sujets et accéder à toutes les
-                  fonctionnalités.
-                </div>
-              </div>
-              <Link
-                href="/auth/login"
-                style={{
-                  fontFamily: "var(--body)",
-                  fontSize: "0.75rem",
-                  fontWeight: 500,
-                  padding: "0.5rem 1rem",
-                  borderRadius: "var(--r)",
-                  background:
-                    "linear-gradient(135deg, var(--gold), var(--gold-hi))",
-                  color: "var(--void)",
-                  textDecoration: "none",
-                  transition: "all 0.2s",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Se connecter
-              </Link>
-            </div>
-          )}
+            />
 
-          {/* Results Bar */}
-          <div className="results-bar">
-            <div className="results-count">
-              <strong>{loading ? "..." : pagination.totalItems}</strong> sujets
-              trouvés
-            </div>
-            <div className="sort-view" style={{ gap: "1rem" }}>
-              {/* Items per page selector */}
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-              >
-                <span
-                  style={{
-                    fontSize: "0.65rem",
-                    color: "var(--text-3)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  Afficher :
-                </span>
-                <select
-                  className="sort-select"
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  style={{ width: "70px" }}
-                >
-                  <option value={9}>9</option>
-                  <option value={12}>12</option>
-                  <option value={24}>24</option>
-                  <option value={48}>48</option>
-                </select>
-              </div>
-
-              <select
-                className="sort-select"
-                onChange={(e) => setFilters({ sortBy: e.target.value as any })}
-              >
-                <option value="createdAt">Plus récents</option>
-                <option value="rating">Mieux notés</option>
-                <option value="reviewsCount">Plus populaires</option>
-                <option value="credits">Prix croissant</option>
-              </select>
-
-              <div className="view-toggle">
-                <button
-                  className={`vt-btn ${viewMode === "grid" ? "on" : ""}`}
-                  onClick={() => setViewMode("grid")}
-                >
-                  ⊞
-                </button>
-                <button
-                  className={`vt-btn ${viewMode === "list" ? "on" : ""}`}
-                  onClick={() => setViewMode("list")}
-                >
-                  ☰
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading / Error / Empty states same as before but adjusting grid layout */}
-          {loading && (
-            <div
-              className={`papers-grid ${viewMode === "list" ? "list-view" : ""}`}
-            >
-              {Array.from({ length: pageSize }).map((_, i) => (
-                <div key={i} className="pcard skeleton-card">
-                  <div className="pc-thumb skeleton"></div>
-                  <div className="pc-body">
-                    <div
-                      className="skeleton"
-                      style={{ height: "16px", marginBottom: "8px" }}
-                    ></div>
-                    <div
-                      className="skeleton"
-                      style={{ height: "14px", width: "70%" }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {error && (
-            <div
-              className="empty-state"
-              style={{ textAlign: "center", padding: "4rem 2rem" }}
-            >
-              <div
-                className="empty-icon"
-                style={{ fontSize: "3rem", marginBottom: "1rem", opacity: 0.4 }}
-              >
-                ⚠️
-              </div>
-              <div
-                className="empty-title"
-                style={{
-                  fontFamily: "var(--display)",
-                  fontSize: "1.8rem",
-                  color: "var(--text)",
-                }}
-              >
-                Erreur de chargement
-              </div>
-              <button className="btn-consult" onClick={refresh}>
-                Réessayer
-              </button>
-            </div>
-          )}
-
-          {!loading && !error && subjects.length === 0 && (
-            <div style={{ padding: "4rem 0", textAlign: "center" }}>
-              <h2 className="empty-title">Aucun sujet trouvé</h2>
-              <p className="empty-sub">
-                Essayez d'élargir votre recherche (ex: "BAC Maths", "Physique
-                2023")
-              </p>
-              <button
-                className="btn-consult"
-                onClick={() => {
-                  setSearch("");
-                  clearFilters();
-                }}
-                style={{ marginTop: "1.5rem" }}
-              >
-                Voir tout le catalogue
-              </button>
-            </div>
-          )}
-
-          {/* Cards Grid */}
-          {!loading && !error && subjects.length > 0 && (
-            <div
-              className={`papers-grid ${viewMode === "list" ? "list-view" : ""}`}
-              style={{
-                gridTemplateColumns:
-                  viewMode === "grid"
-                    ? "repeat(auto-fill, minmax(300px, 1fr))"
-                    : "1fr",
+            {/* Results Bar */}
+            <ResultsBar
+              totalResults={pagination?.totalItems || 0}
+              currentPage={currentPage}
+              totalPages={Math.ceil((pagination?.totalItems || 0) / pageSize)}
+              searchTerm={search}
+              activeFilters={activeFiltersList.length}
+              sortBy="createdAt"
+              viewMode={viewMode}
+              onSortChange={(value) =>
+                setFilters({ sortBy: value as "createdAt" })
+              }
+              onViewModeChange={setViewMode}
+              onClearFilters={() => {
+                clearFilters();
+                setSelectedExamType(undefined);
+                setSearch("");
               }}
-            >
-              {subjects.map((subject: any) => (
-                <div key={subject.id} className="pcard">
-                  <div
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSubjectClick(subject.id);
-                    }}
-                    className="pc-thumb"
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleSubjectClick(subject.id);
-                      }
-                    }}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      padding: 0,
-                      cursor: "none",
-                      width: "100%",
-                      textAlign: "left",
-                    }}
-                  >
-                    <div className="pc-thumb-lines"></div>
-                    <div className="pc-thumb-glyph">
-                      {subject.glyph ||
-                        MATIERE_GLYPHS[
-                          subject.matiere as keyof typeof MATIERE_GLYPHS
-                        ] ||
-                        "∑"}
-                    </div>
-                    <div className={`pc-badge ${subject.badge.toLowerCase()}`}>
-                      {BADGE_LABELS[subject.badge as Badge] || subject.badge}
-                    </div>
-                    <button
-                      className={`pc-fav ${isWished(subject.id) ? "on" : ""}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleToggleFav(subject.id);
-                      }}
-                      title={
-                        isWished(subject.id)
-                          ? "Retirer des favoris"
-                          : "Ajouter aux favoris"
-                      }
-                      style={{ pointerEvents: "auto" }}
-                    >
-                      {isWished(subject.id) ? "🔖" : "📑"}
-                    </button>
-                  </div>
-                  <div className="pc-body">
-                    <div className="pc-meta-row">
-                      <span className="pc-exam">
-                        {subject.type} · {subject.matiere}
-                      </span>
-                      <span className="pc-year">{subject.annee}</span>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleSubjectClick(subject.id);
-                      }}
-                      className="pc-title"
-                      style={{
-                        textDecoration: "none",
-                        color: "inherit",
-                        background: "none",
-                        border: "none",
-                        padding: 0,
-                        cursor: "none",
-                        width: "100%",
-                        textAlign: "left",
-                        fontFamily: "inherit",
-                        fontSize: "inherit",
-                      }}
-                    >
-                      {subject.titre}
-                    </button>
-                    <div className="pc-info">
-                      {subject.pages} pages ·{" "}
-                      {DIFFICULTE_LABELS[subject.difficulte as Difficulte] ||
-                        subject.difficulte}
-                    </div>
-                    <div className="pc-rating">
-                      <div className="pc-stars">
-                        {[...Array(5)].map((_, i) => (
-                          <span
-                            key={i}
-                            className="pc-star"
-                            style={{
-                              color:
-                                i < Math.floor(subject.rating)
-                                  ? "var(--gold)"
-                                  : "var(--text-4)",
-                            }}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                      <span className="pc-review-count">
-                        ({subject.reviewsCount})
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pc-footer">
-                    <div
-                      className={`pc-price ${subject.credits === 0 || subject.isUnlocked ? "free-price" : ""}`}
-                    >
-                      {subject.isUnlocked ? (
-                        <span
-                          style={{ color: "var(--sage)", fontSize: "1.2rem" }}
-                        >
-                          🔓
-                        </span>
-                      ) : subject.credits === 0 ? (
-                        "Gratuit"
-                      ) : (
-                        <>
-                          {subject.credits} <span className="unit">cr</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="pc-actions">
-                      {!subject.isUnlocked && (
-                        <button
-                          className="btn-preview"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openPreviewModal(subject);
-                          }}
-                        >
-                          Aperçu
-                        </button>
-                      )}
-                      <button
-                        className={
-                          subject.isUnlocked ? "btn-consult" : "btn-buy"
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (subject.isUnlocked) {
-                            router.push(`/sujet/${subject.id}`);
-                          } else {
-                            openBuyModal(subject);
-                          }
-                        }}
-                      >
-                        {subject.isUnlocked
-                          ? "Voir"
-                          : subject.credits === 0
-                            ? "Obtenir"
-                            : "Acheter"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+            />
 
-          {/* Pagination */}
-          {!loading && !error && pagination.totalPages > 1 && (
-            <div className="pagination" style={{ marginTop: "3rem" }}>
-              <button
-                className="pg-btn"
-                onClick={() => setPage(currentPage - 1)}
-                disabled={!pagination.hasPrevPage}
+            {/* Papers Grid */}
+            {subjects.length > 0 ? (
+              <div
+                className={`papers-grid ${viewMode === "list" ? "list-view" : ""}`}
               >
-                ‹
-              </button>
-              {[...Array(pagination.totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  className={`pg-btn ${currentPage === i + 1 ? "on" : ""}`}
-                  onClick={() => setPage(i + 1)}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                className="pg-btn"
-                onClick={() => setPage(currentPage + 1)}
-                disabled={!pagination.hasNextPage}
-              >
-                ›
-              </button>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Modals same as before */}
-      {previewModalOpen && currentSubject && (
-        <div
-          className="modal-overlay open"
-          onClick={() => setPreviewModalOpen(false)}
-        >
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <div>
-                <div className="modal-title">{currentSubject.titre}</div>
-                <div className="modal-sub">
-                  {currentSubject.type} · {currentSubject.matiere} ·{" "}
-                  {currentSubject.annee}
-                </div>
-              </div>
-              <button
-                className="modal-close"
-                onClick={() => setPreviewModalOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="preview-viewport">
-              <div className="preview-paper">
-                <div className="pp-line h"></div>
-                {[...Array(7)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`pp-line ${i % 2 === 0 ? "m" : "s"}`}
-                  ></div>
+                {mappedSubjects.map((subject: any) => (
+                  <PaperCard
+                    key={subject.id}
+                    {...subject}
+                    onPreview={() => openPreviewModal(subject)}
+                    onBuy={() => openBuyModal(subject)}
+                    onWishlist={() => handleToggleFav(subject.id)}
+                  />
                 ))}
               </div>
-              <div
-                className="locked-msg"
-                style={{ display: previewPage > 4 ? "flex" : "none" }}
-              >
-                <div className="locked-icon">🔒</div>
-                <div className="locked-text">Achetez pour débloquer</div>
+            ) : (
+              <div className="papers-empty">
+                <p>Aucun sujet trouvé pour ces critères.</p>
+                <button className="btn-reset" onClick={clearFilters}>
+                  Réinitialiser les filtres
+                </button>
               </div>
+            )}
+
+            {/* Pagination */}
+            {pagination && pagination.totalItems > pageSize && (
+              <div className="pagination">
+                <button
+                  onClick={() => setPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                >
+                  ← Précédent
+                </button>
+                <span className="pagination-info">
+                  Page {currentPage} sur{" "}
+                  {Math.ceil(pagination.totalItems / pageSize)}
+                </span>
+                <button
+                  onClick={() => setPage(currentPage + 1)}
+                  disabled={
+                    currentPage >= Math.ceil(pagination.totalItems / pageSize)
+                  }
+                  className="pagination-btn"
+                >
+                  Suivant →
+                </button>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Preview Modal */}
+      {previewModalOpen && currentSubject && (
+        <div
+          className="modal-overlay"
+          onClick={() => setPreviewModalOpen(false)}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              onClick={() => setPreviewModalOpen(false)}
+            >
+              ×
+            </button>
+            <h2 className="modal-title">{currentSubject.titre}</h2>
+            <div className="modal-preview">
+              <p>Aperçu des premières pages...</p>
             </div>
-            <div className="preview-nav" style={{ marginBottom: "1.25rem" }}>
-              <button className="prev-nav-btn" onClick={prevPage}>
-                ‹
-              </button>
-              <span className="pg-indicator">
-                Page {previewPage} / {totalPages}
-              </span>
-              <button className="prev-nav-btn" onClick={nextPage}>
-                ›
-              </button>
-            </div>
-            <div className="modal-actions">
-              <button
-                className="btn-modal-buy"
-                onClick={() => {
-                  setPreviewModalOpen(false);
-                  openBuyModal(currentSubject);
-                }}
-              >
-                Acheter —{" "}
-                {currentSubject.credits === 0
-                  ? "Gratuit"
-                  : `${currentSubject.credits} cr`}
-              </button>
-              <button
-                className="btn-modal-ghost"
-                onClick={() => setPreviewModalOpen(false)}
-              >
-                Fermer
-              </button>
-            </div>
+            <button
+              className="btn-buy"
+              onClick={() => openBuyModal(currentSubject)}
+            >
+              Acheter pour {currentSubject.prixCredits} crédits
+            </button>
           </div>
         </div>
       )}
 
+      {/* Buy Modal */}
       {buyModalOpen && currentSubject && (
-        <div
-          className="modal-overlay open"
-          onClick={() => setBuyModalOpen(false)}
-        >
-          <div
-            className="modal modal-confirm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-head">
-              <div>
-                <div className="modal-title">Confirmer l'achat</div>
-                <div className="modal-sub">{currentSubject.titre}</div>
-              </div>
-              <button
-                className="modal-close"
-                onClick={() => setBuyModalOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--b1)",
-                borderRadius: "var(--r)",
-                padding: "1.25rem",
-                marginBottom: "1.25rem",
-              }}
+        <div className="modal-overlay" onClick={() => setBuyModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              onClick={() => setBuyModalOpen(false)}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: ".65rem",
-                }}
-              >
-                <span style={{ fontSize: ".82rem", color: "var(--text-2)" }}>
-                  Prix
-                </span>
-                <span style={{ color: "var(--gold)" }}>
-                  {currentSubject.credits === 0
-                    ? "Gratuit"
-                    : `${currentSubject.credits} cr`}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: ".65rem",
-                }}
-              >
-                <span style={{ fontSize: ".82rem", color: "var(--text-2)" }}>
-                  Votre solde
-                </span>
-                <span>{userCredits} cr</span>
-              </div>
-              <div
-                style={{
-                  height: "1px",
-                  background: "var(--b1)",
-                  margin: ".75rem 0",
-                }}
-              ></div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: ".85rem", fontWeight: 500 }}>
-                  Solde après
-                </span>
-                <span
-                  style={{
-                    color:
-                      userCredits - currentSubject.credits >= 0
-                        ? "var(--gold)"
-                        : "var(--ruby)",
-                  }}
-                >
-                  {userCredits - currentSubject.credits} cr
-                </span>
-              </div>
+              ×
+            </button>
+            <h2 className="modal-title">Confirmer l'achat</h2>
+            <div className="modal-buy-info">
+              <p>
+                <strong>{currentSubject.titre}</strong>
+              </p>
+              <p>
+                Prix : <strong>{currentSubject.prixCredits} crédits</strong>
+              </p>
+              <p>
+                Solde actuel : <strong>{appUser?.credits ?? 0} crédits</strong>
+              </p>
             </div>
             <div className="modal-actions">
               <button
-                className="btn-modal-buy"
-                onClick={confirmBuy}
-                disabled={userCredits < currentSubject.credits}
-              >
-                {userCredits < currentSubject.credits
-                  ? "Crédits insuffisants"
-                  : "Confirmer l'achat"}
-              </button>
-              <button
-                className="btn-modal-ghost"
+                className="btn-cancel"
                 onClick={() => setBuyModalOpen(false)}
               >
                 Annuler
               </button>
+              <button
+                className="btn-confirm"
+                onClick={confirmBuy}
+                disabled={isPurchasing}
+              >
+                {isPurchasing ? "Traitement..." : "Confirmer"}
+              </button>
             </div>
           </div>
         </div>
       )}
-    </>
-  );
-}
 
-function ToastContainer() {
-  const [toasts, setToasts] = useState<
-    Array<{ id: number; type: string; title: string; msg: string }>
-  >([]);
-  useEffect(() => {
-    const handleToast = (e: any) => setToasts((prev) => [...prev, e.detail]);
-    const handleCloseToast = (e: any) =>
-      setToasts((prev) => prev.filter((t) => t.id !== e.detail.id));
-    window.addEventListener("toast" as any, handleToast);
-    window.addEventListener("toast-close" as any, handleCloseToast);
-    return () => {
-      window.removeEventListener("toast" as any, handleToast);
-      window.removeEventListener("toast-close" as any, handleCloseToast);
-    };
-  }, []);
-  return (
-    <div className="toast-container">
-      {toasts.map((toast) => (
-        <div key={toast.id} className={`toast ${toast.type}`}>
-          <div className="toast-icon">
-            {toast.type === "success" ? "✦" : "ℹ"}
-          </div>
-          <div>
-            <div className="toast-title">{toast.title}</div>
-            <div className="toast-msg">{toast.msg}</div>
-          </div>
-          <button
-            className="toast-close"
-            onClick={() =>
-              window.dispatchEvent(
-                new CustomEvent("toast-close", { detail: { id: toast.id } }),
-              )
-            }
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-    </div>
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        title="Authentification requise"
+      />
+    </>
   );
 }
 

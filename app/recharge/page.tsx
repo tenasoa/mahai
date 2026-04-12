@@ -1,278 +1,314 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/hooks/useAuth'
-import { useTransactionsRealtime } from '@/lib/hooks/useTransactionsRealtime'
-import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
-import { RechargePageSkeleton } from '@/components/ui/PageSkeletons'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useTransactionsRealtime } from "@/lib/hooks/useTransactionsRealtime";
+import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
+import { LuxuryNavbar } from "@/components/layout/LuxuryNavbar";
+import { RechargePageSkeleton } from "@/components/ui/PageSkeletons";
+import { Button } from "@/components/ui";
 import {
-  Zap, Smartphone, CreditCard, CheckCircle, ArrowRight,
-  Info, Shield, Clock, TrendingUp, Gift, Star, Trophy,
-  X, AlertCircle, Copy, Send
-} from 'lucide-react'
-import { rechargeCreditsAction, getUserTransactionsAction } from '@/actions/profile'
-import './recharge.css'
+  Zap,
+  Smartphone,
+  Info,
+  Shield,
+  Clock,
+  CheckCircle,
+  ArrowRight,
+  Copy,
+  AlertCircle,
+  X,
+} from "lucide-react";
+import { rechargeCreditsAction } from "@/actions/profile";
+import {
+  BalanceCard,
+  TransactionHistory,
+  ProviderCard,
+  PaymentForm,
+  RechargeConfirmation,
+  type Transaction,
+  type Provider,
+  type PaymentAmount,
+} from "@/components/recharge";
+import "./recharge.css";
 
 // Packs de crédits
-const CREDIT_PACKS = [
-  { credits: 50, price: 2500, priceEur: 0.50, popular: false },
-  { credits: 150, price: 7500, priceEur: 1.50, popular: true },
-  { credits: 300, price: 15000, priceEur: 3.00, popular: false, bestValue: true },
-]
+const CREDIT_PACKS: PaymentAmount[] = [
+  { credits: 50, price: 2500, bonus: 0 },
+  { credits: 150, price: 7500, bonus: 10, popular: true },
+  { credits: 300, price: 15000, bonus: 25 },
+  { credits: 500, price: 25000, bonus: 75 },
+];
 
-// Opérateurs Mobile Money avec leurs préfixes et numéros admin
-const MOBILE_MONEY_OPERATORS = [
-  { 
-    id: 'MVOLA', 
-    name: 'MVola', 
-    color: '#E84517', 
-    prefix: '034',
-    adminNumber: '034 77 130 85',
-    ussdCode: '#111*1#2*0347713085*MONTANT*2*0000#',
-    description: 'Yas Madagascar'
+// Opérateurs Mobile Money
+const OPERATORS: Provider[] = [
+  {
+    id: "mvola",
+    name: "MVola",
+    color: "#00A8E8",
+    available: true,
   },
-  { 
-    id: 'ORANGE', 
-    name: 'Orange Money', 
-    color: '#FF7900', 
-    prefix: '032',
-    adminNumber: '032 17 560 02',
-    ussdCode: '#144#1*1*0321756002*0321756002*MONTANT*2#',
-    description: 'Orange Madagascar'
+  {
+    id: "orange",
+    name: "Orange Money",
+    color: "#FF7900",
+    available: true,
   },
-  { 
-    id: 'AIRTEL', 
-    name: 'Airtel Money', 
-    color: '#FF0000', 
-    prefix: '033',
-    adminNumber: '033 12 345 67',
-    ussdCode: 'Code USSD à définir',
-    description: 'Airtel Madagascar'
+  {
+    id: "airtel",
+    name: "Airtel Money",
+    color: "#FF0000",
+    available: true,
   },
-]
+];
 
 export default function RechargePage() {
-  const router = useRouter()
-  const { userId, appUser, loading: authLoading } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'historique' | 'recharger'>('recharger')
-  const [selectedPack, setSelectedPack] = useState(CREDIT_PACKS[1]) // 150 crédits par défaut
-  const [selectedOperator, setSelectedOperator] = useState('MVOLA')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [processing, setProcessing] = useState(false)
-  const [transactions, setTransactions] = useState<any[]>([])
-  const [transactionsLoading, setTransactionsLoading] = useState(false)
-  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+  const router = useRouter();
+  const { userId, appUser, loading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"historique" | "recharger">(
+    "recharger",
+  );
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize] = useState(10)
-  const [totalTransactions, setTotalTransactions] = useState(0)
+  // États pour le paiement
+  const [selectedAmount, setSelectedAmount] = useState<PaymentAmount>(
+    CREDIT_PACKS[1],
+  );
+  const [selectedProvider, setSelectedProvider] = useState<string>("mvola");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [processing, setProcessing] = useState(false);
 
-  // États pour le modal de paiement manuel
-  const [showManualModal, setShowManualModal] = useState(false)
-  const [transferCode, setTransferCode] = useState('')
+  // États pour les transactions
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
-  // Hook Realtime pour les transactions
-  const { newTransactionCount, lastTransaction, resetCount } = useTransactionsRealtime({
-    userId: userId ?? undefined,
-    enabled: true
-  })
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalTransactions, setTotalTransactions] = useState(0);
 
-  // Charger les transactions avec pagination
+  // Modal de confirmation
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [transferCode, setTransferCode] = useState("");
+
+  // Realtime transactions
+  const { newTransactionCount, lastTransaction, resetCount } =
+    useTransactionsRealtime({
+      userId: userId ?? undefined,
+      enabled: true,
+    });
+
+  // Charger les transactions
   const loadTransactions = async (page: number = currentPage) => {
-    if (transactionsLoading) return
-    setTransactionsLoading(true)
+    if (transactionsLoading) return;
+    setTransactionsLoading(true);
     try {
-      const { getUserCreditHistoryAction } = await import('@/actions/profile')
-      const result = await getUserCreditHistoryAction(page, pageSize)
+      const { getUserCreditHistoryAction } = await import("@/actions/profile");
+      const result = await getUserCreditHistoryAction(page, pageSize);
       if (result.success && result.data) {
-        setTransactions(result.data)
-        setTotalTransactions(result.pagination?.total || 0)
-        // Réinitialiser le compteur de nouvelles transactions après chargement
-        resetCount()
+        const mappedTransactions: Transaction[] = result.data.map(
+          (tx: any) => ({
+            id: tx.id,
+            type:
+              tx.type === "RECHARGE"
+                ? "in"
+                : tx.type === "ACHAT"
+                  ? "out"
+                  : "bonus",
+            title:
+              tx.type === "ACHAT"
+                ? `Déblocage — ${tx.description || "Sujet"}`
+                : tx.type === "RECHARGE"
+                  ? "Recharge Mobile Money"
+                  : "Bonus",
+            amount:
+              tx.type === "RECHARGE"
+                ? tx.creditsCount || tx.amount
+                : Math.abs(tx.amount),
+            date: tx.createdAt,
+            meta: `${new Date(tx.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} · Réf. ${tx.id?.slice(0, 8).toUpperCase() || "N/A"}`,
+            icon:
+              tx.type === "ACHAT" ? "🔓" : tx.type === "RECHARGE" ? "💳" : "🎁",
+          }),
+        );
+        setTransactions(mappedTransactions);
+        setTotalTransactions(result.pagination?.total || 0);
+        resetCount();
       }
     } catch (error) {
-      console.error('Erreur chargement transactions:', error)
+      console.error("Erreur chargement transactions:", error);
     } finally {
-      setTransactionsLoading(false)
+      setTransactionsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (!authLoading) {
       if (!userId) {
-        router.push('/auth/login')
+        router.push("/auth/login");
       } else {
-        setLoading(false)
-        // Charger les transactions si on est sur l'onglet historique
-        if (activeTab === 'historique') {
-          loadTransactions(1)
+        setLoading(false);
+        if (activeTab === "historique") {
+          loadTransactions(1);
         }
       }
     }
-  }, [userId, authLoading, router])
+  }, [userId, authLoading, router]);
 
   useEffect(() => {
-    if (activeTab === 'historique' && transactions.length === 0 && !transactionsLoading) {
-      loadTransactions(1)
+    if (
+      activeTab === "historique" &&
+      transactions.length === 0 &&
+      !transactionsLoading
+    ) {
+      loadTransactions(1);
     }
-  }, [activeTab])
+  }, [activeTab]);
 
-  // Recharger quand la page change
   useEffect(() => {
-    if (activeTab === 'historique') {
-      loadTransactions(currentPage)
+    if (activeTab === "historique") {
+      loadTransactions(currentPage);
     }
-  }, [currentPage])
+  }, [currentPage]);
 
-  // Recharger les transactions quand une nouvelle arrive en temps réel
+  // Notification pour nouvelle transaction
   useEffect(() => {
     if (newTransactionCount > 0 && lastTransaction) {
-      // Recharger les transactions pour afficher la nouvelle
-      loadTransactions(1)
-      setCurrentPage(1)
+      loadTransactions(1);
+      setCurrentPage(1);
 
-      // Afficher une notification
-      const txType = lastTransaction.type === 'RECHARGE' ? 'Recharge' : lastTransaction.type === 'ACHAT' ? 'Achat' : 'Transaction'
-      const status = lastTransaction.status === 'PENDING' ? 'en attente de validation' : lastTransaction.status === 'COMPLETED' ? 'validée' : 'refusée'
+      const txType =
+        lastTransaction.type === "RECHARGE"
+          ? "Recharge"
+          : lastTransaction.type === "ACHAT"
+            ? "Achat"
+            : "Transaction";
+      const status =
+        lastTransaction.status === "PENDING"
+          ? "en attente"
+          : lastTransaction.status === "COMPLETED"
+            ? "validée"
+            : "refusée";
 
       setNotification({
-        type: lastTransaction.status === 'COMPLETED' ? 'success' : 'error',
-        message: `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`
-      })
+        type: lastTransaction.status === "COMPLETED" ? "success" : "error",
+        message: `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`,
+      });
 
-      // Auto-dismiss après 5 secondes
-      setTimeout(() => {
-        setNotification(null)
-      }, 5000)
+      setTimeout(() => setNotification(null), 5000);
     }
-  }, [newTransactionCount])
+  }, [newTransactionCount]);
 
-  // Grouper les transactions par mois
-  const groupTransactionsByMonth = (txs: any[]) => {
-    const groups: Record<string, any[]> = {}
-    txs.forEach(tx => {
-      const date = new Date(tx.createdAt)
-      const monthKey = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
-      if (!groups[monthKey]) groups[monthKey] = []
-      groups[monthKey].push(tx)
-    })
-    return groups
-  }
+  // Validation du numéro
+  const validatePhoneNumber = () => {
+    const prefixes: Record<string, string> = {
+      mvola: "034",
+      orange: "032",
+      airtel: "033",
+    };
+    const numbers = phoneNumber.replace(/\D/g, "");
+    const requiredPrefix = prefixes[selectedProvider];
 
-  // Transaction par pack - Mode Manuel MVP
-  const handleRecharge = async () => {
-    if (!phoneNumber.trim()) {
-      setNotification({ type: 'error', message: 'Veuillez entrer votre numéro de téléphone' })
-      return
+    if (numbers.length !== 10) {
+      return {
+        valid: false,
+        message: "Le numéro doit contenir exactement 10 chiffres",
+      };
     }
 
-    // Valider le numéro selon l'opérateur
-    const validation = validatePhoneNumber()
+    if (!numbers.startsWith(requiredPrefix)) {
+      return {
+        valid: false,
+        message: `Le numéro doit commencer par ${requiredPrefix} pour ${selectedProvider === "mvola" ? "MVola" : selectedProvider === "orange" ? "Orange Money" : "Airtel Money"}`,
+      };
+    }
+
+    return { valid: true };
+  };
+
+  // Formatage du numéro
+  const formatPhoneNumber = (value: string) => {
+    const numbers = value.replace(/\D/g, "").slice(0, 10);
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 5)
+      return `${numbers.slice(0, 3)} ${numbers.slice(3)}`;
+    if (numbers.length <= 8)
+      return `${numbers.slice(0, 3)} ${numbers.slice(3, 5)} ${numbers.slice(5)}`;
+    return `${numbers.slice(0, 3)} ${numbers.slice(3, 5)} ${numbers.slice(5, 8)} ${numbers.slice(8, 10)}`;
+  };
+
+  // Gestionnaires
+  const handleRecharge = () => {
+    const validation = validatePhoneNumber();
     if (!validation.valid) {
-      setNotification({ type: 'error', message: validation.message || '' })
-      return
+      setNotification({ type: "error", message: validation.message || "" });
+      return;
     }
+    setShowConfirmation(true);
+  };
 
-    // Ouvrir le modal d'instructions de paiement manuel
-    setShowManualModal(true)
-  }
-
-  const handleFinalSubmit = async () => {
+  const handleConfirmPayment = async () => {
     if (!transferCode.trim()) {
-      setNotification({ type: 'error', message: 'Veuillez entrer le code de transfert reçu' })
-      return
+      setNotification({
+        type: "error",
+        message: "Veuillez entrer le code de transfert reçu",
+      });
+      return;
     }
 
-    // Bloquer les achats à 0 Ar
-    if (selectedPack.price <= 0) {
-      setNotification({ type: 'error', message: 'Le montant de la recharge doit être supérieur à 0 Ar' })
-      return
+    if (selectedAmount.price <= 0 || selectedAmount.credits <= 0) {
+      setNotification({ type: "error", message: "Montant invalide" });
+      return;
     }
 
-    // Bloquer les crédits à 0
-    if (selectedPack.credits <= 0) {
-      setNotification({ type: 'error', message: 'Le nombre de crédits doit être supérieur à 0' })
-      return
-    }
-
-    setProcessing(true)
+    setProcessing(true);
     try {
       const result = await rechargeCreditsAction({
-        packCredits: selectedPack.credits,
-        packPrice: selectedPack.price,
-        operator: selectedOperator,
-        phoneNumber: phoneNumber,
-        transferCode: transferCode, // On passe le code de transfert
-        status: 'PENDING' // Indique que l'admin doit valider
-      })
+        packCredits: selectedAmount.credits,
+        packPrice: selectedAmount.price,
+        operator: selectedProvider.toUpperCase(),
+        phoneNumber,
+        transferCode,
+        status: "PENDING",
+      });
 
       if (result.success) {
         setNotification({
-          type: 'success',
-          message: `Votre demande d'achat de ${selectedPack.credits} crédits a été enregistrée. L'administrateur validera votre transfert sous 12h.`
-        })
-        setShowManualModal(false)
-        setTransferCode('')
-        // Recharger les transactions
-        await loadTransactions()
-        // Retour à l'historique
-        setActiveTab('historique')
+          type: "success",
+          message: `Votre demande de ${selectedAmount.credits} crédits a été enregistrée. Validation sous 12h.`,
+        });
+        setShowConfirmation(false);
+        setTransferCode("");
+        await loadTransactions();
+        setActiveTab("historique");
       } else {
-        setNotification({ type: 'error', message: result.error || 'Erreur lors de la validation' })
+        setNotification({
+          type: "error",
+          message: result.error || "Erreur lors de la validation",
+        });
       }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Erreur serveur' })
+    } catch {
+      setNotification({ type: "error", message: "Erreur serveur" });
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
-
-  // Formater et valider le numéro de téléphone (10 chiffres avec préfixe opérateur)
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, '')
-    
-    // Limiter à 10 chiffres
-    const limited = numbers.slice(0, 10)
-    
-    if (limited.length <= 3) return limited
-    if (limited.length <= 5) return `${limited.slice(0, 3)} ${limited.slice(3)}`
-    if (limited.length <= 8) return `${limited.slice(0, 3)} ${limited.slice(3, 5)} ${limited.slice(5)}`
-    return `${limited.slice(0, 3)} ${limited.slice(3, 5)} ${limited.slice(5, 8)} ${limited.slice(8, 10)}`
-  }
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value)
-    setPhoneNumber(formatted)
-  }
-
-  // Valider le numéro selon l'opérateur
-  const validatePhoneNumber = () => {
-    const numbers = phoneNumber.replace(/\D/g, '')
-    const operator = MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)
-    
-    if (numbers.length !== 10) {
-      return { valid: false, message: 'Le numéro doit contenir exactement 10 chiffres' }
-    }
-    
-    if (!numbers.startsWith(operator?.prefix || '')) {
-      return { 
-        valid: false, 
-        message: `Le numéro doit commencer par ${operator?.prefix} pour ${operator?.name}` 
-      }
-    }
-    
-    return { valid: true }
-  }
+  };
 
   if (loading || authLoading) {
-    return <RechargePageSkeleton />
+    return <RechargePageSkeleton />;
   }
 
-  const transactionGroups = groupTransactionsByMonth(transactions)
+  const operatorName =
+    selectedProvider === "mvola"
+      ? "MVola"
+      : selectedProvider === "orange"
+        ? "Orange Money"
+        : "Airtel Money";
 
   return (
     <div className="credits-page">
@@ -280,58 +316,33 @@ export default function RechargePage() {
       <LuxuryNavbar />
 
       {/* HERO */}
-      <div className="hero">
+      <section className="hero">
         <div className="hero-inner">
-          <div className="hero-label">{appUser?.prenom || 'Utilisateur'}</div>
-          <h1 className="hero-title">Mes <em>crédits</em></h1>
-          <div className="balance-row">
-            <div className="balance-card luxury-card card-noise">
-              <div className="balance-label">Solde disponible</div>
-              <div className="balance-amount serif">
-                {appUser?.credits ?? 0}
-                <span className="balance-unit">crédits</span>
-              </div>
-              <div className="balance-ariary">
-                ≈ {(appUser?.credits ?? 0) * 50} Ariary
-              </div>
-            </div>
-            <div className="balance-mini-stats">
-              <div className="bms">
-                <div className="bms-lbl">Reçus ce mois</div>
-                <div className="bms-val cr-in">
-                  {transactions
-                    .filter(tx => tx.type === 'RECHARGE' && new Date(tx.createdAt).getMonth() === new Date().getMonth())
-                    .reduce((sum, tx) => sum + tx.amount, 0)}
-                </div>
-              </div>
-              <div className="bms">
-                <div className="bms-lbl">Dépensés ce mois</div>
-                <div className="bms-val cr-out">
-                  {transactions
-                    .filter(tx => tx.type === 'ACHAT' && new Date(tx.createdAt).getMonth() === new Date().getMonth())
-                    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0)}
-                </div>
-              </div>
-            </div>
-            <button 
-              className="btn-recharge" 
-              onClick={() => setActiveTab('recharger')}
-            >
-              <Zap size={16} />
-              Recharger via Mobile Money
-            </button>
-          </div>
+          <div className="hero-label">{appUser?.prenom || "Utilisateur"}</div>
+          <h1 className="hero-title">
+            Mes <em>crédits</em>
+          </h1>
+          <p className="hero-sub">
+            Gérez votre solde, suivez vos mouvements et rechargez votre compte
+            simplement via Mobile Money.
+          </p>
+
+          <BalanceCard
+            balance={appUser?.credits ?? 0}
+            ariaryEquivalent={`≈ ${(appUser?.credits ?? 0) * 50} Ariary`}
+            onRecharge={() => setActiveTab("recharger")}
+          />
         </div>
-      </div>
+      </section>
 
       {/* MAIN */}
-      <div className="main">
-        {/* LEFT */}
-        <div>
+      <main className="main">
+        <div className="content">
+          {/* TABS */}
           <div className="tabs">
             <button
-              className={`tab ${activeTab === 'historique' ? 'active' : ''}`}
-              onClick={() => setActiveTab('historique')}
+              className={`tab ${activeTab === "historique" ? "active" : ""}`}
+              onClick={() => setActiveTab("historique")}
             >
               Historique
               {newTransactionCount > 0 && (
@@ -339,224 +350,90 @@ export default function RechargePage() {
               )}
             </button>
             <button
-              className={`tab ${activeTab === 'recharger' ? 'active' : ''}`}
-              onClick={() => setActiveTab('recharger')}
+              className={`tab ${activeTab === "recharger" ? "active" : ""}`}
+              onClick={() => setActiveTab("recharger")}
             >
               Recharger
             </button>
           </div>
 
-          {/* TRANSACTIONS */}
-          {activeTab === 'historique' && (
-            <div className="tab-panel active">
-              {transactionsLoading ? (
-                <div className="transactions-loading">Chargement de vos transactions...</div>
-              ) : transactions.length > 0 ? (
-                <div>
-                  {transactions.map((tx) => (
-                    <div key={tx.id} className="tx-row card-noise">
-                      <div className={`tx-icon ${tx.type === 'ACHAT' ? 'out' : tx.type === 'RECHARGE' ? 'in' : 'bonus'}`}>
-                        {tx.type === 'ACHAT' ? '🔓' : tx.type === 'RECHARGE' ? '💳' : '🎁'}
-                      </div>
-                      <div className="tx-body">
-                        <div className="tx-title serif">
-                          {tx.type === 'ACHAT' ? 'Déblocage — ' : tx.type === 'RECHARGE' ? 'Recharge Mobile Money — ' : ''}
-                          {tx.description || `${tx.type} de crédits`}
-                        </div>
-                        <div className="tx-meta mono">
-                          {new Date(tx.createdAt).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                          {tx.id && ` · Réf. ${tx.id.slice(0, 8).toUpperCase()}`}
-                        </div>
-                      </div>
-                      <div>
-                        <div className={`tx-amount mono ${tx.type === 'RECHARGE' ? 'positive' : 'negative'}`}>
-                          {tx.type === 'RECHARGE'
-                            ? `+${tx.creditsCount || tx.amount} cr`
-                            : `${tx.amount >= 0 ? '+' : ''}${tx.amount} cr`
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="transactions-empty">
-                  <p>Aucune transaction enregistrée pour le moment.</p>
-                  <span className="text-xs text-text-4">Vos futurs achats et recharges apparaîtront ici.</span>
-                </div>
-              )}
-
-              {/* Pagination */}
-              {totalTransactions > pageSize && (
-                <div className="pagination">
-                  <div className="pagination-info">
-                    {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalTransactions)} sur {totalTransactions}
-                  </div>
-                  <div className="pagination-controls">
-                    <button
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="pagination-btn"
-                    >
-                      Précédent
-                    </button>
-                    <span className="pagination-current">
-                      Page {currentPage} sur {Math.ceil(totalTransactions / pageSize)}
-                    </span>
-                    <button
-                      onClick={() => setCurrentPage(Math.min(Math.ceil(totalTransactions / pageSize), currentPage + 1))}
-                      disabled={currentPage === Math.ceil(totalTransactions / pageSize)}
-                      className="pagination-btn"
-                    >
-                      Suivant
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+          {/* HISTORIQUE TAB */}
+          {activeTab === "historique" && (
+            <TransactionHistory
+              transactions={transactions}
+              isLoading={transactionsLoading}
+              onTransactionClick={(tx) => console.log(tx)}
+            />
           )}
 
-          {/* RECHARGER */}
-          {activeTab === 'recharger' && (
-            <div className="tab-panel active">
-              <div className="recharge-info">
+          {/* RECHARGER TAB */}
+          {activeTab === "recharger" && (
+            <div className="recharge-section">
+              <div className="info-banner">
                 <Smartphone size={16} />
-                <span>Paiement sécurisé via Mobile Money · Crédité instantanément</span>
+                <span>
+                  Paiement via Mobile Money · Validation manuelle sous 12h
+                </span>
               </div>
 
-              {/* Packs */}
-              <div className="packs-grid">
-                {CREDIT_PACKS.map((pack) => (
-                  <div 
-                    key={pack.credits}
-                    className={`pack-card card-noise ${selectedPack.credits === pack.credits ? 'selected' : ''}`}
-                    onClick={() => setSelectedPack(pack)}
-                  >
-                    {pack.popular && <div className="pack-popular">Populaire</div>}
-                    {pack.bestValue && <div className="pack-popular" style={{ background: 'var(--sage)' }}>Best Value</div>}
-                    <div className="pack-cr serif">{pack.credits}</div>
-                    <div className="pack-lbl">crédits</div>
-                    <div className="pack-price serif">{pack.price.toLocaleString('fr-FR')} Ar</div>
-                    <div className="pack-ariary">≈ {pack.priceEur} €</div>
-                    <button className="btn-buy-pack">
-                      {selectedPack.credits === pack.credits ? '✓ Sélectionné' : 'Sélectionner'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Operator & Phone */}
-              <div className="recharge-form">
-                <div className="form-group">
-                  <label className="form-label">Opérateur Mobile Money</label>
-                  <div className="operator-grid">
-                    {MOBILE_MONEY_OPERATORS.map((op) => (
-                      <button
-                        key={op.id}
-                        className={`operator-card card-noise ${selectedOperator === op.id ? 'selected' : ''}`}
-                        onClick={() => setSelectedOperator(op.id)}
-                      >
-                        <div 
-                          className="operator-dot" 
-                          style={{ background: op.color }}
-                        />
-                        <span>{op.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Numéro de téléphone</label>
-                  <div className="mvola-input-wrap">
-                    <div className="mvola-flag">
-                      <Smartphone size={14} />
-                      <span>{MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.name}</span>
-                    </div>
-                    <input
-                      type="tel"
-                      className="form-input mvola-input"
-                      value={phoneNumber}
-                      onChange={handlePhoneChange}
-                      placeholder="034 XX XXX XX"
-                      maxLength={14}
-                      autoComplete="tel"
+              {/* Provider Selection */}
+              <div className="section">
+                <h3 className="section-label">Opérateur Mobile Money</h3>
+                <div className="providers-grid">
+                  {OPERATORS.map((provider) => (
+                    <ProviderCard
+                      key={provider.id}
+                      provider={provider}
+                      isSelected={selectedProvider === provider.id}
+                      onSelect={(p) => setSelectedProvider(p.id)}
                     />
-                  </div>
-                  <div className="form-hint">
-                    <Info size={12} />
-                    <span>Le numéro doit être associé à votre compte <strong>{MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.name}</strong></span>
-                  </div>
+                  ))}
                 </div>
+              </div>
 
-                {/* How it works */}
-                <div className="how-it-works card-noise">
-                  <Info size={20} />
-                  <div>
-                    <div className="hiw-title serif">Processus d'achat</div>
-                    <div className="hiw-steps">
-                      <span>1️⃣ Choisissez votre pack et entrez votre numéro</span>
-                      <span>2️⃣ Transférez le montant au numéro administrateur</span>
-                      <span>3️⃣ Saisissez le code de transfert reçu par SMS</span>
-                      <span>4️⃣ Votre compte sera crédité après vérification (12h)</span>
-                    </div>
-                  </div>
+              {/* Payment Form */}
+              <PaymentForm
+                amounts={CREDIT_PACKS}
+                selectedAmount={selectedAmount}
+                phoneNumber={phoneNumber}
+                providerId={selectedProvider}
+                isLoading={processing}
+                onAmountSelect={setSelectedAmount}
+                onPhoneNumberChange={(phone) =>
+                  setPhoneNumber(formatPhoneNumber(phone))
+                }
+                onSubmit={handleRecharge}
+              />
+
+              {/* How it works */}
+              <div className="how-it-works">
+                <Info size={20} />
+                <div>
+                  <div className="hiw-title">Processus d&apos;achat</div>
+                  <ol className="hiw-steps">
+                    <li>Choisissez votre pack et entrez votre numéro</li>
+                    <li>Effectuez le transfert vers le numéro indiqué</li>
+                    <li>Renseignez le code de transfert reçu par SMS</li>
+                    <li>
+                      Vos crédits sont ajoutés après vérification (sous 12h)
+                    </li>
+                  </ol>
                 </div>
+              </div>
 
-                {/* Summary & Pay */}
-                <div className="recharge-summary card-noise">
-                  <div className="rs-row">
-                    <span>Pack sélectionné</span>
-                    <span className="rs-val">{selectedPack.credits} crédits</span>
-                  </div>
-                  <div className="rs-row">
-                    <span>Prix à payer</span>
-                    <span className="rs-price">{selectedPack.price.toLocaleString('fr-FR')} Ar</span>
-                  </div>
-                  <div className="rs-row">
-                    <span>Opérateur</span>
-                    <span className="rs-val">{MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.name}</span>
-                  </div>
-                  <div className="rs-row">
-                    <span>Numéro</span>
-                    <span className="rs-val">{phoneNumber || '—'}</span>
-                  </div>
+              {/* Trust badges */}
+              <div className="trust-badges">
+                <div className="trust-item">
+                  <Shield size={14} />
+                  <span>Paiement 100% sécurisé</span>
                 </div>
-
-                <button 
-                  className="btn-pay"
-                  onClick={handleRecharge}
-                  disabled={processing || !phoneNumber.trim()}
-                >
-                  {processing ? (
-                    'Traitement en cours...'
-                  ) : (
-                    <>
-                      Continuer le paiement ({selectedPack.price.toLocaleString('fr-FR')} Ar)
-                      <ArrowRight size={16} />
-                    </>
-                  )}
-                </button>
-
-                <div className="trust-badges">
-                  <div className="trust-item">
-                    <Shield size={14} />
-                    <span>Paiement 100% sécurisé</span>
-                  </div>
-                  <div className="trust-item">
-                    <Clock size={14} />
-                    <span>Validation manuelle sous 12h</span>
-                  </div>
-                  <div className="trust-item">
-                    <CheckCircle size={14} />
-                    <span>Transaction vérifiée par admin</span>
-                  </div>
+                <div className="trust-item">
+                  <Clock size={14} />
+                  <span>Validation sous 12h</span>
+                </div>
+                <div className="trust-item">
+                  <CheckCircle size={14} />
+                  <span>Transaction vérifiée</span>
                 </div>
               </div>
             </div>
@@ -564,282 +441,104 @@ export default function RechargePage() {
         </div>
 
         {/* SIDEBAR */}
-          <aside>
-          <div className="panel luxury-card card-noise">
-            <div className="p-head">
-              <span className="p-label">
-                <div className="p-dot" />
-                Résumé du compte
-              </span>
+        <aside className="sidebar">
+          <div className="panel">
+            <div className="panel-header">
+              <span className="panel-label">Vue d&apos;ensemble</span>
             </div>
-            <div className="p-body">
+            <div className="panel-body">
               <div className="info-row">
-                <span className="ir-key">Solde actuel</span>
-                <span className="ir-val gold serif">{appUser?.credits ?? 0} cr</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Total rechargé</span>
-                <span className="ir-val">
-                  {transactions.filter(tx => tx.type === 'RECHARGE').reduce((sum, tx) => sum + tx.amount, 0)} cr
+                <span className="info-key">Solde actuel</span>
+                <span className="info-val gold">
+                  {appUser?.credits ?? 0} cr
                 </span>
               </div>
               <div className="info-row">
-                <span className="ir-key">Total dépensé</span>
-                <span className="ir-val">
-                  {transactions.filter(tx => tx.type === 'ACHAT').reduce((sum, tx) => sum + Math.abs(tx.amount), 0)} cr
+                <span className="info-key">Total rechargé</span>
+                <span className="info-val">
+                  {transactions
+                    .filter((tx) => tx.type === "in")
+                    .reduce((sum, tx) => sum + tx.amount, 0)}{" "}
+                  cr
                 </span>
               </div>
               <div className="info-row">
-                <span className="ir-key">Bonus obtenus</span>
-                <span className="ir-val gold">
-                  +{transactions.filter(tx => tx.type === 'BONUS').reduce((sum, tx) => sum + tx.amount, 0)} cr
+                <span className="info-key">Total dépensé</span>
+                <span className="info-val">
+                  {transactions
+                    .filter((tx) => tx.type === "out")
+                    .reduce((sum, tx) => sum + tx.amount, 0)}{" "}
+                  cr
+                </span>
+              </div>
+              <div className="info-row">
+                <span className="info-key">Bonus obtenus</span>
+                <span className="info-val gold">
+                  +
+                  {transactions
+                    .filter((tx) => tx.type === "bonus")
+                    .reduce((sum, tx) => sum + tx.amount, 0)}{" "}
+                  cr
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="panel luxury-card card-noise">
-            <div className="p-head">
-              <span className="p-label">
-                <div className="p-dot" />
-                Mobile Money lié
-              </span>
+          <div className="panel">
+            <div className="panel-header">
+              <span className="panel-label">Mobile Money lié</span>
             </div>
-            <div className="p-body">
+            <div className="panel-body">
               <div className="mm-info">
-                <div className="mm-icon">
-                  <Smartphone size={18} />
-                </div>
+                <Smartphone size={18} />
                 <div className="mm-details">
-                  <div className="mm-number mono">
-                    {appUser?.phone || 'Non renseigné'}
+                  <div className="mm-number">
+                    {appUser?.phone || "Non renseigné"}
                   </div>
                   <div className="mm-status">
-                    {appUser?.defaultOperator || 'MVOLA'} · Actif
+                    {appUser?.defaultOperator || "MVOLA"} · Actif
                   </div>
                 </div>
               </div>
-              <button 
-                className="btn-modify"
-                onClick={() => router.push('/profil')}
+              <Button
+                variant="secondary"
+                size="sm"
+                fullWidth
+                onClick={() => router.push("/profil")}
               >
-                Modifier dans le profil
-              </button>
-            </div>
-          </div>
-
-          <div className="panel luxury-card card-noise">
-            <div className="p-head">
-              <span className="p-label">
-                <div className="p-dot" />
-                Gagner des crédits
-              </span>
-            </div>
-            <div className="p-body">
-              <div className="earn-item">
-                <Gift size={16} />
-                <span>Parrainez un ami → <strong className="gold">+20 cr</strong></span>
-              </div>
-              <div className="earn-item">
-                <Star size={16} />
-                <span>Laissez un avis → <strong className="gold">+2 cr</strong></span>
-              </div>
-              <div className="earn-item">
-                <Trophy size={16} />
-                <span>Défi mensuel → jusqu'à <strong className="gold">+50 cr</strong></span>
-              </div>
-              <button className="btn-earn-more" onClick={() => router.push('/parrainage')}>
-                Voir tous les moyens →
-              </button>
+                Modifier
+              </Button>
             </div>
           </div>
         </aside>
-      </div>
+      </main>
 
-      {/* NOTIFICATION TOAST */}
+      {/* CONFIRMATION MODAL */}
+      <RechargeConfirmation
+        isOpen={showConfirmation}
+        onClose={() => {
+          setShowConfirmation(false);
+          setTransferCode("");
+        }}
+        amount={selectedAmount.credits}
+        price={selectedAmount.price}
+        bonus={selectedAmount.bonus}
+        providerName={operatorName}
+        phoneNumber={phoneNumber}
+        isLoading={processing}
+        onConfirm={handleConfirmPayment}
+      />
+
+      {/* NOTIFICATION */}
       {notification && (
-        <div className="toast-container">
-          <div className={`toast ${notification.type}`}>
-            <div className="toast-icon">
-              {notification.type === 'success' ? '✓' : '✕'}
-            </div>
-            <div className="toast-content">
-              <div className="toast-title">
-                {notification.type === 'success' ? 'Succès' : 'Erreur'}
-              </div>
-              <div className="toast-msg">{notification.message}</div>
-            </div>
-            <button 
-              className="toast-close"
-              onClick={() => setNotification(null)}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MANUAL PAYMENT MODAL */}
-      {showManualModal && (
-        <div className="modal-overlay" onClick={() => setShowManualModal(false)}>
-          <div className="modal-content card-noise" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title serif">Instructions de paiement</h2>
-              <button className="modal-close" onClick={() => setShowManualModal(false)}>✕</button>
-            </div>
-            <div className="modal-body">
-              {/* ÉTAPE 1 */}
-              <div className="instruction-box">
-                <div className="step-number">01</div>
-                <div className="hiw-title">Effectuez le transfert</div>
-                <p className="text-xs text-text-muted mb-4">
-                  Envoyez exactement <strong className="gold">{selectedPack.price.toLocaleString('fr-FR')} Ar</strong> depuis votre téléphone vers le numéro administrateur :
-                </p>
-                
-                <div className="admin-number-card">
-                  <div 
-                    className="operator-badge"
-                    style={{ 
-                      background: `${MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.color}20`,
-                      borderColor: MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.color
-                    }}
-                  >
-                    <div 
-                      className="operator-dot" 
-                      style={{ background: MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.color }} 
-                    />
-                    <span>{MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.name}</span>
-                  </div>
-                  
-                  <div className="admin-number-display">
-                    <div className="admin-label">Numéro administrateur :</div>
-                    <div className="admin-number">
-                      {MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.adminNumber}
-                    </div>
-                    <button 
-                      className="btn-copy"
-                      onClick={() => {
-                        const num = MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.adminNumber || ''
-                        navigator.clipboard.writeText(num.replace(/\s/g, ''))
-                        setNotification({ type: 'success', message: 'Numéro copié !' })
-                      }}
-                    >
-                      <Copy size={12} />
-                      Copier
-                    </button>
-                  </div>
-                  
-                  <div className="admin-description">
-                    <Info size={12} />
-                    <span>
-                      {MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.description}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="transfer-steps">
-                  <div className="transfer-step">
-                    <div className="ts-icon">📱</div>
-                    <div className="ts-text">
-                      Composez le code USSD : <br />
-                      <strong className="ussd-code">
-                        {MOBILE_MONEY_OPERATORS.find(op => op.id === selectedOperator)?.ussdCode?.replace('MONTANT', selectedPack.price.toString())}
-                      </strong>
-                    </div>
-                  </div>
-                  <div className="transfer-step">
-                    <div className="ts-icon">💰</div>
-                    <div className="ts-text">
-                      Vérifiez le montant : <strong>{selectedPack.price.toLocaleString('fr-FR')} Ar</strong>
-                    </div>
-                  </div>
-                  <div className="transfer-step">
-                    <div className="ts-icon">🔐</div>
-                    <div className="ts-text">
-                      Saisissez votre <strong>code PIN secret</strong> sur votre téléphone pour confirmer
-                    </div>
-                  </div>
-                  <div className="transfer-step">
-                    <div className="ts-icon">📨</div>
-                    <div className="ts-text">
-                      Vous recevrez un <strong>SMS de confirmation</strong> avec le code de transfert
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ÉTAPE 2 */}
-              <div className="instruction-box">
-                <div className="step-number">02</div>
-                <div className="hiw-title">Entrez le code de transfert</div>
-                <p className="text-xs text-text-muted mb-4">
-                  Après le transfert, vous recevrez un SMS de confirmation avec un <strong>code de transaction</strong>. Saisissez-le ci-dessous :
-                </p>
-                
-                <div className="form-group code-field">
-                  <label className="code-label">
-                    <Send size={12} />
-                    Code de transfert reçu par SMS
-                  </label>
-                  <input
-                    type="text"
-                    className="form-input code-input"
-                    placeholder="Ex: TXN123456 ou CODE-123-XYZ"
-                    value={transferCode}
-                    onChange={(e) => setTransferCode(e.target.value.toUpperCase())}
-                    maxLength={20}
-                  />
-                  <div className="code-hint">
-                    <AlertCircle size={12} />
-                    <span>Conservez précieusement le SMS de confirmation</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* MESSAGE D'ATTENTE */}
-              <div className="wait-msg">
-                <div className="wait-icon">
-                  <Clock size={20} />
-                </div>
-                <div className="wait-content">
-                  <div className="wait-title">Délai de validation</div>
-                  <p>
-                    Après soumission, un administrateur vérifiera votre paiement manuellement.
-                    Vos crédits seront ajoutés à votre compte sous un délai maximum de <strong className="gold">12 heures</strong>.
-                  </p>
-                  <div className="wait-badge">
-                    <CheckCircle size={12} />
-                    <span>Transaction sécurisée et vérifiée</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* BOUTON DE SOUMISSION */}
-              <button
-                className="btn-pay mt-8"
-                onClick={handleFinalSubmit}
-                disabled={processing || !transferCode.trim()}
-              >
-                {processing ? (
-                  <>
-                    <div className="spinner" />
-                    Traitement en cours...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle size={16} />
-                    Confirmer le paiement ({selectedPack.price.toLocaleString('fr-FR')} Ar)
-                  </>
-                )}
-              </button>
-
-              <div className="modal-footer-note">
-                En confirmant, vous déclarez avoir effectué le transfert vers le numéro administrateur ci-dessus.
-              </div>
-            </div>
-          </div>
+        <div className={`notification ${notification.type}`}>
+          <AlertCircle size={16} />
+          <span>{notification.message}</span>
+          <button onClick={() => setNotification(null)}>
+            <X size={16} />
+          </button>
         </div>
       )}
     </div>
-  )
+  );
 }

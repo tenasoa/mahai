@@ -54,9 +54,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
@@ -74,33 +74,32 @@ export default function RootLayout({
         <LuxuryCursor />
         <ScrollToTop />
         <ConditionalNavbar />
-        {children}
+        <div id="main-content" tabIndex={-1} className="shell-main-anchor">
+          {children}
+        </div>
         <MobileBottomNav />
       </body>
     </html>
   );
 }
 
-// Client-side theme initializer to avoid script tag warning
 function ThemeInitializer() {
   return (
-    <>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              try {
-                var theme = localStorage.getItem('theme');
-                var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
-                if (!theme && supportDarkMode) theme = 'dark';
-                if (!theme) theme = 'light';
-                document.documentElement.setAttribute('data-theme', theme);
-                document.documentElement.classList.add(theme);
-              } catch (e) {}
-            })();
-          `,
-        }}
-      />
-    </>
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          (function() {
+            try {
+              var theme = localStorage.getItem('theme');
+              var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+              if (!theme && supportDarkMode) theme = 'dark';
+              if (!theme) theme = 'light';
+              document.documentElement.setAttribute('data-theme', theme);
+              document.documentElement.classList.add(theme);
+            } catch (e) {}
+          })();
+        `,
+      }}
+    />
   );
 }

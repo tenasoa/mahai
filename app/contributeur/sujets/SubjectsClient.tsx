@@ -51,144 +51,217 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
   const displayedSubjects = filteredSubjects.length
 
   return (
-    <>
-      {/* Topbar */}
-      <div className="topbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="topbar-title">
-            Mes <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>sujets</em>
+    <div className="admin-page-content">
+      {/* Header Section */}
+      <div className="admin-header">
+        <div>
+          <div className="admin-header-badge">
+            <File size={12} />
+            Gestion du contenu
           </div>
-          <div className="topbar-stats">
-            <span className="stat-badge stat-published">
-              <CheckCircle2 size={12} /> {stats.published}
-            </span>
-            <span className="stat-badge stat-pending">
-              <AlertCircle size={12} /> {stats.pending}
-            </span>
-            <span className="stat-badge stat-rejected">
-              <XCircle size={12} /> {stats.rejected}
-            </span>
-          </div>
+          <h1 className="admin-title">Mes sujets</h1>
+          <p className="admin-subtitle">
+            Vous avez publié {stats.published} sujets pour un total de {totalSubjects} créations.
+          </p>
         </div>
-        <div className="topbar-right">
+        <div className="admin-header-actions">
+          <Link href="/contributeur/nouveau" className="admin-btn admin-btn-primary">
+            + Nouveau sujet
+          </Link>
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="page-content">
-        {/* Filters */}
-        <div className="subjects-filters">
-          <button 
-            className={`filter-btn ${statusFilter === 'ALL' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('ALL')}
-          >
-            Tous ({totalSubjects})
-          </button>
-          <button 
-            className={`filter-btn ${statusFilter === 'PUBLISHED' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('PUBLISHED')}
-          >
-            <CheckCircle2 size={14} />
-            Publiés ({stats.published})
-          </button>
-          <button 
-            className={`filter-btn ${statusFilter === 'PENDING' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('PENDING')}
-          >
-            <AlertCircle size={14} />
-            En attente ({stats.pending})
-          </button>
-          <button 
-            className={`filter-btn ${statusFilter === 'REJECTED' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('REJECTED')}
-          >
-            <XCircle size={14} />
-            Rejetés ({stats.rejected})
-          </button>
-          <button 
-            className={`filter-btn ${statusFilter === 'DRAFT' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('DRAFT')}
-          >
-            <File size={14} />
-            Brouillons ({subjects.filter(s => s.status === 'DRAFT').length})
-          </button>
+      {/* KPI Stats Grid */}
+      <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
+        <div className="kpi-card" onClick={() => setStatusFilter('PUBLISHED')} style={{ cursor: 'pointer' }}>
+          <div className="kpi-header">
+            <span className="kpi-title">Publiés</span>
+            <div className="kpi-icon" style={{ background: 'var(--sage-dim)', color: 'var(--sage)' }}>
+              <CheckCircle2 size={16} />
+            </div>
+          </div>
+          <div className="kpi-value">{stats.published}</div>
+          <div className="kpi-trend" style={{ color: 'var(--sage)' }}>En ligne</div>
         </div>
 
-        {/* Subjects Table */}
-        <div className="table-wrap">
-          <div className="table-head">
-            <div className="th">Titre</div>
-            <div className="th">Statut</div>
-            <div className="th">Niveau</div>
-            <div className="th">Année</div>
-            <div className="th">Ventes</div>
-            <div className="th">Revenus</div>
-            <div className="th">Actions</div>
+        <div className="kpi-card" onClick={() => setStatusFilter('PENDING')} style={{ cursor: 'pointer' }}>
+          <div className="kpi-header">
+            <span className="kpi-title">En attente</span>
+            <div className="kpi-icon" style={{ background: 'var(--amber-dim)', color: 'var(--amber)' }}>
+              <AlertCircle size={16} />
+            </div>
           </div>
+          <div className="kpi-value">{stats.pending}</div>
+          <div className="kpi-trend" style={{ color: 'var(--amber)' }}>En vérification</div>
+        </div>
 
-          <div className="table-body">
-            {displayedSubjects === 0 ? (
-              <EmptyState
-                title="Aucun sujet trouvé"
-                description={statusFilter === 'ALL' 
-                  ? 'Commencez par publier votre premier sujet'
-                  : `Aucun sujet ${statusFilter === 'PUBLISHED' ? 'publié' : statusFilter === 'PENDING' ? 'en attente' : statusFilter === 'REJECTED' ? 'rejeté' : 'brouillon'}`
-                }
-                icon={File}
-                actionLabel={statusFilter === 'ALL' ? "Nouveau sujet" : undefined}
-                actionHref={statusFilter === 'ALL' ? "/contributeur/nouveau" : undefined}
-              />
-            ) : (
-              filteredSubjects.map((subject: any) => {
-                const status = formatStatus(subject.status)
-                const StatusIcon = status.icon
-                return (
-                  <div key={subject.id} className="table-row">
-                    <div className="td td-title">
-                      <div className="td-main">{subject.titre}</div>
-                      <div className="td-sub">
-                        {subject.matiere || 'N/A'} · {subject.series || 'Toutes séries'} · {subject.credits} cr
-                      </div>
-                    </div>
-                    <div className="td">
-                      <span className={`status-badge ${status.class}`}>
-                        <StatusIcon size={12} />
-                        {status.label}
-                      </span>
-                    </div>
-                    <div className="td">
-                      <span className="grade-badge">{subject.grade || 'N/A'}</span>
-                    </div>
-                    <div className="td">{subject.year || 'N/A'}</div>
-                    <div className="td" style={{ color: subject.ventes ? 'var(--text)' : 'var(--text-3)' }}>
-                      {subject.ventes || '—'}
-                    </div>
-                    <div className="td" style={{ color: subject.revenus ? 'var(--gold)' : 'var(--text-3)' }}>
-                      {subject.revenus ? `${subject.revenus.toLocaleString('fr-FR')} Ar` : '—'}
-                    </div>
-                    <div className="td td-actions">
-                      <Link href={`/sujet/${subject.id}`} className="btn-action" title="Voir">
-                        <Eye size={14} />
-                      </Link>
-                      <Link href={`/contributeur/nouveau?id=${subject.id}`} className="btn-action" title="Modifier">
-                        <Edit3 size={14} />
-                      </Link>
-                      <Link href={`/contributeur/sujets/${subject.id}/stats`} className="btn-action" title="Stats">
-                        <BarChart3 size={14} />
-                      </Link>
-                      <button 
-                        className="btn-action btn-delete" 
-                        title="Supprimer"
-                        onClick={() => setDeleteId(subject.id)}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                )
-              })
-            )}
+        <div className="kpi-card" onClick={() => setStatusFilter('REJECTED')} style={{ cursor: 'pointer' }}>
+          <div className="kpi-header">
+            <span className="kpi-title">Rejetés</span>
+            <div className="kpi-icon" style={{ background: 'var(--ruby-dim)', color: 'var(--ruby)' }}>
+              <XCircle size={16} />
+            </div>
           </div>
+          <div className="kpi-value">{stats.rejected}</div>
+          <div className="kpi-trend" style={{ color: 'var(--ruby)' }}>À corriger</div>
+        </div>
+
+        <div className="kpi-card" onClick={() => setStatusFilter('DRAFT')} style={{ cursor: 'pointer' }}>
+          <div className="kpi-header">
+            <span className="kpi-title">Brouillons</span>
+            <div className="kpi-icon" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-3)' }}>
+              <File size={16} />
+            </div>
+          </div>
+          <div className="kpi-value">{stats.draft}</div>
+          <div className="kpi-trend">Non publiés</div>
+        </div>
+      </div>
+
+      {/* Tabs Filter */}
+      <div className="admin-tabs">
+        <button 
+          className={`admin-tab ${statusFilter === 'ALL' ? 'admin-tab-active' : ''}`}
+          onClick={() => setStatusFilter('ALL')}
+        >
+          Tous les sujets <span className="admin-tab-count">{totalSubjects}</span>
+        </button>
+        <button 
+          className={`admin-tab ${statusFilter === 'PUBLISHED' ? 'admin-tab-active' : ''}`}
+          onClick={() => setStatusFilter('PUBLISHED')}
+        >
+          Publiés <span className="admin-tab-count">{stats.published}</span>
+        </button>
+        <button 
+          className={`admin-tab ${statusFilter === 'PENDING' ? 'admin-tab-active' : ''}`}
+          onClick={() => setStatusFilter('PENDING')}
+        >
+          En attente <span className="admin-tab-count">{stats.pending}</span>
+        </button>
+        <button 
+          className={`admin-tab ${statusFilter === 'REJECTED' ? 'admin-tab-active' : ''}`}
+          onClick={() => setStatusFilter('REJECTED')}
+        >
+          Rejetés <span className="admin-tab-count">{stats.rejected}</span>
+        </button>
+      </div>
+
+      <div className="admin-card">
+        <div className="admin-card-body" style={{ borderBottom: '1px solid var(--b2)', paddingBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Liste de vos créations</h3>
+            <div style={{ position: 'relative', width: '300px' }}>
+              <input 
+                type="text" 
+                placeholder="Rechercher un sujet..." 
+                className="admin-input"
+                style={{ height: '36px', paddingLeft: '2.5rem', fontSize: '0.85rem' }}
+              />
+              <File size={14} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-4)' }} />
+            </div>
+          </div>
+        </div>
+        <div className="table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Sujet</th>
+                <th>Statut</th>
+                <th>Niveau & Année</th>
+                <th>Ventes</th>
+                <th>Gains cumulés</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayedSubjects === 0 ? (
+                <tr>
+                  <td colSpan={6}>
+                    <div className="admin-empty-state">
+                      <File className="admin-empty-state-icon" size={48} />
+                      <div className="admin-empty-state-text">
+                        {statusFilter === 'ALL' 
+                          ? 'Vous n\'avez pas encore créé de sujet.'
+                          : `Aucun sujet ${statusFilter === 'PUBLISHED' ? 'publié' : statusFilter === 'PENDING' ? 'en attente' : statusFilter === 'REJECTED' ? 'rejeté' : 'brouillon'}`}
+                      </div>
+                      {statusFilter === 'ALL' && (
+                        <Link href="/contributeur/nouveau" className="admin-btn admin-btn-primary" style={{ marginTop: '1rem' }}>
+                          Créer mon premier sujet
+                        </Link>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredSubjects.map((subject: any) => {
+                  const status = formatStatus(subject.status)
+                  const StatusIcon = status.icon
+                  
+                  // Déterminer la classe de statut pour le Luxury System
+                  let badgeClass = 'status-gray'
+                  if (subject.status === 'PUBLISHED') badgeClass = 'status-green'
+                  if (subject.status === 'PENDING') badgeClass = 'status-amber'
+                  if (subject.status === 'REJECTED') badgeClass = 'status-ruby'
+
+                  return (
+                    <tr key={subject.id}>
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontWeight: 500, color: 'var(--text)', fontSize: '0.95rem' }}>{subject.titre}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-4)' }}>
+                            {subject.matiere || 'Matière N/A'} · {subject.series || 'Toutes séries'}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${badgeClass}`}>
+                          <StatusIcon size={12} />
+                          {status.label}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span className="status-badge status-blue" style={{ fontSize: '0.7rem' }}>{subject.grade || 'N/A'}</span>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: '0.8rem', color: 'var(--text-3)' }}>{subject.year || '—'}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontFamily: 'var(--mono)', fontSize: '0.9rem', color: subject.ventes ? 'var(--text)' : 'var(--text-4)' }}>
+                          {subject.ventes || '0'}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontFamily: 'var(--mono)', fontWeight: 500, color: subject.revenus ? 'var(--gold)' : 'var(--text-4)' }}>
+                          {subject.revenus ? `${subject.revenus.toLocaleString('fr-FR')} Ar` : '0 Ar'}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          <Link href={`/sujet/${subject.id}`} className="admin-btn admin-btn-outline" style={{ padding: '0.4rem' }} title="Voir">
+                            <Eye size={14} />
+                          </Link>
+                          <Link href={`/contributeur/nouveau?id=${subject.id}`} className="admin-btn admin-btn-outline" style={{ padding: '0.4rem' }} title="Modifier">
+                            <Edit3 size={14} />
+                          </Link>
+                          <Link href={`/contributeur/sujets/${subject.id}/stats`} className="admin-btn admin-btn-outline" style={{ padding: '0.4rem' }} title="Statistiques">
+                            <BarChart3 size={14} />
+                          </Link>
+                          <button 
+                            className="admin-btn admin-btn-outline admin-btn-reject" 
+                            style={{ padding: '0.4rem' }}
+                            title="Supprimer"
+                            onClick={() => setDeleteId(subject.id)}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -201,6 +274,6 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
         confirmLabel="Supprimer définitivement"
         variant="danger"
       />
-    </>
+    </div>
   )
 }

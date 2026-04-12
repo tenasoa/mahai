@@ -225,9 +225,9 @@ export function AvatarUploadModal({
               </p>
             )}
 
-            <div className="avatar-buttons">
+            <div className="modal-footer">
               <button 
-                className="btn-upload" 
+                className="btn-primary" 
                 onClick={handleUpload}
                 disabled={!selectedFile || uploading}
               >
@@ -236,7 +236,7 @@ export function AvatarUploadModal({
 
               {currentAvatarUrl && !selectedFile && (
                 <button 
-                  className="btn-delete" 
+                  className="btn-secondary btn-delete" 
                   onClick={handleDelete}
                   disabled={deleting}
                 >

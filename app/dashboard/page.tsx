@@ -119,7 +119,7 @@ export default function DashboardPage() {
       <LuxuryNavbar />
       <LuxuryCursor />
 
-      <main className="dashboard-main">
+      <main id="main-content" className="dashboard-main">
         <div className="dashboard-container">
           <section className="hero-card">
             <div className="hero-content">
@@ -131,7 +131,7 @@ export default function DashboardPage() {
                       {greeting}, <em>{appUser?.pseudo || appUser?.prenom || 'Utilisateur'}</em>
                     </h1>
                     <p className="hero-subtitle">
-                      Espace de pilotage minimal pendant l'intégration du profil.
+                      Retrouvez ici vos informations essentielles, vos crédits et les accès rapides vers les actions les plus utiles.
                     </p>
                     <p
                       className="hero-time"
@@ -187,28 +187,28 @@ export default function DashboardPage() {
           <div className="lower-grid">
             <section className="dashboard-section">
               <div className="section-header">
-                <h2 className="section-title">Actions <em>Disponibles</em></h2>
+                <h2 className="section-title">Actions <em>Rapides</em></h2>
               </div>
               <div className="activity-list">
                 <div className="activity-item" onClick={() => router.push('/catalogue')}>
                   <div className="ai-dot correction"></div>
                   <div className="ai-content">
-                    <div className="ai-title">Parcourir le catalogue</div>
-                    <div className="ai-sub">Accéder aux sujets déjà branchés sur les données Supabase.</div>
+                    <div className="ai-title">Explorer le catalogue</div>
+                    <div className="ai-sub">Parcourez les sujets disponibles et trouvez rapidement ceux qui correspondent à votre niveau.</div>
                   </div>
                 </div>
                 <div className="activity-item" onClick={() => router.push('/profil')}>
                   <div className="ai-dot purchase"></div>
                   <div className="ai-content">
-                    <div className="ai-title">Compléter mon profil</div>
-                    <div className="ai-sub">Mettre à jour les informations réellement utilisées par l’application.</div>
+                    <div className="ai-title">Mettre à jour mon profil</div>
+                    <div className="ai-sub">Ajoutez vos informations personnelles et académiques pour personnaliser votre expérience.</div>
                   </div>
                 </div>
                 <div className="activity-item" onClick={() => router.push('/credits')}>
                   <div className="ai-dot credit"></div>
                   <div className="ai-content">
                     <div className="ai-title">Recharger mes crédits</div>
-                    <div className="ai-sub">Préparer les prochains achats de sujets depuis le parcours actif.</div>
+                    <div className="ai-sub">Ajoutez des crédits à votre compte pour débloquer vos prochains sujets en toute simplicité.</div>
                   </div>
                 </div>
               </div>
@@ -216,10 +216,10 @@ export default function DashboardPage() {
 
             <section className="dashboard-section">
               <div className="section-header">
-                <h2 className="section-title">État <em>Du Produit</em></h2>
+                <h2 className="section-title">Profil <em>À Finaliser</em></h2>
               </div>
               <div className="streak-card" style={{ cursor: 'default' }}>
-                <div className="streak-title">Intégration en cours</div>
+                <div className="streak-title">Votre progression</div>
                 <div className="streak-num">{profileCompletion}%</div>
                 <div className="streak-unit">profil complété</div>
                 <p
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                     maxWidth: '26rem',
                   }}
                 >
-                  Les sections achats, progression, activité détaillée et recommandations reviendront quand leurs vraies sources seront connectées.
+                  Compléter votre profil améliore la personnalisation de vos recommandations, de votre parcours et de vos futures recherches.
                 </p>
               </div>
             </section>

@@ -2,6 +2,7 @@ import { getUsersAdmin } from '@/actions/admin/users'
 import Link from 'next/link'
 import { Search, Users, ArrowRight } from 'lucide-react'
 import { redirect } from 'next/navigation'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 export const metadata = {
   title: 'Utilisateurs — Admin Mah.AI'
@@ -81,9 +82,9 @@ export default async function AdminUsersPage({
       <div className="admin-card">
         {/* Barre d'outils (recherche, filtres) */}
         <div className="admin-card-header" style={{ borderBottom: '1px solid var(--b1)' }}>
-          <form style={{ display: 'flex', gap: '0.75rem', width: '100%', maxWidth: '450px' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
-              <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)', pointerEvents: 'none' }}>
+          <form style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', maxWidth: '450px' }}>
+            <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+              <div style={{ position: 'absolute', left: '1rem', display: 'flex', alignItems: 'center', color: 'var(--text-4)', pointerEvents: 'none' }}>
                 <Search size={18} />
               </div>
               <input
@@ -91,11 +92,11 @@ export default async function AdminUsersPage({
                 name="q"
                 defaultValue={query}
                 className="admin-input"
-                placeholder="Rechercher par email, nom, prénom..."
+                placeholder="Rechercher par email..."
                 style={{ paddingLeft: '3rem' }}
               />
             </div>
-            <button type="submit" className="admin-btn admin-btn-primary">
+            <button type="submit" className="admin-btn admin-btn-primary" style={{ whiteSpace: 'nowrap' }}>
               <Search size={16} />
               Rechercher
             </button>
@@ -131,17 +132,11 @@ export default async function AdminUsersPage({
                   <tr key={user.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                        {user.profilePicture ? (
-                          <img
-                            src={user.profilePicture}
-                            alt={`${user.prenom} ${user.nom}`}
-                            style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--gold-line)' }}
-                          />
-                        ) : (
-                          <div className="sb-av" style={{ width: 40, height: 40, fontSize: '0.9rem' }}>
-                            {(user.prenom?.charAt(0) || '')}{(user.nom?.charAt(0) || '')}
-                          </div>
-                        )}
+                        <UserAvatar 
+                          src={user.profilePicture} 
+                          initials={(user.prenom?.charAt(0) || '') + (user.nom?.charAt(0) || '')} 
+                          size={40}
+                        />
                         <div>
                           <div style={{ fontWeight: 500, color: 'var(--text)', fontSize: '0.95rem' }}>
                             {user.prenom} {user.nom}

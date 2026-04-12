@@ -1,0 +1,175 @@
+/* ═══════════════════════════════════════════════
+   INPUT COMPONENT - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+/* === LABEL === */
+
+.label {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+/* === INPUT WRAPPER === */
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--depth);
+  border: 1px solid var(--b2);
+  border-radius: var(--r);
+  transition: all var(--transition-fast);
+}
+
+.inputWrapper.hasLeftIcon {
+  padding-left: 0.75rem;
+}
+
+.inputWrapper.hasRightIcon {
+  padding-right: 0.75rem;
+}
+
+/* === INPUT FIELD === */
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0.85rem 1rem;
+  font-size: var(--text-sm);
+  font-family: var(--body);
+  color: var(--text);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--text-3);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--surface);
+}
+
+/* === STATES === */
+
+.inputWrapper:hover:not(.error):not(.disabled) {
+  border-color: var(--gold-line);
+}
+
+.inputWrapper.focused {
+  border-color: var(--gold-line);
+  box-shadow: 0 0 0 4px var(--gold-dim);
+}
+
+.inputWrapper.error {
+  border-color: var(--ruby);
+}
+
+.inputWrapper.error.focused {
+  box-shadow: 0 0 0 4px rgba(155, 35, 53, 0.15);
+}
+
+.inputWrapper.disabled {
+  opacity: 0.6;
+  background: var(--surface);
+}
+
+/* === ICONS === */
+
+.iconLeft,
+.iconRight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.iconLeft {
+  margin-right: 0.5rem;
+}
+
+.iconRight {
+  margin-left: 0.5rem;
+}
+
+.passwordToggle {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast);
+}
+
+.passwordToggle:hover {
+  color: var(--text);
+}
+
+/* === MESSAGES === */
+
+.errorMessage {
+  font-size: var(--text-xs);
+  color: var(--ruby);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* === ACCESSIBILITY === */
+
+.input:focus-visible {
+  outline: none;
+}
+
+.inputWrapper.focused {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Mobile - Touch Targets */
+@media (pointer: coarse) {
+  .input {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+
+  .inputWrapper {
+    min-height: 44px;
+  }
+
+  .passwordToggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .inputWrapper,
+[data-reduced-motion="true"] .input,
+[data-reduced-motion="true"] .passwordToggle {
+  transition: none;
+}

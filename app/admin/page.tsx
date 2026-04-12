@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { FileText, Users, CreditCard, TrendingUp, AlertCircle, CheckCircle2, Clock, ArrowRight, Sparkles } from 'lucide-react'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 async function getDashboardData() {
   // 1. KPIs
@@ -14,7 +15,7 @@ async function getDashboardData() {
   const revenueRes = await query('SELECT COALESCE(SUM(amount), 0) as total FROM "CreditTransaction" WHERE status = $1', ['COMPLETED'])
 
   // 2. Derniers utilisateurs inscrits
-  const recentUsersRes = await query('SELECT id, prenom, nom, email, role, "createdAt" FROM "User" ORDER BY "createdAt" DESC LIMIT 5')
+  const recentUsersRes = await query('SELECT id, prenom, nom, email, role, "createdAt", "profilePicture" FROM "User" ORDER BY "createdAt" DESC LIMIT 5')
 
   // 3. Derniers paiements Mobile Money en attente
   const recentMobileMoneyRes = await query(`
@@ -279,9 +280,11 @@ export default async function AdminDashboard() {
                 <tr key={user.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                      <div className="sb-av" style={{ width: 36, height: 36, fontSize: '0.85rem' }}>
-                        {(user.prenom?.charAt(0) || '')}{(user.nom?.charAt(0) || '')}
-                      </div>
+                    <UserAvatar 
+                      src={user.profilePicture} 
+                      initials={(user.prenom?.charAt(0) || '') + (user.nom?.charAt(0) || '')} 
+                      size={36}
+                    />
                       <div>
                         <div style={{ fontWeight: 500, color: 'var(--text)' }}>{user.prenom} {user.nom}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{user.email}</div>

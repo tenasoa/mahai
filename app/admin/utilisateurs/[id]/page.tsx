@@ -1,7 +1,11 @@
 import { getUserDetailAdmin, updateUserRoleAdmin } from '@/actions/admin/users'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, User, CreditCard, ShoppingBag, History, CheckCircle2, XCircle, Clock, Mail, Phone, Calendar, Award, Edit3 } from 'lucide-react'
+import { 
+  ArrowLeft, User, CreditCard, ShoppingBag, 
+  History, Mail, Phone, Calendar, Award, 
+  Edit3, ShieldCheck, MapPin, GraduationCap 
+} from 'lucide-react'
 
 export const metadata = {
   title: 'Détail Utilisateur — Admin Mah.AI'
@@ -23,7 +27,7 @@ function formatDateShort(dateString: string) {
 }
 
 function formatCredits(credits: number) {
-  return credits + ' cr' + (credits > 1 ? 's' : '')
+  return new Intl.NumberFormat('fr-FR').format(credits) + ' cr' + (credits > 1 ? 's' : '')
 }
 
 function RoleBadge({ role }: { role: string }) {
@@ -36,7 +40,12 @@ function RoleBadge({ role }: { role: string }) {
     ETUDIANT: { label: 'Étudiant', class: 'status-gray' },
   }
   const config = roleConfig[role] || { label: role, class: 'status-gray' }
-  return <span className={`status-badge ${config.class}`}>{config.label}</span>
+  return (
+    <span className={`status-badge ${config.class}`}>
+      <ShieldCheck size={12} />
+      {config.label}
+    </span>
+  )
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -78,55 +87,139 @@ export default async function AdminUserDetailPage({
   }
 
   const tabs = [
-    { id: 'profil', label: 'Profil', icon: User, count: null },
-    { id: 'purchases', label: 'Achats', icon: ShoppingBag, count: userDetail.purchases?.length || 0 },
-    { id: 'credits', label: 'Crédits', icon: CreditCard, count: userDetail.creditHistory?.length || 0 },
-    { id: 'history', label: 'Soumissions', icon: History, count: userDetail.submissions?.length || 0 },
+    { id: 'profil', label: 'Profil & Infos', icon: User, count: null },
+    { id: 'purchases', label: 'Achats Sujets', icon: ShoppingBag, count: userDetail.purchases?.length || 0 },
+    { id: 'credits', label: 'Flux Crédits', icon: CreditCard, count: userDetail.creditHistory?.length || 0 },
+    { id: 'history', label: 'Contributions', icon: History, count: userDetail.submissions?.length || 0 },
   ]
 
   return (
     <div className="admin-page-content">
-      {/* Header */}
-      <div className="admin-header">
-        <div>
-          <Link href="/admin/utilisateurs" className="admin-back-link">
-            <ArrowLeft size={14} />
-            Retour à la liste
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginTop: '1rem' }}>
+      {/* Superior Header / Banner */}
+      <div className="admin-detail-banner" style={{
+        background: 'linear-gradient(to right, var(--depth), var(--void))',
+        border: '1px solid var(--b2)',
+        borderRadius: 'var(--r-lg)',
+        padding: '2.5rem',
+        marginBottom: '2.5rem',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Background Decorative Element */}
+        <div style={{
+          position: 'absolute',
+          top: '-50%',
+          right: '-10%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, var(--gold-dim) 0%, transparent 70%)',
+          opacity: 0.4,
+          pointerEvents: 'none'
+        }}></div>
+
+        <Link href="/admin/utilisateurs" className="admin-back-link">
+          <ArrowLeft size={14} />
+          Retour aux utilisateurs
+        </Link>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', position: 'relative', zIndex: 1 }}>
+          <div style={{ position: 'relative' }}>
             {userDetail.profilePicture ? (
               <img 
                 src={userDetail.profilePicture} 
                 alt={`${userDetail.prenom} ${userDetail.nom}`}
-                className="sb-av sb-av-lg"
-                style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold-line)' }}
+                style={{ 
+                  width: 100, 
+                  height: 100, 
+                  borderRadius: '1.5rem', 
+                  objectFit: 'cover', 
+                  border: '3px solid var(--gold-line)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+                }}
               />
             ) : (
-              <div className="sb-av sb-av-lg" style={{ width: 56, height: 56, fontSize: '1.3rem', background: 'linear-gradient(135deg, var(--gold-dim), var(--amber-dim))', color: 'var(--gold)', border: '2px solid var(--gold-line)' }}>
+              <div style={{ 
+                width: 100, 
+                height: 100, 
+                borderRadius: '1.5rem', 
+                fontSize: '2rem', 
+                background: 'linear-gradient(135deg, var(--surface), var(--depth))', 
+                color: 'var(--gold)', 
+                border: '3px solid var(--gold-line)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'var(--display)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+              }}>
                 {(userDetail.prenom?.charAt(0) || '')}{(userDetail.nom?.charAt(0) || '')}
               </div>
             )}
-            <div>
-              <h1 className="admin-title" style={{ marginBottom: '0.25rem' }}>{userDetail.prenom} {userDetail.nom}</h1>
-              <p className="admin-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Mail size={14} />
-                  {userDetail.email}
-                </span>
-                <span style={{ color: 'var(--text-4)' }}>•</span>
-                <span style={{ color: 'var(--sage)', fontWeight: 600, fontFamily: 'var(--mono)' }}>
+            <div style={{
+              position: 'absolute',
+              bottom: '-8px',
+              right: '-8px',
+              background: 'var(--void)',
+              borderRadius: '50%',
+              padding: '4px'
+            }}>
+              <RoleBadge role={userDetail.role} />
+            </div>
+          </div>
+
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <h1 className="admin-title" style={{ fontSize: '2.2rem', margin: 0 }}>
+                {userDetail.prenom} <em style={{ fontStyle: 'italic', fontWeight: 300 }}>{userDetail.nom}</em>
+              </h1>
+              <span style={{ 
+                fontFamily: 'var(--mono)', 
+                fontSize: '0.7rem', 
+                color: 'var(--text-4)',
+                background: 'var(--surface)',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                border: '1px solid var(--b2)'
+              }}>
+                ID: {userDetail.id.substring(0, 8)}...
+              </span>
+            </div>
+            
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '1.5rem', 
+              marginTop: '0.75rem', 
+              flexWrap: 'wrap' 
+            }}>
+              <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-3)', fontSize: '0.9rem' }}>
+                <Mail size={16} className="text-gold" />
+                {userDetail.email}
+              </p>
+              <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-3)', fontSize: '0.9rem' }}>
+                <Calendar size={16} className="text-gold" />
+                Inscrit le {formatDateShort(userDetail.createdAt)}
+              </p>
+              <div style={{ 
+                background: 'var(--gold-dim)', 
+                padding: '4px 12px', 
+                borderRadius: '8px', 
+                border: '1px solid var(--gold-line)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <CreditCard size={14} className="text-gold" />
+                <span style={{ color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--mono)', fontSize: '0.9rem' }}>
                   {formatCredits(userDetail.credits || 0)}
                 </span>
-              </p>
+              </div>
             </div>
           </div>
         </div>
-        <div className="admin-header-actions">
-          <RoleBadge role={userDetail.role} />
-        </div>
       </div>
 
-      {/* Tabs */}
+      {/* Navigation Tabs */}
       <div className="admin-tabs">
         {tabs.map(t => {
           const Icon = t.icon
@@ -136,9 +229,9 @@ export default async function AdminUserDetailPage({
               href={`/admin/utilisateurs/${p.id}?tab=${t.id}`}
               className={`admin-tab ${tab === t.id ? 'admin-tab-active' : ''}`}
             >
-              <Icon size={16} />
+              <Icon size={18} />
               {t.label}
-              {t.count !== null && t.count > 0 && (
+              {t.count !== null && (
                 <span className="admin-tab-count">{t.count}</span>
               )}
             </Link>
@@ -146,238 +239,353 @@ export default async function AdminUserDetailPage({
         })}
       </div>
 
-      {/* Content */}
-      {tab === 'profil' && (
-        <div className="admin-grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
-          {/* Informations personnelles */}
-          <div className="admin-card">
-            <h2 className="admin-card-title">
-              <User size={18} />
-              Informations personnelles
-            </h2>
-            <div className="admin-info-grid">
-              <div className="admin-info-item">
-                <span className="admin-info-label">Prénom</span>
-                <span className="admin-info-value">{userDetail.prenom || 'Non renseigné'}</span>
+      {/* Main Content Sections */}
+      <div className="admin-content-view">
+        {tab === 'profil' && (
+          <div className="admin-grid" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
+            {/* Detailed Info Card */}
+            <div className="admin-card">
+              <div className="admin-card-header">
+                <h2 className="admin-card-title">
+                  <User size={20} className="text-gold" />
+                  Informations de <em>Profil</em>
+                </h2>
               </div>
-              <div className="admin-info-item">
-                <span className="admin-info-label">Nom</span>
-                <span className="admin-info-value">{userDetail.nom || 'Non renseigné'}</span>
+              <div className="admin-info-grid">
+                <div className="admin-info-item">
+                  <span className="admin-info-label">Prénom</span>
+                  <span className="admin-info-value">{userDetail.prenom || '—'}</span>
+                </div>
+                <div className="admin-info-item">
+                  <span className="admin-info-label">Nom</span>
+                  <span className="admin-info-value">{userDetail.nom || '—'}</span>
+                </div>
+                <div className="admin-info-item">
+                  <span className="admin-info-label">Pseudo</span>
+                  <span className="admin-info-value" style={{ color: 'var(--gold)' }}>@{userDetail.pseudo || 'non_defini'}</span>
+                </div>
+                <div className="admin-info-item">
+                  <span className="admin-info-label">Téléphone</span>
+                  <div className="admin-info-value" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {userDetail.phone ? (
+                      <>
+                        <Phone size={14} className="text-text-4" />
+                        {userDetail.phone}
+                      </>
+                    ) : '—'}
+                  </div>
+                </div>
+                <div className="admin-info-item">
+                  <span className="admin-info-label">Niveau d'études</span>
+                  <div className="admin-info-value" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <GraduationCap size={14} className="text-text-4" />
+                    {userDetail.schoolLevel || userDetail.educationLevel || '—'}
+                  </div>
+                </div>
+                <div className="admin-info-item">
+                  <span className="admin-info-label">Localisation</span>
+                  <div className="admin-info-value" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <MapPin size={14} className="text-text-4" />
+                    {userDetail.region ? `${userDetail.region}${userDetail.district ? `, ${userDetail.district}` : ''}` : '—'}
+                  </div>
+                </div>
+                <div className="admin-info-item" style={{ gridColumn: 'span 2' }}>
+                  <span className="admin-info-label">Biographie / Objectifs</span>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-2)', lineHeight: 1.6, marginTop: '0.25rem' }}>
+                    {userDetail.bio || 'Aucune description fournie.'}
+                  </p>
+                </div>
               </div>
-              <div className="admin-info-item">
-                <span className="admin-info-label">Email</span>
-                <span className="admin-info-value" style={{ fontFamily: 'var(--mono)' }}>{userDetail.email}</span>
+            </div>
+
+            {/* Management & Quick Stats */}
+            <div className="admin-grid" style={{ gap: '2rem' }}>
+              <div className="admin-card">
+                <div className="admin-card-header">
+                  <h2 className="admin-card-title">
+                    <Award size={20} className="text-gold" />
+                    Gestion des <em>Permissions</em>
+                  </h2>
+                </div>
+                <div style={{ padding: '1.5rem' }}>
+                  <form action={handleRoleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        fontFamily: 'var(--mono)', 
+                        fontSize: '0.65rem', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '0.1em', 
+                        color: 'var(--text-4)',
+                        marginBottom: '0.75rem' 
+                      }}>
+                        Rôle de l'utilisateur
+                      </label>
+                      <select name="role" defaultValue={userDetail.role} 
+                        style={{
+                          width: '100%',
+                          background: 'var(--surface)',
+                          border: '1px solid var(--b1)',
+                          borderRadius: 'var(--r)',
+                          padding: '0.8rem 1rem',
+                          color: 'var(--text)',
+                          fontFamily: 'var(--body)',
+                          fontSize: '0.9rem',
+                          outline: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="ETUDIANT">Étudiant (Par défaut)</option>
+                        <option value="CONTRIBUTEUR">Contributeur</option>
+                        <option value="VERIFICATEUR">Vérificateur</option>
+                        <option value="VALIDATEUR">Validateur</option>
+                        <option value="PROFESSEUR">Professeur</option>
+                        <option value="ADMIN">Administrateur</option>
+                      </select>
+                    </div>
+                    <button type="submit" className="admin-btn admin-btn-primary" style={{ width: '100%', gap: '0.75rem' }}>
+                      <Edit3 size={16} />
+                      Appliquer les modifications
+                    </button>
+                  </form>
+                </div>
               </div>
-              <div className="admin-info-item">
-                <span className="admin-info-label">Téléphone</span>
-                <span className="admin-info-value">
-                  {userDetail.phone ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <Phone size={14} style={{ color: 'var(--text-3)' }} />
-                      {userDetail.phone}
+
+              <div className="admin-card" style={{ 
+                background: 'linear-gradient(135deg, var(--card), var(--surface))',
+                border: '1px solid var(--gold-line)'
+              }}>
+                <div style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <div style={{ 
+                      width: '40px', 
+                      height: '40px', 
+                      borderRadius: '12px', 
+                      background: 'var(--gold-dim)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center' 
+                    }}>
+                      <CreditCard size={20} className="text-gold" />
+                    </div>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: '0.7rem', color: 'var(--text-4)', textTransform: 'uppercase' }}>
+                      Portefeuille
                     </span>
-                  ) : (
-                    <span style={{ color: 'var(--text-4)', fontStyle: 'italic' }}>Non renseigné</span>
-                  )}
-                </span>
-              </div>
-              <div className="admin-info-item">
-                <span className="admin-info-label">Niveau d'études</span>
-                <span className="admin-info-value">{userDetail.schoolLevel || 'Non renseigné'}</span>
-              </div>
-              <div className="admin-info-item">
-                <span className="admin-info-label">Date d'inscription</span>
-                <span className="admin-info-value">
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <Calendar size={14} style={{ color: 'var(--text-3)' }} />
-                    {formatDate(userDetail.createdAt)}
-                  </span>
-                </span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-3)', marginBottom: '0.25rem' }}>Crédits actuels</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--display)', letterSpacing: '-0.02em' }}>
+                    {userDetail.credits || 0}<span style={{ color: 'var(--gold)', fontSize: '1rem', marginLeft: '0.5rem' }}>cr</span>
+                  </div>
+                  <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
+                    <button className="admin-btn admin-btn-outline" style={{ flex: 1, fontSize: '0.75rem', padding: '0.5rem' }}>
+                      Historique
+                    </button>
+                    <button className="admin-btn admin-btn-outline" style={{ flex: 1, fontSize: '0.75rem', padding: '0.5rem' }}>
+                      Ajuster le solde
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Gestion du rôle */}
+        {tab === 'purchases' && (
           <div className="admin-card">
-            <h2 className="admin-card-title">
-              <Award size={18} />
-              Permissions
-            </h2>
-            <form action={handleRoleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label className="admin-label">Niveau de permissions</label>
-                <select name="role" defaultValue={userDetail.role} className="admin-input">
-                  <option value="ETUDIANT">Étudiant (Par défaut)</option>
-                  <option value="CONTRIBUTEUR">Contributeur (Propose des sujets)</option>
-                  <option value="VERIFICATEUR">Vérificateur (Modération N1)</option>
-                  <option value="VALIDATEUR">Validateur (Modération N2)</option>
-                  <option value="PROFESSEUR">Professeur (Auteur vérifié)</option>
-                  <option value="ADMIN">Administrateur (Accès total)</option>
-                </select>
-              </div>
-              <button type="submit" className="admin-btn admin-btn-primary">
-                <Edit3 size={16} />
-                Mettre à jour le rôle
-              </button>
-            </form>
-
-            <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--surface)', borderRadius: 'var(--r)', border: '1px solid var(--b1)' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginBottom: '0.5rem' }}>Solde actuel</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--sage)', fontFamily: 'var(--mono)' }}>
-                {formatCredits(userDetail.credits || 0)}
-              </div>
+            <div className="admin-card-header">
+              <h2 className="admin-card-title">
+                <ShoppingBag size={20} className="text-gold" />
+                Liste des <em>Achats</em> ({userDetail.purchases?.length || 0})
+              </h2>
             </div>
+            {userDetail.purchases?.length === 0 ? (
+              <div className="admin-empty-state">
+                <ShoppingBag className="admin-empty-state-icon" size={64} style={{ marginBottom: '1rem' }} />
+                <div className="admin-empty-state-text" style={{ fontSize: '1.1rem' }}>Aucun achat enregistré pour cet utilisateur</div>
+                <p style={{ color: 'var(--text-4)', fontSize: '0.85rem' }}>Les futurs achats apparaîtront ici avec le détail des transactions.</p>
+              </div>
+            ) : (
+              <div className="table-wrapper">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '120px' }}>Date</th>
+                      <th>Sujet & Archive</th>
+                      <th style={{ width: '100px' }}>Année</th>
+                      <th style={{ width: '150px' }}>Niveau</th>
+                      <th style={{ width: '120px', textAlign: 'right' }}>Crédits</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userDetail.purchases.map((purchase: any) => (
+                      <tr key={purchase.id}>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 500, color: 'var(--text-2)' }}>{formatDateShort(purchase.createdAt)}</span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-4)', fontFamily: 'var(--mono)' }}>Transaction #{purchase.id.substring(0, 6)}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '1rem' }}>{purchase.title || 'Sujet sans titre'}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{purchase.subType || 'Sujet officiel'}</div>
+                        </td>
+                        <td>
+                          <span style={{ fontFamily: 'var(--mono)' }}>{purchase.year || '—'}</span>
+                        </td>
+                        <td>
+                          <StatusBadge status={purchase.grade || 'ETUDIANT'} />
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <span style={{ color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--mono)', fontSize: '1rem' }}>
+                            -{purchase.credits || 0}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {tab === 'purchases' && (
-        <div className="admin-card">
-          <h2 className="admin-card-title">
-            <ShoppingBag size={18} />
-            Sujets achetés ({userDetail.purchases?.length || 0})
-          </h2>
-          {userDetail.purchases?.length === 0 ? (
-            <div className="admin-empty-state">
-              <ShoppingBag className="admin-empty-state-icon" size={48} />
-              <div className="admin-empty-state-text">Cet utilisateur n'a acheté aucun sujet</div>
+        {tab === 'credits' && (
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2 className="admin-card-title">
+                <CreditCard size={20} className="text-gold" />
+                Historique des <em>Transactions</em> ({userDetail.creditHistory?.length || 0})
+              </h2>
             </div>
-          ) : (
-            <div className="table-wrapper">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Sujet</th>
-                    <th>Année</th>
-                    <th>Niveau</th>
-                    <th>Crédits</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {userDetail.purchases.map((purchase: any) => (
-                    <tr key={purchase.id}>
-                      <td style={{ fontFamily: 'var(--mono)', fontSize: '0.8rem' }}>{formatDateShort(purchase.createdAt)}</td>
-                      <td>
-                        <div style={{ fontWeight: 500, color: 'var(--text)' }}>{purchase.title || 'Sujet inconnu'}</div>
-                      </td>
-                      <td>{purchase.year || 'N/A'}</td>
-                      <td>
-                        <span className="status-badge status-blue">{purchase.grade || 'N/A'}</span>
-                      </td>
-                      <td>
-                        <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{purchase.credits || 0}</span>
-                      </td>
+            {userDetail.creditHistory?.length === 0 ? (
+              <div className="admin-empty-state">
+                <CreditCard className="admin-empty-state-icon" size={64} style={{ marginBottom: '1rem' }} />
+                <div className="admin-empty-state-text" style={{ fontSize: '1.1rem' }}>Aucune transaction financière</div>
+              </div>
+            ) : (
+              <div className="table-wrapper">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '150px' }}>Date & Heure</th>
+                      <th>Méthode & Opérateur</th>
+                      <th>Montant Réel</th>
+                      <th>Valeur Crédits</th>
+                      <th style={{ width: '150px', textAlign: 'center' }}>Statut</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {tab === 'credits' && (
-        <div className="admin-card">
-          <h2 className="admin-card-title">
-            <CreditCard size={18} />
-            Historique des recharges ({userDetail.creditHistory?.length || 0})
-          </h2>
-          {userDetail.creditHistory?.length === 0 ? (
-            <div className="admin-empty-state">
-              <CreditCard className="admin-empty-state-icon" size={48} />
-              <div className="admin-empty-state-text">Aucune transaction enregistrée</div>
-            </div>
-          ) : (
-            <div className="table-wrapper">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Méthode</th>
-                    <th>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <span>Paiement</span>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-4)', fontWeight: 400, textTransform: 'none' }}>(Montant en Ar)</span>
-                      </div>
-                    </th>
-                    <th>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <span>Crédits</span>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-4)', fontWeight: 400, textTransform: 'none' }}>(Reçus)</span>
-                      </div>
-                    </th>
-                    <th>Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {userDetail.creditHistory.map((tx: any) => (
-                    <tr key={tx.id}>
-                      <td style={{ fontFamily: 'var(--mono)', fontSize: '0.8rem' }}>{formatDateShort(tx.createdAt)}</td>
-                      <td>{tx.paymentMethod || 'Mobile Money'}</td>
-                      <td>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                          <span style={{ fontWeight: 600, color: 'var(--gold)', fontSize: '0.95rem' }}>
-                            {tx.amount ? new Intl.NumberFormat('fr-FR').format(tx.amount) + ' Ar' : '-'}
+                  </thead>
+                  <tbody>
+                    {userDetail.creditHistory.map((tx: any) => (
+                      <tr key={tx.id}>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 500, color: 'var(--text-2)' }}>{formatDateShort(tx.createdAt)}</span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-4)', fontFamily: 'var(--mono)' }}>
+                              {new Date(tx.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <div style={{ 
+                              width: '32px', 
+                              height: '32px', 
+                              borderRadius: '8px', 
+                              background: 'var(--surface)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '1rem'
+                            }}>
+                              {tx.paymentMethod?.toLowerCase().includes('mvola') ? '🇲' : tx.paymentMethod?.toLowerCase().includes('orange') ? '🇴' : '🇦'}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--text)' }}>{tx.paymentMethod || 'Mobile Money'}</div>
+                              <div style={{ fontSize: '0.7rem', color: 'var(--text-4)', fontFamily: 'var(--mono)' }}>REF: {tx.id.substring(0, 8)}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '1.1rem' }}>
+                            {tx.metadata?.price ? new Intl.NumberFormat('fr-FR').format(tx.metadata.price) + ' Ar' : tx.type === 'EARN' && tx.description?.includes('bienvenue') ? '0 Ar' : '—'}
                           </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                          <span style={{ fontSize: '0.9rem', color: 'var(--sage)', fontWeight: 600 }}>
-                            +{tx.creditsCount} cr
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <StatusBadge status={tx.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span style={{ 
+                              fontSize: '1rem', 
+                              color: tx.amount > 0 ? 'var(--sage)' : 'var(--ruby)', 
+                              fontWeight: 700, 
+                              fontFamily: 'var(--mono)' 
+                            }}>
+                              {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
+                            </span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-4)' }}>crédits</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <StatusBadge status={tx.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
-      {tab === 'history' && (
-        <div className="admin-card">
-          <h2 className="admin-card-title">
-            <History size={18} />
-            Soumissions de sujets ({userDetail.submissions?.length || 0})
-          </h2>
-          {userDetail.submissions?.length === 0 ? (
-            <div className="admin-empty-state">
-              <History className="admin-empty-state-icon" size={48} />
-              <div className="admin-empty-state-text">Aucune soumission de sujet</div>
+        {tab === 'history' && (
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2 className="admin-card-title">
+                <History size={20} className="text-gold" />
+                Soumissions de <em>Sujets</em> ({userDetail.submissions?.length || 0})
+              </h2>
             </div>
-          ) : (
-            <div className="table-wrapper">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Titre</th>
-                    <th>Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {userDetail.submissions.map((sub: any) => (
-                    <tr key={sub.id}>
-                      <td style={{ fontFamily: 'var(--mono)', fontSize: '0.8rem' }}>{formatDateShort(sub.createdAt)}</td>
-                      <td style={{ fontWeight: 500 }}>{sub.title}</td>
-                      <td>
-                        <StatusBadge status={sub.status || 'PENDING'} />
-                      </td>
+            {userDetail.submissions?.length === 0 ? (
+              <div className="admin-empty-state">
+                <History className="admin-empty-state-icon" size={64} style={{ marginBottom: '1rem' }} />
+                <div className="admin-empty-state-text" style={{ fontSize: '1.1rem' }}>Aucune contribution active</div>
+                <p style={{ color: 'var(--text-4)', fontSize: '0.85rem' }}>Les sujets proposés par ce contributeur s'afficheront ici.</p>
+              </div>
+            ) : (
+              <div className="table-wrapper">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '120px' }}>Date</th>
+                      <th>Titre du Sujet</th>
+                      <th>Matière & Niveau</th>
+                      <th style={{ width: '150px', textAlign: 'center' }}>Statut Validation</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+                  </thead>
+                  <tbody>
+                    {userDetail.submissions.map((sub: any) => (
+                      <tr key={sub.id}>
+                        <td style={{ fontFamily: 'var(--mono)', fontSize: '0.8rem' }}>{formatDateShort(sub.createdAt)}</td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: 'var(--text-2)' }}>{sub.title}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-4)' }}>ID: {sub.id.substring(0, 8)}</div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <span style={{ fontSize: '0.85rem' }}>{sub.matiere || '—'}</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--gold)' }}>{sub.serie || 'Pluridisciplinaire'}</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <StatusBadge status={sub.status || 'PENDING'} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

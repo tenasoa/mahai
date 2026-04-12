@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
-import type { NextFetchEvent } from 'next/server'
+
+const EMAIL_VERIFIED_COOKIE = 'mahai-email-verified'
+const ONBOARDING_PENDING_COOKIE = 'mahai-onboarding-pending'
 
 // Routes that require authentication
 const protectedRoutes = [
@@ -8,11 +10,19 @@ const protectedRoutes = [
   '/sujet',
   '/examens',
   '/profil',  // Corrigé: '/profile' -> '/profil'
-  '/auth/role-selection',
+  '/auth/onboarding',
 ]
 
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ['/auth/login', '/auth/register']
+
+function readCookieValue(cookieHeader: string, cookieName: string) {
+  return cookieHeader
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(`${cookieName}=`))
+    ?.split('=')[1]
+}
 
 /**
  * Proxy handler for authentication and route protection
@@ -23,7 +33,7 @@ const authRoutes = ['/auth/login', '/auth/register']
  * @param event - The fetch event
  * @returns Response with redirects if needed
  */
-export async function middleware(request: Request, event: NextFetchEvent) {
+export async function middleware(request: Request) {
   const url = new URL(request.url)
   const { pathname } = url
 
@@ -34,9 +44,13 @@ export async function middleware(request: Request, event: NextFetchEvent) {
     .split(';')
     .find(c => c.trim().startsWith('sb-'))
     ?.split('=')[1]
+  const isEmailVerified = readCookieValue(cookieHeader, EMAIL_VERIFIED_COOKIE) === '1'
+  const isOnboardingPending = readCookieValue(cookieHeader, ONBOARDING_PENDING_COOKIE) === '1'
 
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
+  const isVerifyRoute = pathname.startsWith('/auth/verify-email')
+  const isOnboardingRoute = pathname.startsWith('/auth/onboarding')
 
   // Redirect to login if accessing protected route without auth
   if (isProtectedRoute && !authToken) {
@@ -45,8 +59,38 @@ export async function middleware(request: Request, event: NextFetchEvent) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Redirect to dashboard if accessing auth route with auth
+  if (authToken && !isEmailVerified && !isVerifyRoute) {
+    return NextResponse.redirect(new URL('/auth/verify-email', request.url))
+  }
+
+  if (
+    authToken &&
+    isEmailVerified &&
+    isOnboardingPending &&
+    isProtectedRoute &&
+    !isOnboardingRoute
+  ) {
+    return NextResponse.redirect(new URL('/auth/onboarding', request.url))
+  }
+
+  // Redirect to dashboard/onboarding if accessing auth routes with auth
   if (isAuthRoute && authToken) {
+    if (!isEmailVerified) {
+      return NextResponse.redirect(new URL('/auth/verify-email', request.url))
+    }
+
+    if (isOnboardingPending) {
+      return NextResponse.redirect(new URL('/auth/onboarding', request.url))
+    }
+
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  if (isVerifyRoute && authToken && isEmailVerified) {
+    if (isOnboardingPending) {
+      return NextResponse.redirect(new URL('/auth/onboarding', request.url))
+    }
+
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

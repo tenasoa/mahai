@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { REGISTER_ROLE_VALUES } from '@/lib/auth-flow'
 
 export const registerSchema = z.object({
   email: z
@@ -17,6 +18,15 @@ export const registerSchema = z.object({
     .string()
     .max(50, 'Le nom ne peut pas dépasser 50 caractères')
     .optional(),
+  role: z.enum(REGISTER_ROLE_VALUES),
+  etablissement: z.preprocess(
+    (value) => typeof value === 'string' && value.trim() === '' ? undefined : value,
+    z
+      .string()
+      .max(120, "L'établissement ne peut pas dépasser 120 caractères")
+      .optional()
+  ),
+  newsletterOptIn: z.boolean().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
   path: ['confirmPassword'],

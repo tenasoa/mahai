@@ -1,0 +1,250 @@
+/* ═══════════════════════════════════════════════
+   RECHARGE CONFIRMATION - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+/* === SUCCESS STATE === */
+
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  text-align: center;
+  padding: var(--space-xl) 0;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sage), #6eaa8c);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 700;
+  animation: successPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.successMessage {
+  font-size: var(--text-lg);
+  color: var(--text);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.transactionId {
+  background: var(--surface);
+  padding: var(--space-md);
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+.transactionIdLabel {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.transactionIdValue {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--text);
+  word-break: break-all;
+}
+
+/* === ERROR STATE === */
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  text-align: center;
+  padding: var(--space-xl) 0;
+}
+
+.errorIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ruby), #e05575);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.errorMessage {
+  font-size: var(--text-base);
+  color: var(--text);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* === CONFIRMATION STATE === */
+
+.confirmationState {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.summary {
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.value {
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.valueBonus {
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--sage);
+}
+
+.valueTotal {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.summaryDivider {
+  height: 1px;
+  background: var(--gold-line);
+  margin: var(--space-xs) 0;
+}
+
+/* === DETAILS === */
+
+.details {
+  background: var(--surface);
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detailLabel {
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.detailValue {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* === ACTIONS === */
+
+.actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.actions button {
+  flex: 1;
+}
+
+/* === NOTICE === */
+
+.notice {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* === ACCESSIBILITY === */
+
+.successIcon:focus-visible,
+.errorIcon:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .successIcon,
+[data-reduced-motion="true"] .errorIcon {
+  animation: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .actions {
+    flex-direction: column;
+  }
+
+  .summary {
+    padding: var(--space-md);
+  }
+
+  .valueTotal {
+    font-size: 1.25rem;
+  }
+}

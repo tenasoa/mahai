@@ -16,44 +16,35 @@ export default async function ContributorRootLayout({ children }: { children: Re
     redirect('/auth/login')
   }
 
-  // Vérifier le rôle contributeur
-  const userResult = await query(
-    'SELECT role, prenom, nom, "profilePicture" FROM "User" WHERE id = $1 LIMIT 1', 
-    [session.user.id]
-  )
-  const user = userResult.rows[0]
-
-  if (!user || !['CONTRIBUTEUR', 'PROFESSEUR', 'ADMIN', 'VALIDATEUR', 'VERIFICATEUR'].includes(user.role)) {
-    redirect('/dashboard')
-  }
-
-  // Get stats for sidebar
-  const earningsRes = await query(
-    `SELECT COALESCE(SUM(s.credits), 0) as total 
-     FROM "Purchase" p 
-     JOIN "Subject" s ON p."subjectId" = s.id 
-     WHERE s."authorId" = $1`,
+  // Récupérer le rôle et toutes les stats en une seule requête pour économiser les connexions
+  const dataRes = await query(
+    `SELECT 
+      u.role, u.prenom, u.nom, u."profilePicture",
+      (SELECT COALESCE(SUM(s.credits), 0) FROM "Purchase" p JOIN "Subject" s ON p."subjectId" = s.id WHERE s."authorId" = u.id) as "totalEarnings",
+      (SELECT COALESCE(SUM(s.credits), 0) FROM "Purchase" p JOIN "Subject" s ON p."subjectId" = s.id WHERE s."authorId" = u.id AND p."createdAt" >= date_trunc('month', CURRENT_DATE)) as "monthEarnings",
+      (SELECT COUNT(*) FROM "Subject" WHERE "authorId" = u.id) as "totalSubjects"
+     FROM "User" u
+     WHERE u.id = $1 LIMIT 1`,
     [session.user.id]
   )
   
-  const monthEarningsRes = await query(
-    `SELECT COALESCE(SUM(s.credits), 0) as total 
-     FROM "Purchase" p 
-     JOIN "Subject" s ON p."subjectId" = s.id 
-     WHERE s."authorId" = $1 
-     AND p."createdAt" >= date_trunc('month', CURRENT_DATE)`,
-    [session.user.id]
-  )
+  const userData = dataRes.rows[0]
 
-  const subjectsCountRes = await query(
-    'SELECT COUNT(*) as count FROM "Subject" WHERE "authorId" = $1',
-    [session.user.id]
-  )
+  if (!userData || !['CONTRIBUTEUR', 'PROFESSEUR', 'ADMIN', 'VALIDATEUR', 'VERIFICATEUR'].includes(userData.role)) {
+    redirect('/dashboard')
+  }
+
+  const user = {
+    role: userData.role,
+    prenom: userData.prenom,
+    nom: userData.nom,
+    profilePicture: userData.profilePicture
+  }
 
   const stats = {
-    earnings: parseInt(earningsRes.rows[0]?.total || 0),
-    monthEarnings: parseInt(monthEarningsRes.rows[0]?.total || 0),
-    totalSubjects: parseInt(subjectsCountRes.rows[0]?.count || 0)
+    earnings: parseInt(userData.totalEarnings || 0),
+    monthEarnings: parseInt(userData.monthEarnings || 0),
+    totalSubjects: parseInt(userData.totalSubjects || 0)
   }
 
   return (

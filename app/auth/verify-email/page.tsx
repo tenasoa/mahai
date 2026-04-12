@@ -16,7 +16,7 @@ export default function VerifyEmailPage() {
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
-  const email = searchParams.get('email') || 'herizo.r@gmail.com'
+  const email = searchParams.get('email') || ''
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start pt-16 pb-8 px-6 relative overflow-hidden bg-void auth-page">
@@ -76,7 +76,7 @@ function VerifyEmailContent() {
           
           <VerifyEmailForm 
             email={email}
-            onComplete={() => window.location.href = '/auth/role-selection'} 
+            onComplete={(nextUrl) => window.location.href = nextUrl} 
           />
         </div>
       </div>

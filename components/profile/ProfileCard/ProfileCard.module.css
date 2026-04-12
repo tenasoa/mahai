@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════
+   PROFILE CARD - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.profileCard {
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.profileCard:hover {
+  border-color: var(--gold-line);
+  box-shadow: var(--shadow-lg);
+}
+
+.cardHeader {
+  background: var(--surface);
+  padding: 0.75rem 1.1rem;
+  border-bottom: 1px solid var(--b1);
+}
+
+.cardTitle {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.cardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+}
+
+.cardBody {
+  padding: 1.1rem;
+}
+
+/* === INFO ROWS === */
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--b3);
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.irLabel {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.irContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.irValue {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.irValue.gold {
+  color: var(--gold);
+}
+
+.irIcon {
+  color: var(--text-3);
+}
+
+/* === ACCESSIBILITY === */
+
+.profileCard:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .profileCard {
+  transition: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .cardBody {
+    padding: 0.85rem;
+  }
+
+  .infoRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

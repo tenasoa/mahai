@@ -109,11 +109,6 @@ export function ContributorSidebar({ user, stats, isCollapsed, onToggle }: Contr
           ))}
         </nav>
 
-        <div className="sb-bottom">
-          <Link href="/contributeur/nouveau" className="btn-new">
-            + Publier un sujet
-          </Link>
-        </div>
       </aside>
 
       {/* Toggle Button - Outside Sidebar */}

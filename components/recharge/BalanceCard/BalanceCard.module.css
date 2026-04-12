@@ -1,0 +1,175 @@
+/* ═══════════════════════════════════════════════
+   BALANCE CARD - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.balanceCard {
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  padding: 2rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-slow);
+  min-width: 320px;
+}
+
+.balanceCard:hover {
+  border-color: var(--gold-line);
+  box-shadow: var(--shadow-lg);
+}
+
+.gradientLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.6;
+}
+
+.bgGradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, var(--gold-dim), transparent 60%);
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.label {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.label::after {
+  content: '';
+  width: 12px;
+  height: 1px;
+  background: var(--gold-line);
+}
+
+.rechargeButton {
+  font-family: var(--body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: 0.85rem 1.75rem;
+  border-radius: var(--r-lg);
+  background: linear-gradient(135deg, var(--gold), var(--gold-hi));
+  color: var(--void);
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all var(--transition-base);
+  box-shadow: 0 4px 18px var(--gold-glow);
+  white-space: nowrap;
+}
+
+.rechargeButton:hover {
+  box-shadow: 0 8px 28px rgba(201, 168, 76, 0.35);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.rechargeButton:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.balance {
+  font-family: var(--display);
+  font-size: 4rem;
+  font-weight: 300;
+  color: var(--gold);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-sm);
+}
+
+.amount {
+  font-size: 4rem;
+}
+
+.unit {
+  font-family: var(--display);
+  font-size: 1.2rem;
+  color: var(--text-2);
+  font-style: italic;
+  letter-spacing: 0;
+}
+
+.ariary {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  margin-top: var(--space-sm);
+  opacity: 0.8;
+}
+
+.children {
+  margin-top: var(--space-md);
+}
+
+/* === ACCESSIBILITY === */
+
+.balanceCard:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .balanceCard,
+[data-reduced-motion="true"] .rechargeButton {
+  transition: none;
+}
+
+[data-reduced-motion="true"] .rechargeButton:hover {
+  transform: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .balanceCard {
+    padding: 1.5rem;
+    min-width: auto;
+  }
+
+  .balance {
+    font-size: 3rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  .rechargeButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

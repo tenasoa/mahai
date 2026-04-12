@@ -1,0 +1,195 @@
+/* ═══════════════════════════════════════════════
+   PROVIDER CARD - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.providerCard {
+  background: var(--card);
+  border: 2px solid var(--b1);
+  border-radius: var(--r-lg);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  min-height: 88px;
+}
+
+.providerCard:hover:not(.disabled):not(.unavailable) {
+  border-color: var(--gold-line);
+  background: var(--gold-dim);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+.providerCard.selected {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+.providerCard.unavailable {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--surface);
+}
+
+.providerCard.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.providerCard:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === LOGO === */
+
+.providerLogo {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.logoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.logoPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+/* === INFO === */
+
+.providerInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.providerName {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.unavailableLabel {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* === CHECKMARK === */
+
+.checkmark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-hi));
+  color: var(--void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  animation: checkmarkPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === PROVIDER COLORS === */
+
+.providerCard[data-provider="mvola"].selected {
+  border-color: #00A8E8;
+  background: rgba(0, 168, 232, 0.1);
+}
+
+.providerCard[data-provider="orange"].selected {
+  border-color: #FF7900;
+  background: rgba(255, 121, 0, 0.1);
+}
+
+.providerCard[data-provider="airtel"].selected {
+  border-color: #FF0000;
+  background: rgba(255, 0, 0, 0.1);
+}
+
+/* === ACCESSIBILITY === */
+
+.providerCard:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .providerCard,
+[data-reduced-motion="true"] .providerCard:hover,
+[data-reduced-motion="true"] .checkmark {
+  transition: none;
+  animation: none;
+}
+
+[data-reduced-motion="true"] .providerCard:hover {
+  transform: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .providerCard {
+    padding: 1rem;
+    min-height: 76px;
+  }
+
+  .providerLogo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .providerName {
+    font-size: var(--text-sm);
+  }
+
+  .checkmark {
+    width: 24px;
+    height: 24px;
+    font-size: 0.875rem;
+  }
+}

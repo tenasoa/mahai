@@ -106,7 +106,7 @@ body {
 
 .hero-card:hover {
   border-color: var(--gold);
-  box-shadow: 0 4px 24px rgba(168, 134, 58, 0.15);
+  box-shadow: var(--shadow-gold);
 }
 
 .hero-content {
@@ -193,7 +193,7 @@ body {
 
 .hero-quote-card:hover {
   border-color: var(--gold);
-  box-shadow: 0 6px 24px rgba(168, 134, 58, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .hero-quote-icon {
@@ -313,7 +313,7 @@ body {
 
 .stat-card:hover {
   border-color: var(--gold-line);
-  box-shadow: 0 8px 24px rgba(168, 134, 58, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .stat-card::after {
@@ -406,7 +406,7 @@ body {
 
 .prog-card:hover {
   border-color: var(--gold-line);
-  box-shadow: 0 4px 20px rgba(168, 134, 58, 0.12);
+  box-shadow: var(--shadow-md);
 }
 
 .prog-header {
@@ -639,7 +639,7 @@ body {
 
 .streak-card:hover {
   border-color: var(--gold);
-  box-shadow: 0 4px 20px rgba(168, 134, 58, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 .streak-title {
@@ -698,7 +698,7 @@ body {
   background: linear-gradient(135deg, var(--gold), var(--gold-hi));
   color: var(--void);
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(168, 134, 58, 0.3);
+  box-shadow: var(--shadow-gold);
 }
 
 /* Recommendations */
@@ -721,7 +721,7 @@ body {
 
 .rec-item:hover {
   border-color: var(--gold-line);
-  box-shadow: 0 4px 12px rgba(168, 134, 58, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .rec-thumb {
@@ -915,3 +915,4 @@ body {
     font-size: 2rem;
   }
 }
+

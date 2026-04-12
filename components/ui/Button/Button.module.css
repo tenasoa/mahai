@@ -1,0 +1,195 @@
+/* ═══════════════════════════════════════════════
+   BUTTON COMPONENT - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  font-family: var(--body);
+  font-weight: 500;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
+  position: relative;
+}
+
+/* === VARIANTS === */
+
+/* Primary - Gold Gradient */
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold), var(--gold-hi));
+  color: var(--void);
+  box-shadow: 0 2px 8px var(--gold-glow);
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--gold-glow);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Secondary - Outline Gold */
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--gold-line);
+  color: var(--gold);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Ghost - Minimal */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--b1);
+  color: var(--text-2);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--text-3);
+  color: var(--text);
+  background: var(--surface);
+}
+
+/* Danger - Ruby Red */
+.btn-danger {
+  background: rgba(155, 35, 53, 0.1);
+  border: 1px solid rgba(155, 35, 53, 0.3);
+  color: var(--ruby);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(155, 35, 53, 0.2);
+  border-color: var(--ruby);
+}
+
+/* Success - Sage Green */
+.btn-success {
+  background: rgba(74, 107, 90, 0.1);
+  border: 1px solid rgba(74, 107, 90, 0.3);
+  color: var(--sage);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: rgba(74, 107, 90, 0.2);
+  border-color: var(--sage);
+}
+
+/* === SIZES === */
+
+.btn-xs {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+  min-height: 32px;
+}
+
+.btn-sm {
+  padding: 0.35rem 1rem;
+  font-size: 0.75rem;
+  min-height: 36px;
+}
+
+.btn-md {
+  padding: 0.5rem 1.5rem;
+  font-size: 0.88rem;
+  min-height: 44px;
+}
+
+.btn-lg {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  min-height: 52px;
+}
+
+/* === STATES === */
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* === ICONS === */
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+}
+
+/* === LOADING SPINNER === */
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--gold-dim);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  margin-left: var(--space-sm);
+}
+
+/* === ACCESSIBILITY === */
+
+.btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--gold-dim);
+}
+
+/* Mobile - Touch Targets */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .btn-xs {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+  }
+
+  .btn-sm {
+    min-height: 44px;
+  }
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .btn {
+  transition: none;
+}
+
+[data-reduced-motion="true"] .btn:hover:not(:disabled) {
+  transform: none;
+}
+
+[data-reduced-motion="true"] .spinner {
+  animation-duration: 2s;
+}

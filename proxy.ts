@@ -1,12 +1,25 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+const EMAIL_VERIFIED_COOKIE = "mahai-email-verified";
+const ONBOARDING_PENDING_COOKIE = "mahai-onboarding-pending";
+
+const protectedRoutes = [
+  "/dashboard",
+  "/profil",
+  "/credits",
+  "/examens",
+  "/auth/onboarding",
+];
+
+const authRoutes = ["/auth/login", "/auth/register"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
-  })
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,56 +27,96 @@ export async function proxy(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
-          })
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
+            response.cookies.set(name, value, options),
+          );
         },
       },
-    }
-  )
+    },
+  );
 
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
-  // 1. Rediriger l'utilisateur connecté s'il tente d'accéder aux pages d'authentification
-  if (user && request.nextUrl.pathname.startsWith('/auth')) {
-    // Sauf pour verify-email qui peut être utile même connecté (pour re-déclencher l'envoi par ex)
-    // Mais en général on redirige vers le dashboard
-    if (request.nextUrl.pathname !== '/auth/verify-email') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+  const { pathname } = request.nextUrl;
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  const isVerifyRoute = pathname.startsWith("/auth/verify-email");
+  const isOnboardingRoute = pathname.startsWith("/auth/onboarding");
+  const isCallbackRoute = pathname.startsWith("/auth/callback");
+
+  if (!user && isProtectedRoute) {
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (!user) {
+    return response;
+  }
+
+  const isEmailVerified =
+    Boolean(user.email_confirmed_at) ||
+    request.cookies.get(EMAIL_VERIFIED_COOKIE)?.value === "1";
+  const isOnboardingPending =
+    request.cookies.get(ONBOARDING_PENDING_COOKIE)?.value === "1";
+
+  if (!isEmailVerified && !isVerifyRoute && !isCallbackRoute) {
+    const verifyUrl = new URL("/auth/verify-email", request.url);
+    if (user.email) {
+      verifyUrl.searchParams.set("email", user.email);
     }
+    return NextResponse.redirect(verifyUrl);
   }
 
-  // 2. Optionnel : Protéger les routes privées (redirection vers login si non connecté)
-  const privateRoutes = ['/dashboard', '/profil', '/credits', '/examens']
-  const isPrivateRoute = privateRoutes.some(route => request.nextUrl.pathname.startsWith(route))
-  
-  if (!user && isPrivateRoute) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+  if (
+    isProtectedRoute &&
+    isEmailVerified &&
+    isOnboardingPending &&
+    !isOnboardingRoute
+  ) {
+    return NextResponse.redirect(new URL("/auth/onboarding", request.url));
   }
 
-  return response
+  if (isAuthRoute) {
+    if (!isEmailVerified) {
+      const verifyUrl = new URL("/auth/verify-email", request.url);
+      if (user.email) {
+        verifyUrl.searchParams.set("email", user.email);
+      }
+      return NextResponse.redirect(verifyUrl);
+    }
+
+    if (isOnboardingPending) {
+      return NextResponse.redirect(new URL("/auth/onboarding", request.url));
+    }
+
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  if (isVerifyRoute && isEmailVerified) {
+    if (isOnboardingPending) {
+      return NextResponse.redirect(new URL("/auth/onboarding", request.url));
+    }
+
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
-}
+};

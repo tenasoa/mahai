@@ -19,6 +19,8 @@ import {
   type PurchasedSubjectItem,
 } from "@/actions/profile";
 import { uploadAvatarAction } from "@/actions/avatar";
+import "@/components/modals/Modal.css";
+import "./profile.css";
 import {
   MapPin,
   GraduationCap,
@@ -44,9 +46,6 @@ import {
   Smartphone,
   CreditCard,
 } from "lucide-react";
-import "./profil.css";
-import "@/components/modals/ProfileEditModal.css";
-import "@/components/modals/AvatarUploadModal.css";
 
 interface InfoRowProps {
   label: string;
@@ -593,7 +592,7 @@ export default function ProfilePage() {
       <LuxuryCursor />
       <LuxuryNavbar />
 
-      <div className="profile-container">
+      <main id="main-content" className="profile-container">
         {/* HEADER ARCHITECTURAL */}
         <div className="profile-header luxury-card">
           <div className="ph-left">
@@ -806,12 +805,14 @@ export default function ProfilePage() {
                       onToggleVisibility={() => toggleVisibility("showPhone")}
                     />
                   </div>
-                  <button
-                    className="btn-card-action"
-                    onClick={() => setEditModalOpen(true)}
-                  >
-                    Éditer le profil
-                  </button>
+                  <div className="sc-footer">
+                    <button
+                      className="btn-card-action"
+                      onClick={() => setEditModalOpen(true)}
+                    >
+                      Mettre à jour le profil
+                    </button>
+                  </div>
                 </div>
 
                 <div className="luxury-card settings-card">
@@ -847,13 +848,13 @@ export default function ProfilePage() {
                   <div className="bio-content">
                     <p className="bio-text">
                       {appUser?.bio ||
-                        "Vous n'avez pas encore rédigé de biographie."}
+                        "Présentez-vous en quelques lignes pour personnaliser davantage votre profil."}
                     </p>
                     <button
                       className="btn-card-action"
                       onClick={() => setEditModalOpen(true)}
                     >
-                      Éditer
+                      Modifier
                     </button>
                   </div>
                 </div>
@@ -902,7 +903,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="pref-group">
-                    <span className="ir-label">Matières de Prédilection</span>
+                    <span className="ir-label">Matières préférées</span>
                     <div className="luxury-tags">
                       {(appUser?.matieresPreferees?.length ?? 0) > 0 ? (
                         appUser?.matieresPreferees?.map((m: string) => (
@@ -912,14 +913,14 @@ export default function ProfilePage() {
                         ))
                       ) : (
                         <span className="luxury-tag-empty">
-                          Aucune matière favorite
+                          Aucune matière renseignée
                         </span>
                       )}
                     </div>
                   </div>
 
                   <div className="pref-group mt-6">
-                    <span className="ir-label">Objectifs Visés</span>
+                    <span className="ir-label">Objectifs d'étude</span>
                     <div className="luxury-tags">
                       {(appUser?.objectifsEtude?.length ?? 0) > 0 ? (
                         appUser?.objectifsEtude?.map((o: string) => (
@@ -929,26 +930,14 @@ export default function ProfilePage() {
                         ))
                       ) : (
                         <span className="luxury-tag-empty">
-                          Aucun objectif défini
+                          Aucun objectif renseigné
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="luxury-card settings-card">
-                  <div className="sc-header">
-                    <h3 className="sc-title">
-                      Fonctionnalités <em>En Intégration</em>
-                    </h3>
-                    <Info size={14} className="sc-info-icon" />
-                  </div>
-                  <p className="text-sm text-text-3">
-                    La bibliothèque d’achats, l’historique financier et les
-                    réglages avancés de sécurité seront réintroduits quand leurs
-                    vraies données seront connectées.
-                  </p>
-                </div>
+
               </div>
             </div>
           </div>
@@ -1153,7 +1142,7 @@ export default function ProfilePage() {
                 <div className="luxury-card settings-card mm-settings-card">
                   <div className="sc-header">
                     <h3 className="sc-title">
-                      Mobile <em>Banking</em>
+                      Mobile <em>Money</em>
                     </h3>
                     <Smartphone size={14} className="sc-info-icon" />
                   </div>
@@ -1298,8 +1287,8 @@ export default function ProfilePage() {
                       Authentification renforcée (2FA)
                     </div>
                     <div className="security-desc">
-                      Préférence stockée dès maintenant, activation finale au
-                      prochain sprint.
+                      Ajoutez une protection supplémentaire à votre compte
+                      lorsque cette option est activée.
                     </div>
                   </div>
                 </div>
@@ -1402,6 +1391,7 @@ export default function ProfilePage() {
               >
                 <div
                   className="modal-container password-modal"
+                  style={{ maxWidth: '450px' }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="modal-header">
@@ -1574,7 +1564,7 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-      </div>
+      </main>
 
       {/* NOTIFICATION TOAST */}
       {notification && (

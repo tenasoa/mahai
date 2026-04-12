@@ -1,0 +1,216 @@
+/* ═══════════════════════════════════════════════
+   PAYMENT FORM - LUXURY DESIGN SYSTEM
+═══════════════════════════════════════════════ */
+
+.paymentForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.sectionTitle {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  margin: 0;
+}
+
+/* === AMOUNTS GRID === */
+
+.amountsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.amountCard {
+  background: var(--card);
+  border: 2px solid var(--b1);
+  border-radius: var(--r-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  min-height: 120px;
+  justify-content: center;
+}
+
+.amountCard:hover {
+  border-color: var(--gold-line);
+  background: var(--gold-dim);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+.amountCard.selected {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+.amountCard.popular {
+  border-color: var(--gold);
+}
+
+.amountCard:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.popularBadge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--gold), var(--gold-hi));
+  color: var(--void);
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--r);
+  font-weight: 600;
+}
+
+.amountCredits {
+  font-family: var(--display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.amountPrice {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.amountBonus {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--sage);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* === SUMMARY === */
+
+.summary {
+  background: var(--surface);
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summaryLabel {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.summaryValue {
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.summaryValueBonus {
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--sage);
+}
+
+.summaryDivider {
+  height: 1px;
+  background: var(--b1);
+  margin: var(--space-xs) 0;
+}
+
+.summaryTotal {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+/* === SECURITY NOTICE === */
+
+.securityNotice {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  text-align: center;
+  padding: var(--space-md);
+  background: var(--surface);
+  border-radius: var(--r);
+  margin-top: var(--space-md);
+}
+
+/* === ACCESSIBILITY === */
+
+.amountCard:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* === REDUCED MOTION === */
+
+[data-reduced-motion="true"] .amountCard,
+[data-reduced-motion="true"] .amountCard:hover {
+  transition: none;
+  transform: none;
+}
+
+/* === MOBILE === */
+
+@media (max-width: 768px) {
+  .amountsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .amountCard {
+    flex-direction: row;
+    justify-content: flex-start;
+    min-height: 76px;
+    padding: 1rem;
+  }
+
+  .popularBadge {
+    top: auto;
+    bottom: -8px;
+    left: auto;
+    right: 0;
+  }
+
+  .amountCredits {
+    font-size: 1.5rem;
+  }
+
+  .summaryTotal {
+    font-size: 1.25rem;
+  }
+}
