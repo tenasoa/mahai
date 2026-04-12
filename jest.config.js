@@ -1,16 +1,16 @@
 /** @type {import('jest').Config} */
 const config = {
-  testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  testEnvironment: "jsdom",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.tsx"],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    "^@/(.*)$": "<rootDir>/$1",
+    "\\.(css|less|scss|sass)$": "identity-obj-proxy",
   },
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
+  testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/"],
   collectCoverageFrom: [
-    'components/**/*.{ts,tsx}',
-    '!components/**/*.stories.{ts,tsx}',
-    '!components/**/index.{ts,tsx}',
+    "components/**/*.{ts,tsx}",
+    "!components/**/*.stories.{ts,tsx}",
+    "!components/**/index.{ts,tsx}",
   ],
   coverageThreshold: {
     global: {
@@ -20,6 +20,6 @@ const config = {
       statements: 70,
     },
   },
-}
+};
 
-export default config
+export default config;
