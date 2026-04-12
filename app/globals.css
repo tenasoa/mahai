@@ -339,13 +339,12 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: var(--void);
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--gold-line);
-    border: 3px solid var(--void);
-    border-radius: 10px;
+    background: var(--gold-lo);
+    border-radius: 5px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
