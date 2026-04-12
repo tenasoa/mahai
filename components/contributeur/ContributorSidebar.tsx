@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, PlusCircle, CreditCard, BarChart3, User, Menu, X, ChevronRight, ChevronLeft } from 'lucide-react'
+import { LayoutDashboard, FileText, PlusCircle, CreditCard, BarChart3, User, Menu, X, ChevronRight, ChevronLeft, Sun, Moon } from 'lucide-react'
 
 interface ContributorSidebarProps {
   user: {
@@ -23,6 +23,20 @@ interface ContributorSidebarProps {
 
 export function ContributorSidebar({ user, stats, isCollapsed, onToggle }: ContributorSidebarProps) {
   const pathname = usePathname()
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('mahai_theme') as 'light' | 'dark' || 'dark'
+    setTheme(savedTheme)
+    document.documentElement.setAttribute('data-theme', savedTheme)
+  }, [])
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+    document.documentElement.setAttribute('data-theme', newTheme)
+    localStorage.setItem('mahai_theme', newTheme)
+  }
 
   const navItems = [
     {
@@ -108,6 +122,23 @@ export function ContributorSidebar({ user, stats, isCollapsed, onToggle }: Contr
             </div>
           ))}
         </nav>
+
+        {/* Theme Toggle Button */}
+        <div className="sb-bottom">
+          <button
+            onClick={toggleTheme}
+            className="sb-theme-toggle"
+            title={`Passer en mode ${theme === 'dark' ? 'clair' : 'sombre'}`}
+            aria-label={`Passer en mode ${theme === 'dark' ? 'clair' : 'sombre'}`}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            {!isCollapsed && (
+              <span className="sb-theme-text">
+                Mode {theme === 'dark' ? 'clair' : 'sombre'}
+              </span>
+            )}
+          </button>
+        </div>
 
       </aside>
 
