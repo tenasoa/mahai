@@ -209,9 +209,6 @@
 }
 
 .sb-collapse-btn {
-  position: absolute;
-  right: -12px;
-  top: 30px;
   width: 24px;
   height: 24px;
   background: var(--depth);

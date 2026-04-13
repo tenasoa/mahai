@@ -30,12 +30,14 @@
   }
 }
 
+/*
 @media (max-width: 768px) {
   .footerGrid {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
 }
+*/
 
 /* === BRAND SECTION === */
 

@@ -9,7 +9,7 @@ export function LuxuryFooter() {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
-        <div className={styles.footerGrid}>
+        <div className={`${styles.footerGrid} grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4`}>
           {/* BRAND */}
           <div className={styles.footerBrand}>
             <div className={styles.footerLogo}>

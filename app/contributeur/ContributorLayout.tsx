@@ -31,10 +31,6 @@ export function ContributorLayout({ children, user, stats }: ContributorLayoutPr
     }
   }, [])
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'dark')
-  }, [])
-
   const handleToggle = () => {
     const newState = !isCollapsed
     setIsCollapsed(newState)
@@ -42,7 +38,7 @@ export function ContributorLayout({ children, user, stats }: ContributorLayoutPr
   }
 
   return (
-    <div className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`} data-theme="dark">
+    <div className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className="contributor-noise" />
       
       <ContributorSidebar 

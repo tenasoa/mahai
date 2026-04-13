@@ -252,10 +252,10 @@ export function UserNotifications() {
           ref={dropdownRef}
           style={{
             position: 'absolute',
-            right: '80px',
+            right: '0',
             top: 'calc(100% + 0.5rem)',
             width: '340px',
-            maxWidth: 'calc(100vw - 2rem)',
+            maxWidth: '94vw',
             maxHeight: '500px',
             overflowY: 'auto',
             background: 'var(--card)',

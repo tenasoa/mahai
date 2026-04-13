@@ -108,15 +108,16 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
 
   return (
     <aside className={`admin-sidebar ${isCollapsed ? 'collapsed' : ''}`} id="adminSidebar">
-      <div className="sb-logo">
+      <div className="sb-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80px', position: 'relative' }}>
         <Link href="/" className="sb-logo-main">
           Mah<span className="sb-gem" />AI
         </Link>
-        <span className="sb-admin-badge">⚡ Administration</span>
+        <span className="sb-admin-badge" style={{ marginTop: '4px' }}>⚡ Administration</span>
 
         <button
           onClick={toggleSidebar}
           className="sb-collapse-btn"
+          style={{ position: 'absolute', top: '1rem', right: '1rem' }}
           title={isCollapsed ? "Étendre" : "Réduire"}
           aria-label={isCollapsed ? "Étendre le menu" : "Réduire le menu"}
         >
@@ -125,6 +126,19 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
       </div>
 
       <nav className="sb-nav">
+        {/* Navigation Rapide */}
+        <div style={{ marginTop: '0.75rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--b2)', paddingBottom: '1rem' }}>
+          <div className="sb-section" style={{ marginTop: 0 }}>Navigation rapide</div>
+          <Link href="/dashboard" className={`sb-link ${pathname === '/dashboard' ? 'active' : ''}`}>
+            <User size={18} />
+            <span className="sb-link-text">Espace Étudiant</span>
+          </Link>
+          <Link href="/contributeur" className={`sb-link ${pathname.startsWith('/contributeur') ? 'active' : ''}`}>
+            <FileText size={18} />
+            <span className="sb-link-text">Espace Contributeur</span>
+          </Link>
+        </div>
+
         {navItems.map(section => (
           <div key={section.section}>
             <div className="sb-section">{section.section}</div>
