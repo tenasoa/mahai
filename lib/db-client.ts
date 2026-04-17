@@ -223,6 +223,11 @@ export const db = {
       return result.rows[0] || null
     },
     
+    async findMany({ where }: { where?: {} } = {}) {
+      const result = await query('SELECT * FROM "ExamenBlanc" ORDER BY "createdAt" DESC')
+      return result.rows
+    },
+
     async update({ where, data }: { where: { id: string }; data: any }) {
       const updates: string[] = []
       const values: any[] = []
@@ -238,6 +243,77 @@ export const db = {
       const sql = `UPDATE "ExamenBlanc" SET ${updates.join(', ')} WHERE id = $1 RETURNING *`
       const result = await query(sql, [where.id, ...values])
       return result.rows[0]
+    }
+  },
+
+  examenBlancSubmission: {
+    async create({ data }: { data: any }) {
+      const fields: string[] = []
+      const values: any[] = []
+      const placeholders: string[] = []
+
+      if (!data.id) {
+        data.id = crypto.randomUUID()
+      }
+
+      let paramIndex = 1
+      for (const [key, value] of Object.entries(data)) {
+        const dbKey = key
+        fields.push(`"${dbKey}"`)
+        placeholders.push(`$${paramIndex}`)
+        values.push(value)
+        paramIndex++
+      }
+
+      const sql = `INSERT INTO "ExamenBlancSubmission" (${fields.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`
+      const result = await query(sql, values)
+      return result.rows[0]
+    },
+
+    async findUnique({ where }: { where: { id: string } }) {
+      const result = await query('SELECT * FROM "ExamenBlancSubmission" WHERE id = $1', [where.id])
+      return result.rows[0] || null
+    },
+
+    async update({ where, data }: { where: { id: string }; data: any }) {
+      const updates: string[] = []
+      const values: any[] = []
+
+      let paramIndex = 2
+      for (const [key, value] of Object.entries(data)) {
+        const dbKey = key
+        updates.push(`"${dbKey}" = $${paramIndex}`)
+        values.push(value)
+        paramIndex++
+      }
+
+      const sql = `UPDATE "ExamenBlancSubmission" SET ${updates.join(', ')} WHERE id = $1 RETURNING *`
+      const result = await query(sql, [where.id, ...values])
+      return result.rows[0]
+    },
+
+    async findMany({ where }: { where: { userId?: string; examId?: string } }) {
+      const conditions: string[] = []
+      const values: any[] = []
+      let paramIndex = 1
+
+      if (where.userId) {
+        conditions.push(`"userId" = $${paramIndex}`)
+        values.push(where.userId)
+        paramIndex++
+      }
+      if (where.examId) {
+        conditions.push(`"examId" = $${paramIndex}`)
+        values.push(where.examId)
+        paramIndex++
+      }
+
+      const sql = conditions.length > 0
+        ? `SELECT * FROM "ExamenBlancSubmission" WHERE ${conditions.join(' AND ')}`
+        : 'SELECT * FROM "ExamenBlancSubmission"'
+
+      const result = await query(sql, values)
+      return result.rows
     }
   }
 }
