@@ -153,7 +153,7 @@ export async function updateSubjectStatus(subjectId: string, newStatus: string, 
   
   const oldStatus = current.status
 
-  await query('UPDATE "Subject" SET status = $1, "updatedAt" = NOW() WHERE id = $2', [newStatus, subjectId])
+  await query('UPDATE "Subject" SET status = $1 WHERE id = $2', [newStatus, subjectId])
   
   let action = 'UPDATED'
   if (newStatus === 'PUBLISHED') action = 'PUBLISHED'

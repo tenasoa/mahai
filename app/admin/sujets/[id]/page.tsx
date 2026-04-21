@@ -116,11 +116,14 @@ export default async function AdminSubjectDetailPage({
         <div>
           {/* Document Details Card */}
           <div className="admin-card">
-            <h2 className="admin-card-title">
-              <BookOpen size={18} />
-              Détails du document
-            </h2>
-            <div className="admin-info-grid">
+            <div className="admin-card-header">
+              <h2 className="admin-card-title">
+                <BookOpen size={18} />
+                Détails du document
+              </h2>
+            </div>
+            <div className="admin-card-body" style={{ padding: 0 }}>
+              <div className="admin-info-grid">
               <div className="admin-info-item">
                 <span className="admin-info-label">Matière</span>
                 <span className="admin-info-value">{subject.motiere || 'N/A'}</span>
@@ -200,14 +203,18 @@ export default async function AdminSubjectDetailPage({
                 </div>
               </div>
             )}
+            </div>
           </div>
 
           {/* Purchases Card */}
           <div className="admin-card">
-            <h2 className="admin-card-title">
-              <DollarSign size={18} />
-              Achats ({subject.purchases?.length || 0})
-            </h2>
+            <div className="admin-card-header">
+              <h2 className="admin-card-title">
+                <DollarSign size={18} />
+                Achats ({subject.purchases?.length || 0})
+              </h2>
+            </div>
+            <div className="admin-card-body" style={{ padding: 0 }}>
             {subject.purchases?.length === 0 ? (
               <div className="admin-empty-state">
                 <DollarSign className="admin-empty-state-icon" size={48} />
@@ -245,6 +252,7 @@ export default async function AdminSubjectDetailPage({
                 </table>
               </div>
             )}
+            </div>
           </div>
         </div>
 
@@ -252,10 +260,13 @@ export default async function AdminSubjectDetailPage({
         <div>
           {/* Moderation Panel */}
           <div className="admin-card">
-            <h2 className="admin-card-title">
-              <Edit3 size={18} />
-              Modération du sujet
-            </h2>
+            <div className="admin-card-header">
+              <h2 className="admin-card-title">
+                <Edit3 size={18} />
+                Modération du sujet
+              </h2>
+            </div>
+            <div className="admin-card-body">
             <form action={handleStatusUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label className="admin-label">Nouveau statut</label>
@@ -282,14 +293,18 @@ export default async function AdminSubjectDetailPage({
                 Mettre à jour le statut
               </button>
             </form>
+            </div>
           </div>
 
           {/* Activity Log */}
           <div className="admin-card">
-            <h2 className="admin-card-title">
-              <Clock size={18} />
-              Historique
-            </h2>
+            <div className="admin-card-header">
+              <h2 className="admin-card-title">
+                <Clock size={18} />
+                Historique
+              </h2>
+            </div>
+            <div className="admin-card-body">
             {subject.logs?.length === 0 ? (
               <div className="admin-empty-state">
                 <Clock className="admin-empty-state-icon" size={48} />
@@ -320,6 +335,7 @@ export default async function AdminSubjectDetailPage({
                 ))}
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>

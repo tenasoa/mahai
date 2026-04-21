@@ -17,6 +17,7 @@ import {
 import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { useToast } from '@/lib/hooks/useToast'
+import { RichTextEditor } from '@/components/ui/RichTextEditor'
 
 type BlogPost = {
   id: string
@@ -46,6 +47,9 @@ export default function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null)
+  
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [postToDelete, setPostToDelete] = useState<string | null>(null)
   
   const [postForm, setPostForm] = useState({
     title: '',
@@ -157,11 +161,16 @@ export default function AdminBlogPage() {
     }
   }
 
-  const handleDeletePost = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) return
+  const promptDeletePost = (id: string) => {
+    setPostToDelete(id)
+    setDeleteConfirmOpen(true)
+  }
+
+  const handleDeletePost = async () => {
+    if (!postToDelete) return
 
     try {
-      const res = await fetch(`/api/admin/blog-posts/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/blog-posts/${postToDelete}`, { method: 'DELETE' })
       if (res.ok) {
         showToast('Article supprimé')
         loadPosts()
@@ -170,6 +179,9 @@ export default function AdminBlogPage() {
       }
     } catch {
       showToast('Erreur lors de la suppression', true)
+    } finally {
+      setDeleteConfirmOpen(false)
+      setPostToDelete(null)
     }
   }
 
@@ -295,7 +307,7 @@ export default function AdminBlogPage() {
                         </button>
                         <button 
                           className="admin-btn admin-btn-sm admin-btn-danger"
-                          onClick={() => handleDeletePost(post.id)}
+                          onClick={() => promptDeletePost(post.id)}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -312,14 +324,14 @@ export default function AdminBlogPage() {
       {/* POST MODAL */}
       {modalOpen && (
         <div className="admin-overlay open" onClick={() => setModalOpen(false)}>
-          <div className="admin-modal" style={{ maxWidth: '800px', maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="admin-modal" style={{ maxWidth: '1100px', width: '95%', height: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header border-b border-border-1 p-4 flex-shrink-0 bg-card">
               <h3 className="modal-title">{editingPost ? 'Modifier l\'article' : 'Nouvel article'}</h3>
               <button className="modal-close" onClick={() => setModalOpen(false)}>
                 <XCircle size={20} />
               </button>
             </div>
-            <div className="modal-body">
+            <div className="modal-body flex-grow overflow-y-auto p-6 bg-void/50">
               <div className="admin-form-stack">
                 <div className="admin-form-group">
                   <label className="admin-label">Titre</label>
@@ -365,16 +377,19 @@ export default function AdminBlogPage() {
                     rows={3}
                   />
                 </div>
+
                 <div className="admin-form-group">
-                  <label className="admin-label">Contenu</label>
-                  <textarea
+                  <div className="flex justify-between items-end mb-2">
+                    <label className="admin-label m-0">Contenu</label>
+                    <span className="text-xs text-text-4 font-mono">Rich HTML Enabled</span>
+                  </div>
+                  <RichTextEditor
                     value={postForm.content}
-                    onChange={(e) => setPostForm({ ...postForm, content: e.target.value })}
-                    placeholder="Contenu de l'article (Markdown supporté)..."
-                    className="admin-input"
-                    rows={12}
+                    onChange={(val) => setPostForm({ ...postForm, content: val })}
+                    placeholder="Commencez à rédiger votre histoire..."
                   />
                 </div>
+
                 <div className="admin-form-grid-2">
                   <div className="admin-form-group">
                     <label className="admin-label">Image de couverture (URL)</label>
@@ -382,53 +397,105 @@ export default function AdminBlogPage() {
                       type="text"
                       value={postForm.coverImage}
                       onChange={(e) => setPostForm({ ...postForm, coverImage: e.target.value })}
-                      placeholder="https://..."
+                      placeholder="https://images.unsplash.com/..."
                       className="admin-input"
                     />
+                    {postForm.coverImage && (
+                      <div className="mt-2 rounded-lg overflow-hidden border border-border-1 aspect-video relative group">
+                        <img src={postForm.coverImage} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-xs text-white bg-black/60 px-2 py-1 rounded">Aperçu de la couverture</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="admin-form-group">
-                    <label className="admin-label">Temps de lecture (min)</label>
-                    <input
-                      type="number"
-                      value={postForm.readTime}
-                      onChange={(e) => setPostForm({ ...postForm, readTime: parseInt(e.target.value) || 5 })}
-                      min={1}
-                      className="admin-input"
-                    />
+                    <div className="admin-form-group mb-4">
+                      <label className="admin-label">Temps de lecture (min)</label>
+                      <input
+                        type="number"
+                        value={postForm.readTime}
+                        onChange={(e) => setPostForm({ ...postForm, readTime: parseInt(e.target.value) || 5 })}
+                        min={1}
+                        className="admin-input"
+                      />
+                    </div>
+                    <div className="p-4 rounded-xl bg-surface border border-border-1">
+                      <label className="admin-label mb-3">Visibilité & Mise en avant</label>
+                      <div className="flex flex-col gap-3">
+                        <label className="admin-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={postForm.isPublished}
+                            onChange={(e) => setPostForm({ ...postForm, isPublished: e.target.checked })}
+                          />
+                          <span className="text-sm">Publier immédiatement</span>
+                        </label>
+                        <label className="admin-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={postForm.isFeatured}
+                            onChange={(e) => setPostForm({ ...postForm, isFeatured: e.target.checked })}
+                          />
+                          <span className="text-sm">Mettre à la une (Hero Section)</span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="admin-form-row">
-                  <label className="admin-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={postForm.isPublished}
-                      onChange={(e) => setPostForm({ ...postForm, isPublished: e.target.checked })}
-                    />
-                    <span>Publié</span>
-                  </label>
-                  <label className="admin-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={postForm.isFeatured}
-                      onChange={(e) => setPostForm({ ...postForm, isFeatured: e.target.checked })}
-                    />
-                    <span>À la une</span>
-                  </label>
                 </div>
               </div>
             </div>
+
+            <div className="modal-footer border-t border-border-1 p-4 flex-shrink-0 bg-card">
+              <div className="flex justify-between items-center" style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+                <div className="text-xs text-text-4">
+                  {editingPost ? 'ID: ' + editingPost.id.substring(0,8) : 'Nouvel article'}
+                </div>
+                <div className="modal-actions">
+                  <button className="admin-btn admin-btn-outline" onClick={() => setModalOpen(false)}>
+                    Annuler
+                  </button>
+                  <button
+                    className="admin-btn admin-btn-primary"
+                    onClick={handleSavePost}
+                    disabled={saving}
+                  >
+                    {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                    {saving ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteConfirmOpen && (
+        <div className="admin-overlay open" onClick={() => setDeleteConfirmOpen(false)}>
+          <div className="admin-modal" style={{ maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ color: 'var(--ruby)' }}>Confirmer la suppression</h3>
+              <button className="modal-close" onClick={() => setDeleteConfirmOpen(false)}>
+                <XCircle size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p style={{ color: 'var(--text-2)' }}>
+                Êtes-vous sûr de vouloir supprimer définitivement cet article ? Cette action est irréversible.
+              </p>
+            </div>
             <div className="modal-footer">
               <div className="modal-actions">
-                <button className="admin-btn admin-btn-outline" onClick={() => setModalOpen(false)}>
+                <button className="admin-btn admin-btn-outline" onClick={() => setDeleteConfirmOpen(false)}>
                   Annuler
                 </button>
                 <button
-                  className="admin-btn admin-btn-primary"
-                  onClick={handleSavePost}
-                  disabled={saving}
+                  className="admin-btn admin-btn-danger"
+                  onClick={handleDeletePost}
                 >
-                  {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-                  {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                  <Trash2 size={16} />
+                  Supprimer
                 </button>
               </div>
             </div>

@@ -2,7 +2,7 @@ import { query } from '@/lib/db'
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { FileText, Users, CreditCard, TrendingUp, AlertCircle, CheckCircle2, Clock, ArrowRight, Sparkles, Settings, Smartphone, Package } from 'lucide-react'
+import { FileText, Users, CreditCard, TrendingUp, AlertCircle, CheckCircle2, Clock, ArrowRight, Sparkles, Settings, Smartphone, Package, Newspaper } from 'lucide-react'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 
 async function getDashboardData() {
@@ -13,6 +13,8 @@ async function getDashboardData() {
   const mobileMoneyCountRes = await query('SELECT COUNT(*) FROM "CreditTransaction" WHERE status = $1', ['PENDING'])
   const salesCountRes = await query('SELECT COUNT(*) FROM "Purchase"')
   const revenueRes = await query('SELECT COALESCE(SUM(amount), 0) as total FROM "CreditTransaction" WHERE status = $1', ['COMPLETED'])
+  const blogPostsCountRes = await query('SELECT COUNT(*) FROM "BlogPost"')
+  const draftsCountRes = await query('SELECT COUNT(*) FROM "BlogPost" WHERE is_published = false')
 
   // 2. Derniers utilisateurs inscrits
   const recentUsersRes = await query('SELECT id, prenom, nom, email, role, "createdAt", "profilePicture" FROM "User" ORDER BY "createdAt" DESC LIMIT 5')
@@ -42,7 +44,9 @@ async function getDashboardData() {
       reviews: parseInt(reviewsCountRes.rows[0].count),
       mobilemoney: parseInt(mobileMoneyCountRes.rows[0].count),
       sales: parseInt(salesCountRes.rows[0].count),
-      revenue: parseInt(revenueRes.rows[0].total)
+      revenue: parseInt(revenueRes.rows[0].total),
+      blogPosts: parseInt(blogPostsCountRes.rows[0].count),
+      blogDrafts: parseInt(draftsCountRes.rows[0].count)
     },
     recentUsers: recentUsersRes.rows,
     recentMobileMoney: recentMobileMoneyRes.rows,
@@ -123,6 +127,18 @@ export default async function AdminDashboard() {
           <div className="kpi-trend kpi-trend-up">
             <CheckCircle2 size={12} />
             Accessibles au public
+          </div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Articles de Blog</span>
+            <span className="kpi-icon kpi-icon-emerald"><Newspaper size={18} /></span>
+          </div>
+          <div className="kpi-value">{data.kpi.blogPosts}</div>
+          <div className="kpi-trend kpi-trend-up">
+            <Clock size={12} />
+            {data.kpi.blogDrafts} en brouillon
           </div>
         </div>
 

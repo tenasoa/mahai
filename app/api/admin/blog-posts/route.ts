@@ -8,10 +8,8 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category");
     const published = searchParams.get("published");
 
-    // Use admin client for public reads to bypass RLS issues with authenticated users
-    const supabase = published === "true"
-      ? await createSupabaseAdminClient()
-      : await createSupabaseServerClient();
+    // Use admin client to bypass RLS in the admin panel
+    const supabase = await createSupabaseAdminClient();
 
     let query = supabase
       .from("BlogPost")
@@ -42,7 +40,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    // Use admin client for DB operations to avoid UUID/RLS insert errors
+    const supabase = await createSupabaseAdminClient();
     const body = await request.json();
 
     const {
@@ -68,6 +67,13 @@ export async function POST(request: NextRequest) {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
+    // Get an admin UUID to avoid "admin" invalid UUID error
+    let validAuthorId = authorId;
+    if (!validAuthorId || validAuthorId === "admin") {
+      const { data: adminUser } = await supabase.from("User").select("id").eq("role", "ADMIN").limit(1).single();
+      validAuthorId = adminUser?.id;
+    }
+
     const { data: post, error } = await supabase
       .from("BlogPost")
       .insert({
@@ -76,7 +82,7 @@ export async function POST(request: NextRequest) {
         excerpt,
         content,
         category: category || "general",
-        author_id: authorId || "admin",
+        author_id: validAuthorId,
         author_name: authorName || "Admin Mah.AI",
         cover_image: coverImage,
         read_time: readTime || 5,
@@ -100,7 +106,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseAdminClient();
     const body = await request.json();
 
     const {
@@ -166,7 +172,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseAdminClient();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 

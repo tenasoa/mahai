@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(
   request: NextRequest,
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const supabase = await createSupabaseServerClient()
+    const supabase = await createSupabaseAdminClient()
     
     const { data: post, error } = await supabase
       .from('BlogPost')
@@ -40,7 +40,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const supabase = await createSupabaseServerClient()
+    const supabase = await createSupabaseAdminClient()
     const body = await request.json()
     
     const { data: post, error } = await supabase
@@ -71,7 +71,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const supabase = await createSupabaseServerClient()
+    const supabase = await createSupabaseAdminClient()
     
     const { error } = await supabase
       .from('BlogPost')

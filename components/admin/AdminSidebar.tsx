@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
+  Newspaper
 } from "lucide-react";
 import { useAdminTransactionsRealtime } from "@/lib/hooks/useAdminTransactionsRealtime";
 import "@/app/dashboard-theme.css";
@@ -45,6 +46,13 @@ const navItems = [
         icon: "subjects",
         badge: "sujets",
         badgeType: "ruby",
+      },
+      {
+        href: "/admin/blog",
+        label: "Blog",
+        icon: "blog",
+        badge: null,
+        badgeType: null,
       },
     ],
   },
@@ -108,6 +116,8 @@ function SidebarIcon({ type, size = 18 }: { type: string; size?: number }) {
       return <FileText size={size} />;
     case "credits":
       return <CreditCard size={size} />;
+    case "blog":
+      return <Newspaper size={size} />;
     case "withdrawals":
       return <Wallet size={size} />;
     case "users":
@@ -175,9 +185,7 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
     } else {
       document.body.style.overflow = "unset";
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
+    return () => document.body.style.overflow = "unset";
   }, [isMobileOpen]);
 
   // Charger le thème depuis localStorage

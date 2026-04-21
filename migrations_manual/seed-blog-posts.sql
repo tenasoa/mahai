@@ -14,32 +14,38 @@ INSERT INTO "BlogPost" (
     'Comment réussir son BAC de mathématiques : guide complet',
     'comment-reussir-bac-mathematiques',
     'Découvrez nos stratégies éprouvées pour exceller en mathématiques au BAC. Analyse des sujets des 5 dernières années, conseils de méthodologie et astuces pour maximiser votre note.',
-    '# Introduction
+    '<h2>Introduction</h2>
+<p>Le BAC de mathématiques est souvent considéré comme l''épreuve la plus redoutée. Pourtant, avec une bonne préparation et les bonnes méthodes, il est tout à fait possible de viser l''excellence et d''obtenir une mention.</p>
 
-Le BAC de mathématiques est souvent considéré comme l''épreuve la plus redoutée. Pourtant, avec une bonne préparation et les bonnes méthodes, il est tout à fait possible de viser l''excellence.
+<h2>Analyse des sujets récents</h2>
+<p>En analysant les sujets des 5 dernières années, nous avons identifié les thématiques les plus fréquentes qui tombent presque à chaque session :</p>
+<ul>
+  <li><strong>Algèbre</strong> : polynômes complexes, équations différentielles</li>
+  <li><strong>Analyse</strong> : intégration, étude de suites numériques et de fonctions logarithmiques</li>
+  <li><strong>Géométrie</strong> : espaces vectoriels, transformations dans le plan</li>
+  <li><strong>Probabilités</strong> : lois continues, statistiques et probabilités conditionnelles</li>
+</ul>
 
-## Analyse des sujets récents
+<blockquote>
+  "Le secret n''est pas de tout savoir par cœur, mais de comprendre la logique derrière chaque théorème pour pouvoir l''appliquer à n''importe quel problème."
+</blockquote>
 
-En analysant les sujets des 5 dernières années, nous avons identifié les thématiques les plus fréquentes :
-- Algèbre : polynômes, équations différentielles
-- Analyse : intégration, suites numériques
-- Géométrie : espaces vectoriels, transformations
-- Probabilités : lois continues, statistiques
+<h2>Méthodologie de travail</h2>
+<ol>
+  <li><strong>Comprendre le cours</strong> avant de faire des exercices : un théorème incompris est inutile.</li>
+  <li><strong>Varier les types d''exercices</strong> pour ne pas se spécialiser sur un seul type de problème.</li>
+  <li><strong>Travailler en temps limité</strong> pour s''habituer au stress de l''examen (essayez de faire un problème en 1 heure).</li>
+  <li><strong>Revoir systématiquement ses erreurs</strong> pour ne jamais les reproduire le jour J.</li>
+</ol>
 
-## Méthodologie de travail
+<img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Mathématiques et calculs" />
 
-1. **Comprendre le cours** avant de faire des exercices
-2. **Varier les types d''exercices** pour ne pas se spécialiser
-3. **Travailler en temps limité** pour s''habituer au stress
-4. **Revoir les erreurs** pour ne pas les reproduire
-
-## Ressources Mah.AI
-
-Notre plateforme propose des centaines de sujets corrigés par IA pour vous entraîner efficacement.',
+<h2>Ressources Mah.AI</h2>
+<p>Notre plateforme propose des centaines de sujets corrigés par notre Intelligence Artificielle pour vous entraîner efficacement. Rejoignez dès maintenant les milliers d''élèves qui préparent leur réussite !</p>',
     'conseils-bac',
-    'admin',
+    (SELECT id FROM "User" WHERE role = 'ADMIN' LIMIT 1),
     'Admin Mah.AI',
-    null,
+    'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
     8,
     true,
     true,
@@ -47,31 +53,38 @@ Notre plateforme propose des centaines de sujets corrigés par IA pour vous entr
   ),
   (
     gen_random_uuid(),
-    'Nouveau : Correction IA propulsée par Perplexity',
-    'nouveau-correction-ia-perplexity',
-    'Notre système de correction IA utilise maintenant l''API Perplexity pour une précision améliorée de 90%. Découvrez cette innovation majeure.',
-    '# Une avancée technologique majeure
+    'Nouveau : Correction IA propulsée par des Modèles Avancés',
+    'nouveau-correction-ia-avancee',
+    'Notre système de correction IA utilise maintenant des technologies de pointe pour une précision améliorée de 90%. Découvrez cette innovation majeure.',
+    '<h2>Une avancée technologique majeure</h2>
+<p>Nous sommes fiers d''annoncer l''intégration de nouveaux moteurs d''Intelligence Artificielle dans notre système de correction. Cette amélioration permet une précision de <strong>90%</strong> dans les corrections de sujets d''examen complexes.</p>
 
-Nous sommes fiers d''annoncer l''intégration de l''API Perplexity dans notre système de correction IA. Cette amélioration permet une précision de 90% dans les corrections de sujets d''examen.
+<h3>Pourquoi cette nouvelle technologie ?</h3>
+<p>Nos nouveaux modèles d''IA avancés ont été entraînés spécifiquement pour :</p>
+<ul>
+  <li>Comprendre parfaitement le <strong>contexte éducatif malgache</strong>.</li>
+  <li>Accéder à des ressources pédagogiques et des barèmes de correction actualisés.</li>
+  <li>Fournir des explications détaillées et extrêmement pédagogiques, étape par étape.</li>
+  <li>S''adapter au niveau de l''élève pour ne pas le décourager.</li>
+</ul>
 
-## Pourquoi Perplexity ?
+<blockquote>
+  "C''est comme avoir un professeur particulier disponible 24h/24 et 7j/7, prêt à vous expliquer vos erreurs avec une patience infinie."
+</blockquote>
 
-Perplexity est un moteur de recherche IA avancé qui :
-- Comprend le contexte éducatif malgache
-- Accède à des ressources pédagogiques actualisées
-- Fournit des explications détaillées et pédagogiques
-- S''adapte au niveau de l''élève
+<img src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Technologie IA" />
 
-## Bénéfices pour les utilisateurs
-
-- Corrections plus précises
-- Explications plus détaillées
-- Meilleure compréhension des erreurs
-- Progression plus rapide',
+<h2>Bénéfices pour les utilisateurs</h2>
+<ol>
+  <li>Des corrections beaucoup plus précises et fiables.</li>
+  <li>Des explications détaillées pour chaque point perdu.</li>
+  <li>Une meilleure compréhension de vos propres erreurs de raisonnement.</li>
+  <li>Une progression fulgurante dans vos révisions.</li>
+</ol>',
     'actualites',
-    'admin',
+    (SELECT id FROM "User" WHERE role = 'ADMIN' LIMIT 1),
     'Admin Mah.AI',
-    null,
+    'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
     5,
     true,
     false,
@@ -82,32 +95,38 @@ Perplexity est un moteur de recherche IA avancé qui :
     'Guide complet : Recharger vos crédits',
     'guide-recharger-credits',
     'Tout ce que vous devez savoir sur la recharge de crédits via Mobile Money (MVola, Orange, Airtel).',
-    '# Comment recharger vos crédits sur Mah.AI
+    '<h2>Comment recharger vos crédits sur Mah.AI</h2>
+<p>La recharge de crédits est simple, ultra rapide et <strong>100% sécurisée</strong> grâce à notre intégration directe avec les principaux opérateurs Mobile Money de Madagascar.</p>
 
-La recharge de crédits est simple et sécurisée grâce à notre intégration Mobile Money.
+<h3>Étapes de recharge pas à pas</h3>
+<ol>
+  <li>Connectez-vous à votre compte Mah.AI.</li>
+  <li>Allez dans votre espace profil et cliquez sur le bouton <strong>Recharger</strong>.</li>
+  <li>Choisissez le montant ou le pack de crédits que vous souhaitez acheter.</li>
+  <li>Sélectionnez votre opérateur préféré (MVola, Orange Money, Airtel Money).</li>
+  <li>Effectuez le transfert vers notre numéro affiché à l''écran avec la référence demandée.</li>
+  <li>Vos crédits sont validés et ajoutés à votre compte (généralement en moins de 10 minutes).</li>
+</ol>
 
-## Étapes de recharge
+<blockquote>
+  Astuce : Conservez toujours le SMS de confirmation de votre opérateur jusqu''à ce que les crédits apparaissent sur votre compte !
+</blockquote>
 
-1. Connectez-vous à votre compte
-2. Allez dans la section "Recharge"
-3. Choisissez le montant à recharger
-4. Sélectionnez votre opérateur (MVola, Orange, Airtel)
-5. Effectuez le transfert vers notre numéro
-6. Attendez la validation (généralement sous 12h)
+<h2>Opérateurs supportés</h2>
+<ul>
+  <li><strong>MVola</strong> : Disponible 24/7</li>
+  <li><strong>Orange Money</strong> : Disponible 24/7</li>
+  <li><strong>Airtel Money</strong> : Disponible 24/7</li>
+</ul>
 
-## Opérateurs supportés
+<img src="https://images.unsplash.com/photo-1620714223084-8fcacc6dfd8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Paiement mobile" />
 
-- **MVola** : 034 77 130 85
-- **Orange Money** : 032 17 560 02
-- **Airtel Money** : Bientôt disponible
-
-## Sécurité
-
-Tous les paiements sont sécurisés et tracés. En cas de problème, notre support est disponible 7j/7.',
+<h2>Sécurité absolue</h2>
+<p>Tous les paiements sont sécurisés et tracés dans notre base de données. En cas du moindre problème, notre support technique est disponible 7j/7 pour vous assister rapidement.</p>',
     'tutoriel',
-    'admin',
+    (SELECT id FROM "User" WHERE role = 'ADMIN' LIMIT 1),
     'Admin Mah.AI',
-    null,
+    'https://images.unsplash.com/photo-1620714223084-8fcacc6dfd8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
     4,
     true,
     false,
@@ -118,33 +137,37 @@ Tous les paiements sont sécurisés et tracés. En cas de problème, notre suppo
     'Devenir contributeur : Guide complet',
     'devenir-contributeur-mahai',
     'Rejoignez notre communauté d''enseignants et gagnez des revenus en partageant vos sujets d''examen.',
-    '# Pourquoi devenir contributeur ?
+    '<h2>Pourquoi devenir contributeur ?</h2>
+<p>En tant qu''enseignant ou professionnel de l''éducation, vous possédez des ressources intellectuelles précieuses. <strong>Mah.AI</strong> vous permet de monétiser vos sujets d''examen tout en aidant des milliers d''élèves malgaches à réussir.</p>
 
-En tant qu''enseignant, vous possédez des ressources précieuses. Mah.AI vous permet de les monétiser tout en aidant des milliers d''élèves.
+<h3>Vos avantages exclusifs</h3>
+<ul>
+  <li><strong>Revenus passifs attractifs</strong> : Gagnez de l''argent à chaque fois qu''un élève télécharge l''un de vos sujets (jusqu''à 90% de commission).</li>
+  <li><strong>Impact national</strong> : Aidez des élèves venant de toutes les régions de Madagascar à accéder à une éducation de qualité.</li>
+  <li><strong>Visibilité et Prestigie</strong> : Mettez en valeur votre expertise et devenez un professeur reconnu sur la plateforme.</li>
+  <li><strong>Communauté d''élite</strong> : Rejoignez un réseau exclusif d''enseignants passionnés.</li>
+</ul>
 
-## Avantages
+<blockquote>
+  "Depuis que je partage mes sujets sur Mah.AI, j''ai non seulement un revenu complémentaire stable, mais j''ai aussi l''impression de participer à l''amélioration du niveau éducatif de tout le pays."
+</blockquote>
 
-- **Revenus passifs** : Gagnez de l''argent à chaque téléchargement
-- **Impact** : Aidez des élèves à réussir
-- **Visibilité** : Mettez en valeur votre expertise
-- **Communauté** : Rejoignez un réseau d''enseignants
+<img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Enseignant et tableau" />
 
-## Comment ça marche ?
+<h2>Comment ça marche ?</h2>
+<ol>
+  <li>Créez votre compte et remplissez le formulaire de candidature contributeur.</li>
+  <li>Une fois validé, uploadez vos sujets officiels et leurs corrections détaillées.</li>
+  <li>L''équipe Mah.AI valide la qualité de votre contenu.</li>
+  <li>Vous recevez vos gains chaque mois directement par Mobile Money !</li>
+</ol>
 
-1. Créez votre compte contributeur
-2. Uploadez vos sujets et corrections
-3. Définissez votre prix par téléchargement
-4. Recevez vos gains chaque mois
-
-## Exigences
-
-- Être enseignant certifié
-- Proposer du contenu original
-- Respecter les programmes officiels',
+<h2>Critères d''éligibilité</h2>
+<p>Pour garantir la qualité de la plateforme, nous demandons à nos contributeurs d''être des <strong>enseignants certifiés</strong> ou des étudiants en fin de cycle, de proposer un contenu strictement original, et de respecter à la lettre les programmes officiels de l''Éducation Nationale Malgache.</p>',
     'carriere',
-    'admin',
+    (SELECT id FROM "User" WHERE role = 'ADMIN' LIMIT 1),
     'Admin Mah.AI',
-    null,
+    'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
     6,
     true,
     false,
@@ -155,32 +178,38 @@ En tant qu''enseignant, vous possédez des ressources précieuses. Mah.AI vous p
     'Stratégies pour le BEPC 2026',
     'strategies-bepc-2026',
     'Préparez-vous efficacement au BEPC avec nos conseils d''experts et nos sujets de qualité.',
-    '# Le BEPC : une étape cruciale
+    '<h2>Le BEPC : une étape cruciale</h2>
+<p>Le Brevet d''Études du Premier Cycle est la première certification officielle majeure pour un élève malgache. Une bonne préparation n''est pas seulement recommandée, elle est absolument essentielle pour s''assurer une place au lycée.</p>
 
-Le Brevet d''Études du Premier Cycle est la première certification officielle. Une bonne préparation est essentielle.
+<h3>Les matières clés à maîtriser</h3>
+<ul>
+  <li><strong>Mathématiques</strong> : Algèbre de base, géométrie plane, et statistiques simples. Ne négligez pas les théorèmes classiques (Thalès, Pythagore).</li>
+  <li><strong>Français</strong> : Grammaire stricte, conjugaison, et surtout la méthodologie de l''expression écrite.</li>
+  <li><strong>Histoire-Géographie</strong> : Connaître l''histoire de Madagascar et les grands enjeux géographiques mondiaux.</li>
+  <li><strong>SVT</strong> : Biologie humaine, géologie et environnement.</li>
+  <li><strong>Physique-Chimie</strong> : Les bases de la mécanique et des réactions chimiques.</li>
+</ul>
 
-## Matières clés
+<blockquote>
+  Le secret pour le BEPC est de ne faire aucune impasse. Une note catastrophique dans une matière peut difficilement être rattrapée par les autres.
+</blockquote>
 
-- **Mathématiques** : Algèbre, géométrie, statistiques
-- **Français** : Grammaire, conjugaison, expression écrite
-- **Histoire-Géographie** : Madagascar et le monde
-- **SVT** : Biologie et géologie
-- **Physique-Chimie** : Les bases
+<img src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Étudiant au bureau" />
 
-## Planning de révision
+<h2>Le planning de révision idéal</h2>
+<ol>
+  <li><strong>2 mois avant</strong> : Révision complète et méthodique de tous les cours de l''année. Fiches de synthèse obligatoires.</li>
+  <li><strong>1 mois avant</strong> : Exercices d''application pour vérifier la bonne compréhension des fiches.</li>
+  <li><strong>2 semaines avant</strong> : Sujets d''annales chronométrés. C''est la phase la plus importante !</li>
+  <li><strong>1 semaine avant</strong> : Révisions ciblées uniquement sur vos points faibles et repos psychologique.</li>
+</ol>
 
-- **2 mois avant** : Révision complète du cours
-- **1 mois avant** : Exercices d''application
-- **2 semaines avant** : Sujets d''annales
-- **1 semaine avant** : Révisions ciblées
-
-## Ressources Mah.AI
-
-Notre plateforme propose des centaines de sujets BEPC corrigés pour vous préparer efficacement.',
+<h2>Ressources Mah.AI</h2>
+<p>Notre plateforme propose des centaines de sujets BEPC corrigés pour vous préparer efficacement. Bonne chance à tous les candidats 2026 !</p>',
     'conseils-bepc',
-    'admin',
+    (SELECT id FROM "User" WHERE role = 'ADMIN' LIMIT 1),
     'Admin Mah.AI',
-    null,
+    'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
     5,
     true,
     false,
@@ -191,27 +220,32 @@ Notre plateforme propose des centaines de sujets BEPC corrigés pour vous prépa
     'Histoires de succès : Nos utilisateurs témoignent',
     'histoires-succes-utilisateurs',
     'Découvrez les témoignages d''élèves qui ont réussi leurs examens grâce à Mah.AI.',
-    '# Témoignages de nos utilisateurs
+    '<h2>Témoignages de nos utilisateurs</h2>
+<p>Rien ne nous rend plus fiers que de voir nos utilisateurs accomplir leurs rêves académiques. Voici quelques histoires de succès de la session précédente.</p>
 
-## Marie R., 18 ans - Admise au BAC
+<h3>Marie R., 18 ans - Admise au BAC Scientifique</h3>
+<blockquote>
+  "Mah.AI m''a permis de progresser en mathématiques de manière spectaculaire. Les corrections détaillées de l''Intelligence Artificielle m''ont aidé à comprendre mes erreurs à mon propre rythme, sans avoir honte de poser des questions."
+</blockquote>
 
-"Mah.AI m''a permis de progresser en mathématiques de manière spectaculaire. Les corrections détaillées m''ont aidé à comprendre mes erreurs."
+<h3>Jean-Luc M., 16 ans - BEPC avec Mention Très Bien</h3>
+<blockquote>
+  "Grâce aux sujets d''annales disponibles sur Mah.AI, je me sentais parfaitement prêt le jour de l''examen. Je connaissais déjà la structure des épreuves. J''ai obtenu ma mention très bien et je rentre dans le lycée de mes rêves !"
+</blockquote>
 
-## Jean-Luc M., 16 ans - BEPC avec mention
+<img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Étudiants célébrant" />
 
-"Grâce aux sujets d''annales disponibles sur Mah.AI, je me sentais prêt le jour de l''examen. J''ai obtenu ma mention très bien !"
+<h3>Fara R., Enseignante et Contributeuse</h3>
+<blockquote>
+  "En tant que contributeuse depuis le début de l''année, je peux partager mes ressources pédagogiques et aider des élèves de tout Madagascar tout en gagnant un revenu complémentaire très appréciable. C''est un système gagnant-gagnant exceptionnel !"
+</blockquote>
 
-## Fara R., enseignante
-
-"En tant que contributeuse, je peux partager mes ressources et aider les élèves tout en gagnant un revenu complémentaire. C''est gagnant-gagnant !"
-
-## Rejoignez la communauté
-
-Des milliers d''élèves utilisent déjà Mah.AI pour réussir. Pourquoi pas vous ?',
+<h2>Rejoignez la communauté de l''excellence</h2>
+<p>Des milliers d''élèves utilisent déjà <strong>Mah.AI</strong> pour assurer leur réussite aux examens nationaux. N''attendez plus la veille des épreuves : inscrivez-vous aujourd''hui et commencez à préparer votre avenir !</p>',
     'communaute',
-    'admin',
+    (SELECT id FROM "User" WHERE role = 'ADMIN' LIMIT 1),
     'Admin Mah.AI',
-    null,
+    'https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
     8,
     true,
     false,

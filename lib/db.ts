@@ -8,7 +8,7 @@ const pool = globalForDb.pool || new Pool({
   // Add resilience for serverless/high-concurrency environments
   max: 15,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  connectionTimeoutMillis: 10000,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 })
 
