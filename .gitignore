@@ -1,6 +1,7 @@
 ```
 # Dependencies
 node_modules/
+.git_disabled/
 
 # Environment
 .env
@@ -46,4 +47,15 @@ Thumbs.db
 # Testing
 .pytest_cache/
 .mypy_cache/
+
+# Next.js
+.next/
+out/
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
 ```
