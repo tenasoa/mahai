@@ -129,29 +129,29 @@ export default function SupportPage() {
       <LuxuryNavbar />
 
       {/* Hero */}
-      <section className="relative py-24 px-6 border-b border-b1 bg-depth">
+      <section className="relative pt-28 pb-16 px-6 border-b border-border-1 bg-depth text-center">
         <div className="max-w-7xl mx-auto">
-          <div className="font-mono text-xs text-gold flex items-center gap-2 mb-4">
+          <div className="font-mono text-xs text-gold flex items-center justify-center gap-2 mb-4">
             <div className="w-5 h-px bg-gold"></div>
             Centre d'aide
           </div>
           <h1 className="font-display font-normal text-5xl md:text-6xl text-text leading-tight mb-6">
             Comment pouvons-nous <em className="text-gold">vous aider ?</em>
           </h1>
-          <p className="text-text2 text-lg max-w-3xl leading-relaxed mb-8">
+          <p className="text-text-2 text-lg max-w-3xl leading-relaxed mb-8">
             Trouvez des réponses à vos questions ou contactez notre équipe de support.
           </p>
           
           {/* Search */}
           <div className="max-w-2xl">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text3" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-3" />
               <input
                 type="text"
                 placeholder="Rechercher dans l'aide..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-card border border-b1 rounded-lg text-text placeholder:text-text3 focus:border-gold focus:outline-none transition-colors"
+                className="w-full pl-12 pr-4 py-4 bg-card border border-border-1 rounded-xl text-text placeholder:text-text-3 focus:border-gold focus:outline-none transition-colors"
               />
             </div>
           </div>
@@ -166,12 +166,12 @@ export default function SupportPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {contactOptions.map((option, index) => (
-              <div key={index} className={`bg-card border ${option.available ? 'border-b1' : 'border-ruby-line bg-ruby-dim'} rounded-lg p-6`}>
-                <div className={`w-12 h-12 ${option.available ? 'bg-gold-dim border-gold-line text-gold' : 'bg-ruby-dim border-ruby-line text-ruby'} border rounded flex items-center justify-center mb-4`}>
+              <div key={index} className={`rounded-2xl border ${option.available ? 'border-border-1 bg-card' : 'border-ruby-line bg-ruby-dim'} p-6`}>
+                <div className={`w-12 h-12 ${option.available ? 'bg-gold/10 border-gold-line text-gold' : 'bg-ruby/10 border-ruby-line text-ruby'} border rounded-xl flex items-center justify-center mb-4`}>
                   {option.icon}
                 </div>
                 <h3 className="font-display text-xl text-text mb-2">{option.title}</h3>
-                <p className="text-text2 text-sm mb-4">{option.description}</p>
+                <p className="text-text-2 text-sm mb-4">{option.description}</p>
                 {!option.available ? (
                   <div className="font-mono text-xs text-ruby flex items-center gap-2">
                     <Clock className="w-3 h-3" />
@@ -187,7 +187,7 @@ export default function SupportPage() {
       </section>
 
       {/* Help Articles */}
-      <section className="py-20 px-6 bg-surface">
+      <section className="py-20 px-6 bg-depth">
         <div className="max-w-7xl mx-auto">
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-8 text-center">
             Articles d'<em className="text-gold">aide</em>
@@ -202,7 +202,7 @@ export default function SupportPage() {
                 className={`font-mono text-xs px-4 py-2 rounded-full transition-all ${
                   activeCategory === category.id
                     ? 'bg-gold text-void'
-                    : 'bg-card border border-b1 text-text3 hover:border-gold hover:text-gold'
+                    : 'bg-card border border-border-1 text-text-3 hover:border-gold hover:text-gold'
                 }`}
               >
                 {category.name}
@@ -213,14 +213,14 @@ export default function SupportPage() {
           {/* Articles Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredArticles.map((article, index) => (
-              <div key={index} className="bg-card border border-b1 rounded-lg p-6 hover:border-gold transition-all">
+              <div key={index} className="rounded-2xl border border-border-1 bg-card p-6 hover:border-gold transition-all">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-gold-dim border border-gold-line rounded flex items-center justify-center text-gold">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gold/10 border border-gold-line rounded-xl flex items-center justify-center text-gold">
                     {article.icon}
                   </div>
                   <div>
                     <h3 className="font-display text-lg text-text mb-2">{article.title}</h3>
-                    <p className="text-text2 text-sm leading-relaxed">{article.content}</p>
+                    <p className="text-text-2 text-sm leading-relaxed">{article.content}</p>
                   </div>
                 </div>
               </div>
@@ -236,80 +236,80 @@ export default function SupportPage() {
             Liens <em className="text-gold">rapides</em>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link href="/comment-ca-marche" className="bg-card border border-b1 rounded-lg p-6 hover:border-gold transition-all flex items-center justify-between">
+            <Link href="/comment-ca-marche" className="rounded-2xl border border-border-1 bg-card p-6 hover:border-gold transition-all flex items-center justify-between group">
               <div>
-                <h3 className="font-display text-lg text-text mb-1">Comment ça marche</h3>
-                <p className="text-text2 text-sm">Guide complet d'utilisation</p>
+                <h3 className="font-display text-lg text-text mb-1 group-hover:text-gold transition-colors">Comment ça marche</h3>
+                <p className="text-text-2 text-sm">Guide complet d'utilisation</p>
               </div>
-              <ArrowRight className="w-5 h-5 text-gold" />
+              <ArrowRight className="w-5 h-5 text-gold transform group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/correction-ia" className="bg-card border border-b1 rounded-lg p-6 hover:border-gold transition-all flex items-center justify-between">
+            <Link href="/correction-ia" className="rounded-2xl border border-border-1 bg-card p-6 hover:border-gold transition-all flex items-center justify-between group">
               <div>
-                <h3 className="font-display text-lg text-text mb-1">Correction IA</h3>
-                <p className="text-text2 text-sm">Comprendre notre technologie</p>
+                <h3 className="font-display text-lg text-text mb-1 group-hover:text-gold transition-colors">Correction IA</h3>
+                <p className="text-text-2 text-sm">Comprendre notre technologie</p>
               </div>
-              <ArrowRight className="w-5 h-5 text-gold" />
+              <ArrowRight className="w-5 h-5 text-gold transform group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/devenir-contributeur" className="bg-card border border-b1 rounded-lg p-6 hover:border-gold transition-all flex items-center justify-between">
+            <Link href="/devenir-contributeur" className="rounded-2xl border border-border-1 bg-card p-6 hover:border-gold transition-all flex items-center justify-between group">
               <div>
-                <h3 className="font-display text-lg text-text mb-1">Devenir contributeur</h3>
-                <p className="text-text2 text-sm">Rejoindre notre communauté</p>
+                <h3 className="font-display text-lg text-text mb-1 group-hover:text-gold transition-colors">Devenir contributeur</h3>
+                <p className="text-text-2 text-sm">Rejoindre notre communauté</p>
               </div>
-              <ArrowRight className="w-5 h-5 text-gold" />
+              <ArrowRight className="w-5 h-5 text-gold transform group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/contact" className="bg-card border border-b1 rounded-lg p-6 hover:border-gold transition-all flex items-center justify-between">
+            <Link href="/contact" className="rounded-2xl border border-border-1 bg-card p-6 hover:border-gold transition-all flex items-center justify-between group">
               <div>
-                <h3 className="font-display text-lg text-text mb-1">Contact direct</h3>
-                <p className="text-text2 text-sm">Envoyer un message</p>
+                <h3 className="font-display text-lg text-text mb-1 group-hover:text-gold transition-colors">Contact direct</h3>
+                <p className="text-text-2 text-sm">Envoyer un message</p>
               </div>
-              <ArrowRight className="w-5 h-5 text-gold" />
+              <ArrowRight className="w-5 h-5 text-gold transform group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
       </section>
 
       {/* Status */}
-      <section className="py-20 px-6 bg-surface">
+      <section className="py-20 px-6 bg-depth">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-8 text-center">
             État du <em className="text-gold">service</em>
           </h2>
-          <div className="bg-card border border-b1 rounded-lg p-8">
+          <div className="rounded-2xl border border-border-1 bg-card p-8">
             <div className="flex items-center gap-3 mb-6">
               <CheckCircle className="w-6 h-6 text-sage" />
               <span className="font-display text-xl text-text">Tous les systèmes sont opérationnels</span>
             </div>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-b3">
-                <span className="text-text2">Plateforme web</span>
+              <div className="flex items-center justify-between py-3 border-b border-border-1">
+                <span className="text-text-2">Plateforme web</span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-sage rounded-full"></div>
                   <span className="font-mono text-xs text-sage">Opérationnel</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-b3">
-                <span className="text-text2">Correction IA</span>
+              <div className="flex items-center justify-between py-3 border-b border-border-1">
+                <span className="text-text-2">Correction IA</span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-sage rounded-full"></div>
                   <span className="font-mono text-xs text-sage">Opérationnel</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-b3">
-                <span className="text-text2">Paiement Mobile Money</span>
+              <div className="flex items-center justify-between py-3 border-b border-border-1">
+                <span className="text-text-2">Paiement Mobile Money</span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-sage rounded-full"></div>
                   <span className="font-mono text-xs text-sage">Opérationnel</span>
                 </div>
               </div>
               <div className="flex items-center justify-between py-3">
-                <span className="text-text2">Support chat</span>
+                <span className="text-text-2">Support chat</span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-ruby rounded-full"></div>
                   <span className="font-mono text-xs text-ruby">Hors service</span>
                 </div>
               </div>
             </div>
-            <div className="mt-6 font-mono text-xs text-text3 text-center">
+            <div className="mt-6 font-mono text-xs text-text-3 text-center">
               Dernière mise à jour : {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>

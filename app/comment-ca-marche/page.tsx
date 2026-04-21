@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Search, Eye, Smartphone, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Search, Eye, Smartphone, Sparkles, ArrowRight } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
+import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 
 export default function CommentCaMarchePage() {
@@ -73,7 +74,7 @@ export default function CommentCaMarchePage() {
       <LuxuryNavbar />
 
       {/* Hero */}
-      <section className="relative py-24 px-6 border-b border-b1 bg-depth">
+      <section className="relative pt-28 pb-16 px-6 border-b border-border-1 bg-depth">
         <div className="max-w-7xl mx-auto">
           <div className="font-mono text-xs text-gold flex items-center gap-2 mb-4">
             <div className="w-5 h-px bg-gold"></div>
@@ -82,12 +83,12 @@ export default function CommentCaMarchePage() {
           <h1 className="font-display font-normal text-5xl md:text-6xl text-text leading-tight mb-6">
             Comment ça <em className="text-gold">marche</em>
           </h1>
-          <p className="text-text2 text-lg max-w-2xl leading-relaxed mb-8">
+          <p className="text-text-2 text-lg max-w-2xl leading-relaxed mb-8">
             Découvrez comment utiliser Mah.AI pour accéder aux sujets d'examens, les acheter avec Mobile Money, et obtenir des corrections IA instantanées.
           </p>
           <Link
             href="/catalogue?guest=true"
-            className="inline-flex items-center gap-2 font-body text-sm font-medium px-6 py-3 rounded bg-gradient-to-r from-gold to-gold-hi text-void border-none transition-all hover:-translate-y-0.5 hover:shadow-gold-md tracking-[0.04em]"
+            className="inline-flex items-center gap-2 font-body text-sm font-medium px-6 py-3 rounded-xl bg-gradient-to-r from-gold to-gold-hi text-void border-none transition-all hover:-translate-y-0.5 hover:shadow-gold-md tracking-[0.04em]"
           >
             Parcourir le catalogue
             <ArrowRight className="w-4 h-4" />
@@ -98,29 +99,29 @@ export default function CommentCaMarchePage() {
       {/* Steps */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-b1 border border-b1 rounded-lg overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {steps.map((step, index) => (
               <div
                 key={step.num}
-                className="bg-card p-8 hover:bg-card-hover transition-colors"
+                className="rounded-2xl border border-border-1 bg-card p-8 hover:border-gold transition-colors"
               >
                 <div className="flex justify-between items-start mb-6">
                   <div className="font-display text-5xl font-light text-gold-lo leading-none">
                     {step.num}
                   </div>
-                  <div className="w-12 h-12 bg-gold-dim border border-gold-line rounded flex items-center justify-center text-gold">
+                  <div className="w-12 h-12 bg-gold/10 border border-gold-line rounded-xl flex items-center justify-center text-gold">
                     {step.icon}
                   </div>
                 </div>
                 <h3 className="font-display text-2xl text-text mb-3">
                   {step.title}
                 </h3>
-                <p className="text-text2 text-sm leading-relaxed mb-6">
+                <p className="text-text-2 text-sm leading-relaxed mb-6">
                   {step.description}
                 </p>
                 <ul className="space-y-2">
                   {step.details.map((detail, i) => (
-                    <li key={i} className="font-mono text-xs text-text3 flex items-center gap-2">
+                    <li key={i} className="font-mono text-xs text-text-3 flex items-center gap-2">
                       <span className="w-1 h-1 bg-gold rounded-full"></span>
                       {detail}
                     </li>
@@ -133,19 +134,19 @@ export default function CommentCaMarchePage() {
       </section>
 
       {/* Detailed explanation */}
-      <section className="py-20 px-6 bg-surface">
+      <section className="py-20 px-6 bg-depth">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-8 text-center">
             En <em className="text-gold">détail</em>
           </h2>
 
           <div className="space-y-8">
-            <div className="bg-card border border-b1 rounded-lg p-8">
+            <div className="rounded-2xl border border-border-1 bg-card p-8">
               <h3 className="font-display text-xl text-text mb-4">1. Recherche de sujets</h3>
-              <p className="text-text2 leading-relaxed mb-4">
+              <p className="text-text-2 leading-relaxed mb-4">
                 Utilisez notre catalogue pour trouver exactement le sujet dont vous avez besoin. Filtrez par :
               </p>
-              <ul className="space-y-2 text-text2">
+              <ul className="space-y-2 text-text-2">
                 <li className="flex items-start gap-3">
                   <span className="text-gold mt-1">✦</span>
                   <span><strong>Niveau d'examen :</strong> BAC, BEPC, CEPE</span>
@@ -165,38 +166,39 @@ export default function CommentCaMarchePage() {
               </ul>
             </div>
 
-            <div className="bg-card border border-b1 rounded-lg p-8">
+            <div className="rounded-2xl border border-border-1 bg-card p-8">
               <h3 className="font-display text-xl text-text mb-4">2. Achat de crédits</h3>
-              <p className="text-text2 leading-relaxed mb-4">
+              <p className="text-text-2 leading-relaxed mb-4">
                 Mah.AI fonctionne avec un système de crédits. Pour acheter des sujets, vous devez d'abord recharger votre wallet :
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="bg-lift border border-b3 rounded p-4 text-center">
+                <div className="bg-lift border border-border-1 rounded-xl p-4 text-center">
                   <div className="font-display text-2xl text-gold mb-1">50 cr</div>
-                  <div className="font-mono text-xs text-text3">2 500 Ar</div>
+                  <div className="font-mono text-xs text-text-3">2 500 Ar</div>
                 </div>
-                <div className="bg-lift border border-b3 rounded p-4 text-center border-gold">
+                <div className="bg-lift border border-gold-line rounded-xl p-4 text-center relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-gold/10 rounded-bl-full -mr-8 -mt-8"></div>
                   <div className="font-display text-2xl text-gold mb-1">150 cr</div>
-                  <div className="font-mono text-xs text-text3">7 500 Ar</div>
+                  <div className="font-mono text-xs text-text-3">7 500 Ar</div>
                   <div className="font-mono text-[0.6rem] text-gold mt-1">+10 bonus</div>
                 </div>
-                <div className="bg-lift border border-b3 rounded p-4 text-center">
+                <div className="bg-lift border border-border-1 rounded-xl p-4 text-center">
                   <div className="font-display text-2xl text-gold mb-1">300 cr</div>
-                  <div className="font-mono text-xs text-text3">15 000 Ar</div>
+                  <div className="font-mono text-xs text-text-3">15 000 Ar</div>
                   <div className="font-mono text-[0.6rem] text-gold mt-1">+25 bonus</div>
                 </div>
               </div>
-              <p className="text-text2 text-sm leading-relaxed mt-4">
+              <p className="text-text-2 text-sm leading-relaxed mt-4">
                 Paiement accepté via MVola, Orange Money et Airtel Money. Validation sous 12h maximum.
               </p>
             </div>
 
-            <div className="bg-card border border-b1 rounded-lg p-8">
+            <div className="rounded-2xl border border-border-1 bg-card p-8">
               <h3 className="font-display text-xl text-text mb-4">3. Achat de sujets</h3>
-              <p className="text-text2 leading-relaxed mb-4">
+              <p className="text-text-2 leading-relaxed mb-4">
                 Chaque sujet a un prix en crédits indiqué clairement. Après achat, vous pouvez :
               </p>
-              <ul className="space-y-2 text-text2">
+              <ul className="space-y-2 text-text-2">
                 <li className="flex items-start gap-3">
                   <span className="text-gold mt-1">✦</span>
                   <span>Télécharger le sujet complet en PDF</span>
@@ -212,12 +214,12 @@ export default function CommentCaMarchePage() {
               </ul>
             </div>
 
-            <div className="bg-card border border-b1 rounded-lg p-8">
+            <div className="rounded-2xl border border-border-1 bg-card p-8">
               <h3 className="font-display text-xl text-text mb-4">4. Correction IA</h3>
-              <p className="text-text2 leading-relaxed mb-4">
+              <p className="text-text-2 leading-relaxed mb-4">
                 Notre IA analyse vos réponses et vous fournit :
               </p>
-              <ul className="space-y-2 text-text2">
+              <ul className="space-y-2 text-text-2">
                 <li className="flex items-start gap-3">
                   <span className="text-gold mt-1">✦</span>
                   <span><strong>Note sur 20 :</strong> Estimation précise de votre performance</span>
@@ -246,26 +248,27 @@ export default function CommentCaMarchePage() {
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-4">
             Prêt à <em className="text-gold">commencer</em> ?
           </h2>
-          <p className="text-text2 mb-8">
+          <p className="text-text-2 mb-8">
             Rejoignez des milliers d'élèves malgaches qui préparent leurs examens avec Mah.AI.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/auth/register"
-              className="inline-flex items-center justify-center gap-2 font-body text-sm font-medium px-8 py-3 rounded bg-gradient-to-r from-gold to-gold-hi text-void border-none transition-all hover:-translate-y-0.5 hover:shadow-gold-md tracking-[0.04em]"
+              className="inline-flex items-center justify-center gap-2 font-body text-sm font-medium px-8 py-3 rounded-xl bg-gradient-to-r from-gold to-gold-hi text-void border-none transition-all hover:-translate-y-0.5 hover:shadow-gold-md tracking-[0.04em]"
             >
               Créer un compte gratuitement
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/catalogue?guest=true"
-              className="inline-flex items-center justify-center gap-2 font-body text-sm font-medium px-8 py-3 rounded border border-b1 text-text hover:border-gold hover:text-gold transition-all tracking-[0.04em]"
+              className="inline-flex items-center justify-center gap-2 font-body text-sm font-medium px-8 py-3 rounded-xl border border-border-1 text-text hover:border-gold hover:text-gold transition-all tracking-[0.04em]"
             >
               Voir le catalogue
             </Link>
           </div>
         </div>
       </section>
+      <LuxuryFooter />
     </div>
   )
 }

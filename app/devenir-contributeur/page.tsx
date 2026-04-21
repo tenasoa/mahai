@@ -33,7 +33,7 @@ export default async function BecomeContributorPage() {
   )
 
   return (
-    <main className="min-h-screen bg-void px-4 pb-16 pt-24 md:px-8">
+    <main className="min-h-screen bg-void px-4 pb-16 pt-28 md:px-8">
       <div className="mx-auto max-w-[1020px] space-y-6">
         <section className="rounded-2xl border border-gold-line bg-gradient-to-br from-gold-dim to-transparent p-6 md:p-8">
           <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-gold">

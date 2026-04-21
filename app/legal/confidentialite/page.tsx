@@ -1,8 +1,12 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Shield, Mail, Database, Cookie, UserCheck, Trash2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { Shield, Database, UserCheck, Cookie, Trash2, Mail, ArrowLeft } from 'lucide-react'
+import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
+import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
+import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
+import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 
 export default function PolitiqueConfidentialitePage() {
   const [loading, setLoading] = useState(true)
@@ -14,81 +18,56 @@ export default function PolitiqueConfidentialitePage() {
     return () => clearTimeout(timer)
   }, [])
 
+  if (loading) {
+    return <LegalPageSkeleton />
+  }
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--void)', color: 'var(--text)', padding: '4rem 1.5rem' }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto' }}>
-        <Link
-          href="/"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: 'var(--text-3)',
-            textDecoration: 'none',
-            fontSize: '0.85rem',
-            marginBottom: '2.5rem',
-            transition: 'color 0.2s ease'
-          }}
-        >
-          <ArrowLeft size={14} />
-          Retour à l'accueil
-        </Link>
+    <div className="min-h-screen bg-void text-text">
+      <LuxuryCursor />
+      <LuxuryNavbar />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-          <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: 'var(--r)',
-            background: 'var(--gold-dim)',
-            color: 'var(--gold)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <Shield size={24} />
+      {/* Hero */}
+      <div className="border-b border-border-1 bg-depth relative z-10 pt-28 pb-14">
+        <div className="max-w-7xl mx-auto px-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 font-mono text-xs text-text-3 hover:text-text-2 transition-colors mb-6 group"
+          >
+            <ArrowLeft className="w-3 h-3 transform group-hover:-translate-x-1 transition-transform" />
+            Retour à l'accueil
+          </Link>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 bg-gold/10 border border-gold-line rounded-2xl flex items-center justify-center text-gold">
+              <Shield className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="font-display font-normal text-4xl md:text-5xl text-text leading-tight">
+                Politique de <em className="text-gold">confidentialité</em>
+              </h1>
+              <p className="font-mono text-xs text-text-4 uppercase tracking-[0.12em] mt-2">
+                Dernière mise à jour · {lastUpdated}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 style={{
-              fontFamily: 'var(--display)',
-              fontSize: '2.5rem',
-              fontWeight: 400,
-              margin: 0,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.1
-            }}>
-              Politique de <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>confidentialité</em>
-            </h1>
-            <p style={{
-              fontFamily: 'var(--mono)',
-              fontSize: '0.7rem',
-              color: 'var(--text-4)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginTop: '0.5rem'
-            }}>
-              Dernière mise à jour · {lastUpdated}
-            </p>
-          </div>
+          <p className="text-text-2 text-lg max-w-3xl leading-relaxed mt-6">
+            Mah.AI (« nous ») s'engage à protéger la vie privée de ses utilisateurs. Cette politique explique quelles données nous collectons, comment nous les utilisons et vos droits pour les contrôler.
+          </p>
         </div>
+      </div>
 
-        <p style={{
-          fontSize: '0.95rem',
-          color: 'var(--text-2)',
-          lineHeight: 1.75,
-          marginBottom: '3rem',
-          maxWidth: '720px'
-        }}>
-          Mah.AI (« nous ») s'engage à protéger la vie privée de ses utilisateurs. Cette politique explique
-          quelles données nous collectons, comment nous les utilisons et vos droits pour les contrôler.
-        </p>
-
-        <section style={sectionStyle}>
-          <div style={sectionHeaderStyle}>
-            <Database size={18} style={{ color: 'var(--gold)' }} />
-            <h2 style={sectionTitleStyle}>1. Données que nous collectons</h2>
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-6 py-16 pb-24 relative z-10">
+        
+        {/* Section 1 */}
+        <section className="mb-12 pb-12 border-b border-border-2">
+          <div className="flex items-center gap-3 mb-6">
+            <Database className="w-5 h-5 text-gold" />
+            <h2 className="font-display font-normal text-3xl text-text">
+              1. Données que nous collectons
+            </h2>
           </div>
-          <ul style={listStyle}>
+          <ul className="space-y-3 text-text-2 leading-relaxed ml-8 list-disc marker:text-gold">
             <li><strong>Informations de compte</strong> : prénom, nom, email, mot de passe (chiffré).</li>
             <li><strong>Profil académique</strong> : niveau scolaire, établissement, matières préférées, objectifs.</li>
             <li><strong>Numéro(s) Mobile Money</strong> (MVola / Orange Money / Airtel Money) pour effectuer les recharges.</li>
@@ -97,12 +76,15 @@ export default function PolitiqueConfidentialitePage() {
           </ul>
         </section>
 
-        <section style={sectionStyle}>
-          <div style={sectionHeaderStyle}>
-            <UserCheck size={18} style={{ color: 'var(--gold)' }} />
-            <h2 style={sectionTitleStyle}>2. Utilisation de vos données</h2>
+        {/* Section 2 */}
+        <section className="mb-12 pb-12 border-b border-border-2">
+          <div className="flex items-center gap-3 mb-6">
+            <UserCheck className="w-5 h-5 text-gold" />
+            <h2 className="font-display font-normal text-3xl text-text">
+              2. Utilisation de vos données
+            </h2>
           </div>
-          <ul style={listStyle}>
+          <ul className="space-y-3 text-text-2 leading-relaxed ml-8 list-disc marker:text-gold">
             <li>Fournir et améliorer le service (catalogue personnalisé, recommandations).</li>
             <li>Gérer votre compte, votre portefeuille de crédits et vos transactions Mobile Money.</li>
             <li>Assurer la sécurité (détection de fraude, authentification).</li>
@@ -111,119 +93,81 @@ export default function PolitiqueConfidentialitePage() {
           </ul>
         </section>
 
-        <section style={sectionStyle}>
-          <div style={sectionHeaderStyle}>
-            <Cookie size={18} style={{ color: 'var(--gold)' }} />
-            <h2 style={sectionTitleStyle}>3. Cookies et stockage local</h2>
+        {/* Section 3 */}
+        <section className="mb-12 pb-12 border-b border-border-2">
+          <div className="flex items-center gap-3 mb-6">
+            <Cookie className="w-5 h-5 text-gold" />
+            <h2 className="font-display font-normal text-3xl text-text">
+              3. Cookies et stockage local
+            </h2>
           </div>
-          <p style={paragraphStyle}>
-            Nous utilisons des cookies techniques pour maintenir votre session et enregistrer vos préférences (thème
-            clair/sombre, état de la sidebar). Aucun cookie de tracking tiers n'est utilisé sans votre consentement explicite.
+          <p className="text-text-2 leading-relaxed">
+            Nous utilisons des cookies techniques pour maintenir votre session et enregistrer vos préférences (thème clair/sombre, état de la sidebar). Aucun cookie de tracking tiers n'est utilisé sans votre consentement explicite.
           </p>
         </section>
 
-        <section style={sectionStyle}>
-          <div style={sectionHeaderStyle}>
-            <Shield size={18} style={{ color: 'var(--gold)' }} />
-            <h2 style={sectionTitleStyle}>4. Sécurité et conservation</h2>
+        {/* Section 4 */}
+        <section className="mb-12 pb-12 border-b border-border-2">
+          <div className="flex items-center gap-3 mb-6">
+            <Shield className="w-5 h-5 text-gold" />
+            <h2 className="font-display font-normal text-3xl text-text">
+              4. Sécurité et conservation
+            </h2>
           </div>
-          <p style={paragraphStyle}>
-            Les mots de passe sont stockés sous forme de hash bcrypt. Les échanges sont chiffrés en HTTPS/TLS.
-            Les données de compte sont conservées tant que votre compte est actif, puis archivées 3 ans après
-            suppression pour obligations légales (comptabilité, fiscalité), sauf demande explicite.
+          <p className="text-text-2 leading-relaxed">
+            Les mots de passe sont stockés sous forme de hash bcrypt. Les échanges sont chiffrés en HTTPS/TLS. Les données de compte sont conservées tant que votre compte est actif, puis archivées 3 ans après suppression pour obligations légales (comptabilité, fiscalité), sauf demande explicite.
           </p>
         </section>
 
-        <section style={sectionStyle}>
-          <div style={sectionHeaderStyle}>
-            <Trash2 size={18} style={{ color: 'var(--gold)' }} />
-            <h2 style={sectionTitleStyle}>5. Vos droits (RGPD)</h2>
+        {/* Section 5 */}
+        <section className="mb-12 pb-12 border-b border-border-2">
+          <div className="flex items-center gap-3 mb-6">
+            <Trash2 className="w-5 h-5 text-gold" />
+            <h2 className="font-display font-normal text-3xl text-text">
+              5. Vos droits (RGPD)
+            </h2>
           </div>
-          <ul style={listStyle}>
+          <ul className="space-y-3 text-text-2 leading-relaxed ml-8 list-disc marker:text-gold mb-6">
             <li><strong>Accès</strong> : consulter toutes les données que nous détenons sur vous.</li>
             <li><strong>Rectification</strong> : corriger une information erronée directement depuis votre profil.</li>
             <li><strong>Effacement</strong> : supprimer votre compte et les données associées (sauf obligations légales).</li>
             <li><strong>Portabilité</strong> : exporter vos données dans un format lisible (JSON/CSV).</li>
             <li><strong>Opposition</strong> : refuser les communications marketing à tout moment.</li>
           </ul>
-          <p style={{ ...paragraphStyle, marginTop: '1rem' }}>
-            Pour exercer ces droits, contactez-nous : <strong style={{ color: 'var(--gold)' }}>support@mah.ai</strong>
+          <p className="text-text-2 leading-relaxed">
+            Pour exercer ces droits, contactez-nous : <strong className="text-gold">support@mah.ai</strong>
           </p>
         </section>
 
-        <section style={sectionStyle}>
-          <div style={sectionHeaderStyle}>
-            <Mail size={18} style={{ color: 'var(--gold)' }} />
-            <h2 style={sectionTitleStyle}>6. Contact</h2>
+        {/* Section 6 */}
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Mail className="w-5 h-5 text-gold" />
+            <h2 className="font-display font-normal text-3xl text-text">
+              6. Contact
+            </h2>
           </div>
-          <p style={paragraphStyle}>
+          <p className="text-text-2 leading-relaxed mb-6">
             Pour toute question relative à cette politique ou à vos données :
           </p>
-          <div style={{
-            marginTop: '1rem',
-            padding: '1.25rem 1.5rem',
-            background: 'var(--surface)',
-            border: '1px solid var(--b2)',
-            borderRadius: 'var(--r)',
-            fontFamily: 'var(--mono)',
-            fontSize: '0.85rem',
-            color: 'var(--gold)'
-          }}>
-            Mah.AI — Antananarivo, Madagascar<br />
-            <span style={{ color: 'var(--text-2)' }}>E-mail :</span> support@mah.ai
+          <div className="p-6 bg-card border border-border-1 rounded-2xl">
+            <div className="font-mono text-sm text-gold mb-2">Mah.AI — Antananarivo, Madagascar</div>
+            <div className="font-mono text-sm">
+              <span className="text-text-2">E-mail : </span> 
+              <a href="mailto:support@mah.ai" className="text-gold hover:opacity-70 transition-opacity">support@mah.ai</a>
+            </div>
           </div>
         </section>
 
-        <div style={{
-          marginTop: '3rem',
-          padding: '1.5rem',
-          background: 'var(--gold-dim)',
-          border: '1px dashed var(--gold-line)',
-          borderRadius: 'var(--r)',
-          textAlign: 'center'
-        }}>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-2)', margin: 0 }}>
-            Consultez aussi nos <Link href="/legal/cgu" style={{ color: 'var(--gold)', textDecoration: 'none', fontWeight: 500 }}>Conditions Générales d'Utilisation</Link> pour
-            connaître l'ensemble des règles d'usage du service.
+        {/* Footer Info Box */}
+        <div className="mt-16 p-8 bg-gold-dim border border-gold-line rounded-2xl text-center">
+          <p className="text-sm text-text-2 m-0">
+            Consultez aussi nos <Link href="/legal/cgu" className="text-gold hover:opacity-70 transition-opacity font-medium">Conditions Générales d'Utilisation</Link> pour connaître l'ensemble des règles d'usage du service.
           </p>
         </div>
       </div>
+
+      <LuxuryFooter />
     </div>
   )
-}
-
-const sectionStyle: React.CSSProperties = {
-  marginBottom: '2.5rem',
-  paddingBottom: '2rem',
-  borderBottom: '1px solid var(--b2)'
-}
-
-const sectionHeaderStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-  marginBottom: '1rem'
-}
-
-const sectionTitleStyle: React.CSSProperties = {
-  fontFamily: 'var(--display)',
-  fontSize: '1.5rem',
-  fontWeight: 500,
-  margin: 0,
-  letterSpacing: '-0.01em'
-}
-
-const paragraphStyle: React.CSSProperties = {
-  fontSize: '0.9rem',
-  color: 'var(--text-2)',
-  lineHeight: 1.75,
-  margin: 0
-}
-
-const listStyle: React.CSSProperties = {
-  fontSize: '0.9rem',
-  color: 'var(--text-2)',
-  lineHeight: 1.9,
-  paddingLeft: '1.5rem',
-  margin: 0
 }

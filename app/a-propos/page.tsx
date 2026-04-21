@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Target, Users, Globe, Award, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Target, Users, Globe, Award, ArrowRight } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
@@ -76,7 +76,7 @@ export default function AProposPage() {
       <LuxuryNavbar />
 
       {/* Hero */}
-      <section className="relative py-24 px-6 border-b border-b1 bg-depth">
+      <section className="relative pt-28 pb-16 px-6 border-b border-border-1 bg-depth overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="font-mono text-xs text-gold flex items-center gap-2 mb-4">
             <div className="w-5 h-px bg-gold"></div>
@@ -85,7 +85,7 @@ export default function AProposPage() {
           <h1 className="font-display font-normal text-5xl md:text-6xl text-text leading-tight mb-6">
             À propos de <em className="text-gold">Mah.AI</em>
           </h1>
-          <p className="text-text2 text-lg max-w-3xl leading-relaxed mb-8">
+          <p className="text-text-2 text-lg max-w-3xl leading-relaxed mb-8">
             La plateforme éducative malgache qui révolutionne la préparation aux examens grâce à l'intelligence artificielle et à une communauté d'experts passionnés.
           </p>
         </div>
@@ -97,14 +97,14 @@ export default function AProposPage() {
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-6">
             Notre <em className="text-gold">mission</em>
           </h2>
-          <p className="text-text2 text-lg leading-relaxed mb-8">
+          <p className="text-text-2 text-lg leading-relaxed mb-8">
             Démocratiser l'accès aux ressources éducatives de qualité à Madagascar en utilisant la technologie pour rendre l'apprentissage plus accessible, plus efficace et plus engageant pour tous les élèves.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
+              <div key={index} className="rounded-2xl border border-border-1 bg-card p-6 text-center">
                 <div className="font-display text-4xl text-gold mb-2">{stat.value}</div>
-                <div className="font-mono text-xs text-text3 uppercase tracking-[0.1em]">{stat.label}</div>
+                <div className="font-mono text-xs text-text-3 uppercase tracking-[0.1em]">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -112,21 +112,21 @@ export default function AProposPage() {
       </section>
 
       {/* Values */}
-      <section className="py-20 px-6 bg-surface">
+      <section className="py-20 px-6 bg-depth">
         <div className="max-w-7xl mx-auto">
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-12 text-center">
             Nos <em className="text-gold">valeurs</em>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {values.map((value, index) => (
-              <div key={index} className="bg-card border border-b1 rounded-lg p-8">
-                <div className="w-12 h-12 bg-gold-dim border border-gold-line rounded flex items-center justify-center text-gold mb-6">
+              <div key={index} className="rounded-2xl border border-border-1 bg-card p-8">
+                <div className="w-12 h-12 bg-gold/10 border border-gold-line rounded-xl flex items-center justify-center text-gold mb-6">
                   {value.icon}
                 </div>
                 <h3 className="font-display text-2xl text-text mb-3">
                   {value.title}
                 </h3>
-                <p className="text-text2 leading-relaxed">
+                <p className="text-text-2 leading-relaxed">
                   {value.description}
                 </p>
               </div>
@@ -141,34 +141,36 @@ export default function AProposPage() {
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-8 text-center">
             Notre <em className="text-gold">histoire</em>
           </h2>
-          <div className="space-y-6 text-text2 leading-relaxed">
-            <p>
-              Mah.AI est né d'une observation simple : trop d'élèves malgaches échouent aux examens non pas par manque de travail, mais par manque d'accès aux ressources et aux corrections de qualité.
-            </p>
-            <p>
-              En 2024, une équipe d'entrepreneurs passionnés par l'éducation a décidé de relever ce défi. L'idée était de créer une plateforme qui centraliserait tous les sujets d'examens officiels (BAC, BEPC, CEPE) des 21 dernières années, avec des corrections détaillées et accessibles à tous.
-            </p>
-            <p>
-              Très vite, nous avons compris que la technologie pouvait faire plus que simplement stocker des documents. En intégrant l'intelligence artificielle, et plus particulièrement l'API Perplexity, nous avons pu offrir un service de correction automatique qui guide les élèves dans leur apprentissage.
-            </p>
-            <p>
-              Aujourd'hui, Mah.AI est utilisé par des milliers d'élèves à travers Madagascar. Notre communauté de contributeurs continue d'enrichir la plateforme, et nous ne cessons d'innover pour offrir la meilleure expérience possible.
-            </p>
+          <div className="rounded-2xl border border-gold-line bg-gradient-to-br from-gold-dim to-transparent p-8 md:p-10">
+            <div className="space-y-6 text-text-2 leading-relaxed">
+              <p>
+                Mah.AI est né d'une observation simple : trop d'élèves malgaches échouent aux examens non pas par manque de travail, mais par manque d'accès aux ressources et aux corrections de qualité.
+              </p>
+              <p>
+                En 2024, une équipe d'entrepreneurs passionnés par l'éducation a décidé de relever ce défi. L'idée était de créer une plateforme qui centraliserait tous les sujets d'examens officiels (BAC, BEPC, CEPE) des 21 dernières années, avec des corrections détaillées et accessibles à tous.
+              </p>
+              <p>
+                Très vite, nous avons compris que la technologie pouvait faire plus que simplement stocker des documents. En intégrant l'intelligence artificielle, et plus particulièrement l'API Perplexity, nous avons pu offrir un service de correction automatique qui guide les élèves dans leur apprentissage.
+              </p>
+              <p>
+                Aujourd'hui, Mah.AI est utilisé par des milliers d'élèves à travers Madagascar. Notre communauté de contributeurs continue d'enrichir la plateforme, et nous ne cessons d'innover pour offrir la meilleure expérience possible.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Team */}
-      <section className="py-20 px-6 bg-surface">
+      <section className="py-20 px-6 bg-depth">
         <div className="max-w-7xl mx-auto">
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-12 text-center">
             Notre <em className="text-gold">équipe</em>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {team.map((member, index) => (
-              <div key={index} className="bg-card border border-b1 rounded-lg p-8">
+              <div key={index} className="rounded-2xl border border-border-1 bg-card p-8">
                 <h3 className="font-display text-xl text-text mb-3">{member.name}</h3>
-                <p className="text-text2 leading-relaxed">{member.description}</p>
+                <p className="text-text-2 leading-relaxed">{member.description}</p>
               </div>
             ))}
           </div>
@@ -181,20 +183,20 @@ export default function AProposPage() {
           <h2 className="font-display font-normal text-3xl text-text tracking-[-0.02em] mb-4">
             Rejoignez <em className="text-gold">l'aventure</em>
           </h2>
-          <p className="text-text2 mb-8">
+          <p className="text-text-2 mb-8">
             Que vous soyez élève, parent, enseignant ou contributeur, il y a une place pour vous dans la communauté Mah.AI.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/auth/register"
-              className="inline-flex items-center justify-center gap-2 font-body text-sm font-medium px-8 py-3 rounded bg-gradient-to-r from-gold to-gold-hi text-void border-none transition-all hover:-translate-y-0.5 hover:shadow-gold-md tracking-[0.04em]"
+              className="inline-flex items-center justify-center gap-2 font-body text-sm font-medium px-8 py-3 rounded-xl bg-gradient-to-r from-gold to-gold-hi text-void border-none transition-all hover:-translate-y-0.5 hover:shadow-gold-md tracking-[0.04em]"
             >
               Créer un compte
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/devenir-contributeur"
-              className="inline-flex items-center justify-center gap-2 font-body text-sm font-medium px-8 py-3 rounded border border-b1 text-text hover:border-gold hover:text-gold transition-all tracking-[0.04em]"
+              className="inline-flex items-center justify-center gap-2 font-body text-sm font-medium px-8 py-3 rounded-xl border border-border-1 text-text hover:border-gold hover:text-gold transition-all tracking-[0.04em]"
             >
               Devenir contributeur
             </Link>
