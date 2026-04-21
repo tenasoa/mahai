@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { X, Upload, Trash2, Image as ImageIcon } from 'lucide-react'
 import { uploadAvatarAction, deleteAvatarAction } from '@/actions/avatar'
 import '@/components/modals/Modal.css'
@@ -31,6 +31,21 @@ export function AvatarUploadModal({
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropZoneRef = useRef<HTMLDivElement>(null)
+  const modalContainerRef = useRef<HTMLDivElement>(null)
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') { e.preventDefault(); onClose() }
+  }, [onClose])
+
+  useEffect(() => {
+    if (!isOpen) return
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = ''
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, handleKeyDown])
 
   if (!isOpen) return null
 
@@ -160,12 +175,18 @@ export function AvatarUploadModal({
   }
 
   return (
-    <div className={`modal-overlay ${isOpen ? 'open' : ''}`} onClick={handleClose}>
-      <div className="modal-container avatar-upload-modal" onClick={(e) => e.stopPropagation()}>
+    <div
+      className={`modal-overlay ${isOpen ? 'open' : ''}`}
+      onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="avatar-modal-title"
+    >
+      <div ref={modalContainerRef} className="modal-container avatar-upload-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">Modifier mon <em>avatar</em></h2>
-          <button onClick={handleClose} className="modal-close">
-            <X size={20} />
+          <h2 id="avatar-modal-title" className="modal-title">Modifier mon <em>avatar</em></h2>
+          <button onClick={handleClose} className="modal-close" aria-label="Fermer">
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
         <div className="modal-content">

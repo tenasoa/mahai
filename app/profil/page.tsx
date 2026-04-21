@@ -5,15 +5,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { LuxuryNavbar } from "@/components/layout/LuxuryNavbar";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
-import { ProfileEditModal } from "@/components/modals/ProfileEditModal";
+// import { ProfileEditModal } from "@/components/modals/ProfileEditModal"; // Supprimé au profit de l'édition inline
 import { AvatarUploadModal } from "@/components/modals/AvatarUploadModal";
 import { ProfilePageSkeleton } from "@/components/ui/PageSkeletons";
 import {
   updateCurrentUserProfileAction,
   getCurrentUserPurchasedSubjectsAction,
-  updateCurrentUserSecuritySettingsAction,
-  changeUserPasswordAction,
-  requestPasswordChangeCodeAction,
   getUserTransactionsAction,
   updatePaymentPreferencesAction,
   type PurchasedSubjectItem,
@@ -30,76 +27,32 @@ import {
   User as UserIcon,
   BookOpen,
   Shield,
-  BellRing,
-  Clock3,
-  KeyRound,
-  Eye,
-  EyeOff,
   CheckCircle,
   Info,
   Zap,
   Camera,
   X,
-  ArrowUpRight,
-  ArrowDownLeft,
   PlusCircle,
   Smartphone,
-  CreditCard,
+  Trash2,
+  Check,
+  Eye,
 } from "lucide-react";
-
-interface InfoRowProps {
-  label: string;
-  value: string | number | undefined | null;
-  icon?: React.ReactNode;
-  isPublic?: boolean;
-  showVisibilityIcon?: boolean;
-  onToggleVisibility?: () => void;
-}
-
-function ProfileInfoRow({
-  label,
-  value,
-  icon,
-  isPublic,
-  showVisibilityIcon = true,
-  onToggleVisibility,
-}: InfoRowProps) {
-  const isEmpty = !value || value === "";
-  const displayValue = isEmpty ? "Non renseigné" : value;
-
-  return (
-    <div className={`info-row ${isEmpty ? "is-empty" : ""}`}>
-      <div className="ir-label">{label}</div>
-      <div className="ir-content">
-        {icon && <span className="ir-icon">{icon}</span>}
-        <span className="ir-value">{displayValue}</span>
-      </div>
-      <div className="ir-visibility-cell">
-        {showVisibilityIcon && (
-          <div
-            className={`ir-visibility ${isPublic ? "public" : "private"}`}
-            title={
-              isPublic
-                ? "Visible sur votre profil public"
-                : "Masqué sur votre profil public"
-            }
-            onClick={onToggleVisibility}
-            style={{ cursor: "pointer" }}
-          >
-            {isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+import { ProfileInfoRow } from "@/components/profile/ProfileInfoRow";
+import { SecurityTab, type SecuritySettings } from "@/components/profile/SecurityTab";
+import { TransactionsTab } from "@/components/profile/TransactionsTab";
+import { PurchasedSubjectsTab } from "@/components/profile/PurchasedSubjectsTab";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { userId, user, appUser, setAppUser, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Mah.AI — Mon profil";
+  }, []);
   const [saveLoading, setSaveLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "profil" | "mes-sujets" | "coffre-fort" | "securite"
@@ -110,6 +63,69 @@ export default function ProfilePage() {
   } | null>(null);
   const [notificationTimeout, setNotificationTimeout] =
     useState<NodeJS.Timeout | null>(null);
+
+  const [userPhones, setUserPhones] = useState<{id?: string, phone: string, provider: string}[]>([]);
+
+  // Charger les numéros
+  const loadUserPhones = async () => {
+    try {
+      const response = await fetch('/api/user/phones');
+      if (response.ok) {
+        const data = await response.json();
+        setUserPhones(data);
+      }
+    } catch (err) {
+      console.error('Erreur chargement numéros', err);
+    }
+  };
+
+  const handleInlineSave = async (field: string, newValue: any) => {
+    try {
+      const result = await updateCurrentUserProfileAction({ [field]: newValue });
+      if (result.success) {
+        setNotification({ type: "success", message: `${field} mis à jour.` });
+        if (appUser) setAppUser({ ...appUser, [field]: newValue });
+      } else {
+        setNotification({ type: "error", message: result.error || "Erreur de mise à jour" });
+      }
+    } catch (error) {
+      setNotification({ type: "error", message: "Erreur serveur" });
+    }
+  };
+
+  const handleAddPhone = async (phone: string, provider: string) => {
+    if (!phone || !provider) return;
+
+    try {
+      const response = await fetch('/api/user/phones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, provider })
+      });
+      if (response.ok) {
+        setNotification({ type: "success", message: "Numéro ajouté." });
+        loadUserPhones();
+      } else {
+        const errorData = await response.json();
+        setNotification({ type: "error", message: errorData.error || "Erreur lors de l'ajout." });
+      }
+    } catch (err) {
+      setNotification({ type: "error", message: "Erreur serveur." });
+    }
+  };
+
+  const handleDeletePhone = async (phoneId: string) => {
+    if (!confirm("Supprimer ce numéro ?")) return;
+    try {
+      const response = await fetch(`/api/user/phones?id=${phoneId}`, { method: 'DELETE' });
+      if (response.ok) {
+        setNotification({ type: "success", message: "Numéro supprimé." });
+        loadUserPhones();
+      }
+    } catch (err) {
+      setNotification({ type: "error", message: "Erreur serveur." });
+    }
+  };
 
   // Auto-dismiss notification après 5 secondes
   useEffect(() => {
@@ -139,8 +155,7 @@ export default function ProfilePage() {
   const [purchasedSubjectsLoading, setPurchasedSubjectsLoading] =
     useState(false);
   const [purchasedSubjectsLoaded, setPurchasedSubjectsLoaded] = useState(false);
-  const [securitySaving, setSecuritySaving] = useState(false);
-  const [securitySettings, setSecuritySettings] = useState({
+  const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
     securityTwoFactorEnabled: false,
     securityLoginAlertEnabled: true,
     securityUnknownDeviceBlock: false,
@@ -153,17 +168,6 @@ export default function ProfilePage() {
   const [showEtablissement, setShowEtablissement] = useState(
     appUser?.showEtablissement ?? true,
   );
-  // États pour le changement de mot de passe
-  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
-  const [passwordStep, setPasswordStep] = useState<"form" | "code">("form");
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-    code: "",
-  });
-  const [passwordChanging, setPasswordChanging] = useState(false);
-
   const [transactions, setTransactions] = useState<any[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsLoaded, setTransactionsLoaded] = useState(false);
@@ -274,58 +278,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Gestion du changement de mot de passe
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordChanging(true);
-
-    try {
-      if (passwordStep === "form") {
-        // Étape 1 : Demander le code
-        const result = await requestPasswordChangeCodeAction(passwordData);
-        if (result.success) {
-          setNotification({
-            type: "success",
-            message: "Code de confirmation envoyé à votre adresse email !",
-          });
-          setPasswordStep("code");
-        } else {
-          setNotification({
-            type: "error",
-            message: result.error || "Erreur lors de la demande de code",
-          });
-        }
-      } else {
-        // Étape 2 : Valider le code et changer le mot de passe
-        const result = await changeUserPasswordAction(passwordData);
-        if (result.success) {
-          setNotification({
-            type: "success",
-            message: "Mot de passe mis à jour avec succès !",
-          });
-          setPasswordModalOpen(false);
-          setPasswordStep("form");
-          setPasswordData({
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-            code: "",
-          });
-        } else {
-          setNotification({
-            type: "error",
-            message:
-              result.error || "Code invalide ou erreur lors du changement",
-          });
-        }
-      }
-    } catch (error) {
-      setNotification({ type: "error", message: "Erreur serveur" });
-    } finally {
-      setPasswordChanging(false);
-    }
-  };
-
   const loadPurchasedSubjects = async () => {
     if (purchasedSubjectsLoading) return;
 
@@ -372,33 +324,6 @@ export default function ProfilePage() {
     } finally {
       setTransactionsLoading(false);
       setTransactionsLoaded(true);
-    }
-  };
-
-  const handleSecuritySave = async () => {
-    setSecuritySaving(true);
-    try {
-      const result =
-        await updateCurrentUserSecuritySettingsAction(securitySettings);
-      if (result.success) {
-        setNotification({
-          type: "success",
-          message: "Paramètres de sécurité enregistrés.",
-        });
-      } else {
-        setNotification({
-          type: "error",
-          message: result.error || "Échec de la sauvegarde des paramètres.",
-        });
-      }
-    } catch (error) {
-      console.error("Erreur sauvegarde sécurité:", error);
-      setNotification({
-        type: "error",
-        message: "Erreur serveur pendant la sauvegarde de la sécurité.",
-      });
-    } finally {
-      setSecuritySaving(false);
     }
   };
 
@@ -462,7 +387,7 @@ export default function ProfilePage() {
           type: "success",
           message: "Profil sublimé avec succès !",
         });
-        setEditModalOpen(false);
+        // Fermeture de modale supprimée car édition inline active
         // Mettre à jour l'état local au lieu de recharger la page
         if (appUser) {
           setAppUser({ ...appUser, ...cleanedData });
@@ -762,24 +687,31 @@ export default function ProfilePage() {
                   <div className="info-rows">
                     <ProfileInfoRow
                       label="Pseudo"
+                      field="pseudo"
                       value={appUser?.pseudo || "Non renseigné"}
                       icon={<UserIcon size={14} />}
                       showVisibilityIcon={false}
+                      onSave={handleInlineSave}
                     />
                     <ProfileInfoRow
                       label="Prénom"
+                      field="prenom"
                       value={appUser?.prenom || "Non renseigné"}
                       icon={<UserIcon size={14} />}
                       showVisibilityIcon={false}
+                      onSave={handleInlineSave}
                     />
                     <ProfileInfoRow
                       label="Nom"
+                      field="nom"
                       value={appUser?.nom || "Non renseigné"}
                       icon={<UserIcon size={14} />}
                       showVisibilityIcon={false}
+                      onSave={handleInlineSave}
                     />
                     <ProfileInfoRow
                       label="Âge"
+                      field="birthDate"
                       value={
                         appUser?.birthDate
                           ? `${calculateAge(appUser.birthDate)} ans`
@@ -787,31 +719,76 @@ export default function ProfilePage() {
                       }
                       icon={<Calendar size={14} />}
                       showVisibilityIcon={false}
+                      onSave={handleInlineSave}
+                      type="date"
                     />
                     <ProfileInfoRow
                       label="E-mail"
+                      field="email"
                       value={user?.email}
                       icon={<Shield size={14} />}
                       isPublic={showEmail}
                       showVisibilityIcon={true}
                       onToggleVisibility={() => toggleVisibility("showEmail")}
                     />
-                    <ProfileInfoRow
-                      label="Téléphone"
-                      value={appUser?.phone}
-                      icon={<Phone size={14} />}
-                      isPublic={showPhone}
-                      showVisibilityIcon={true}
-                      onToggleVisibility={() => toggleVisibility("showPhone")}
-                    />
                   </div>
-                  <div className="sc-footer">
-                    <button
-                      className="btn-card-action"
-                      onClick={() => setEditModalOpen(true)}
-                    >
-                      Mettre à jour le profil
-                    </button>
+                </div>
+
+                <div className="luxury-card settings-card">
+                  <div className="sc-header">
+                    <h3 className="sc-title">
+                      Mes <em>Téléphones</em>
+                    </h3>
+                    <Phone size={14} className="sc-info-icon" />
+                  </div>
+                  <div className="telephones-container">
+                    <div className="info-rows">
+                      {userPhones.map((up) => (
+                        <div key={up.id} className="info-row phone-row">
+                          <div className="ir-label">{up.provider}</div>
+                          <div className="ir-content">
+                            <span className="ir-icon"><Smartphone size={14} /></span>
+                            <span className="ir-value font-mono">{up.phone}</span>
+                            <button 
+                              className="ir-btn-delete" 
+                              onClick={() => up.id && handleDeletePhone(up.id)}
+                              title="Supprimer ce numéro"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="add-phone-form">
+                      <div className="ap-inputs">
+                        <select id="new-provider" className="ap-select">
+                          <option value="MVOLA">MVola</option>
+                          <option value="ORANGE">Orange</option>
+                          <option value="AIRTEL">Airtel</option>
+                        </select>
+                        <input 
+                          id="new-phone" 
+                          type="text" 
+                          placeholder="03X XX XXX XX" 
+                          className="ap-input"
+                        />
+                        <button 
+                          className="ap-btn"
+                          onClick={() => {
+                            const p = (document.getElementById('new-phone') as HTMLInputElement).value;
+                            const pr = (document.getElementById('new-provider') as HTMLSelectElement).value;
+                            if (p && pr) {
+                              handleAddPhone(p, pr);
+                              (document.getElementById('new-phone') as HTMLInputElement).value = '';
+                            }
+                          }}
+                        >
+                          <PlusCircle size={16} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -825,13 +802,17 @@ export default function ProfilePage() {
                   <div className="info-rows">
                     <ProfileInfoRow
                       label="Région"
+                      field="region"
                       value={appUser?.region}
                       showVisibilityIcon={false}
+                      onSave={handleInlineSave}
                     />
                     <ProfileInfoRow
                       label="District"
+                      field="district"
                       value={appUser?.district}
                       showVisibilityIcon={false}
+                      onSave={handleInlineSave}
                     />
                   </div>
                 </div>
@@ -845,17 +826,14 @@ export default function ProfilePage() {
                     </h3>
                     <BookOpen size={14} className="sc-info-icon" />
                   </div>
-                  <div className="bio-content">
-                    <p className="bio-text">
-                      {appUser?.bio ||
-                        "Présentez-vous en quelques lignes pour personnaliser davantage votre profil."}
-                    </p>
-                    <button
-                      className="btn-card-action"
-                      onClick={() => setEditModalOpen(true)}
-                    >
-                      Modifier
-                    </button>
+                  <div className="bio-editing">
+                    <ProfileInfoRow
+                      label="Biographie"
+                      field="bio"
+                      value={appUser?.bio || "Aucune biographie... Cliquez pour en ajouter une."}
+                      onSave={handleInlineSave}
+                      type="textarea"
+                    />
                   </div>
                 </div>
 
@@ -869,26 +847,34 @@ export default function ProfilePage() {
                   <div className="info-rows">
                     <ProfileInfoRow
                       label="Établissement"
+                      field="etablissement"
                       value={appUser?.etablissement}
                       icon={<Building size={14} />}
                       isPublic={appUser?.showEtablissement}
+                      onSave={handleInlineSave}
                     />
                     <ProfileInfoRow
                       label="Niveau"
+                      field="educationLevel"
                       value={appUser?.educationLevel}
                       showVisibilityIcon={false}
+                      onSave={handleInlineSave}
                     />
                     <ProfileInfoRow
                       label="Classe / Série"
+                      field="gradeLevel"
                       value={appUser?.gradeLevel}
                       showVisibilityIcon={false}
+                      onSave={handleInlineSave}
                     />
                     {appUser?.filiere && (
                       <ProfileInfoRow
                         label="Filière"
+                        field="filiere"
                         value={appUser.filiere}
                         icon={<BookOpen size={14} />}
                         showVisibilityIcon={false}
+                        onSave={handleInlineSave}
                       />
                     )}
                   </div>
@@ -945,623 +931,36 @@ export default function ProfilePage() {
           <div
             className={`ptab-panel ${activeTab === "mes-sujets" ? "active" : ""}`}
           >
-            <div className="section-header">
-              <h3 className="section-title-with-icon">
-                <BookOpen size={18} />
-                Mes <em>Sujets</em>
-              </h3>
-            </div>
-
-            {purchasedSubjectsLoading ? (
-              <div className="subjects-grid">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="subject-card-skeleton">
-                    <div className="subject-line w-70"></div>
-                    <div className="subject-line w-45"></div>
-                    <div className="subject-line w-30"></div>
-                  </div>
-                ))}
-              </div>
-            ) : purchasedSubjects.length > 0 ? (
-              <>
-                <div className="subjects-summary">
-                  <span>
-                    <strong>{purchasedSubjects.length}</strong> sujet
-                    {purchasedSubjects.length > 1 ? "s" : ""} débloqué
-                    {purchasedSubjects.length > 1 ? "s" : ""}
-                  </span>
-                </div>
-
-                <div className="subjects-grid">
-                  {purchasedSubjects.map((subject) => (
-                    <article
-                      key={`${subject.id}-${subject.purchasedAt}`}
-                      className="subject-card"
-                    >
-                      <div className="subject-card-head">
-                        <span className="subject-badge">{subject.type}</span>
-                        <span className="subject-credits">
-                          -{subject.creditsAmount} cr
-                        </span>
-                      </div>
-                      <h4 className="subject-title">{subject.titre}</h4>
-                      <p className="subject-meta">
-                        {subject.matiere} · {subject.annee}
-                        {subject.serie ? ` · ${subject.serie}` : ""}
-                      </p>
-                      <p className="subject-date">
-                        Débloqué le{" "}
-                        {new Date(subject.purchasedAt).toLocaleDateString(
-                          "fr-FR",
-                          { day: "2-digit", month: "long", year: "numeric" },
-                        )}
-                      </p>
-                      <button
-                        className="btn-card-action mt-4"
-                        onClick={() => router.push(`/sujet/${subject.id}`)}
-                      >
-                        Ouvrir le sujet
-                      </button>
-                    </article>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="empty-section-title">
-                  Aucun sujet débloqué pour le moment.
-                </p>
-                <p className="empty-section-text">
-                  Quand vous achetez un sujet avec vos crédits, il apparaît
-                  automatiquement ici.
-                </p>
-                <button
-                  className="btn-card-action mt-4"
-                  onClick={() => router.push("/catalogue")}
-                >
-                  Explorer le catalogue
-                </button>
-              </>
-            )}
+            <PurchasedSubjectsTab
+              subjects={purchasedSubjects}
+              loading={purchasedSubjectsLoading}
+            />
           </div>
 
           <div
             className={`ptab-panel ${activeTab === "coffre-fort" ? "active" : ""}`}
           >
-            <div className="section-header">
-              <h3 className="section-title-with-icon">
-                <Zap size={18} />
-                Mon <em>Coffre-fort</em>
-              </h3>
-            </div>
-
-            <div className="safe-grid">
-              <div className="safe-main-content">
-                {/* Balance Card Luxury */}
-                <div className="luxury-balance-card">
-                  <div className="lbc-bg"></div>
-                  <div className="lbc-header">
-                    <div className="lbc-label">Solde actuel</div>
-                    <Zap size={20} className="lbc-icon" />
-                  </div>
-                  <div className="lbc-amount">
-                    {appUser?.credits ?? 0} <span>crédits</span>
-                  </div>
-                  <div className="lbc-footer">
-                    <button
-                      className="btn-lbc-action"
-                      onClick={() => router.push("/recharge")}
-                    >
-                      <PlusCircle size={16} />
-                      Recharger
-                    </button>
-                  </div>
-                </div>
-
-                {/* Transactions Table */}
-                <div className="luxury-card settings-card safe-transactions-card">
-                  <div className="sc-header">
-                    <h3 className="sc-title">
-                      Historique des <em>Transactions</em>
-                    </h3>
-                    <Clock3 size={14} className="sc-info-icon" />
-                  </div>
-
-                  {transactionsLoading ? (
-                    <div className="transactions-loading">
-                      Chargement de vos transactions...
-                    </div>
-                  ) : transactions.length > 0 ? (
-                    <div className="transactions-list">
-                      {transactions.map((tx) => (
-                        <div key={tx.id} className="transaction-item">
-                          <div
-                            className={`tx-icon-wrap ${tx.type === "ACHAT" ? "spend" : "receive"}`}
-                          >
-                            {tx.type === "ACHAT" ? (
-                              <ArrowUpRight size={16} />
-                            ) : (
-                              <ArrowDownLeft size={16} />
-                            )}
-                          </div>
-                          <div className="tx-details">
-                            <div className="tx-desc">
-                              {tx.description ||
-                                (tx.type === "ACHAT"
-                                  ? "Achat de sujet"
-                                  : "Recharge de crédits")}
-                            </div>
-                            <div className="tx-date">
-                              {new Date(tx.createdAt).toLocaleDateString(
-                                "fr-FR",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
-                            </div>
-                            {tx.type === "RECHARGE" && tx.amount && (
-                              <div
-                                className="tx-payment-amount"
-                                style={{
-                                  fontSize: "0.7rem",
-                                  color: "var(--luxury-text-muted)",
-                                  marginTop: "0.2rem",
-                                  fontFamily: "var(--mono)",
-                                }}
-                              >
-                                {tx.amount} Ar
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            className={`tx-amount ${tx.type === "ACHAT" ? "minus" : "plus"}`}
-                          >
-                            {tx.type === "ACHAT"
-                              ? `-${tx.amount} cr`
-                              : `+${tx.creditsCount || tx.amount} cr`}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="transactions-empty">
-                      <p>Aucune transaction enregistrée pour le moment.</p>
-                      <span className="text-xs text-text-4">
-                        Vos futurs achats et recharges apparaîtront ici.
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="safe-sidebar-content">
-                {/* Mobile Money Settings */}
-                <div className="luxury-card settings-card mm-settings-card">
-                  <div className="sc-header">
-                    <h3 className="sc-title">
-                      Mobile <em>Money</em>
-                    </h3>
-                    <Smartphone size={14} className="sc-info-icon" />
-                  </div>
-                  <div className="mm-settings-form">
-                    <div className="form-group">
-                      <label className="form-label">Opérateur par défaut</label>
-                      <select
-                        className="form-input"
-                        value={mobileMoneySettings.operator}
-                        onChange={(e) =>
-                          setMobileMoneySettings({
-                            ...mobileMoneySettings,
-                            operator: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="MVOLA">MVola</option>
-                        <option value="ORANGE">Orange Money</option>
-                        <option value="AIRTEL">Airtel Money</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Numéro de téléphone</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={mobileMoneySettings.phoneNumber}
-                        onChange={(e) =>
-                          setMobileMoneySettings({
-                            ...mobileMoneySettings,
-                            phoneNumber: e.target.value,
-                          })
-                        }
-                        placeholder="034 XX XXX XX"
-                      />
-                    </div>
-                    <button
-                      className="btn-card-action"
-                      onClick={handleMobileMoneySave}
-                      disabled={mobileMoneySaving}
-                    >
-                      {mobileMoneySaving ? "Enregistrement..." : "Enregistrer"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Credit Perks Card */}
-                <div className="luxury-card settings-card perks-card">
-                  <div className="sc-header">
-                    <h3 className="sc-title">
-                      Avantages <em>Premium</em>
-                    </h3>
-                    <CreditCard size={14} className="sc-info-icon" />
-                  </div>
-                  <ul className="perks-list">
-                    <li>
-                      <CheckCircle size={12} className="perk-icon" />{" "}
-                      Corrections IA illimitées
-                    </li>
-                    <li>
-                      <CheckCircle size={12} className="perk-icon" />{" "}
-                      Téléchargement PDF HD
-                    </li>
-                    <li>
-                      <CheckCircle size={12} className="perk-icon" /> Accès
-                      prioritaire 24/7
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+            <TransactionsTab
+              credits={appUser?.credits ?? 0}
+              transactions={transactions}
+              transactionsLoading={transactionsLoading}
+              mobileMoneySettings={mobileMoneySettings}
+              setMobileMoneySettings={setMobileMoneySettings}
+              mobileMoneySaving={mobileMoneySaving}
+              onMobileMoneySave={handleMobileMoneySave}
+            />
           </div>
 
           <div
             className={`ptab-panel ${activeTab === "securite" ? "active" : ""}`}
           >
-            <div className="section-header">
-              <h3 className="section-title-with-icon">
-                <Shield size={18} />
-                Paramètres <em>Sécurité</em>
-              </h3>
-            </div>
-
-            <div className="security-grid">
-              <div className="security-card">
-                <div className="security-card-head">
-                  <BellRing size={16} className="sc-info-icon" />
-                  <div>
-                    <div className="security-title">Alertes de connexion</div>
-                    <div className="security-desc">
-                      Recevoir un email lors d’une nouvelle connexion.
-                    </div>
-                  </div>
-                </div>
-                <label className="security-switch">
-                  <input
-                    type="checkbox"
-                    checked={securitySettings.securityLoginAlertEnabled}
-                    onChange={(event) =>
-                      setSecuritySettings((previous) => ({
-                        ...previous,
-                        securityLoginAlertEnabled: event.target.checked,
-                      }))
-                    }
-                  />
-                  <span>Activer</span>
-                </label>
-              </div>
-
-              <div className="security-card">
-                <div className="security-card-head">
-                  <Shield size={16} className="sc-info-icon" />
-                  <div>
-                    <div className="security-title">
-                      Blocage appareil inconnu
-                    </div>
-                    <div className="security-desc">
-                      Refuser les connexions depuis un appareil non reconnu.
-                    </div>
-                  </div>
-                </div>
-                <label className="security-switch">
-                  <input
-                    type="checkbox"
-                    checked={securitySettings.securityUnknownDeviceBlock}
-                    onChange={(event) =>
-                      setSecuritySettings((previous) => ({
-                        ...previous,
-                        securityUnknownDeviceBlock: event.target.checked,
-                      }))
-                    }
-                  />
-                  <span>Activer</span>
-                </label>
-              </div>
-
-              <div className="security-card">
-                <div className="security-card-head">
-                  <KeyRound size={16} className="sc-info-icon" />
-                  <div>
-                    <div className="security-title">
-                      Authentification renforcée (2FA)
-                    </div>
-                    <div className="security-desc">
-                      Ajoutez une protection supplémentaire à votre compte
-                      lorsque cette option est activée.
-                    </div>
-                  </div>
-                </div>
-                <label className="security-switch">
-                  <input
-                    type="checkbox"
-                    checked={securitySettings.securityTwoFactorEnabled}
-                    onChange={(event) =>
-                      setSecuritySettings((previous) => ({
-                        ...previous,
-                        securityTwoFactorEnabled: event.target.checked,
-                      }))
-                    }
-                  />
-                  <span>Activer</span>
-                </label>
-              </div>
-
-              <div className="security-card">
-                <div className="security-card-head">
-                  <Clock3 size={16} className="sc-info-icon" />
-                  <div>
-                    <div className="security-title">
-                      Expiration automatique de session
-                    </div>
-                    <div className="security-desc">
-                      Déconnexion automatique après inactivité.
-                    </div>
-                  </div>
-                </div>
-                <select
-                  className="security-select"
-                  value={securitySettings.securitySessionTimeoutMinutes}
-                  onChange={(event) =>
-                    setSecuritySettings((previous) => ({
-                      ...previous,
-                      securitySessionTimeoutMinutes: Number(event.target.value),
-                    }))
-                  }
-                >
-                  <option value={30}>30 minutes</option>
-                  <option value={60}>1 heure</option>
-                  <option value={120}>2 heures</option>
-                  <option value={240}>4 heures</option>
-                </select>
-              </div>
-
-              <div className="security-card">
-                <div className="security-card-head">
-                  <Shield size={16} className="sc-info-icon" />
-                  <div>
-                    <div className="security-title">Récupération par email</div>
-                    <div className="security-desc">
-                      Autoriser la réinitialisation de mot de passe via email.
-                    </div>
-                  </div>
-                </div>
-                <label className="security-switch">
-                  <input
-                    type="checkbox"
-                    checked={securitySettings.securityRecoveryEmailEnabled}
-                    onChange={(event) =>
-                      setSecuritySettings((previous) => ({
-                        ...previous,
-                        securityRecoveryEmailEnabled: event.target.checked,
-                      }))
-                    }
-                  />
-                  <span>Activer</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="security-actions">
-              <button
-                className="btn-card-action"
-                onClick={handleSecuritySave}
-                disabled={securitySaving}
-              >
-                {securitySaving
-                  ? "Enregistrement..."
-                  : "Enregistrer les paramètres sécurité"}
-              </button>
-              <button
-                className="btn-card-action ghost"
-                onClick={() => setPasswordModalOpen(true)}
-              >
-                Changer le mot de passe
-              </button>
-            </div>
-
-            {/* Modal Changement de mot de passe */}
-            {passwordModalOpen && (
-              <div
-                className={`modal-overlay open`}
-                onClick={() => {
-                  setPasswordModalOpen(false);
-                  setPasswordStep("form");
-                }}
-              >
-                <div
-                  className="modal-container password-modal"
-                  style={{ maxWidth: '450px' }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="modal-header">
-                    <h2 className="modal-title">
-                      {passwordStep === "form" ? (
-                        <>
-                          Changer le <em>mot de passe</em>
-                        </>
-                      ) : (
-                        <>
-                          Confirmer le <em>changement</em>
-                        </>
-                      )}
-                    </h2>
-                    <button
-                      onClick={() => {
-                        setPasswordModalOpen(false);
-                        setPasswordStep("form");
-                      }}
-                      className="modal-close"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-                  <form
-                    onSubmit={handlePasswordChange}
-                    className="modal-content"
-                  >
-                    {passwordStep === "form" ? (
-                      <>
-                        <div className="form-group">
-                          <label className="form-label">
-                            Mot de passe actuel
-                          </label>
-                          <input
-                            type="password"
-                            value={passwordData.currentPassword}
-                            onChange={(e) =>
-                              setPasswordData({
-                                ...passwordData,
-                                currentPassword: e.target.value,
-                              })
-                            }
-                            className="form-input"
-                            placeholder="••••••••"
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">
-                            Nouveau mot de passe
-                          </label>
-                          <input
-                            type="password"
-                            value={passwordData.newPassword}
-                            onChange={(e) =>
-                              setPasswordData({
-                                ...passwordData,
-                                newPassword: e.target.value,
-                              })
-                            }
-                            className="form-input"
-                            placeholder="••••••••"
-                            required
-                            minLength={6}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">
-                            Confirmer le mot de passe
-                          </label>
-                          <input
-                            type="password"
-                            value={passwordData.confirmPassword}
-                            onChange={(e) =>
-                              setPasswordData({
-                                ...passwordData,
-                                confirmPassword: e.target.value,
-                              })
-                            }
-                            className="form-input"
-                            placeholder="••••••••"
-                            required
-                            minLength={6}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          style={{ textAlign: "center", marginBottom: "1rem" }}
-                        >
-                          <p
-                            style={{
-                              fontSize: "0.85rem",
-                              color: "var(--text-2)",
-                              lineHeight: "1.5",
-                            }}
-                          >
-                            Un code à 6 chiffres a été envoyé à{" "}
-                            <strong>{user?.email}</strong>. Veuillez le saisir
-                            ci-dessous pour valider votre nouveau mot de passe.
-                          </p>
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">
-                            Code de confirmation
-                          </label>
-                          <input
-                            type="text"
-                            value={passwordData.code}
-                            onChange={(e) =>
-                              setPasswordData({
-                                ...passwordData,
-                                code: e.target.value
-                                  .replace(/\D/g, "")
-                                  .slice(0, 6),
-                              })
-                            }
-                            className="form-input"
-                            style={{
-                              textAlign: "center",
-                              fontSize: "1.5rem",
-                              letterSpacing: "0.5rem",
-                              fontFamily: "var(--mono)",
-                            }}
-                            placeholder="000000"
-                            required
-                            maxLength={6}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    <div className="modal-footer password-modal-footer">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (passwordStep === "code") {
-                            setPasswordStep("form");
-                          } else {
-                            setPasswordModalOpen(false);
-                          }
-                        }}
-                        className="btn-secondary"
-                      >
-                        {passwordStep === "code" ? "Retour" : "Annuler"}
-                      </button>
-                      <button
-                        type="submit"
-                        className="btn-primary"
-                        disabled={passwordChanging}
-                      >
-                        {passwordChanging ? "Validation..." : "Valider"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-
-            {appUser?.securitySettingsUpdatedAt && (
-              <p className="security-footnote">
-                Dernière mise à jour:{" "}
-                {new Date(appUser.securitySettingsUpdatedAt).toLocaleDateString(
-                  "fr-FR",
-                  { day: "2-digit", month: "long", year: "numeric" },
-                )}
-              </p>
-            )}
+            <SecurityTab
+              securitySettings={securitySettings}
+              setSecuritySettings={setSecuritySettings}
+              securitySettingsUpdatedAt={appUser?.securitySettingsUpdatedAt}
+              userEmail={user?.email}
+              onNotification={setNotification}
+            />
           </div>
         </div>
       </main>
@@ -1571,7 +970,7 @@ export default function ProfilePage() {
         <div className="toast-container">
           <div className={`toast ${notification.type}`}>
             <div className="toast-icon">
-              {notification.type === "success" ? "✓" : "✕"}
+              {notification.type === "success" ? <Check size={18} /> : <X size={18} />}
             </div>
             <div className="toast-content">
               <div className="toast-title">
@@ -1582,21 +981,15 @@ export default function ProfilePage() {
             <button
               className="toast-close"
               onClick={() => setNotification(null)}
+              aria-label="Fermer la notification"
             >
-              ×
+              <X size={14} />
             </button>
           </div>
         </div>
       )}
 
-      {/* MODALE D'ÉDITION */}
-      <ProfileEditModal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        userData={appUser}
-        onSave={handleProfileUpdate}
-        loading={saveLoading}
-      />
+      {/* ÉDITION INLINE ACTIVÉE - Modale supprimée */}
 
       {/* MODALE UPLOAD AVATAR */}
       <AvatarUploadModal
@@ -1607,24 +1000,6 @@ export default function ProfilePage() {
         onAvatarChange={() => window.location.reload()}
         onError={(message) => setNotification({ type: "error", message })}
       />
-
-      <style jsx>{`
-        .mt-6 {
-          margin-top: 1.5rem;
-        }
-        .mb-8 {
-          margin-bottom: 2rem;
-        }
-        .p-10 {
-          padding: 3rem;
-        }
-        .flex-1 {
-          flex: 1;
-        }
-        .text-rose {
-          color: #ff4d4f;
-        }
-      `}</style>
     </div>
   );
 }

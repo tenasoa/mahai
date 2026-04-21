@@ -24,17 +24,24 @@ import { rechargeCreditsAction } from "@/actions/profile";
 import {
   BalanceCard,
   TransactionHistory,
-  ProviderCard,
   PaymentForm,
   RechargeConfirmation,
   type Transaction,
-  type Provider,
   type PaymentAmount,
 } from "@/components/recharge";
+
 import "./recharge.css";
 
-// Packs de crédits
-const CREDIT_PACKS: PaymentAmount[] = [
+// Type local pour les opérateurs
+type Provider = {
+  id: 'mvola' | 'orange' | 'airtel'
+  name: string
+  color: string
+  available: boolean
+}
+
+// Packs par défaut (fallback si l'API échoue)
+const DEFAULT_PACKS: PaymentAmount[] = [
   { credits: 50, price: 2500, bonus: 0 },
   { credits: 150, price: 7500, bonus: 10, popular: true },
   { credits: 300, price: 15000, bonus: 25 },
@@ -72,10 +79,9 @@ export default function RechargePage() {
   );
 
   // États pour le paiement
-  const [selectedAmount, setSelectedAmount] = useState<PaymentAmount>(
-    CREDIT_PACKS[1],
-  );
-  const [selectedProvider, setSelectedProvider] = useState<string>("mvola");
+  const [creditPacks, setCreditPacks] = useState<PaymentAmount[]>(DEFAULT_PACKS);
+  const [selectedAmount, setSelectedAmount] = useState<PaymentAmount | undefined>(undefined);
+  const [selectedProvider, setSelectedProvider] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processing, setProcessing] = useState(false);
 
@@ -148,6 +154,7 @@ export default function RechargePage() {
   };
 
   useEffect(() => {
+    document.title = "Mah.AI — Recharge de crédits";
     if (!authLoading) {
       if (!userId) {
         router.push("/auth/login");
@@ -204,32 +211,7 @@ export default function RechargePage() {
     }
   }, [newTransactionCount]);
 
-  // Validation du numéro
-  const validatePhoneNumber = () => {
-    const prefixes: Record<string, string> = {
-      mvola: "034",
-      orange: "032",
-      airtel: "033",
-    };
-    const numbers = phoneNumber.replace(/\D/g, "");
-    const requiredPrefix = prefixes[selectedProvider];
-
-    if (numbers.length !== 10) {
-      return {
-        valid: false,
-        message: "Le numéro doit contenir exactement 10 chiffres",
-      };
-    }
-
-    if (!numbers.startsWith(requiredPrefix)) {
-      return {
-        valid: false,
-        message: `Le numéro doit commencer par ${requiredPrefix} pour ${selectedProvider === "mvola" ? "MVola" : selectedProvider === "orange" ? "Orange Money" : "Airtel Money"}`,
-      };
-    }
-
-    return { valid: true };
-  };
+  // L'opérateur est détecté automatiquement via le préfixe du numéro
 
   // Formatage du numéro
   const formatPhoneNumber = (value: string) => {
@@ -242,26 +224,62 @@ export default function RechargePage() {
     return `${numbers.slice(0, 3)} ${numbers.slice(3, 5)} ${numbers.slice(5, 8)} ${numbers.slice(8, 10)}`;
   };
 
-  // Gestionnaires
+  // Charger les packs de crédits dynamiques au montage
+  useEffect(() => {
+    async function fetchCreditPacks() {
+      try {
+        const res = await fetch('/api/config/credit-packs')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.packs && data.packs.length > 0) {
+            const packs = data.packs.map((p: any) => ({
+              credits: p.credits,
+              price: p.price,
+              bonus: p.bonus,
+              popular: p.popular
+            }))
+            setCreditPacks(packs)
+            // Sélectionner le pack populaire par défaut, ou le premier
+            const defaultPack = packs.find((p: PaymentAmount) => p.popular) || packs[0]
+            setSelectedAmount(defaultPack)
+          } else {
+            // Fallback aux packs par défaut
+            setSelectedAmount(DEFAULT_PACKS.find(p => p.popular) || DEFAULT_PACKS[0])
+          }
+        } else {
+          setSelectedAmount(DEFAULT_PACKS.find(p => p.popular) || DEFAULT_PACKS[0])
+        }
+      } catch (err) {
+        console.error('Erreur chargement packs:', err)
+        setSelectedAmount(DEFAULT_PACKS.find(p => p.popular) || DEFAULT_PACKS[0])
+      }
+    }
+    fetchCreditPacks()
+  }, []);
+
   const handleRecharge = () => {
-    const validation = validatePhoneNumber();
-    if (!validation.valid) {
-      setNotification({ type: "error", message: validation.message || "" });
+    if (!phoneNumber || !selectedProvider || !selectedAmount) {
+      setNotification({ type: "error", message: "Veuillez sélectionner un numéro et un pack" });
       return;
     }
     setShowConfirmation(true);
   };
 
-  const handleConfirmPayment = async () => {
-    if (!transferCode.trim()) {
+  const handleConfirmPayment = async (senderCode?: string) => {
+    const code = senderCode?.trim() || transferCode.trim();
+    if (!code) {
       setNotification({
         type: "error",
         message: "Veuillez entrer le code de transfert reçu",
       });
       return;
     }
+    // Mettre à jour transferCode si le code vient de la modale
+    if (senderCode) {
+      setTransferCode(senderCode);
+    }
 
-    if (selectedAmount.price <= 0 || selectedAmount.credits <= 0) {
+    if (!selectedAmount || selectedAmount.price <= 0 || selectedAmount.credits <= 0) {
       setNotification({ type: "error", message: "Montant invalide" });
       return;
     }
@@ -273,14 +291,14 @@ export default function RechargePage() {
         packPrice: selectedAmount.price,
         operator: selectedProvider.toUpperCase(),
         phoneNumber,
-        transferCode,
+        transferCode: code,
         status: "PENDING",
       });
 
       if (result.success) {
         setNotification({
           type: "success",
-          message: `Votre demande de ${selectedAmount.credits} crédits a été enregistrée. Validation sous 12h.`,
+          message: `Votre demande de ${selectedAmount?.credits || 0} crédits a été enregistrée. Validation sous 12h.`,
         });
         setShowConfirmation(false);
         setTransferCode("");
@@ -376,24 +394,9 @@ export default function RechargePage() {
                 </span>
               </div>
 
-              {/* Provider Selection */}
-              <div className="section">
-                <h3 className="section-label">Opérateur Mobile Money</h3>
-                <div className="providers-grid">
-                  {OPERATORS.map((provider) => (
-                    <ProviderCard
-                      key={provider.id}
-                      provider={provider}
-                      isSelected={selectedProvider === provider.id}
-                      onSelect={(p) => setSelectedProvider(p.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Payment Form */}
+              {/* Payment Form — opérateur auto-détecté */}
               <PaymentForm
-                amounts={CREDIT_PACKS}
+                amounts={creditPacks}
                 selectedAmount={selectedAmount}
                 phoneNumber={phoneNumber}
                 providerId={selectedProvider}
@@ -402,6 +405,7 @@ export default function RechargePage() {
                 onPhoneNumberChange={(phone) =>
                   setPhoneNumber(formatPhoneNumber(phone))
                 }
+                onProviderChange={(id) => setSelectedProvider(id)}
                 onSubmit={handleRecharge}
               />
 
@@ -411,9 +415,9 @@ export default function RechargePage() {
                 <div>
                   <div className="hiw-title">Processus d&apos;achat</div>
                   <ol className="hiw-steps">
-                    <li>Choisissez votre pack et entrez votre numéro</li>
-                    <li>Effectuez le transfert vers le numéro indiqué</li>
-                    <li>Renseignez le code de transfert reçu par SMS</li>
+                    <li>Choisissez votre pack et sélectionnez votre numéro</li>
+                    <li>Effectuez le transfert vers le numéro Mah.AI indiqué</li>
+                    <li>Renseignez le code de transaction reçu par SMS</li>
                     <li>
                       Vos crédits sont ajoutés après vérification (sous 12h)
                     </li>
@@ -520,9 +524,9 @@ export default function RechargePage() {
           setShowConfirmation(false);
           setTransferCode("");
         }}
-        amount={selectedAmount.credits}
-        price={selectedAmount.price}
-        bonus={selectedAmount.bonus}
+        amount={selectedAmount?.credits || 0}
+        price={selectedAmount?.price || 0}
+        bonus={selectedAmount?.bonus || 0}
         providerName={operatorName}
         phoneNumber={phoneNumber}
         isLoading={processing}

@@ -9,6 +9,9 @@
   overflow: hidden;
   transition: all var(--transition-base);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .paperCard.hovered {
@@ -83,18 +86,20 @@
 }
 
 .badgeFree {
-  background: rgba(74, 107, 90, 0.9);
-  color: var(--sage);
+  background: rgba(74, 107, 90, 0.92);
+  color: #f3fff8;
   border: 1px solid rgba(74, 107, 90, 0.5);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .badgeUnlocked {
-  background: rgba(74, 107, 90, 0.9);
-  color: #8ecaac;
+  background: rgba(74, 107, 90, 0.92);
+  color: #f3fff8;
   border: 1px solid rgba(74, 107, 90, 0.5);
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .wishlistButton {
@@ -229,6 +234,38 @@
   justify-content: space-between;
 }
 
+/* === LIST LAYOUT === */
+
+.listLayout {
+  display: grid;
+  grid-template-columns: minmax(170px, 210px) 1fr;
+  grid-template-rows: auto auto;
+}
+
+.listLayout .thumbnail {
+  grid-row: 1 / span 2;
+  min-height: 142px;
+  height: 100%;
+  border-right: 1px solid var(--b3);
+}
+
+.listLayout .cardBody {
+  padding: 0.85rem 1rem 0.65rem;
+}
+
+.listLayout .cardTitle {
+  margin-bottom: 0.2rem;
+}
+
+.listLayout .cardInfo {
+  margin-bottom: 0.45rem;
+}
+
+.listLayout .cardFooter {
+  grid-column: 2;
+  padding: 0.7rem 1rem;
+}
+
 .price {
   font-family: var(--display);
   font-size: var(--text-xl);
@@ -313,6 +350,19 @@
 /* === MOBILE === */
 
 @media (max-width: 768px) {
+  .listLayout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .listLayout .thumbnail {
+    border-right: 0;
+  }
+
+  .listLayout .cardFooter {
+    grid-column: auto;
+  }
+
   .thumbnail {
     height: 100px;
   }

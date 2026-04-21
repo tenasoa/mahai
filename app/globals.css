@@ -64,6 +64,14 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
+  /* === PAGE LAYOUT === */
+  --page-gutter:   1.5rem;   /* Horizontal padding des pages */
+  --page-max-w:    1400px;   /* Max-width standard (dashboard, catalogue) */
+  --page-max-w-md: 1200px;   /* Max-width medium (sujet, detail) */
+  --page-max-w-sm: 1100px;   /* Max-width étroit (recharge, results) */
+  --space-page-y:  4rem;     /* Padding bas de page */
+  --space-hero-y:  5rem;     /* Padding top sections héro */
+
   /* === FONT SIZES === */
   --text-xs: 0.75rem; /* 12px */
   --text-sm: 0.875rem; /* 14px */
@@ -96,6 +104,20 @@
   --transition-slow: 0.4s ease;
   --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* === Z-INDEX SYSTEM === */
+  --z-dropdown:       100;  /* Dropdowns, autocomplete, popover */
+  --z-sticky:         200;  /* Éléments sticky dans la page */
+  --z-navbar:         500;  /* Navigation principale fixe */
+  --z-above-navbar:   620;  /* Éléments flottants au-dessus de la nav */
+  --z-drawer:         800;  /* Drawers et sidebars mobiles */
+  --z-modal-backdrop: 900;  /* Overlay/backdrop des modales */
+  --z-modal:         1000;  /* Fenêtres modales */
+  --z-above-modal:   1002;  /* Éléments au-dessus des modales */
+  --z-toast:         1100;  /* Notifications toast */
+  --z-tooltip:       1200;  /* Tooltips */
+  --z-cursor:        9998;  /* Anneau du curseur custom */
+  --z-cursor-dot:    9999;  /* Point du curseur custom / skip link */
 
   /* === OTHER TOKENS === */
   --overlay: rgba(8, 7, 5, 0.85);
@@ -257,7 +279,7 @@
     padding: 0.75rem 1.5rem;
     border-radius: var(--r);
     border: 1px solid var(--gold);
-    z-index: 9999;
+    z-index: var(--z-cursor-dot);
     font-family: var(--body);
     font-size: 0.875rem;
     font-weight: 500;
@@ -324,9 +346,21 @@
   }
 
   .container {
-    max-width: 1300px;
+    max-width: var(--page-max-w);
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 var(--page-gutter);
+  }
+
+  .page-container {
+    max-width: var(--page-max-w);
+    margin: 0 auto;
+    padding: 0 var(--page-gutter) var(--space-page-y);
+  }
+
+  .page-container--sm {
+    max-width: var(--page-max-w-sm);
+    margin: 0 auto;
+    padding: 0 var(--page-gutter) var(--space-page-y);
   }
 
   .section {
@@ -684,7 +718,7 @@
     background: var(--gold);
     border-radius: 50%;
     position: fixed;
-    z-index: 9999;
+    z-index: var(--z-cursor-dot);
     pointer-events: none;
     transform: translate(-50%, -50%);
     transition:
@@ -700,7 +734,7 @@
     border: 1px solid var(--gold);
     border-radius: 50%;
     position: fixed;
-    z-index: 9998;
+    z-index: var(--z-cursor);
     pointer-events: none;
     transform: translate(-50%, -50%);
     transition:
@@ -933,7 +967,7 @@
   border-top: 1px solid var(--b1);
   padding: 0.5rem 0.75rem;
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-  z-index: 1000;
+  z-index: var(--z-navbar);
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
@@ -1029,6 +1063,12 @@
 }
 
 @media (max-width: 768px) {
+  :root {
+    --page-gutter:  1rem;
+    --space-page-y: 2.5rem;
+    --space-hero-y: 3rem;
+  }
+
   .mobile-bottom-nav {
     display: block;
   }
@@ -1080,6 +1120,17 @@
 }
 
 /* Reduced Motion - Support amélioré */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 [data-reduced-motion="true"] {
   *,
   *::before,
@@ -1091,14 +1142,28 @@
   }
 }
 
-/* Scrollbar améliorée pour accessibilité */
-@media (prefers-contrast: high) {
-  ::-webkit-scrollbar-thumb {
-    background: var(--gold);
+/* Contraste élevé — accessibilité */
+@media (prefers-contrast: more) {
+  :root {
+    --text-2: var(--text);
+    --text-3: var(--text-2);
+    --b1: rgba(255, 255, 255, 0.25);
+    --gold-line: var(--gold);
   }
 
-  ::-webkit-scrollbar-track {
-    background: var(--void);
+  ::-webkit-scrollbar-thumb { background: var(--gold); }
+  ::-webkit-scrollbar-track  { background: var(--void); }
+
+  button, [role="button"] {
+    border-width: 2px;
+  }
+
+  :focus-visible {
+    outline-width: 3px;
+  }
+
+  .card, .panel, [class*="card"], [class*="panel"] {
+    border-color: var(--b1);
   }
 }
 

@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { Search, Users, ArrowRight } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
+import { AdminPaginationLinks } from '@/components/admin/AdminPaginationLinks'
 
 export const metadata = {
   title: 'Utilisateurs — Admin Mah.AI'
@@ -65,6 +67,7 @@ export default async function AdminUsersPage({
 
   return (
     <div className="admin-page-content">
+      <AdminBreadcrumb items={[{ label: 'Utilisateurs' }]} />
       <div className="admin-header">
         <div>
           <div className="admin-header-badge">
@@ -176,42 +179,13 @@ export default async function AdminUsersPage({
           </table>
         </div>
 
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '1rem 1.25rem',
-            background: 'var(--surface)',
-            borderTop: '1px solid var(--b1)',
-            borderRadius: '0 0 var(--r-lg) var(--r-lg)',
-            fontFamily: 'var(--mono)',
-            fontSize: '0.75rem',
-            color: 'var(--text-3)'
-          }}>
-            <span>
-              {(page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, pagination.total)} sur {pagination.total}
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Link
-                href={`/admin/utilisateurs?q=${query}&page=${Math.max(1, page - 1)}`}
-                className={`admin-btn admin-btn-outline ${page === 1 ? 'admin-btn-disabled' : ''}`}
-                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
-              >
-                Précédent
-              </Link>
-              <span>Page {page} sur {pagination.totalPages}</span>
-              <Link
-                href={`/admin/utilisateurs?q=${query}&page=${Math.min(pagination.totalPages, page + 1)}`}
-                className={`admin-btn admin-btn-outline ${page === pagination.totalPages ? 'admin-btn-disabled' : ''}`}
-                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
-              >
-                Suivant
-              </Link>
-            </div>
-          </div>
-        )}
+        <AdminPaginationLinks
+          currentPage={page}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.total}
+          itemsPerPage={PAGE_SIZE}
+          buildUrl={(p) => `/admin/utilisateurs?q=${query}&page=${p}`}
+        />
       </div>
     </div>
   )

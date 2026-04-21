@@ -1,7 +1,8 @@
 import { getSubjectsAdmin } from '@/actions/admin/subjects'
 import Link from 'next/link'
 import { FileText, CheckCircle2, AlertCircle, XCircle, ArrowRight, FolderOpen } from 'lucide-react'
-import { Pagination } from '@/components/ui/Pagination'
+import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
+import { AdminPaginationLinks } from '@/components/admin/AdminPaginationLinks'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
@@ -44,6 +45,7 @@ export default async function AdminSubjectsPage({
 
   return (
     <div className="admin-page-content">
+      <AdminBreadcrumb items={[{ label: 'Sujets' }]} />
       <div className="admin-header">
         <div>
           <div className="admin-header-badge" style={{ background: 'var(--ruby-dim)', borderColor: 'var(--ruby-line)', color: '#E06070' }}>
@@ -183,39 +185,13 @@ export default async function AdminSubjectsPage({
           </table>
         </div>
         
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            padding: '1rem 1.25rem',
-            background: 'var(--surface)',
-            borderTop: '1px solid var(--b1)',
-            borderRadius: '0 0 var(--r-lg) var(--r-lg)',
-            fontFamily: 'var(--mono)',
-            fontSize: '0.75rem',
-            color: 'var(--text-3)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Link
-                href={`/admin/sujets?status=${statusTab}&page=${Math.max(1, page - 1)}`}
-                className={`admin-btn admin-btn-outline ${page === 1 ? 'admin-btn-disabled' : ''}`}
-                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
-              >
-                Précédent
-              </Link>
-              <span>Page {page} sur {pagination.totalPages}</span>
-              <Link
-                href={`/admin/sujets?status=${statusTab}&page=${Math.min(pagination.totalPages, page + 1)}`}
-                className={`admin-btn admin-btn-outline ${page === pagination.totalPages ? 'admin-btn-disabled' : ''}`}
-                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
-              >
-                Suivant
-              </Link>
-            </div>
-          </div>
-        )}
+        <AdminPaginationLinks
+          currentPage={page}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.total}
+          itemsPerPage={PAGE_SIZE}
+          buildUrl={(p) => `/admin/sujets?status=${statusTab}&page=${p}`}
+        />
       </div>
     </div>
   )

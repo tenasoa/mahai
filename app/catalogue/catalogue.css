@@ -44,7 +44,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 300;
+  z-index: var(--z-navbar);
   background: rgba(var(--void-rgb), 0.94);
   border-bottom: 1px solid var(--b1);
   backdrop-filter: blur(20px);
@@ -55,9 +55,9 @@ body {
 }
 
 .nav-inner {
-  max-width: 1440px;
+  max-width: var(--page-max-w);
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 var(--page-gutter);
   height: 64px;
   display: flex;
   align-items: center;
@@ -209,9 +209,9 @@ body {
    PAGE LAYOUT
 ═══════════════════════════════════════════════ */
 .page-layout {
-  max-width: 1440px;
+  max-width: var(--page-max-w);
   margin: 0 auto;
-  padding: 84px 2rem 3rem;
+  padding: 84px var(--page-gutter) var(--space-page-y);
 }
 
 /* Main Area */
@@ -257,8 +257,7 @@ body {
 }
 
 .papers-grid.list-view > * {
-  display: flex;
-  flex-direction: column;
+  min-height: 0;
 }
 
 /* Empty State */
@@ -346,7 +345,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
   animation: fadeIn 0.2s ease;
   padding: 1rem;
 }
@@ -419,6 +418,71 @@ body {
   color: var(--text-2);
 }
 
+.modal-preview-rich {
+  padding: 1rem;
+}
+
+.preview-sheet {
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  padding: 1rem;
+}
+
+.preview-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  margin-bottom: 0.6rem;
+}
+
+.preview-sheet-title {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  color: var(--text);
+  margin-bottom: 0.65rem;
+}
+
+.preview-sheet-lines {
+  background: var(--surface);
+  border: 1px solid var(--b2);
+  border-radius: var(--r);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-2);
+  line-height: 1.55;
+  text-align: left;
+}
+
+.preview-sheet-blurred {
+  filter: blur(2px);
+  user-select: none;
+}
+
+.preview-single-page-note {
+  margin-top: 0.7rem;
+  font-size: 0.72rem;
+  color: var(--amber);
+}
+
+.preview-meta {
+  margin-top: 0.7rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+}
+
 .modal-buy-info {
   background: var(--surface);
   border: 1px solid var(--b1);
@@ -431,6 +495,39 @@ body {
   margin: 0.5rem 0;
   font-size: 0.9rem;
   color: var(--text-2);
+}
+
+.modal-buy-heading {
+  font-family: var(--display);
+  font-size: 1.2rem;
+  color: var(--text);
+  margin: 0 0 0.8rem;
+}
+
+.modal-buy-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--b3);
+  gap: 1rem;
+}
+
+.modal-buy-row.total {
+  border-bottom: 0;
+  padding-top: 0.7rem;
+  color: var(--gold);
+}
+
+.modal-buy-footnote {
+  margin-top: -0.4rem;
+  margin-bottom: 0.2rem;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
 }
 
 .modal-actions {

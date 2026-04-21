@@ -29,10 +29,15 @@ function CatalogueContent() {
   const searchParams = useSearchParams();
   const { userId, appUser } = useAuth();
 
+  // Set page title
+  useEffect(() => {
+    document.title = "Mah.AI — Catalogue de sujets";
+  }, []);
+
   const isGuest = !userId;
   const guestMode = searchParams.get("guest") === "true" || isGuest;
 
-  const [pageSize, setPageSize] = useState(9);
+  const pageSize = 9;
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -50,7 +55,6 @@ function CatalogueContent() {
   const {
     subjects,
     loading,
-    error,
     pagination,
     currentPage,
     setPage,
@@ -129,7 +133,7 @@ function CatalogueContent() {
         showToast(
           "success",
           "Achat réussi",
-          `${currentSubject.titre} est maintenant débloqué !`,
+          `${currentSubject.title} est maintenant débloqué !`,
         );
         setBuyModalOpen(false);
         router.push(`/sujet/${currentSubject.id}`);
@@ -160,7 +164,7 @@ function CatalogueContent() {
 
   useEffect(() => {
     refresh();
-  }, [pageSize]);
+  }, [pageSize, refresh]);
 
   if (loading) return <CataloguePageSkeleton />;
 
@@ -182,6 +186,7 @@ function CatalogueContent() {
     isAi: subject.hasCorrectionIa,
     isUnlocked: subject.isUnlocked,
     isWished: isWished(subject.id),
+    description: subject.description,
   }));
 
   // Filtres actifs
@@ -321,8 +326,13 @@ function CatalogueContent() {
                   <PaperCard
                     key={subject.id}
                     {...subject}
+                    layout={viewMode}
                     onPreview={() => openPreviewModal(subject)}
-                    onBuy={() => openBuyModal(subject)}
+                    onBuy={() =>
+                      subject.isUnlocked
+                        ? router.push(`/sujet/${subject.id}`)
+                        : openBuyModal(subject)
+                    }
                     onWishlist={() => handleToggleFav(subject.id)}
                   />
                 ))}
@@ -378,15 +388,48 @@ function CatalogueContent() {
             >
               ×
             </button>
-            <h2 className="modal-title">{currentSubject.titre}</h2>
-            <div className="modal-preview">
-              <p>Aperçu des premières pages...</p>
+            <h2 className="modal-title">{currentSubject.title}</h2>
+            <div className="modal-preview modal-preview-rich">
+              <div className="preview-sheet">
+                <div className="preview-sheet-head">
+                  <span>{currentSubject.examType}</span>
+                  <span>{currentSubject.year}</span>
+                </div>
+                <div className="preview-sheet-title">{currentSubject.subject}</div>
+                <div className="preview-sheet-lines">
+                  <p>
+                    {currentSubject.description ||
+                      "Exercice 1 — Résoudre les questions suivantes en détaillant vos étapes."}
+                  </p>
+                  <p>
+                    1. Identifier les données du problème et les hypothèses.
+                  </p>
+                  <p>
+                    2. Développer votre raisonnement dans un français clair.
+                  </p>
+                  <p className="preview-sheet-blurred">
+                    3. Justifier votre méthode puis conclure avec le résultat attendu.
+                  </p>
+                  <p className="preview-sheet-blurred">
+                    4. Barème et correction détaillée disponibles après achat.
+                  </p>
+                </div>
+                {currentSubject.pages <= 1 && (
+                  <div className="preview-single-page-note">
+                    Sujet sur une seule page : la partie basse est volontairement floutée.
+                  </div>
+                )}
+              </div>
+              <div className="preview-meta">
+                <span>{currentSubject.pages || 1} page(s)</span>
+                <span>Accès total après achat</span>
+              </div>
             </div>
             <button
               className="btn-buy"
               onClick={() => openBuyModal(currentSubject)}
             >
-              Acheter pour {currentSubject.prixCredits} crédits
+              Acheter pour {currentSubject.price} crédits
             </button>
           </div>
         </div>
@@ -404,16 +447,25 @@ function CatalogueContent() {
             </button>
             <h2 className="modal-title">Confirmer l'achat</h2>
             <div className="modal-buy-info">
-              <p>
-                <strong>{currentSubject.titre}</strong>
-              </p>
-              <p>
-                Prix : <strong>{currentSubject.prixCredits} crédits</strong>
-              </p>
-              <p>
-                Solde actuel : <strong>{appUser?.credits ?? 0} crédits</strong>
-              </p>
+              <p className="modal-buy-heading">{currentSubject.title}</p>
+              <div className="modal-buy-row">
+                <span>Prix du sujet</span>
+                <strong>{currentSubject.price} crédits</strong>
+              </div>
+              <div className="modal-buy-row">
+                <span>Votre solde actuel</span>
+                <strong>{appUser?.credits ?? 0} crédits</strong>
+              </div>
+              <div className="modal-buy-row total">
+                <span>Solde après achat</span>
+                <strong>
+                  {(appUser?.credits ?? 0) - currentSubject.price} crédits
+                </strong>
+              </div>
             </div>
+            <p className="modal-buy-footnote">
+              Achat immédiat, accès permanent, correction IA incluse.
+            </p>
             <div className="modal-actions">
               <button
                 className="btn-cancel"

@@ -1,263 +1,275 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
-import { useAuth } from "@/lib/hooks/useAuth";
-import { AuthModal } from "@/components/ui/AuthModal";
-import { getSubjectById } from "@/lib/supabase/subjects";
+import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
 import {
-  getCurrentUserCredits,
-  purchaseCurrentUserSubject,
-} from "@/actions/user";
-import { convertSubjectToExamAction } from "@/actions/examen";
-import { SujetDetailSkeleton } from "@/components/ui/PageSkeletons";
-import { AIFeedbackNarrative } from "@/components/ui/AIFeedbackNarrative";
-import { EmptyState } from "@/components/ui/EmptyState";
-import {
-  Check,
-  Info,
-  FileText,
-  Zap,
-  Star,
-  LucideIcon,
-  Search,
+  BookOpen,
+  Download,
+  GraduationCap,
+  PencilLine,
   Sparkles,
-  FileSearch,
-  Scale,
-  CheckCircle,
-} from "lucide-react";
-import "./detail.css";
+  Timer,
+  Users,
+  FileText,
+  Clock,
+  Target,
+  BrainCircuit,
+} from 'lucide-react'
+import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { AuthModal } from '@/components/ui/AuthModal'
+import { getSubjectById } from '@/lib/supabase/subjects'
+import { getCurrentUserCredits, purchaseCurrentUserSubject } from '@/actions/user'
+import { convertSubjectToExamAction } from '@/actions/examen'
+import { SujetDetailSkeleton } from '@/components/ui/PageSkeletons'
+import { EmptyState } from '@/components/ui/EmptyState'
+import './detail.css'
 
-// Types
-type SubjectState = "locked" | "unlocked" | "pending";
+type AccessState = 'locked' | 'unlocked'
+type DisplayMode = 'lecture' | 'exercice' | 'solo' | 'groupe'
 
-interface Subject {
-  id: string;
-  titre: string;
-  type: string;
-  matiere: string;
-  annee: string;
-  serie?: string;
-  difficulte: string;
-  langue: string;
-  credits: number;
-  rating: number;
-  reviews: number;
-  pages: number;
-  description: string;
-  glyph: string;
-  hasCorrectionIa: boolean;
-  hasCorrectionProf: boolean;
-  authorName: string;
-  createdAt: string;
-  coefficient?: number;
-  bareme?: number;
-  duree?: string;
-  nbExercices?: number;
-  authentifie?: boolean;
-  ecole?: string;
+interface SubjectPayload {
+  id: string
+  titre: string
+  type: string
+  matiere: string
+  annee: string
+  serie?: string | null
+  pages?: number | null
+  credits: number
+  difficulte?: string | null
+  description?: string | null
+  rating?: number | null
+  reviews?: number | null
+  isUnlocked?: boolean
+  hasCorrectionIa?: boolean | null
+  authorName?: string | null
+  bareme?: number | null
+  duree?: string | null
+  nbExercices?: number | null
+}
+
+interface ToastMessage {
+  id: string
+  type: 'success' | 'error' | 'info'
+  message: string
+}
+
+// NOTE: Le vrai contenu des exercices n'est pas encore disponible en base de données.
+// Cette fonction retourne un template d'exemple pour démonstration de l'interface.
+// TODO: Charger les vraies questions depuis la table Subject quand le champ content sera ajouté.
+function createExerciseTemplate(subject: SubjectPayload) {
+  return [
+    {
+      id: 'q1',
+      type: 'text',
+      label: `[DÉMO] Exercice 1 — Notions clés en ${subject.matiere}`,
+      placeholder: 'Votre définition structurée...',
+    },
+    {
+      id: 'q2',
+      type: 'textarea',
+      label: '[DÉMO] Exercice 2 — Résolution guidée',
+      placeholder: 'Rédigez votre raisonnement étape par étape...',
+    },
+    {
+      id: 'q3',
+      type: 'qcm',
+      label: '[DÉMO] Exercice 3 — Choix multiple',
+      options: [
+        'Option A: Méthode directe',
+        'Option B: Méthode par récurrence',
+        'Option C: Méthode graphique',
+      ],
+    },
+    {
+      id: 'q4',
+      type: 'checkbox',
+      label: '[DÉMO] Exercice 4 — Vérifications',
+      options: [
+        'J’ai vérifié les unités',
+        'J’ai justifié chaque étape',
+        'J’ai relu la conclusion',
+      ],
+    },
+  ]
 }
 
 export default function SujetDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { userId } = useAuth();
+  const params = useParams<{ id: string }>()
+  const router = useRouter()
+  const { userId } = useAuth()
 
-  // États
-  const [subject, setSubject] = useState<any | null>(null);
-  const [state, setState] = useState<SubjectState>("locked");
-  const [loading, setLoading] = useState(true);
-  const [credits, setCredits] = useState(0);
-  const [activeTab, setActiveTab] = useState<"apercu" | "avis" | "similaires">(
-    "apercu",
-  );
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [progress, setProgress] = useState(0);
-  const [isReadOnly, setIsReadOnly] = useState(false);
-  const [toasts, setToasts] = useState<
-    Array<{ id: string; type: string; title: string; msg: string }>
-  >([]);
-  const [countdown, setCountdown] = useState(90);
-  const [isPurchasing, setIsPurchasing] = useState(false);
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
+  const [subject, setSubject] = useState<SubjectPayload | null>(null)
+  const [accessState, setAccessState] = useState<AccessState>('locked')
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('lecture')
+  const [loading, setLoading] = useState(true)
+  const [credits, setCredits] = useState(0)
+  const [isPurchasing, setIsPurchasing] = useState(false)
+  const [isConvertingExam, setIsConvertingExam] = useState(false)
+  const [isSubmittingExercise, setIsSubmittingExercise] = useState(false)
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [exerciseAnswers, setExerciseAnswers] = useState<Record<string, string>>({})
+  const [toasts, setToasts] = useState<ToastMessage[]>([])
 
-  // Vérifier si l'utilisateur est connecté
-  const isGuest = !userId;
+  const isGuest = !userId
 
-  // Chargement des données
+  const pushToast = (type: ToastMessage['type'], message: string) => {
+    const id = crypto.randomUUID()
+    setToasts((prev) => [...prev, { id, type, message }])
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id))
+    }, 4200)
+  }
+
   useEffect(() => {
-    async function loadData() {
-      if (!params.id) return;
+    async function loadSubject() {
+      if (!params?.id) return
 
-      setLoading(true);
+      setLoading(true)
       try {
-        // Charger le sujet et les crédits en parallèle
         const [subjectData, userCredits] = await Promise.all([
-          getSubjectById(params.id as string),
-          userId ? getCurrentUserCredits() : 0,
-        ]);
+          getSubjectById(params.id),
+          userId ? getCurrentUserCredits() : Promise.resolve(0),
+        ])
 
         if (subjectData) {
-          setSubject(subjectData);
-          if (subjectData.isUnlocked) {
-            setState("unlocked");
-          }
+          setSubject(subjectData)
+          setAccessState(subjectData.isUnlocked ? 'unlocked' : 'locked')
         }
 
-        setCredits(userCredits);
-      } catch (err) {
-        console.error("Error loading data:", err);
+        setCredits(userCredits)
+      } catch (error) {
+        console.error('load subject error', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
 
-    loadData();
-  }, [params.id, userId]);
+    void loadSubject()
+  }, [params?.id, userId])
 
-  // Timer pour le mode pending
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (state === "pending" && countdown > 0) {
-      interval = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [state, countdown]);
+  const exerciseTemplate = useMemo(
+    () => (subject ? createExerciseTemplate(subject) : []),
+    [subject],
+  )
 
-  const showToast = (type: string, title: string, msg: string) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    setToasts((prev) => [...prev, { id, type, title, msg }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4500);
-  };
+  const answeredExerciseCount = useMemo(
+    () =>
+      Object.values(exerciseAnswers).filter((value) => {
+        if (!value) return false
+        return value.split(',').filter(Boolean).length > 0
+      }).length,
+    [exerciseAnswers],
+  )
 
-  const unlockSubject = async () => {
+  const requestUnlock = () => {
     if (isGuest) {
-      setShowAuthModal(true);
-      return;
+      setShowAuthModal(true)
+      return
     }
 
-    if (!subject || !userId) {
-      showToast(
-        "error",
-        "Connexion requise",
-        "Veuillez vous connecter pour débloquer ce sujet.",
-      );
-      return;
-    }
+    if (!subject) return
 
-    // Vérifier les crédits avant d'afficher la modale
     if (credits < subject.credits) {
-      showToast(
-        "error",
-        "Crédits insuffisants",
-        `Il vous manque ${subject.credits - credits} crédits pour acheter ce sujet.`,
-      );
-      return;
+      pushToast('error', `Crédits insuffisants. Il vous manque ${subject.credits - credits} crédits.`)
+      return
     }
 
-    setShowPurchaseModal(true);
-  };
+    setShowPurchaseModal(true)
+  }
 
   const confirmPurchase = async () => {
-    if (!subject || !userId) return;
+    if (!subject || !userId) return
 
-    setIsPurchasing(true);
-    setShowPurchaseModal(false);
+    setIsPurchasing(true)
     try {
-      const result = await purchaseCurrentUserSubject(subject.id);
-      if (result.success) {
-        showToast(
-          "success",
-          "Débloqué !",
-          `Accès permanent accordé — ${subject.credits} crédits débités`,
-        );
-        const updatedCredits =
-          result.remainingCredits ?? (await getCurrentUserCredits());
-        setCredits(updatedCredits);
-        setState("unlocked");
-      } else {
-        showToast("error", "Erreur", result.error || "Transaction impossible");
+      const result = await purchaseCurrentUserSubject(subject.id)
+      if (!result.success) {
+        pushToast('error', result.error || 'Impossible de finaliser l’achat.')
+        return
       }
-    } catch (err) {
-      showToast("error", "Erreur", "Une erreur est survenue lors de l'achat");
-    } finally {
-      setIsPurchasing(false);
-    }
-  };
 
-  const handleAnswerChange = (id: string, value: string) => {
-    const newAnswers = { ...answers, [id]: value };
-    setAnswers(newAnswers);
-    const answeredCount = Object.values(newAnswers).filter(
-      (v) => v.trim().length > 0,
-    ).length;
-    setProgress(answeredCount);
-  };
-
-  const submitAnswers = () => {
-    showToast(
-      "success",
-      "Soumis !",
-      "Correction IA en cours — notification dans ~2 min",
-    );
-    setTimeout(() => setState("pending"), 600);
-  };
-
-  const toggleMode = () => {
-    setIsReadOnly(!isReadOnly);
-  };
-
-  const handleConvertToExam = async () => {
-    if (!userId) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    if (!subject) return;
-
-    setIsConverting(true);
-    try {
-      const result = await convertSubjectToExamAction(subject.id, userId);
-
-      if (result.success && result.examId) {
-        showToast(
-          "success",
-          "Examen créé !",
-          "Redirection vers l'examen blanc...",
-        );
-        // Attendre un court instant pour que le toast soit visible
-        setTimeout(() => {
-          router.push(`/examens/${result.examId}`);
-        }, 800);
-      } else {
-        showToast(
-          "error",
-          "Erreur",
-          result.error || "Impossible de créer l'examen",
-        );
-      }
+      setAccessState('unlocked')
+      setShowPurchaseModal(false)
+      const remaining = result.remainingCredits ?? (await getCurrentUserCredits())
+      setCredits(remaining)
+      pushToast('success', 'Sujet débloqué avec succès. Vous avez maintenant accès complet.')
     } catch (error) {
-      console.error("Erreur lors de la conversion:", error);
-      showToast(
-        "error",
-        "Erreur",
-        "Une erreur est survenue lors de la conversion",
-      );
+      console.error('confirm purchase error', error)
+      pushToast('error', 'Une erreur est survenue pendant l’achat.')
     } finally {
-      setIsConverting(false);
+      setIsPurchasing(false)
     }
-  };
+  }
+
+  const handleExerciseValue = (key: string, value: string) => {
+    setExerciseAnswers((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleCheckboxValue = (key: string, option: string) => {
+    const current = exerciseAnswers[key]?.split(',').filter(Boolean) || []
+    const next = current.includes(option)
+      ? current.filter((item) => item !== option)
+      : [...current, option]
+    setExerciseAnswers((prev) => ({ ...prev, [key]: next.join(',') }))
+  }
+
+  const submitExerciseForAI = async () => {
+    if (accessState === 'locked') {
+      requestUnlock()
+      return
+    }
+
+    setIsSubmittingExercise(true)
+    setTimeout(() => {
+      setIsSubmittingExercise(false)
+      pushToast('success', 'Réponses envoyées à l’IA. Votre correction détaillée sera disponible sous peu.')
+    }, 1300)
+  }
+
+  const startSoloExam = async () => {
+    if (!subject) return
+
+    if (accessState === 'locked') {
+      requestUnlock()
+      return
+    }
+
+    if (!userId) {
+      setShowAuthModal(true)
+      return
+    }
+
+    setIsConvertingExam(true)
+    try {
+      const result = await convertSubjectToExamAction(subject.id, userId)
+      if (!result.success || !result.examId) {
+        pushToast('error', result.error || 'Impossible de préparer le mode examen.')
+        return
+      }
+      router.push(`/examens/${result.examId}`)
+    } catch (error) {
+      console.error('start solo exam error', error)
+      pushToast('error', 'Erreur de conversion vers le mode examen.')
+    } finally {
+      setIsConvertingExam(false)
+    }
+  }
+
+  const handleDownloadPdf = () => {
+    if (accessState === 'locked') {
+      requestUnlock()
+      return
+    }
+
+    pushToast('info', 'Le téléchargement PDF sera activé avec le stockage sécurisé final.')
+  }
 
   if (loading) {
-    return <SujetDetailSkeleton />;
+    return <SujetDetailSkeleton />
   }
 
   if (!subject) {
@@ -265,1431 +277,320 @@ export default function SujetDetailPage() {
       <div className="min-h-screen bg-void flex items-center justify-center p-6">
         <EmptyState
           title="Sujet introuvable"
-          description="Désolé, nous ne parvenons pas à trouver ce sujet d'examen. Il a peut-être été déplacé ou supprimé."
+          description="Ce sujet n’est pas accessible pour le moment."
           actionLabel="Retour au catalogue"
           actionHref="/catalogue"
         />
       </div>
-    );
+    )
   }
 
   return (
-    <div className="detail-page-container">
+    <div className="subject-detail-page">
       <LuxuryCursor />
 
-      {/* MODALE D'AUTHENTIFICATION POUR LES NON-CONNECTÉS */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         title="Authentification requise"
-        message="Connectez-vous ou créez un compte pour accéder à ce sujet"
+        message="Connectez-vous pour débloquer ce sujet et accéder aux modes avancés."
       />
 
-      {/* MODALE D'ACHAT */}
-      {showPurchaseModal && subject && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowPurchaseModal(false)}
-        >
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Confirmer l'achat</h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowPurchaseModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="purchase-summary">
-                <div className="subject-info">
-                  <h4>{subject.titre}</h4>
-                  <p>
-                    {subject.matiere} • {subject.annee} • {subject.type}
-                  </p>
-                </div>
-                <div className="price-info">
-                  <div className="price-row">
-                    <span>Prix du sujet:</span>
-                    <span className="price-amount">
-                      {subject.credits} crédits
-                    </span>
-                  </div>
-                  <div className="price-row">
-                    <span>Vos crédits:</span>
-                    <span className="credits-amount">{credits} crédits</span>
-                  </div>
-                  <div className="price-row total">
-                    <span>Crédits après achat:</span>
-                    <span className="credits-remaining">
-                      {credits - subject.credits} crédits
-                    </span>
-                  </div>
-                </div>
+      {showPurchaseModal && (
+        <div className="sd-overlay" onClick={() => setShowPurchaseModal(false)}>
+          <div className="sd-modal" onClick={(event) => event.stopPropagation()}>
+            <h3>Confirmer l'achat</h3>
+            <p className="sd-modal-subtitle">{subject.titre}</p>
+
+            <div className="sd-modal-summary">
+              <div>
+                <span>Prix du sujet</span>
+                <strong>{subject.credits} crédits</strong>
               </div>
-              <div className="purchase-benefits">
-                <h5>Ce que vous obtenez:</h5>
-                <ul>
-                  <li>✅ Accès permanent au sujet complet</li>
-                  <li>✅ Correction IA détaillée</li>
-                  <li>✅ Consultation complète dans Mah.AI</li>
-                  <li>✅ Suivi de progression</li>
-                </ul>
+              <div>
+                <span>Votre solde actuel</span>
+                <strong>{credits} crédits</strong>
+              </div>
+              <div className="total">
+                <span>Solde après achat</span>
+                <strong>{credits - subject.credits} crédits</strong>
               </div>
             </div>
-            <div className="modal-footer">
-              <button
-                className="btn-cancel"
-                onClick={() => setShowPurchaseModal(false)}
-              >
+
+            <p className="sd-modal-note">Accès permanent, mode exercice et mode examen solo inclus.</p>
+
+            <div className="sd-modal-actions">
+              <button className="sd-btn-secondary" onClick={() => setShowPurchaseModal(false)}>
                 Annuler
               </button>
-              <button
-                className="btn-confirm"
-                onClick={confirmPurchase}
-                disabled={isPurchasing}
-              >
-                {isPurchasing
-                  ? "Achat en cours..."
-                  : `Confirmer l'achat • ${subject.credits} crédits`}
+              <button className="sd-btn-primary" onClick={confirmPurchase} disabled={isPurchasing}>
+                {isPurchasing ? 'Traitement...' : 'Confirmer l’achat'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* TOASTS */}
-      <div className="toast-container">
-        {toasts.map((t) => (
-          <div key={t.id} className="toast">
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "2px",
-                background:
-                  t.type === "success"
-                    ? "var(--gold)"
-                    : t.type === "error"
-                      ? "var(--ruby)"
-                      : "#3A6EA8",
-              }}
-            ></div>
-            <div>
-              <div className="toast-title">{t.title}</div>
-              <div className="toast-msg">{t.msg}</div>
-            </div>
-            <button
-              className="toast-close"
-              onClick={() =>
-                setToasts((prev) => prev.filter((toast) => toast.id !== t.id))
-              }
-            >
-              ✕
-            </button>
+      <div className="sd-toast-stack">
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`sd-toast sd-toast-${toast.type}`}>
+            {toast.message}
           </div>
         ))}
       </div>
 
-      {/* HERO */}
-      <div className="hero">
-        <div className="hero-inner">
-          <div
-            className="nav-crumbs"
-            style={{ marginBottom: "1.5rem", opacity: 0.8 }}
-          >
-            <Link
-              href="/catalogue"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: ".5rem",
-                color: "var(--text-3)",
-                textDecoration: "none",
-              }}
-            >
-              <span>←</span>
-              <span>Retour au catalogue</span>
-            </Link>
-            <span className="nav-sep">/</span>
-            <span className="nav-crumb-cur">
-              {subject.matiere} {subject.annee}
+      <header className="subject-header">
+        <div className="subject-header-inner">
+          <div className="subject-breadcrumbs">
+            <Link href="/catalogue">Catalogue</Link>
+            <span>/</span>
+            <span>{subject.matiere}</span>
+          </div>
+
+          <div className="subject-tags">
+            <span className="tag">{subject.type}</span>
+            <span className="tag">{subject.annee}</span>
+            <span className="tag">{subject.serie || 'Tronc commun'}</span>
+            <span className={`tag ${accessState === 'locked' ? 'tag-locked' : 'tag-unlocked'}`}>
+              {accessState === 'locked' ? 'Non débloqué' : 'Débloqué'}
             </span>
           </div>
 
-          <div className="hero-tags">
-            <span className="tag tag-exam">{subject.type}</span>
-            <span className="tag tag-official">✓ Authentifié</span>
-            <span className="tag tag-ai">✦ Correction IA</span>
-            {state === "locked" && (
-              <span className="tag tag-locked">🔒 Non débloqué</span>
-            )}
-            {state === "unlocked" && (
-              <span className="tag tag-unlocked">🔓 Débloqué</span>
-            )}
-            {state === "pending" && (
-              <span className="tag tag-pending">⏳ Correction en cours</span>
-            )}
-          </div>
-          <h1 className="hero-title">
-            {subject.matiere}{" "}
-            {subject.serie ? (
-              <span>
-                — <em>{subject.serie}</em>
-              </span>
-            ) : (
-              ""
-            )}
-            <br />
-            Épreuve officielle {subject.annee}
-          </h1>
-          <div className="hero-meta">
-            <span className="meta-item">
-              🎓 {subject.type} · {subject.serie || "Tronc commun"}
-            </span>
-            <span className="meta-item">
-              📅 {subject.annee} · Session principale
-            </span>
-            <span className="meta-item">⏱ Durée : {subject.duree}</span>
-            <span className="meta-item">
-              📄 {subject.nbExercices} exercices · {subject.bareme} pts
-            </span>
-            <span className="meta-item">
-              <span className="stars">★★★★★</span>
-              <span className="rating-num" style={{ marginLeft: ".35rem" }}>
-                {subject.rating}
-              </span>
-              <span className="rating-count">({subject.reviews} avis)</span>
-            </span>
+          <h1>{subject.titre}</h1>
+          <p className="subject-subtitle">
+            {subject.description ||
+              'Sujet officiel avec lecture simple, entraînement interactif et mode examen blanc solo.'}
+          </p>
+
+          <div className="subject-meta">
+            <span><FileText size={14} /> {subject.pages || 1} pages</span>
+            <span><Clock size={14} /> {subject.duree || '3h'}</span>
+            <span><Target size={14} /> {subject.nbExercices || 4} exercices</span>
+            <span><BrainCircuit size={14} /> Correction IA disponible</span>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* MAIN */}
-      <div className="main">
-        {/* LEFT */}
-        <div>
-          <div className="tabs">
+      <main className="subject-main">
+        <section className="subject-content">
+          <div className="mode-switcher">
             <button
-              className={`tab ${activeTab === "apercu" ? "active" : ""}`}
-              onClick={() => setActiveTab("apercu")}
+              className={displayMode === 'lecture' ? 'active' : ''}
+              onClick={() => setDisplayMode('lecture')}
             >
-              Aperçu
+              <BookOpen size={16} /> Lecture simple
             </button>
             <button
-              className={`tab ${activeTab === "avis" ? "active" : ""}`}
-              onClick={() => setActiveTab("avis")}
+              className={displayMode === 'exercice' ? 'active' : ''}
+              onClick={() => setDisplayMode('exercice')}
             >
-              Avis ({subject.reviews})
+              <PencilLine size={16} /> Mode exercice
             </button>
             <button
-              className={`tab ${activeTab === "similaires" ? "active" : ""}`}
-              onClick={() => setActiveTab("similaires")}
+              className={displayMode === 'solo' ? 'active' : ''}
+              onClick={() => setDisplayMode('solo')}
             >
-              Sujets similaires
+              <Timer size={16} /> Examen blanc solo
+            </button>
+            <button
+              className={displayMode === 'groupe' ? 'active' : ''}
+              onClick={() => setDisplayMode('groupe')}
+            >
+              <Users size={16} /> Examen groupé
             </button>
           </div>
 
-          {/* ══ APERÇU PANEL ══ */}
-          <div
-            className={`tab-panel ${activeTab === "apercu" ? "active" : ""}`}
-          >
-            {/* ── STATE: LOCKED ── */}
-            {state === "locked" && (
-              <div id="state-locked">
-                <div className="sec-label">Aperçu du sujet</div>
-                <div className="preview-grid">
-                  <div className="pg-thumb pg-free">
-                    <div className="pg-img">
-                      <span className="pg-symbol">∫</span>
-                    </div>
-                    <div className="pg-foot">
-                      <span className="pg-lbl">Exercice 1</span>
-                      <span className="pg-status" style={{ color: "#8ECAAC" }}>
-                        👁 Visible
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pg-thumb pg-free">
-                    <div className="pg-img">
-                      <span className="pg-symbol">Σ</span>
-                    </div>
-                    <div className="pg-foot">
-                      <span className="pg-lbl">Exercice 2</span>
-                      <span className="pg-status" style={{ color: "#8ECAAC" }}>
-                        👁 Visible
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pg-thumb">
-                    <div className="pg-img">
-                      <span className="pg-symbol">π</span>
-                      <div className="pg-blur-overlay">
-                        <span className="pg-blur-icon">🔒</span>
-                      </div>
-                    </div>
-                    <div className="pg-foot">
-                      <span className="pg-lbl">Exercice 3</span>
-                      <span className="pg-status">🔒</span>
-                    </div>
-                  </div>
-                  <div className="pg-thumb">
-                    <div className="pg-img">
-                      <span className="pg-symbol">∞</span>
-                      <div className="pg-blur-overlay">
-                        <span className="pg-blur-icon">🔒</span>
-                      </div>
-                    </div>
-                    <div className="pg-foot">
-                      <span className="pg-lbl">Exercice 4</span>
-                      <span className="pg-status">🔒</span>
-                    </div>
-                  </div>
-                  <div className="pg-thumb">
-                    <div className="pg-img">
-                      <span className="pg-symbol">∂</span>
-                      <div className="pg-blur-overlay">
-                        <span className="pg-blur-icon">🔒</span>
-                      </div>
-                    </div>
-                    <div className="pg-foot">
-                      <span className="pg-lbl">Exercice 5</span>
-                      <span className="pg-status">🔒</span>
-                    </div>
-                  </div>
-                  <div className="pg-thumb">
-                    <div className="pg-img">
-                      <span className="pg-symbol">⊗</span>
-                      <div className="pg-blur-overlay">
-                        <span className="pg-blur-icon">🔒</span>
-                      </div>
-                    </div>
-                    <div className="pg-foot">
-                      <span className="pg-lbl">Barème</span>
-                      <span className="pg-status">🔒</span>
-                    </div>
-                  </div>
+          {displayMode === 'lecture' && (
+            <article className={`lecture-sheet ${accessState === 'locked' ? 'locked' : ''}`}>
+              <div className="lecture-head">
+                <div>
+                  <h2>Lecture du sujet</h2>
+                  <p>Version HTML sans saisie, idéale pour lire calmement l’énoncé.</p>
                 </div>
+                <button className="sd-btn-secondary" onClick={handleDownloadPdf}>
+                  <Download size={14} /> Télécharger PDF
+                </button>
+              </div>
 
-                <div className="excerpt-wrap">
-                  <div className="sec-label">
-                    Questions accessibles gratuitement
-                  </div>
-                  <div className="excerpt-content">
-                    <div className="excerpt-q">
-                      <div className="excerpt-q-num">
-                        Exercice 1 · Équations différentielles (6 pts)
-                      </div>
-                      <div className="excerpt-q-text">
-                        1. Résoudre l'équation différentielle y'' − 3y' + 2y =
-                        eˣ avec les conditions initiales y(0) = 1 et y'(0) = 0.
-                        <br />
-                        <br />
-                        2. En déduire la solution particulière vérifiant y(0) =
-                        2.
-                      </div>
-                    </div>
-                    <div className="excerpt-q">
-                      <div className="excerpt-q-num">
-                        Exercice 2 · Intégrales (5 pts)
-                      </div>
-                      <div className="excerpt-q-text">
-                        Calculer les intégrales suivantes :<br />
-                        a) ∫₀^π x·sin(x) dx
-                        <br />
-                        b) ∫₁^e ln(x)/x dx
-                        <br />
-                        <br />
-                        Interpréter géométriquement chaque résultat.
-                      </div>
-                    </div>
-                    <div className="excerpt-q blurred">
-                      <div className="excerpt-q-num">
-                        Exercice 3 · Géométrie dans l'espace (4 pts)
-                      </div>
-                      <div className="excerpt-q-text">
-                        Dans un repère orthonormé (O, i, j, k), on donne les
-                        points A(1,2,3), B(0,−1,2) et C(3,1,0). Déterminer
-                        l'équation du plan (ABC) et la distance du point
-                        D(2,2,2) à ce plan.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="locked-banner">
-                  <div className="lb-icon">🔒</div>
-                  <div className="lb-title">Accès complet requis</div>
-                  <div className="lb-sub">
-                    Débloquez ce sujet pour accéder à l'intégralité des
-                    exercices, soumettre vos réponses et obtenir une correction
-                    détaillée par IA.
-                  </div>
-                  <div className="lb-price-row">
-                    <span className="lb-price">{subject.credits}</span>
-                    <div>
-                      <span className="lb-price-lbl">crédits</span>
-                      <div
-                        style={{
-                          fontFamily: "var(--mono)",
-                          fontSize: ".58rem",
-                          color: "var(--text-4)",
-                        }}
-                      >
-                        ≈ 750 Ar
-                      </div>
-                    </div>
-                  </div>
-                  <button className="btn-unlock" onClick={unlockSubject}>
-                    Débloquer pour {subject.credits} crédits →
-                  </button>
-                  <div
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".58rem",
-                      color: "var(--text-4)",
-                      marginTop: ".85rem",
-                    }}
-                  >
-                    Accès permanent · Correction IA incluse · Consultation dans
-                    Mah.AI
-                  </div>
-                </div>
-
-                <div className="sec-label" style={{ marginTop: "1.75rem" }}>
-                  Description du sujet
-                </div>
-                <p
-                  style={{
-                    fontSize: ".87rem",
-                    color: "var(--text-2)",
-                    lineHeight: "1.85",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  {subject.description}
+              <div className="lecture-body">
+                <h3>Énoncé</h3>
+                <p>
+                  Exercice 1. Résoudre les questions suivantes avec un raisonnement complet. Toute réponse non justifiée sera partiellement notée.
                 </p>
-                <div className="sec-label">Thèmes couverts</div>
-                <div
-                  style={{ display: "flex", flexWrap: "wrap", gap: ".4rem" }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".58rem",
-                      textTransform: "uppercase",
-                      letterSpacing: ".08em",
-                      padding: ".2rem .6rem",
-                      border: "1px solid var(--b1)",
-                      borderRadius: "2px",
-                      color: "var(--text-3)",
-                    }}
-                  >
-                    Équations différentielles
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".58rem",
-                      textTransform: "uppercase",
-                      letterSpacing: ".08em",
-                      padding: ".2rem .6rem",
-                      border: "1px solid var(--b1)",
-                      borderRadius: "2px",
-                      color: "var(--text-3)",
-                    }}
-                  >
-                    Intégrales
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".58rem",
-                      textTransform: "uppercase",
-                      letterSpacing: ".08em",
-                      padding: ".2rem .6rem",
-                      border: "1px solid var(--b1)",
-                      borderRadius: "2px",
-                      color: "var(--text-3)",
-                    }}
-                  >
-                    Géométrie 3D
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".58rem",
-                      textTransform: "uppercase",
-                      letterSpacing: ".08em",
-                      padding: ".2rem .6rem",
-                      border: "1px solid var(--b1)",
-                      borderRadius: "2px",
-                      color: "var(--text-3)",
-                    }}
-                  >
-                    Fonctions
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".58rem",
-                      textTransform: "uppercase",
-                      letterSpacing: ".08em",
-                      padding: ".2rem .6rem",
-                      border: "1px solid var(--b1)",
-                      borderRadius: "2px",
-                      color: "var(--text-3)",
-                    }}
-                  >
-                    Probabilités
-                  </span>
-                </div>
+                <p>
+                  Exercice 2. Identifier les hypothèses, puis proposer une méthode de résolution adaptée aux données fournies.
+                </p>
+                <p className={accessState === 'locked' ? 'blurred' : ''}>
+                  Exercice 3. Développer la solution détaillée et valider le résultat final avec les unités appropriées.
+                </p>
+                <p className={accessState === 'locked' ? 'blurred' : ''}>
+                  Barème complet et annexe méthodologique disponibles après déblocage.
+                </p>
               </div>
-            )}
 
-            {/* ── STATE: UNLOCKED ── */}
-            {state === "unlocked" && (
-              <div id="state-unlocked">
-                <div className="reader-toolbar">
-                  <span className="rt-label">Mode lecture</span>
-                  <button
-                    className={`rt-btn ${!isReadOnly ? "active" : ""}`}
-                    onClick={toggleMode}
-                  >
-                    {!isReadOnly ? "✎ Mode réponse" : "👁 Mode lecture"}
-                  </button>
-                  <button
-                    className="rt-btn"
-                    onClick={() =>
-                      showToast(
-                        "info",
-                        "PDF",
-                        "Le téléchargement PDF sera activé quand le stockage signé sera prêt.",
-                      )
-                    }
-                  >
-                    ⬇ PDF bientôt
-                  </button>
-                  <button
-                    className="rt-btn"
-                    onClick={() =>
-                      showToast(
-                        "info",
-                        "Plein écran",
-                        "Mode plein écran activé",
-                      )
-                    }
-                  >
-                    ⛶ Plein écran
-                  </button>
-                  <button
-                    className="rt-btn"
-                    onClick={() =>
-                      showToast("info", "Signet", "Sujet mis en favori")
-                    }
-                  >
-                    ♡ Favori
-                  </button>
-                  <button
-                    className="rt-btn exam-convert-btn"
-                    onClick={handleConvertToExam}
-                    disabled={isConverting}
-                    title="Convertir ce sujet en examen blanc chronométré"
-                    style={{
-                      background: isConverting
-                        ? "transparent"
-                        : "rgba(10,255,224,0.1)",
-                      border: "1px solid rgba(10,255,224,0.35)",
-                      color: isConverting ? "var(--text-3)" : "var(--teal)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {isConverting ? "⏳ Création..." : "✦ Examen blanc"}
-                  </button>
+              {accessState === 'locked' && (
+                <div className="locked-overlay">
+                  <p>Débloquez le sujet pour lire l’intégralité du contenu.</p>
+                  <button className="sd-btn-primary" onClick={requestUnlock}>Débloquer maintenant</button>
                 </div>
-                <div className="subject-doc" id="subjectDoc">
-                  <div className="doc-header">
-                    <div className="doc-school">{subject.ecole}</div>
-                    <div className="doc-exam-title">
-                      {subject.type} — {subject.serie} · Session {subject.annee}
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "var(--display)",
-                        fontSize: "1.1rem",
-                        color: "var(--gold)",
-                        margin: ".2rem 0",
-                      }}
-                    >
-                      Épreuve de {subject.matiere}
-                    </div>
-                    <div className="doc-meta-line">
-                      <span>Durée : {subject.duree}</span>
-                      <span>Coefficient : {subject.coefficient}</span>
-                      <span>Barème : {subject.bareme} points</span>
-                      <span>Calculatrice autorisée</span>
-                    </div>
-                  </div>
-                  <div className="doc-body">
-                    <div className="doc-part">
-                      <div className="doc-part-title">
-                        Exercice 1 — Équations différentielles{" "}
-                        <span className="doc-part-pts">6 pts</span>
-                      </div>
-                      <div className="doc-q">
-                        <span className="doc-q-num">Q.1</span>
-                        <div className="doc-q-content">
-                          <div className="doc-q-pts">3 points</div>
-                          <div className="doc-q-text">
-                            Résoudre l'équation différentielle y'' − 3y' + 2y =
-                            eˣ avec les conditions initiales y(0) = 1 et y'(0) =
-                            0.
-                          </div>
-                          {!isReadOnly && (
-                            <textarea
-                              className="doc-q-answer"
-                              placeholder="Votre réponse…"
-                              value={answers["a1"] || ""}
-                              onChange={(e) =>
-                                handleAnswerChange("a1", e.target.value)
-                              }
-                            ></textarea>
-                          )}
-                        </div>
-                      </div>
-                      <div className="doc-q">
-                        <span className="doc-q-num">Q.2</span>
-                        <div className="doc-q-content">
-                          <div className="doc-q-pts">3 points</div>
-                          <div className="doc-q-text">
-                            En déduire la solution particulière vérifiant y(0) =
-                            2, puis tracer l'allure de la courbe sur [0, 2].
-                          </div>
-                          {!isReadOnly && (
-                            <textarea
-                              className="doc-q-answer"
-                              placeholder="Votre réponse…"
-                              value={answers["a2"] || ""}
-                              onChange={(e) =>
-                                handleAnswerChange("a2", e.target.value)
-                              }
-                            ></textarea>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="doc-part">
-                      <div className="doc-part-title">
-                        Exercice 2 — Calcul intégral{" "}
-                        <span className="doc-part-pts">5 pts</span>
-                      </div>
-                      <div className="doc-q">
-                        <span className="doc-q-num">Q.3</span>
-                        <div className="doc-q-content">
-                          <div className="doc-q-pts">2 points</div>
-                          <div className="doc-q-text">
-                            Calculer ∫₀^π x·sin(x) dx par intégration par
-                            parties. Interpréter géométriquement.
-                          </div>
-                          {!isReadOnly && (
-                            <textarea
-                              className="doc-q-answer"
-                              placeholder="Votre réponse…"
-                              value={answers["a3"] || ""}
-                              onChange={(e) =>
-                                handleAnswerChange("a3", e.target.value)
-                              }
-                            ></textarea>
-                          )}
-                        </div>
-                      </div>
-                      <div className="doc-q">
-                        <span className="doc-q-num">Q.4</span>
-                        <div className="doc-q-content">
-                          <div className="doc-q-pts">3 points</div>
-                          <div className="doc-q-text">
-                            Calculer ∫₁^e ln(x)/x dx. En déduire l'aire de la
-                            région délimitée par la courbe y = ln(x)/x, l'axe
-                            des abscisses et les droites x = 1 et x = e.
-                          </div>
-                          {!isReadOnly && (
-                            <textarea
-                              className="doc-q-answer"
-                              placeholder="Votre réponse…"
-                              value={answers["a4"] || ""}
-                              onChange={(e) =>
-                                handleAnswerChange("a4", e.target.value)
-                              }
-                            ></textarea>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="doc-part">
-                      <div className="doc-part-title">
-                        Exercice 3 — Géométrie dans l'espace{" "}
-                        <span className="doc-part-pts">4 pts</span>
-                      </div>
-                      <div className="doc-q">
-                        <span className="doc-q-num">Q.5</span>
-                        <div className="doc-q-content">
-                          <div className="doc-q-pts">4 points</div>
-                          <div className="doc-q-text">
-                            Dans un repère orthonormé (O, i, j, k), soient
-                            A(1,2,3), B(2,0,1) et C(0,1,4). Déterminer
-                            l'équation du plan (ABC) puis la distance du point
-                            D(2,2,2) à ce plan.
-                          </div>
-                          {!isReadOnly && (
-                            <textarea
-                              className="doc-q-answer"
-                              placeholder="Votre réponse…"
-                              value={answers["a5"] || ""}
-                              onChange={(e) =>
-                                handleAnswerChange("a5", e.target.value)
-                              }
-                            ></textarea>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="submit-bar">
-                  <div className="sb-info">
-                    <div className="sb-title">Prêt·e à soumettre ?</div>
-                    <div className="sb-sub">
-                      {progress} / 5 questions répondues
-                    </div>
-                  </div>
-                  <button className="btn-submit" onClick={submitAnswers}>
-                    Soumettre pour correction IA →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ── STATE: PENDING ── */}
-            {state === "pending" && (
-              <div id="state-pending" className="space-y-8">
-                <AIFeedbackNarrative
-                  isVisible={state === "pending"}
-                  onComplete={() => {
-                    showToast(
-                      "success",
-                      "Analyse terminée",
-                      "Votre correction est prête !",
-                    );
-                  }}
-                />
-
-                <div className="answers-recap">
-                  <div className="ar-head">
-                    <div className="sec-label" style={{ marginBottom: 0 }}>
-                      Vos réponses soumises
-                    </div>
-                    <div className="ar-stats">
-                      <span className="ar-stat">
-                        <strong>{progress}</strong>répondues
-                      </span>
-                      <span className="ar-stat">
-                        <strong>{5 - progress}</strong>vides
-                      </span>
-                    </div>
-                  </div>
-                  <div id="arList" style={{ marginTop: ".85rem" }}>
-                    {["a1", "a2", "a3", "a4", "a5"].map((id, i) => (
-                      <div key={id} className="ar-item">
-                        <span className="ar-num">
-                          Q.{String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span className="ar-text">
-                          {answers[id] ? (
-                            answers[id].length > 120 ? (
-                              answers[id].substring(0, 120) + "…"
-                            ) : (
-                              answers[id]
-                            )
-                          ) : (
-                            <span className="ar-empty">Non répondue</span>
-                          )}
-                        </span>
-                        <span className="ar-len">
-                          {answers[id] ? answers[id].length + " car." : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "1.5rem",
-                    background: "var(--card)",
-                    border: "1px solid var(--b1)",
-                    borderRadius: "var(--r-lg)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".65rem",
-                      color: "var(--text-3)",
-                      marginBottom: ".85rem",
-                      textTransform: "uppercase",
-                      letterSpacing: ".1em",
-                    }}
-                  >
-                    Simulation : voir la correction maintenant
-                  </div>
-                  <button
-                    className="btn-unlock"
-                    onClick={() =>
-                      router.push(`/sujet/${params.id}/correction`)
-                    }
-                    style={{ padding: ".65rem 1.75rem", fontSize: ".85rem" }}
-                  >
-                    Voir la correction IA →
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ══ AVIS PANEL ══ */}
-          <div className={`tab-panel ${activeTab === "avis" ? "active" : ""}`}>
-            <div className="rev-sum">
-              <div className="rev-big">{subject.rating}</div>
-              <div>
-                <div
-                  style={{
-                    fontSize: ".65rem",
-                    color: "var(--gold)",
-                    letterSpacing: ".05em",
-                    marginBottom: ".35rem",
-                  }}
-                >
-                  ★★★★★
-                </div>
-                <div className="rev-bars">
-                  <div className="rb-row">
-                    <span className="rb-lbl">5</span>
-                    <div className="rb-track">
-                      <div className="rb-fill" style={{ width: "88%" }}></div>
-                    </div>
-                    <span className="rb-pct">88%</span>
-                  </div>
-                  <div className="rb-row">
-                    <span className="rb-lbl">4</span>
-                    <div className="rb-track">
-                      <div className="rb-fill" style={{ width: "9%" }}></div>
-                    </div>
-                    <span className="rb-pct">9%</span>
-                  </div>
-                  <div className="rb-row">
-                    <span className="rb-lbl">3</span>
-                    <div className="rb-track">
-                      <div className="rb-fill" style={{ width: "3%" }}></div>
-                    </div>
-                    <span className="rb-pct">3%</span>
-                  </div>
-                  <div className="rb-row">
-                    <span className="rb-lbl">2</span>
-                    <div className="rb-track">
-                      <div className="rb-fill" style={{ width: "0%" }}></div>
-                    </div>
-                    <span className="rb-pct">0%</span>
-                  </div>
-                  <div className="rb-row">
-                    <span className="rb-lbl">1</span>
-                    <div className="rb-track">
-                      <div className="rb-fill" style={{ width: "0%" }}></div>
-                    </div>
-                    <span className="rb-pct">0%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="rev-item">
-              <div className="rev-head">
-                <div className="rev-av">H</div>
-                <span className="rev-name">Herizo R.</span>
-                <span
-                  style={{
-                    fontFamily: "var(--mono)",
-                    fontSize: ".58rem",
-                    color: "var(--text-4)",
-                  }}
-                >
-                  Il y a 2j
-                </span>
-                <span className="rev-stars">★★★★★</span>
-              </div>
-              <div className="rev-text">
-                Exactement le sujet officiel, aucune faute. La correction IA
-                était très précise, elle m'a aidé à comprendre mes erreurs en
-                géométrie vectorielle.
-              </div>
-            </div>
-            <div className="rev-item">
-              <div className="rev-head">
-                <div className="rev-av">M</div>
-                <span className="rev-name">Mirana T.</span>
-                <span
-                  style={{
-                    fontFamily: "var(--mono)",
-                    fontSize: ".58rem",
-                    color: "var(--text-4)",
-                  }}
-                >
-                  Il y a 5j
-                </span>
-                <span className="rev-stars">★★★★★</span>
-              </div>
-              <div className="rev-text">
-                Super sujet bien structuré. Idéal pour préparer l'examen. Le
-                contributeur a aussi posté le sujet de rattrapage, je recommande
-                ses publications.
-              </div>
-            </div>
-            <div className="rev-item">
-              <div className="rev-head">
-                <div className="rev-av">J</div>
-                <span className="rev-name">Jean-Claude R.</span>
-                <span
-                  style={{
-                    fontFamily: "var(--mono)",
-                    fontSize: ".58rem",
-                    color: "var(--text-4)",
-                  }}
-                >
-                  Il y a 1 sem.
-                </span>
-                <span className="rev-stars">★★★★☆</span>
-              </div>
-              <div className="rev-text">
-                Très bon sujet. Petite déduction car la mise en page est
-                légèrement différente de l'original. Mais le contenu est complet
-                et la correction IA excellente.
-              </div>
-            </div>
-          </div>
-
-          {/* ══ SIMILAIRES PANEL ══ */}
-          <div
-            className={`tab-panel ${activeTab === "similaires" ? "active" : ""}`}
-          >
-            <div style={{ display: "grid", gap: ".75rem" }}>
-              <div
-                style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--b1)",
-                  borderRadius: "var(--r-lg)",
-                  padding: "1rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: ".85rem",
-                  cursor: "pointer",
-                  transition: "all .2s",
-                }}
-                onClick={() =>
-                  showToast(
-                    "info",
-                    "Sujets similaires",
-                    "La navigation vers les sujets similaires sera disponible après raccordement des données.",
-                  )
-                }
-              >
-                <div
-                  style={{
-                    width: "44px",
-                    height: "52px",
-                    background: "var(--surface)",
-                    border: "1px solid var(--b2)",
-                    borderRadius: "var(--r)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "var(--display)",
-                    fontSize: "1.2rem",
-                    color: "var(--gold-lo)",
-                    flexShrink: 0,
-                  }}
-                >
-                  Σ
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: ".85rem",
-                      fontWeight: 500,
-                      color: "var(--text)",
-                      marginBottom: ".2rem",
-                    }}
-                  >
-                    BAC Maths Série C — 2023
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".6rem",
-                      color: "var(--text-3)",
-                    }}
-                  >
-                    BAC · Série C · 2023
-                  </div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div
-                    style={{
-                      fontFamily: "var(--display)",
-                      fontSize: "1.1rem",
-                      color: "var(--gold)",
-                    }}
-                  >
-                    12 cr
-                  </div>
-                  <div
-                    style={{
-                      fontSize: ".6rem",
-                      color: "var(--gold)",
-                      marginTop: ".1rem",
-                    }}
-                  >
-                    ★★★★☆
-                  </div>
-                </div>
-              </div>
-              <div
-                style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--b1)",
-                  borderRadius: "var(--r-lg)",
-                  padding: "1rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: ".85rem",
-                  cursor: "pointer",
-                  transition: "all .2s",
-                }}
-                onClick={() =>
-                  showToast(
-                    "info",
-                    "Sujets similaires",
-                    "La navigation vers les sujets similaires sera disponible après raccordement des données.",
-                  )
-                }
-              >
-                <div
-                  style={{
-                    width: "44px",
-                    height: "52px",
-                    background: "var(--surface)",
-                    border: "1px solid var(--b2)",
-                    borderRadius: "var(--r)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "var(--display)",
-                    fontSize: "1.2rem",
-                    color: "var(--gold-lo)",
-                    flexShrink: 0,
-                  }}
-                >
-                  π
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: ".85rem",
-                      fontWeight: 500,
-                      color: "var(--text)",
-                      marginBottom: ".2rem",
-                    }}
-                  >
-                    Rattrapage BAC Maths C — 2024
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".6rem",
-                      color: "var(--text-3)",
-                    }}
-                  >
-                    Rattrapage · Série C · 2024
-                  </div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div
-                    style={{
-                      fontFamily: "var(--display)",
-                      fontSize: "1.1rem",
-                      color: "#8ECAAC",
-                    }}
-                  >
-                    Gratuit
-                  </div>
-                  <div
-                    style={{
-                      fontSize: ".6rem",
-                      color: "var(--gold)",
-                      marginTop: ".1rem",
-                    }}
-                  >
-                    ★★★★★
-                  </div>
-                </div>
-              </div>
-              <div
-                style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--b1)",
-                  borderRadius: "var(--r-lg)",
-                  padding: "1rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: ".85rem",
-                  cursor: "pointer",
-                  transition: "all .2s",
-                }}
-                onClick={() =>
-                  showToast(
-                    "info",
-                    "Sujets similaires",
-                    "La navigation vers les sujets similaires sera disponible après raccordement des données.",
-                  )
-                }
-              >
-                <div
-                  style={{
-                    width: "44px",
-                    height: "52px",
-                    background: "var(--surface)",
-                    border: "1px solid var(--b2)",
-                    borderRadius: "var(--r)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "var(--display)",
-                    fontSize: "1.2rem",
-                    color: "var(--gold-lo)",
-                    flexShrink: 0,
-                  }}
-                >
-                  ∞
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: ".85rem",
-                      fontWeight: 500,
-                      color: "var(--text)",
-                      marginBottom: ".2rem",
-                    }}
-                  >
-                    DS Analyse — Lycée Andohalo 2024
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".6rem",
-                      color: "var(--text-3)",
-                    }}
-                  >
-                    DS · Terminale C · 2024
-                  </div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div
-                    style={{
-                      fontFamily: "var(--display)",
-                      fontSize: "1.1rem",
-                      color: "var(--gold)",
-                    }}
-                  >
-                    8 cr
-                  </div>
-                  <div
-                    style={{
-                      fontSize: ".6rem",
-                      color: "var(--gold)",
-                      marginTop: ".1rem",
-                    }}
-                  >
-                    ★★★★★
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT SIDEBAR */}
-        <aside id="sidebar">
-          {/* Price card — changes per state */}
-          {state === "locked" && (
-            <div id="pc-locked">
-              <div className="price-card">
-                <div className="pc-label">Prix d'accès</div>
-                <div className="pc-price">{subject.credits}</div>
-                <div className="pc-unit">crédits · accès permanent</div>
-                <div className="pc-balance">
-                  Votre solde :{" "}
-                  <span className="pc-balance-val">{credits} cr</span>
-                </div>
-                <button className="btn-buy" onClick={unlockSubject}>
-                  🔓 Débloquer ce sujet
-                </button>
-                <div className="pc-note">
-                  Accès permanent après achat · Correction IA incluse ·
-                  Consultation complète
-                </div>
-              </div>
-              <div style={{ textAlign: "center", marginBottom: "1rem" }}>
-                <button
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontFamily: "var(--mono)",
-                    fontSize: ".6rem",
-                    textTransform: "uppercase",
-                    letterSpacing: ".1em",
-                    color: "var(--text-3)",
-                    cursor: "pointer",
-                    transition: "color .2s",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: ".45rem",
-                    margin: "0 auto",
-                  }}
-                  onClick={() => router.push("/credits")}
-                >
-                  + Recharger mes crédits →
-                </button>
-              </div>
-            </div>
+              )}
+            </article>
           )}
 
-          {state === "unlocked" && (
-            <div id="pc-unlocked">
-              <div className="price-card unlocked-card">
-                <div className="unlocked-icon">🔓</div>
-                <div className="unlocked-label">Accès débloqué</div>
-                <div className="unlocked-sub">
-                  Vous avez accès à ce sujet. Répondez aux questions puis
-                  soumettez pour une correction IA détaillée.
-                </div>
-                <button
-                  className="btn-buy"
-                  style={{
-                    background: "linear-gradient(135deg,var(--sage),#6AAB8A)",
-                  }}
-                  onClick={submitAnswers}
-                >
-                  Soumettre mes réponses →
-                </button>
-                <div
-                  style={{
-                    marginTop: "0.75rem",
-                    borderTop: "1px solid rgba(255,255,255,0.08)",
-                    paddingTop: "0.75rem",
-                  }}
-                >
-                  <button
-                    onClick={handleConvertToExam}
-                    disabled={isConverting}
-                    style={{
-                      width: "100%",
-                      padding: ".6rem 1rem",
-                      background: isConverting
-                        ? "rgba(10,255,224,0.05)"
-                        : "linear-gradient(135deg, rgba(10,255,224,0.15), rgba(10,255,224,0.05))",
-                      border: "1px solid rgba(10,255,224,0.3)",
-                      borderRadius: "var(--r)",
-                      fontFamily: "var(--mono)",
-                      fontSize: ".65rem",
-                      textTransform: "uppercase",
-                      letterSpacing: ".1em",
-                      color: isConverting ? "var(--text-3)" : "var(--teal)",
-                      cursor: isConverting ? "not-allowed" : "pointer",
-                      transition: "all .2s",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: ".4rem",
-                    }}
-                    title="Convertir ce sujet en examen blanc chronométré"
-                  >
-                    {isConverting
-                      ? "⏳ Création de l'examen..."
-                      : "✦ Passer en examen blanc"}
-                  </button>
-                  <div
-                    style={{
-                      fontFamily: "var(--mono)",
-                      fontSize: ".55rem",
-                      color: "var(--text-4)",
-                      marginTop: ".4rem",
-                      textAlign: "center",
-                    }}
-                  >
-                    Chronomètre activé · Conditions réelles
-                  </div>
-                </div>
+          {displayMode === 'exercice' && (
+            <section className="exercise-sheet">
+              <div className="exercise-head">
+                <h2>Mode exercice interactif</h2>
+                <p style={{ color: 'var(--gold)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                  ⚠️ Mode démonstration — Le vrai contenu du sujet sera bientôt disponible.
+                </p>
               </div>
-            </div>
+
+              {/* Banner informatif */}
+              <div style={{
+                padding: '1rem 1.25rem',
+                background: 'var(--gold-dim)',
+                border: '1px dashed var(--gold-line)',
+                borderRadius: 'var(--r)',
+                marginBottom: '1.5rem',
+                fontSize: '0.82rem',
+                color: 'var(--text-2)',
+                lineHeight: 1.6
+              }}>
+                <strong style={{ color: 'var(--gold)' }}>Information :</strong> Les exercices affichés ci-dessous
+                sont un <strong>template de démonstration</strong> et ne correspondent pas encore au vrai contenu
+                de ce sujet. La mise en ligne des vraies questions est en cours de préparation.
+              </div>
+
+              {exerciseTemplate.map((item) => (
+                <div className="exercise-item" key={item.id}>
+                  <label>{item.label}</label>
+
+                  {item.type === 'text' && (
+                    <input
+                      value={exerciseAnswers[item.id] || ''}
+                      onChange={(event) => handleExerciseValue(item.id, event.target.value)}
+                      placeholder={item.placeholder}
+                    />
+                  )}
+
+                  {item.type === 'textarea' && (
+                    <textarea
+                      value={exerciseAnswers[item.id] || ''}
+                      onChange={(event) => handleExerciseValue(item.id, event.target.value)}
+                      placeholder={item.placeholder}
+                      rows={5}
+                    />
+                  )}
+
+                  {item.type === 'qcm' && (
+                    <div className="exercise-options">
+                      {item.options?.map((option) => (
+                        <label key={option}>
+                          <input
+                            type="radio"
+                            checked={exerciseAnswers[item.id] === option}
+                            onChange={() => handleExerciseValue(item.id, option)}
+                          />
+                          <span>{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {item.type === 'checkbox' && (
+                    <div className="exercise-options">
+                      {item.options?.map((option) => {
+                        const checked = (exerciseAnswers[item.id] || '')
+                          .split(',')
+                          .filter(Boolean)
+                          .includes(option)
+                        return (
+                          <label key={option}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => handleCheckboxValue(item.id, option)}
+                            />
+                            <span>{option}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <div className="exercise-footer">
+                <span>{answeredExerciseCount} / {exerciseTemplate.length} questions remplies</span>
+                <button className="sd-btn-primary" onClick={submitExerciseForAI} disabled={isSubmittingExercise || accessState === 'locked'}>
+                  {isSubmittingExercise ? 'Soumission...' : accessState === 'locked' ? 'Débloquez le sujet pour soumettre' : "Soumettre à l'IA"}
+                </button>
+              </div>
+            </section>
           )}
 
-          {state === "pending" && (
-            <div id="pc-pending">
-              <div className="price-card pending-card">
-                <div style={{ fontSize: "1.8rem", marginBottom: ".5rem" }}>
-                  ⏳
-                </div>
-                <div className="unlocked-label">Correction en cours</div>
-                <div className="unlocked-sub">
-                  L'IA analyse vos réponses. Résultat disponible dans environ 2
-                  min.
-                </div>
-                <button
-                  className="btn-buy"
-                  style={{
-                    background: "linear-gradient(135deg,var(--amber),#E8A060)",
-                  }}
-                  onClick={() => router.push(`/sujet/${params.id}/correction`)}
-                >
-                  Voir la correction →
-                </button>
+          {displayMode === 'solo' && (
+            <section className="solo-mode-card">
+              <div className="solo-mode-head">
+                <h2>Mode examen blanc solo</h2>
+                <p>
+                  Session chronométrée, anti copie/coller, progression question par question et soumission finale.
+                </p>
               </div>
-            </div>
-          )}
 
-          {/* Contributor */}
-          <div className="panel">
-            <div className="p-head">
-              <span className="p-label">
-                <span className="p-dot"></span>Contributeur
-              </span>
-            </div>
-            <div className="p-body">
-              <div className="contrib-row">
-                <div className="contrib-av">
-                  {subject.author?.prenom?.charAt(0) ||
-                    subject.authorName?.charAt(0) ||
-                    "A"}
-                </div>
-                <div className="contrib-info">
-                  <div className="contrib-name">
-                    {subject.author
-                      ? `${subject.author.prenom} ${subject.author.nom || ""}`
-                      : subject.authorName || "Contributeur Mah.AI"}
-                  </div>
-                  <div className="contrib-meta">
-                    84 sujets · 4.8★ · Antananarivo
-                  </div>
-                </div>
-                <span className="contrib-badge">Elite</span>
+              <div className="solo-mode-badges">
+                <span><Timer size={14} /> {subject.duree || '3h'}</span>
+                <span><GraduationCap size={14} /> Conditions réelles</span>
+                <span><Sparkles size={14} /> Correction IA post-soumission</span>
               </div>
-              <button
-                style={{
-                  width: "100%",
-                  marginTop: ".75rem",
-                  padding: ".5rem",
-                  background: "transparent",
-                  border: "1px solid var(--b1)",
-                  borderRadius: "var(--r)",
-                  fontFamily: "var(--mono)",
-                  fontSize: ".6rem",
-                  textTransform: "uppercase",
-                  letterSpacing: ".1em",
-                  color: "var(--text-3)",
-                  cursor: "pointer",
-                  transition: "all .2s",
-                }}
-                onClick={() => router.push("/profil/1")}
-              >
-                Voir son profil →
+
+              <button className="sd-btn-primary" onClick={startSoloExam} disabled={isConvertingExam}>
+                {isConvertingExam ? 'Préparation de la session...' : 'Lancer le mode examen solo'}
               </button>
-            </div>
+            </section>
+          )}
+
+          {displayMode === 'groupe' && (
+            <section className="group-mode-card">
+              <h2>Mode examen groupé</h2>
+              <p>
+                Ce mode sera disponible lorsqu’un professeur ou un administrateur créera une session d’examen collective.
+              </p>
+              <p className="group-note">Fonctionnalité planifiée: salles, convocations et suivi multi-candidats.</p>
+            </section>
+          )}
+        </section>
+
+        <aside className="subject-sidebar">
+          <div className="price-card">
+            <p className="price-label">Prix d’accès</p>
+            <div className="price-value">{subject.credits} crédits</div>
+            <p className="price-balance">Votre solde: {credits} crédits</p>
+            {accessState === 'locked' ? (
+              <button className="sd-btn-primary" onClick={requestUnlock}>
+                Débloquer ce sujet
+              </button>
+            ) : (
+              <div className="unlocked-badge">Sujet débloqué — accès permanent</div>
+            )}
+            <button className="sd-btn-secondary" onClick={() => router.push('/credits')}>
+              Recharger mes crédits
+            </button>
           </div>
 
-          {/* Info */}
-          <div className="panel">
-            <div className="p-head">
-              <span className="p-label">
-                <span className="p-dot"></span>Informations
-              </span>
-            </div>
-            <div className="p-body">
-              <div className="info-row">
-                <span className="ir-key">Matière</span>
-                <span className="ir-val">{subject.matiere}</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Niveau</span>
-                <span className="ir-val">Terminale {subject.serie}</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Type</span>
-                <span className="ir-val">{subject.type}</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Année</span>
-                <span className="ir-val gold">{subject.annee}</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Durée</span>
-                <span className="ir-val">{subject.duree}</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Exercices</span>
-                <span className="ir-val">{subject.nbExercices} exercices</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Barème</span>
-                <span className="ir-val">{subject.bareme} points</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Accès</span>
-                <span className="ir-val">Consultation web après achat</span>
-              </div>
-              <div className="info-row">
-                <span className="ir-key">Authentifié</span>
-                <span className="ir-val gold">✓ Officiel</span>
-              </div>
-            </div>
+          <div className="side-card">
+            <h3>Informations</h3>
+            <ul>
+              <li><span>Matière</span><strong>{subject.matiere}</strong></li>
+              <li><span>Niveau</span><strong>{subject.serie || 'Général'}</strong></li>
+              <li><span>Type</span><strong>{subject.type}</strong></li>
+              <li><span>Année</span><strong>{subject.annee}</strong></li>
+              <li><span>Auteur</span><strong>{subject.authorName || 'Contributeur Mah.AI'}</strong></li>
+            </ul>
           </div>
         </aside>
-      </div>
-
-      {/* STICKY CTA FOR MOBILE - Shows when locked */}
-      {state === "locked" && (
-        <div className="sticky-cta-mobile">
-          <div className="sticky-cta-content">
-            <div className="sticky-cta-info">
-              <span className="sticky-cta-price">
-                {subject.credits} crédits
-              </span>
-              <span className="sticky-cta-label">Débloquer ce sujet</span>
-            </div>
-            <button className="sticky-cta-btn" onClick={unlockSubject}>
-              Débloquer →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STATE DEMO SWITCHER - Uncomment for development/testing only */}
-      {/* 
-      <div className="state-demo">
-        <button className={`sdemo-btn ${state === 'locked' ? 'on' : ''}`} onClick={() => setState('locked')}>🔒 Verrouillé</button>
-        <button className={`sdemo-btn ${state === 'unlocked' ? 'on' : ''}`} onClick={() => setState('unlocked')}>🔓 Débloqué</button>
-        <button className={`sdemo-btn ${state === 'pending' ? 'on' : ''}`} onClick={() => setState('pending')}>⏳ En attente</button>
-      </div>
-      */}
+      </main>
     </div>
-  );
+  )
 }

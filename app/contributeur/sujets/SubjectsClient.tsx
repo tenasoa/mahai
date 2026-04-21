@@ -1,11 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect, useTransition } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, AlertCircle, XCircle, File, Edit3, BarChart3, Eye, Trash2 } from 'lucide-react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import {
+  CheckCircle2, AlertCircle, XCircle, File, Edit3, BarChart3, Eye, Trash2,
+  Search, ChevronUp, ChevronDown, ChevronsUpDown,
+  ChevronLeft, ChevronRight
+} from 'lucide-react'
 import { useToast } from '@/lib/hooks/useToast'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { requestSubjectDeletion } from './actions'
 
 interface ContributorSubjectsClientProps {
   user: {
@@ -22,6 +27,12 @@ interface ContributorSubjectsClientProps {
   }
 }
 
+type StatusFilter = 'ALL' | 'PUBLISHED' | 'PENDING' | 'REJECTED' | 'DRAFT'
+type SortKey = 'titre' | 'ventes' | 'revenus'
+type SortDir = 'asc' | 'desc'
+
+const PAGE_SIZE = 10
+
 function formatStatus(status: string) {
   const config: Record<string, { label: string; class: string; icon: any }> = {
     PUBLISHED: { label: 'Publié', class: 'pub', icon: CheckCircle2 },
@@ -33,22 +44,121 @@ function formatStatus(status: string) {
 }
 
 export default function ContributorSubjectsClient({ user, subjects, stats }: ContributorSubjectsClientProps) {
-  const [statusFilter, setStatusFilter] = useState<string>('ALL')
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const toast = useToast()
+  const [isPending, startTransition] = useTransition()
+
+  // Lecture du filtre initial depuis URL (deep-link depuis dashboard)
+  const initialStatus = (searchParams.get('status') as StatusFilter) || 'ALL'
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatus)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  // Reset page à 1 quand filtre/recherche change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [statusFilter, searchQuery])
 
   const handleDelete = async () => {
-    if (!deleteId) return
-    toast.success('Succès', 'Demande de suppression envoyée à l\'administration.')
-    setDeleteId(null)
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const result = await requestSubjectDeletion(deleteTarget.id)
+      if (result.success) {
+        toast.success(
+          result.immediatelyRemoved ? 'Sujet supprimé' : 'Demande envoyée',
+          result.message || 'Opération effectuée'
+        )
+        setDeleteTarget(null)
+        startTransition(() => router.refresh())
+      } else {
+        toast.error('Erreur', result.error || 'Impossible de supprimer le sujet')
+      }
+    } catch (e) {
+      toast.error('Erreur', 'Une erreur est survenue')
+    } finally {
+      setDeleting(false)
+    }
   }
 
-  const filteredSubjects = statusFilter === 'ALL'
-    ? subjects
-    : subjects.filter(s => s.status === statusFilter)
+  // Filtrage + recherche + tri (B2 + U2)
+  const processedSubjects = useMemo(() => {
+    let list = [...subjects]
+
+    // Filtre statut
+    if (statusFilter !== 'ALL') {
+      list = list.filter(s => s.status === statusFilter)
+    }
+
+    // Recherche (B2)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter(s =>
+        (s.titre || '').toLowerCase().includes(q) ||
+        (s.matiere || '').toLowerCase().includes(q) ||
+        (s.series || '').toLowerCase().includes(q) ||
+        (s.grade || '').toLowerCase().includes(q)
+      )
+    }
+
+    // Tri (U2)
+    if (sortKey) {
+      list.sort((a, b) => {
+        let aVal: any = a[sortKey]
+        let bVal: any = b[sortKey]
+        if (sortKey === 'ventes' || sortKey === 'revenus') {
+          aVal = Number(aVal) || 0
+          bVal = Number(bVal) || 0
+        } else {
+          aVal = String(aVal || '').toLowerCase()
+          bVal = String(bVal || '').toLowerCase()
+        }
+        if (aVal < bVal) return sortDir === 'asc' ? -1 : 1
+        if (aVal > bVal) return sortDir === 'asc' ? 1 : -1
+        return 0
+      })
+    }
+
+    return list
+  }, [subjects, statusFilter, searchQuery, sortKey, sortDir])
+
+  // Pagination (U1)
+  const totalPages = Math.max(1, Math.ceil(processedSubjects.length / PAGE_SIZE))
+  const pagedSubjects = processedSubjects.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  )
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('desc')
+    }
+  }
+
+  const SortIndicator = ({ keyName }: { keyName: SortKey }) => {
+    if (sortKey !== keyName) return <ChevronsUpDown size={12} className="sort-indicator" />
+    return sortDir === 'asc'
+      ? <ChevronUp size={12} className="sort-indicator" />
+      : <ChevronDown size={12} className="sort-indicator" />
+  }
 
   const totalSubjects = subjects.length
-  const displayedSubjects = filteredSubjects.length
+
+  const statusTabs: { key: StatusFilter; label: string; count: number }[] = [
+    { key: 'ALL', label: 'Tous les sujets', count: totalSubjects },
+    { key: 'PUBLISHED', label: 'Publiés', count: stats.published },
+    { key: 'PENDING', label: 'En attente', count: stats.pending },
+    { key: 'REJECTED', label: 'Rejetés', count: stats.rejected }
+  ]
 
   return (
     <div className="admin-page-content">
@@ -61,7 +171,7 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
           </div>
           <h1 className="admin-title">Mes sujets</h1>
           <p className="admin-subtitle">
-            Vous avez publié {stats.published} sujets pour un total de {totalSubjects} créations.
+            Vous avez publié {stats.published} sujet{stats.published > 1 ? 's' : ''} pour un total de {totalSubjects} création{totalSubjects > 1 ? 's' : ''}.
           </p>
         </div>
         <div className="admin-header-actions">
@@ -71,9 +181,15 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
         </div>
       </div>
 
-      {/* KPI Stats Grid */}
-      <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
-        <div className="kpi-card" onClick={() => setStatusFilter('PUBLISHED')} style={{ cursor: 'pointer' }}>
+      {/* KPI Stats Grid (U8 - cards cliquables avec feedback actif) */}
+      <div className="kpi-grid contrib-animate-in" style={{ marginBottom: '2rem' }}>
+        <button
+          type="button"
+          className={`kpi-card is-clickable ${statusFilter === 'PUBLISHED' ? 'is-active' : ''}`}
+          onClick={() => setStatusFilter(statusFilter === 'PUBLISHED' ? 'ALL' : 'PUBLISHED')}
+          aria-pressed={statusFilter === 'PUBLISHED'}
+          style={{ textAlign: 'left', font: 'inherit', border: '1px solid var(--b2)' }}
+        >
           <div className="kpi-header">
             <span className="kpi-title">Publiés</span>
             <div className="kpi-icon" style={{ background: 'var(--sage-dim)', color: 'var(--sage)' }}>
@@ -82,9 +198,15 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
           </div>
           <div className="kpi-value">{stats.published}</div>
           <div className="kpi-trend" style={{ color: 'var(--sage)' }}>En ligne</div>
-        </div>
+        </button>
 
-        <div className="kpi-card" onClick={() => setStatusFilter('PENDING')} style={{ cursor: 'pointer' }}>
+        <button
+          type="button"
+          className={`kpi-card is-clickable ${statusFilter === 'PENDING' ? 'is-active' : ''}`}
+          onClick={() => setStatusFilter(statusFilter === 'PENDING' ? 'ALL' : 'PENDING')}
+          aria-pressed={statusFilter === 'PENDING'}
+          style={{ textAlign: 'left', font: 'inherit', border: '1px solid var(--b2)' }}
+        >
           <div className="kpi-header">
             <span className="kpi-title">En attente</span>
             <div className="kpi-icon" style={{ background: 'var(--amber-dim)', color: 'var(--amber)' }}>
@@ -93,9 +215,15 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
           </div>
           <div className="kpi-value">{stats.pending}</div>
           <div className="kpi-trend" style={{ color: 'var(--amber)' }}>En vérification</div>
-        </div>
+        </button>
 
-        <div className="kpi-card" onClick={() => setStatusFilter('REJECTED')} style={{ cursor: 'pointer' }}>
+        <button
+          type="button"
+          className={`kpi-card is-clickable ${statusFilter === 'REJECTED' ? 'is-active' : ''}`}
+          onClick={() => setStatusFilter(statusFilter === 'REJECTED' ? 'ALL' : 'REJECTED')}
+          aria-pressed={statusFilter === 'REJECTED'}
+          style={{ textAlign: 'left', font: 'inherit', border: '1px solid var(--b2)' }}
+        >
           <div className="kpi-header">
             <span className="kpi-title">Rejetés</span>
             <div className="kpi-icon" style={{ background: 'var(--ruby-dim)', color: 'var(--ruby)' }}>
@@ -104,9 +232,15 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
           </div>
           <div className="kpi-value">{stats.rejected}</div>
           <div className="kpi-trend" style={{ color: 'var(--ruby)' }}>À corriger</div>
-        </div>
+        </button>
 
-        <div className="kpi-card" onClick={() => setStatusFilter('DRAFT')} style={{ cursor: 'pointer' }}>
+        <button
+          type="button"
+          className={`kpi-card is-clickable ${statusFilter === 'DRAFT' ? 'is-active' : ''}`}
+          onClick={() => setStatusFilter(statusFilter === 'DRAFT' ? 'ALL' : 'DRAFT')}
+          aria-pressed={statusFilter === 'DRAFT'}
+          style={{ textAlign: 'left', font: 'inherit', border: '1px solid var(--b2)' }}
+        >
           <div className="kpi-header">
             <span className="kpi-title">Brouillons</span>
             <div className="kpi-icon" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-3)' }}>
@@ -115,76 +249,91 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
           </div>
           <div className="kpi-value">{stats.draft}</div>
           <div className="kpi-trend">Non publiés</div>
-        </div>
+        </button>
       </div>
 
       {/* Tabs Filter */}
       <div className="admin-tabs">
-        <button 
-          className={`admin-tab ${statusFilter === 'ALL' ? 'admin-tab-active' : ''}`}
-          onClick={() => setStatusFilter('ALL')}
-        >
-          Tous les sujets <span className="admin-tab-count">{totalSubjects}</span>
-        </button>
-        <button 
-          className={`admin-tab ${statusFilter === 'PUBLISHED' ? 'admin-tab-active' : ''}`}
-          onClick={() => setStatusFilter('PUBLISHED')}
-        >
-          Publiés <span className="admin-tab-count">{stats.published}</span>
-        </button>
-        <button 
-          className={`admin-tab ${statusFilter === 'PENDING' ? 'admin-tab-active' : ''}`}
-          onClick={() => setStatusFilter('PENDING')}
-        >
-          En attente <span className="admin-tab-count">{stats.pending}</span>
-        </button>
-        <button 
-          className={`admin-tab ${statusFilter === 'REJECTED' ? 'admin-tab-active' : ''}`}
-          onClick={() => setStatusFilter('REJECTED')}
-        >
-          Rejetés <span className="admin-tab-count">{stats.rejected}</span>
-        </button>
+        {statusTabs.map(tab => (
+          <button
+            key={tab.key}
+            className={`admin-tab ${statusFilter === tab.key ? 'admin-tab-active' : ''}`}
+            onClick={() => setStatusFilter(tab.key)}
+          >
+            {tab.label} <span className="admin-tab-count">{tab.count}</span>
+          </button>
+        ))}
       </div>
 
       <div className="admin-card">
         <div className="admin-card-body" style={{ borderBottom: '1px solid var(--b2)', paddingBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Liste de vos créations</h3>
-            <div style={{ position: 'relative', width: '300px' }}>
-              <input 
-                type="text" 
-                placeholder="Rechercher un sujet..." 
-                className="admin-input"
-                style={{ height: '36px', paddingLeft: '2.5rem', fontSize: '0.85rem' }}
+          <div className="contrib-card-header">
+            <h3 className="contrib-card-title">
+              Liste de vos créations
+              {searchQuery && (
+                <span style={{ fontWeight: 400, color: 'var(--text-4)', fontSize: '0.85rem', marginLeft: '0.5rem' }}>
+                  — {processedSubjects.length} résultat{processedSubjects.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </h3>
+            <div className="contrib-search-wrap">
+              <Search size={14} className="contrib-search-icon" />
+              <input
+                type="text"
+                placeholder="Rechercher un sujet, une matière…"
+                className="contrib-search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Rechercher un sujet"
               />
-              <File size={14} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-4)' }} />
             </div>
           </div>
         </div>
+
         <div className="table-wrapper">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Sujet</th>
+                <th
+                  className={`is-sortable ${sortKey === 'titre' ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort('titre')}
+                >
+                  Sujet
+                  <SortIndicator keyName="titre" />
+                </th>
                 <th>Statut</th>
-                <th>Niveau & Année</th>
-                <th>Ventes</th>
-                <th>Gains cumulés</th>
+                <th>Niveau &amp; Année</th>
+                <th
+                  className={`is-sortable ${sortKey === 'ventes' ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort('ventes')}
+                >
+                  Ventes
+                  <SortIndicator keyName="ventes" />
+                </th>
+                <th
+                  className={`is-sortable ${sortKey === 'revenus' ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort('revenus')}
+                >
+                  Gains cumulés
+                  <SortIndicator keyName="revenus" />
+                </th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {displayedSubjects === 0 ? (
+              {pagedSubjects.length === 0 ? (
                 <tr>
                   <td colSpan={6}>
                     <div className="admin-empty-state">
                       <File className="admin-empty-state-icon" size={48} />
                       <div className="admin-empty-state-text">
-                        {statusFilter === 'ALL' 
-                          ? 'Vous n\'avez pas encore créé de sujet.'
-                          : `Aucun sujet ${statusFilter === 'PUBLISHED' ? 'publié' : statusFilter === 'PENDING' ? 'en attente' : statusFilter === 'REJECTED' ? 'rejeté' : 'brouillon'}`}
+                        {searchQuery
+                          ? `Aucun sujet ne correspond à "${searchQuery}".`
+                          : statusFilter === 'ALL'
+                            ? 'Vous n\'avez pas encore créé de sujet.'
+                            : `Aucun sujet ${statusFilter === 'PUBLISHED' ? 'publié' : statusFilter === 'PENDING' ? 'en attente' : statusFilter === 'REJECTED' ? 'rejeté' : 'brouillon'}.`}
                       </div>
-                      {statusFilter === 'ALL' && (
+                      {statusFilter === 'ALL' && !searchQuery && (
                         <Link href="/contributeur/nouveau" className="admin-btn admin-btn-primary" style={{ marginTop: '1rem' }}>
                           Créer mon premier sujet
                         </Link>
@@ -193,11 +342,10 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
                   </td>
                 </tr>
               ) : (
-                filteredSubjects.map((subject: any) => {
+                pagedSubjects.map((subject: any) => {
                   const status = formatStatus(subject.status)
                   const StatusIcon = status.icon
-                  
-                  // Déterminer la classe de statut pour le Luxury System
+
                   let badgeClass = 'status-gray'
                   if (subject.status === 'PUBLISHED') badgeClass = 'status-green'
                   if (subject.status === 'PENDING') badgeClass = 'status-amber'
@@ -206,9 +354,9 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
                   return (
                     <tr key={subject.id}>
                       <td>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <span style={{ fontWeight: 500, color: 'var(--text)', fontSize: '0.95rem' }}>{subject.titre}</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-4)' }}>
+                        <div className="contrib-subject-cell">
+                          <span className="contrib-subject-title">{subject.titre}</span>
+                          <span className="contrib-subject-meta">
                             {subject.matiere || 'Matière N/A'} · {subject.series || 'Toutes séries'}
                           </span>
                         </div>
@@ -226,31 +374,31 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
                         </div>
                       </td>
                       <td>
-                        <div style={{ fontFamily: 'var(--mono)', fontSize: '0.9rem', color: subject.ventes ? 'var(--text)' : 'var(--text-4)' }}>
+                        <span style={{ fontFamily: 'var(--mono)', fontSize: '0.9rem', color: subject.ventes ? 'var(--text)' : 'var(--text-4)' }}>
                           {subject.ventes || '0'}
-                        </div>
+                        </span>
                       </td>
                       <td>
-                        <div style={{ fontFamily: 'var(--mono)', fontWeight: 500, color: subject.revenus ? 'var(--gold)' : 'var(--text-4)' }}>
-                          {subject.revenus ? `${subject.revenus.toLocaleString('fr-FR')} Ar` : '0 Ar'}
-                        </div>
+                        <span style={{ fontFamily: 'var(--mono)', fontWeight: 500, color: subject.revenus ? 'var(--gold)' : 'var(--text-4)' }}>
+                          {subject.revenus ? `${Number(subject.revenus).toLocaleString('fr-FR')} Ar` : '0 Ar'}
+                        </span>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                          <Link href={`/sujet/${subject.id}`} className="admin-btn admin-btn-outline" style={{ padding: '0.4rem' }} title="Voir">
+                        <div className="contrib-row-actions">
+                          <Link href={`/sujet/${subject.id}`} className="admin-btn admin-btn-outline" title="Voir" aria-label="Voir le sujet">
                             <Eye size={14} />
                           </Link>
-                          <Link href={`/contributeur/nouveau?id=${subject.id}`} className="admin-btn admin-btn-outline" style={{ padding: '0.4rem' }} title="Modifier">
+                          <Link href={`/contributeur/nouveau?id=${subject.id}`} className="admin-btn admin-btn-outline" title="Modifier" aria-label="Modifier le sujet">
                             <Edit3 size={14} />
                           </Link>
-                          <Link href={`/contributeur/sujets/${subject.id}/stats`} className="admin-btn admin-btn-outline" style={{ padding: '0.4rem' }} title="Statistiques">
+                          <Link href={`/contributeur/sujets/${subject.id}/stats`} className="admin-btn admin-btn-outline" title="Statistiques" aria-label="Voir les statistiques">
                             <BarChart3 size={14} />
                           </Link>
-                          <button 
-                            className="admin-btn admin-btn-outline admin-btn-reject" 
-                            style={{ padding: '0.4rem' }}
+                          <button
+                            className="admin-btn admin-btn-outline admin-btn-reject"
                             title="Supprimer"
-                            onClick={() => setDeleteId(subject.id)}
+                            aria-label="Supprimer le sujet"
+                            onClick={() => setDeleteTarget({ id: subject.id, title: subject.titre })}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -263,15 +411,62 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
             </tbody>
           </table>
         </div>
+
+        {/* Pagination (U1) */}
+        {processedSubjects.length > PAGE_SIZE && (
+          <div className="contrib-pagination">
+            <span className="contrib-pagination-info">
+              {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, processedSubjects.length)} sur {processedSubjects.length}
+            </span>
+            <div className="contrib-pagination-controls">
+              <button
+                type="button"
+                className="contrib-pagination-btn"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                aria-label="Page précédente"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .map((p, idx, arr) => (
+                  <span key={p} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {idx > 0 && arr[idx - 1] !== p - 1 && (
+                      <span style={{ color: 'var(--text-4)', padding: '0 4px' }}>…</span>
+                    )}
+                    <button
+                      type="button"
+                      className={`contrib-pagination-btn ${currentPage === p ? 'is-active' : ''}`}
+                      onClick={() => setCurrentPage(p)}
+                      aria-label={`Page ${p}`}
+                      aria-current={currentPage === p ? 'page' : undefined}
+                    >
+                      {p}
+                    </button>
+                  </span>
+                ))}
+              <button
+                type="button"
+                className="contrib-pagination-btn"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                aria-label="Page suivante"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <ConfirmDialog 
-        isOpen={!!deleteId}
-        onClose={() => setDeleteId(null)}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => !deleting && setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Supprimer ce sujet ?"
-        description="Cette action est irréversible. Le sujet sera retiré de la vente et vos gains associés seront gelés."
-        confirmLabel="Supprimer définitivement"
+        title={`Supprimer "${deleteTarget?.title ?? ''}" ?`}
+        description="Si ce sujet n'a pas de ventes, il sera immédiatement retiré. Sinon une demande sera envoyée à l'administration pour préserver les achats existants."
+        confirmLabel={deleting ? 'Suppression…' : 'Supprimer définitivement'}
         variant="danger"
       />
     </div>

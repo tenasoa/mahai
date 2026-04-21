@@ -1,7 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Download, Star, ShoppingCart, DollarSign, TrendingUp, Eye, FileText, Edit3 } from 'lucide-react'
+import {
+  ArrowLeft, Download, Star, ShoppingCart, DollarSign, TrendingUp,
+  Eye, FileText, Edit3, BarChart3, Users
+} from 'lucide-react'
+import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
 
 interface SubjectStatsClientProps {
   user: { prenom: string; nom: string; role: string }
@@ -11,149 +15,244 @@ interface SubjectStatsClientProps {
   recentPurchases: any[]
 }
 
-export default function SubjectStatsClient({ user, subject, stats, salesHistory, recentPurchases }: SubjectStatsClientProps) {
-  const maxRevenue = Math.max(...salesHistory.map(h => h.revenue), 1)
+function formatMonthLabel(raw: string) {
+  if (!raw) return ''
+  const parts = raw.split('-')
+  return parts.length >= 2 ? parts[1] : raw
+}
 
+export default function SubjectStatsClient({
+  user, subject, stats, salesHistory, recentPurchases
+}: SubjectStatsClientProps) {
   if (!subject) {
     return (
-      <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-3)' }}>
-        <h1 style={{ fontFamily: 'var(--display)', fontSize: '2rem', color: 'var(--text)', marginBottom: '1rem' }}>Sujet non trouvé</h1>
-        <Link href="/contributeur/sujets" style={{ color: 'var(--gold)', textDecoration: 'none' }}>← Retour aux sujets</Link>
+      <div className="admin-page-content">
+        <AdminBreadcrumb
+          homeHref="/contributeur"
+          homeLabel="Dashboard Contributeur"
+          items={[
+            { label: 'Mes sujets', href: '/contributeur/sujets' },
+            { label: 'Statistiques' }
+          ]}
+        />
+        <div className="admin-empty-state" style={{ padding: '4rem 2rem' }}>
+          <FileText size={48} className="admin-empty-state-icon" />
+          <div className="admin-empty-state-text">Sujet non trouvé ou accès refusé.</div>
+          <Link href="/contributeur/sujets" className="admin-btn admin-btn-primary" style={{ marginTop: '1rem' }}>
+            <ArrowLeft size={14} />
+            Retour aux sujets
+          </Link>
+        </div>
       </div>
     )
   }
 
+  const maxRevenue = Math.max(...salesHistory.map((h: any) => Number(h.revenue) || 0), 1)
+  const gridLabels = [maxRevenue, Math.round(maxRevenue * 0.75), Math.round(maxRevenue * 0.5), Math.round(maxRevenue * 0.25), 0]
+
   return (
-    <>
-      {/* Topbar */}
-      <div className="topbar">
-        <div className="topbar-title" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Link href="/contributeur/sujets" style={{ color: 'var(--text-3)' }}>
-            <ArrowLeft size={20} />
+    <div className="admin-page-content">
+      {/* Breadcrumb */}
+      <AdminBreadcrumb
+        homeHref="/contributeur"
+        homeLabel="Dashboard Contributeur"
+        items={[
+          { label: 'Mes sujets', href: '/contributeur/sujets' },
+          { label: subject.titre || 'Sujet' }
+        ]}
+      />
+
+      {/* Header */}
+      <div className="admin-header">
+        <div>
+          <div className="admin-header-badge">
+            <BarChart3 size={12} />
+            Statistiques détaillées
+          </div>
+          <h1 className="admin-title">{subject.titre}</h1>
+          <p className="admin-subtitle">
+            Analysez les performances de ce sujet en temps réel.
+          </p>
+        </div>
+        <div className="admin-header-actions">
+          <Link href="/contributeur/sujets" className="admin-btn admin-btn-outline">
+            <ArrowLeft size={14} />
+            Retour
           </Link>
-          <div>
-            Statistiques de <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>{subject.titre}</em>
-          </div>
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="page-content">
-        {/* Subject Header */}
-        <div className="subject-stats-header">
-          <div className="subject-info">
-            <div className="subject-icon">
-              <FileText size={24} />
-            </div>
-            <div className="subject-details">
-              <h2 style={{ fontFamily: 'var(--display)', fontSize: '1.5rem', color: 'var(--text)', marginBottom: '0.35rem' }}>{subject.titre}</h2>
-              <div className="subject-meta" style={{ fontFamily: 'var(--mono)', fontSize: '0.65rem', color: 'var(--text-3)' }}>
-                {subject.matiere} • {subject.annee} • {subject.type}
-              </div>
-            </div>
+      {/* Subject header card (D1) */}
+      <div className="contrib-subject-header-card">
+        <div className="contrib-subject-header-left">
+          <div className="contrib-subject-header-icon">
+            <FileText size={24} />
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Link href={`/sujet/${subject.id}`} className="btn-tbl">Voir</Link>
-            <Link href={`/contributeur/nouveau?id=${subject.id}`} className="btn-tbl">Modifier</Link>
-          </div>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="stats-overview">
-          <div className="stat-card">
-            <div className="label">Revenus totaux</div>
-            <div className="value" style={{ color: 'var(--gold)' }}>{stats.totalRevenue.toLocaleString('fr-FR')} <span style={{ fontSize: '1rem', color: 'var(--gold-lo)' }}>Ar</span></div>
-            <div className="sub" style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text-3)' }}>
-              <DollarSign size={12} style={{ display: 'inline', verticalAlign: 'middle' }} />
-              {stats.totalSales} ventes
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="label">Ventes totales</div>
-            <div className="value">{stats.totalSales}</div>
-            <div className="sub" style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text-3)' }}>
-              <ShoppingCart size={12} style={{ display: 'inline', verticalAlign: 'middle' }} />
-              Achats confirmé
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="label">Note moyenne</div>
-            <div className="value">{stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '--'} <Star size={20} style={{ display: 'inline', color: 'var(--gold)' }} /></div>
-            <div className="sub" style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text-3)' }}>
-              <Star size={12} style={{ display: 'inline', verticalAlign: 'middle' }} />
-              {stats.averageRating >= 4.5 ? 'Excellent' : stats.averageRating >= 3.5 ? 'Bien' : 'À améliorer'}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="label">Downloads</div>
-            <div className="value">{stats.totalDownloads}</div>
-            <div className="sub" style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text-3)' }}>
-              <Download size={12} style={{ display: 'inline', verticalAlign: 'middle' }} />
-              Consultations
+          <div className="contrib-subject-header-body">
+            <h2 className="contrib-subject-header-title">{subject.titre}</h2>
+            <div className="contrib-subject-header-meta">
+              {subject.matiere} • {subject.annee} • {subject.type || 'Sujet'}
             </div>
           </div>
         </div>
+        <div className="contrib-subject-header-actions">
+          <Link href={`/sujet/${subject.id}`} className="admin-btn admin-btn-outline">
+            <Eye size={14} />
+            Voir
+          </Link>
+          <Link href={`/contributeur/nouveau?id=${subject.id}`} className="admin-btn admin-btn-outline">
+            <Edit3 size={14} />
+            Modifier
+          </Link>
+        </div>
+      </div>
 
-        {/* Sales Chart */}
-        <div className="chart-card">
-          <div className="chart-header">
-            <div className="chart-title">Évolution des <em>ventes</em></div>
-            <TrendingUp size={20} style={{ color: 'var(--gold)' }} />
+      {/* KPI Grid (D1) */}
+      <div className="kpi-grid contrib-animate-in">
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Revenus totaux</span>
+            <div className="kpi-icon" style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
+              <DollarSign size={16} />
+            </div>
           </div>
-          <div className="chart-bars">
-            {salesHistory.length === 0 ? (
-              <div style={{ textAlign: 'center', width: '100%', padding: '2rem', color: 'var(--text-3)' }}>
-                Aucune donnée disponible
-              </div>
-            ) : (
-              salesHistory.map((month, index) => {
-                const height = (month.revenue / maxRevenue) * 100
-                return (
-                  <div key={index} className="bar-col">
-                    <div className="bar" style={{ height: `${height}%` }} title={`${month.revenue} Ar`} />
-                    <div className="bar-label">{month.month.slice(5)}</div>
-                  </div>
-                )
-              })
-            )}
+          <div className="kpi-value gold">
+            {Number(stats.totalRevenue).toLocaleString('fr-FR')} <small>Ar</small>
+          </div>
+          <div className="kpi-trend">
+            {Number(stats.totalSales)} vente{Number(stats.totalSales) > 1 ? 's' : ''} confirmée{Number(stats.totalSales) > 1 ? 's' : ''}
           </div>
         </div>
 
-        {/* Recent Purchases */}
-        <div className="panel">
-          <div className="p-head">
-            <div className="p-dot"></div>
-            <span className="p-label">
-              <Eye size={14} />
-              Achats récents
-            </span>
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Ventes totales</span>
+            <div className="kpi-icon" style={{ background: 'var(--blue-dim)', color: 'var(--blue)' }}>
+              <ShoppingCart size={16} />
+            </div>
           </div>
-          <div className="p-body">
-            {recentPurchases.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-3)' }}>
-                Aucun achat récent
-              </div>
-            ) : (
-              recentPurchases.map((purchase) => (
-                <div key={purchase.id} className="earner-row">
-                  <div className="er-av">
-                    {(purchase.prenom?.charAt(0) || 'U').toUpperCase()}
-                  </div>
-                  <div className="er-name">
-                    {purchase.prenom} {purchase.nom?.charAt(0)}.
-                  </div>
-                  <div className="er-amount">
-                    {purchase.creditsAmount} cr
-                  </div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '0.58rem', color: 'var(--text-4)', minWidth: '80px', textAlign: 'right' }}>
-                    {new Date(purchase.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                  </div>
+          <div className="kpi-value">{Number(stats.totalSales)}</div>
+          <div className="kpi-trend">Achats confirmés</div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Note moyenne</span>
+            <div className="kpi-icon" style={{ background: 'var(--amber-dim)', color: 'var(--amber)' }}>
+              <Star size={16} />
+            </div>
+          </div>
+          <div className="kpi-value">
+            {Number(stats.averageRating) > 0 ? Number(stats.averageRating).toFixed(1) : '—'}
+            <small> / 5</small>
+          </div>
+          <div className="kpi-trend" style={{ color: Number(stats.averageRating) >= 4 ? 'var(--sage)' : 'var(--text-4)' }}>
+            {Number(stats.averageRating) >= 4.5 ? 'Excellent' : Number(stats.averageRating) >= 3.5 ? 'Bien' : 'À améliorer'}
+          </div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-header">
+            <span className="kpi-title">Téléchargements</span>
+            <div className="kpi-icon" style={{ background: 'var(--sage-dim)', color: 'var(--sage)' }}>
+              <Download size={16} />
+            </div>
+          </div>
+          <div className="kpi-value">{Number(stats.totalDownloads)}</div>
+          <div className="kpi-trend">Consultations</div>
+        </div>
+      </div>
+
+      {/* Chart + Purchases (split) */}
+      <div className="contrib-split-analytics">
+        <div className="admin-card">
+          <div className="admin-card-body">
+            <div className="contrib-card-header">
+              <h3 className="contrib-card-title">Évolution des ventes</h3>
+              <TrendingUp size={18} style={{ color: 'var(--gold)' }} />
+            </div>
+
+            <div className="contrib-chart" role="img" aria-label="Graphique des revenus mensuels">
+              {salesHistory.length > 0 && (
+                <div className="contrib-chart-grid" aria-hidden="true">
+                  {gridLabels.map((val, i) => (
+                    <div key={i} className="contrib-chart-gridline">
+                      <span className="contrib-chart-gridline-label">
+                        {val >= 1000 ? `${Math.round(val / 1000)}k` : val}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))
-            )}
+              )}
+
+              {salesHistory.length === 0 ? (
+                <div className="contrib-chart-empty">
+                  Aucune donnée de ventes sur 6 mois
+                </div>
+              ) : (
+                salesHistory.map((month: any, index: number) => {
+                  const revenue = Number(month.revenue) || 0
+                  const sales = Number(month.sales) || 0
+                  const height = (revenue / maxRevenue) * 100
+                  return (
+                    <div key={index} className="contrib-chart-col">
+                      <div className="contrib-chart-bar-wrap">
+                        <div
+                          className="contrib-chart-bar"
+                          style={{ height: `${Math.max(height, 2)}%` }}
+                          aria-label={`${revenue} Ar, ${sales} ventes`}
+                        />
+                      </div>
+                      <div className="contrib-chart-tooltip">
+                        {revenue.toLocaleString('fr-FR')} Ar<br />
+                        <span style={{ color: 'var(--text-4)' }}>{sales} vente{sales > 1 ? 's' : ''}</span>
+                      </div>
+                      <span className="contrib-chart-label">
+                        {formatMonthLabel(month.month)}
+                      </span>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Recent purchases */}
+        <div className="admin-card">
+          <div className="admin-card-body">
+            <div className="contrib-card-header">
+              <h3 className="contrib-card-title">
+                <Users size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6, color: 'var(--gold)' }} />
+                Achats récents
+              </h3>
+              <span className="admin-tab-count">{recentPurchases.length}</span>
+            </div>
+            <div className="contrib-purchases-list">
+              {recentPurchases.length === 0 ? (
+                <div className="contrib-chart-empty">Aucun achat récent</div>
+              ) : (
+                recentPurchases.map((purchase: any) => (
+                  <div key={purchase.id} className="contrib-purchase-row">
+                    <div className="contrib-purchase-avatar">
+                      {(purchase.prenom?.charAt(0) || 'U').toUpperCase()}
+                    </div>
+                    <div className="contrib-purchase-name">
+                      {purchase.prenom} {purchase.nom?.charAt(0) || ''}.
+                    </div>
+                    <div className="contrib-purchase-amount">
+                      {purchase.creditsAmount} cr
+                    </div>
+                    <div className="contrib-purchase-date">
+                      {new Date(purchase.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

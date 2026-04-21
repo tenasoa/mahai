@@ -1,9 +1,26 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Input } from "@/components/ui";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui";
+import { Phone, ChevronDown } from "lucide-react";
 import styles from "./PaymentForm.module.css";
+
+type OperatorId = 'mvola' | 'orange' | 'airtel'
+
+function detectOperator(phone: string): OperatorId | '' {
+  const p = phone.replace(/\s/g, '')
+  const prefix3 = p.substring(0, 3)
+  if (['034', '038'].includes(prefix3)) return 'mvola'
+  if (['032', '037'].includes(prefix3)) return 'orange'
+  if (prefix3 === '033') return 'airtel'
+  return ''
+}
+
+const OPERATOR_NAMES: Record<string, string> = {
+  mvola: 'MVola',
+  orange: 'Orange Money',
+  airtel: 'Airtel Money',
+}
 
 export interface PaymentAmount {
   credits: number;
@@ -21,6 +38,7 @@ export interface PaymentFormProps {
   error?: string;
   onAmountSelect?: (amount: PaymentAmount) => void;
   onPhoneNumberChange?: (phoneNumber: string) => void;
+  onProviderChange?: (providerId: string) => void;
   onSubmit?: (data: {
     amount: PaymentAmount;
     phoneNumber: string;
@@ -44,11 +62,53 @@ export function PaymentForm({
   error,
   onAmountSelect,
   onPhoneNumberChange,
+  onProviderChange,
   onSubmit,
 }: PaymentFormProps) {
   const [localPhone, setLocalPhone] = useState(phoneNumber);
   const [localAmount, setLocalAmount] = useState<PaymentAmount | undefined>(
     selectedAmount,
+  );
+  const [userPhones, setUserPhones] = useState<{id: string, phone: string, provider: string}[]>([]);
+  const [detectedOperator, setDetectedOperator] = useState('');
+
+  useEffect(() => {
+    async function fetchPhones() {
+      try {
+        const res = await fetch('/api/user/phones')
+        if (res.ok) {
+          const data = await res.json()
+          setUserPhones(data)
+          if (data.length > 0 && !localPhone) {
+            const first = data[0]
+            setLocalPhone(first.phone)
+            onPhoneNumberChange?.(first.phone)
+            const det = detectOperator(first.phone)
+            if (det) {
+              setDetectedOperator(det)
+              onProviderChange?.(det)
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Erreur chargement numéros', err)
+      }
+    }
+    fetchPhones()
+  }, []);
+
+  const handlePhoneSelect = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value
+      setLocalPhone(value)
+      onPhoneNumberChange?.(value)
+      const det = detectOperator(value)
+      if (det) {
+        setDetectedOperator(det)
+        onProviderChange?.(det)
+      }
+    },
+    [onPhoneNumberChange, onProviderChange],
   );
 
   const handleAmountSelect = useCallback(
@@ -59,14 +119,6 @@ export function PaymentForm({
     [onAmountSelect],
   );
 
-  const handlePhoneChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setLocalPhone(value);
-      onPhoneNumberChange?.(value);
-    },
-    [onPhoneNumberChange],
-  );
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -82,7 +134,7 @@ export function PaymentForm({
     [localAmount, localPhone, providerId, onSubmit],
   );
 
-  const isValid = localAmount && localPhone.length >= 10 && providerId;
+  const isValid = localAmount && localPhone && (providerId || detectedOperator);
 
   return (
     <form className={styles.paymentForm} onSubmit={handleSubmit}>
@@ -115,18 +167,40 @@ export function PaymentForm({
         </div>
       </div>
 
-      {/* Phone Number */}
+      {/* Phone Number — Dropdown */}
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Numéro Mobile Money</h3>
-        <Input
-          type="tel"
-          placeholder="Ex: 03 45 678 90"
-          value={localPhone}
-          onChange={handlePhoneChange}
-          error={error}
-          leftIcon={<span>📱</span>}
-          maxLength={15}
-        />
+        <div className={styles.phoneSelectWrapper}>
+          <div className={styles.phoneIcon}>
+            <Phone size={16} />
+          </div>
+          <select
+            value={localPhone}
+            onChange={handlePhoneSelect}
+            className={styles.phoneSelect}
+            aria-label="Numéro Mobile Money"
+          >
+            <option value="">— Choisir un numéro —</option>
+            {userPhones.map((up) => (
+              <option key={up.id || up.phone} value={up.phone}>
+                {up.phone}
+              </option>
+            ))}
+          </select>
+          <div className={styles.phoneChevron}>
+            <ChevronDown size={16} />
+          </div>
+        </div>
+        {userPhones.length === 0 && (
+          <p className={styles.noPhoneMsg}>Aucun numéro enregistré. Ajoutez-en depuis votre profil.</p>
+        )}
+        {(detectedOperator || providerId) && (
+          <div className={styles.operatorBadge}>
+            <span className={styles.operatorName}>{OPERATOR_NAMES[detectedOperator || providerId || '']}</span>
+            <span className={styles.operatorAuto}>détecté auto</span>
+          </div>
+        )}
+        {error && <p className={styles.errorMsg}>{error}</p>}
       </div>
 
       {/* Summary */}

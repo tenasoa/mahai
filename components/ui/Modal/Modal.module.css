@@ -9,10 +9,11 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Changé de center à flex-start */
   justify-content: center;
-  z-index: 1000;
-  padding: var(--space-lg);
+  z-index: var(--z-modal);
+  padding: var(--space-xl);
+  overflow-y: auto; /* Permet le défilement de l'overlay */
   animation: fadeIn var(--transition-base);
 }
 
@@ -24,8 +25,8 @@
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-lg);
   max-width: 90vw;
-  max-height: 90vh;
-  overflow: auto;
+  /* max-height retiré pour permettre au contenu de s'allonger */
+  margin: auto 0; /* Centre verticalement si le contenu est petit */
   animation: slideUp var(--transition-base);
   position: relative;
 }

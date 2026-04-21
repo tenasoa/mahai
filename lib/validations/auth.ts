@@ -4,8 +4,8 @@ import { REGISTER_ROLE_VALUES } from '@/lib/auth-flow'
 export const registerSchema = z.object({
   email: z
     .string()
-    .min(1, 'L\'email est requis')
-    .email('Adresse email invalide'),
+    .min(1, 'L\'e-mail est requis')
+    .email('Adresse e-mail invalide'),
   password: z
     .string()
     .min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
@@ -37,8 +37,8 @@ export type RegisterFormData = z.infer<typeof registerSchema>
 export const loginSchema = z.object({
   email: z
     .string()
-    .min(1, 'L\'email est requis')
-    .email('Adresse email invalide'),
+    .min(1, 'L\'e-mail est requis')
+    .email('Adresse e-mail invalide'),
   password: z
     .string()
     .min(1, 'Le mot de passe est requis'),
@@ -49,8 +49,8 @@ export type LoginFormData = z.infer<typeof loginSchema>
 export const forgotPasswordSchema = z.object({
   email: z
     .string()
-    .min(1, 'L\'email est requis')
-    .email('Adresse email invalide'),
+    .min(1, 'L\'e-mail est requis')
+    .email('Adresse e-mail invalide'),
 })
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>

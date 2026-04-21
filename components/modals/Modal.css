@@ -8,7 +8,7 @@
   position: fixed;
   inset: 0;
   background: rgba(248, 244, 238, 0.85);
-  z-index: 900;
+  z-index: var(--z-modal-backdrop);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -98,7 +98,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 .modal-close:hover {
@@ -140,7 +140,7 @@
   font-size: 0.88rem;
   color: var(--text);
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   box-sizing: border-box;
   -webkit-appearance: none;
   appearance: none;
@@ -180,7 +180,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: none;
-  transition: all 0.2s ease;
+  transition: transform var(--transition-base), box-shadow var(--transition-base), background var(--transition-fast), border-color var(--transition-fast);
   white-space: nowrap;
   text-align: center;
   letter-spacing: 0.04em;
@@ -277,6 +277,148 @@
   background: var(--gold);
 }
 
+/* ==========================================================
+   Auth Modal (connexion/inscription requise)
+   ========================================================== */
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  animation: modalFadeIn 0.2s ease;
+}
+
+.auth-modal-dialog {
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  padding: 2rem;
+  max-width: 440px;
+  width: 90%;
+  box-shadow: var(--glow-lg);
+  animation: modalSlideUp 0.3s ease;
+}
+
+.auth-modal-icon {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.auth-modal-icon svg {
+  display: block;
+  margin: 0 auto;
+  color: var(--gold);
+  opacity: 0.85;
+}
+
+.auth-modal-head {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.auth-modal-title {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.auth-modal-desc {
+  font-size: 0.85rem;
+  color: var(--text-3);
+  line-height: 1.6;
+}
+
+.auth-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-modal-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, var(--gold), var(--gold-hi));
+  color: var(--void);
+  font-family: var(--body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(168,134,58,0.22);
+  border: none;
+}
+
+.auth-modal-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(168,134,58,0.35);
+}
+
+.auth-modal-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid var(--b1);
+  transition: all 0.2s;
+}
+
+.auth-modal-btn-secondary:hover {
+  background: var(--card);
+  border-color: var(--gold-line);
+}
+
+.auth-modal-dismiss {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-4);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: none;
+  transition: color 0.2s;
+  display: block;
+}
+
+.auth-modal-dismiss:hover {
+  color: var(--text-3);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .modal-overlay {
@@ -300,4 +442,9 @@
   .modal-footer .btn-primary {
     width: 100%;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay, .modal-content { animation: none; }
+  .loading-spinner { animation: none; }
 }

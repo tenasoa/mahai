@@ -73,8 +73,8 @@ export function Modal({
       // Add event listeners
       document.addEventListener('keydown', handleKeyDown)
 
-      // Prevent body scroll
-      document.body.style.overflow = 'hidden'
+      // Prevent body scroll (désactivé à la demande de l'utilisateur pour utiliser le scroll navigateur)
+      // document.body.style.overflow = 'hidden'
 
       // Focus first focusable element
       setTimeout(() => {
@@ -90,7 +90,7 @@ export function Modal({
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = ''
+      // document.body.style.overflow = ''
 
       // Restore previous focus
       if (previousActiveElement.current instanceof HTMLElement) {

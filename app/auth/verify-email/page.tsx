@@ -3,6 +3,7 @@
 import { Suspense } from 'react'
 import { VerifyEmailForm } from '@/components/auth/VerifyEmailForm'
 import { AuthPageSkeleton } from '@/components/ui/PageSkeletons'
+import { Logo } from '@/components/common/Logo'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
@@ -30,29 +31,7 @@ function VerifyEmailContent() {
         animation: 'fadeUp 0.6s ease both'
       }}>
         <div className="auth-logo" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2"
-            style={{ 
-              fontFamily: 'var(--display)', 
-              fontSize: '1.9rem', 
-              fontWeight: 600, 
-              color: 'var(--text)', 
-              textDecoration: 'none', 
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem'
-            }}
-          >
-            Mah<span className="logo-gem" style={{ 
-              width: '8px', 
-              height: '8px', 
-              background: 'var(--gold)', 
-              borderRadius: '50%', 
-              boxShadow: '0 0 12px var(--gold-glow)',
-              animation: 'pulse 3s ease-in-out infinite'
-            }}></span>AI
-          </Link>
+          <Logo size="md" />
         </div>
         
         <div className="auth-card" style={{ 

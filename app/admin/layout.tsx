@@ -27,12 +27,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const initials = `${user.prenom?.charAt(0) || ''}${user.nom?.charAt(0) || ''}`.toUpperCase() || 'A'
 
   return (
-    <div className="admin-body">
-      <div className="admin-noise" />
-      <div className="admin-layout">
+    <div className="admin-body" suppressHydrationWarning>
+      <div className="admin-noise" suppressHydrationWarning />
+      <div className="admin-layout" suppressHydrationWarning>
         <AdminSidebar user={user} initials={initials} />
 
-        <div className="admin-main">
+        <div className="admin-main" suppressHydrationWarning>
           {children}
         </div>
       </div>

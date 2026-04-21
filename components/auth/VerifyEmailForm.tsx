@@ -9,6 +9,7 @@ import {
 import { useToast, ToastContainer } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { CheckCircle2, Mail, RefreshCw } from "lucide-react";
+import "./auth-forms.css";
 
 interface VerifyEmailFormProps {
   email?: string;
@@ -66,14 +67,14 @@ export function VerifyEmailForm({ email = "", onComplete }: VerifyEmailFormProps
       }
 
       if (!result.verified) {
-        addToast("Votre email n'est pas encore confirmé.", "error");
+        addToast("Votre e-mail n'est pas encore confirmé.", "error");
         return;
       }
 
       const redirectUrl = result.nextUrl || "/auth/onboarding";
       setNextUrl(redirectUrl);
       setShowSuccess(true);
-      addToast("Email vérifié avec succès", "success");
+      addToast("Adresse vérifiée avec succès", "success");
 
       setTimeout(() => {
         onComplete(redirectUrl);
@@ -87,7 +88,7 @@ export function VerifyEmailForm({ email = "", onComplete }: VerifyEmailFormProps
 
   const resendEmail = async () => {
     if (!resolvedEmail) {
-      addToast("Impossible de retrouver votre adresse email", "error");
+      addToast("Impossible de retrouver votre adresse e-mail", "error");
       return;
     }
 
@@ -110,69 +111,22 @@ export function VerifyEmailForm({ email = "", onComplete }: VerifyEmailFormProps
   };
 
   if (!mounted) {
-    return <div style={{ minHeight: "340px" }} />;
+    return <div className="auth-skeleton" />;
   }
 
   if (showSuccess) {
     return (
-      <div style={{ textAlign: "center", animation: "fadeUp 0.4s ease" }}>
-        <div
-          style={{
-            width: "72px",
-            height: "72px",
-            borderRadius: "50%",
-            background: "rgba(0, 255, 136, 0.1)",
-            border: "1px solid rgba(0, 255, 136, 0.3)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 1.25rem",
-            animation: "popIn 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        >
-          <CheckCircle2 className="w-8 h-8 text-[#00FF88]" />
+      <div className="auth-success-wrap">
+        <div className="auth-success-icon">
+          <CheckCircle2 size={32} />
         </div>
-
-        <h1
-          style={{
-            fontFamily: "var(--display)",
-            fontSize: "2rem",
-            color: "var(--text)",
-            letterSpacing: "-0.03em",
-            marginBottom: "0.5rem",
-          }}
-        >
-          Email confirmé
+        <h1 className="auth-success-heading">
+          E-mail confirmé
         </h1>
-
-        <p
-          style={{
-            fontSize: "0.85rem",
-            color: "var(--text-2)",
-            lineHeight: 1.7,
-            marginBottom: "1.6rem",
-          }}
-        >
-          Votre compte est prêt. Redirection en cours vers la configuration du
-          profil.
+        <p className="auth-success-text">
+          Votre compte est prêt. Redirection en cours vers la configuration du profil.
         </p>
-
-        <button
-          onClick={() => window.location.assign(nextUrl)}
-          style={{
-            width: "100%",
-            fontFamily: "var(--body)",
-            fontSize: "0.9rem",
-            fontWeight: 500,
-            padding: "0.9rem",
-            borderRadius: "var(--r)",
-            background: "linear-gradient(135deg, var(--gold), var(--gold-hi))",
-            color: "var(--void)",
-            border: "none",
-            cursor: "none",
-            letterSpacing: "0.04em",
-          }}
-        >
+        <button onClick={() => window.location.assign(nextUrl)} className="auth-submit-btn">
           Continuer vers mon profil
         </button>
       </div>
@@ -180,119 +134,42 @@ export function VerifyEmailForm({ email = "", onComplete }: VerifyEmailFormProps
   }
 
   return (
-    <div>
+    <div className="auth-form-wrapper">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
-      <div
-        style={{
-          width: "100%",
-          height: "120px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <div style={{ animation: "envFloat 3s ease-in-out infinite" }}>
-          <Mail className="w-16 h-16 text-[#FFD166] opacity-80" strokeWidth={1.5} />
-        </div>
+      <div className="auth-float-icon">
+        <Mail size={64} strokeWidth={1.5} />
       </div>
 
-      <h1
-        style={{
-          fontFamily: "var(--display)",
-          fontSize: "1.95rem",
-          fontWeight: 400,
-          letterSpacing: "-0.02em",
-          color: "var(--text)",
-          textAlign: "center",
-          marginBottom: "0.4rem",
-          lineHeight: 1.1,
-        }}
-      >
-        Confirmez votre email
+      <h1 className="auth-heading-centered-lg">
+        Confirmez votre e-mail
       </h1>
 
-      <p
-        style={{
-          fontSize: "0.85rem",
-          color: "var(--text-3)",
-          textAlign: "center",
-          lineHeight: 1.7,
-          marginBottom: "1.75rem",
-        }}
-      >
-        Nous avons envoyé un lien de confirmation Supabase. Ouvrez cet email,
+      <p className="auth-subtitle-centered">
+        Nous avons envoyé un lien de confirmation à votre adresse. Ouvrez cet e-mail,
         cliquez sur le lien puis revenez ici.
       </p>
 
-      {resolvedEmail ? (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "0.45rem",
-            background: "var(--gold-dim)",
-            border: "1px solid var(--gold-line)",
-            borderRadius: "var(--r-lg)",
-            padding: "0.55rem 1.1rem",
-            fontFamily: "var(--mono)",
-            fontSize: "0.72rem",
-            color: "var(--gold)",
-            marginBottom: "1.75rem",
-            wordBreak: "break-all",
-          }}
-        >
-          <Mail className="w-3 h-3" />
+      {resolvedEmail && (
+        <div className="auth-email-badge-lg">
+          <Mail size={12} />
           <span>{resolvedEmail}</span>
         </div>
-      ) : null}
+      )}
 
       <button
         onClick={checkVerificationStatus}
         disabled={isChecking}
-        style={{
-          width: "100%",
-          fontFamily: "var(--body)",
-          fontSize: "0.9rem",
-          fontWeight: 500,
-          padding: "0.9rem",
-          borderRadius: "var(--r)",
-          background: "linear-gradient(135deg, var(--gold), var(--gold-hi))",
-          color: "var(--void)",
-          border: "none",
-          cursor: isChecking ? "not-allowed" : "none",
-          letterSpacing: "0.04em",
-          boxShadow: "0 4px 20px rgba(201,168,76,0.2)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "0.5rem",
-          marginBottom: "0.75rem",
-        }}
+        className="auth-submit-btn auth-submit-btn-mb-sm"
       >
-        <RefreshCw className={`w-4 h-4 ${isChecking ? "animate-spin" : ""}`} />
-        {isChecking ? "Vérification..." : "J'ai déjà confirmé mon email"}
+        <RefreshCw size={16} className={isChecking ? "animate-spin" : ""} />
+        {isChecking ? "Vérification..." : "J'ai déjà confirmé mon e-mail"}
       </button>
 
       <button
         onClick={resendEmail}
         disabled={timerActive || isResending}
-        style={{
-          width: "100%",
-          fontFamily: "var(--mono)",
-          fontSize: "0.72rem",
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          padding: "0.75rem",
-          borderRadius: "var(--r)",
-          background: "var(--surface)",
-          color: timerActive ? "var(--text-4)" : "var(--gold)",
-          border: "1px solid var(--b2)",
-          cursor: timerActive || isResending ? "not-allowed" : "none",
-          marginBottom: "1.3rem",
-        }}
+        className="auth-mono-btn"
       >
         {isResending
           ? "Envoi..."
@@ -301,18 +178,9 @@ export function VerifyEmailForm({ email = "", onComplete }: VerifyEmailFormProps
             : "Renvoyer le lien de confirmation"}
       </button>
 
-      <div style={{ textAlign: "center" }}>
-        <Link
-          href="/auth/register"
-          style={{
-            fontFamily: "var(--mono)",
-            fontSize: "0.62rem",
-            color: "var(--text-3)",
-            textDecoration: "none",
-            cursor: "none",
-          }}
-        >
-          Mauvaise adresse email ? Recommencer
+      <div className="auth-center-text">
+        <Link href="/auth/register" className="auth-link-plain">
+          Mauvaise adresse e-mail ? Recommencer
         </Link>
       </div>
     </div>

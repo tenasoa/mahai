@@ -1,0 +1,47 @@
+.correction-page {
+  min-height: 100vh;
+  background: var(--void);
+  color: var(--text);
+  padding-bottom: 5rem;
+}
+
+.correction-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 84px 1.5rem 0;
+}
+
+.luxury-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-4);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.luxury-back-link:hover {
+  color: var(--gold);
+}
+
+.blue-dim {
+  background: rgba(74, 139, 201, 0.1);
+}
+
+.blue-line {
+  border-color: rgba(74, 139, 201, 0.22);
+}
+
+.text-blue {
+  color: #4A8BC9;
+}
+
+@media (max-width: 640px) {
+  .correction-container {
+    padding-top: 72px;
+  }
+}

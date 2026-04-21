@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { Bell, Check, X, Zap, CreditCard, BookOpen, Settings, AlertTriangle } from 'lucide-react'
+import { Bell, Check, X, Zap, CreditCard, BookOpen, Settings, AlertTriangle, Sparkles, Library, AlertCircle, Star } from 'lucide-react'
 import { 
   markAllNotificationsAsReadAction, 
   dismissNotificationAction,
@@ -86,10 +86,10 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'credit': return { icon: '✦', class: 'ni-credit' }
-      case 'sujet': return { icon: '📚', class: 'ni-sujet' }
-      case 'alert': return { icon: '⚠', class: 'ni-alert' }
-      default: return { icon: '🔔', class: 'ni-system' }
+      case 'credit': return { icon: <Sparkles size={16} />, class: 'ni-credit' }
+      case 'sujet': return { icon: <Library size={16} />, class: 'ni-sujet' }
+      case 'alert': return { icon: <AlertCircle size={16} />, class: 'ni-alert' }
+      default: return { icon: <Bell size={16} />, class: 'ni-system' }
     }
   }
 
@@ -236,7 +236,7 @@ export default function NotificationsPage() {
                         {notif.body}
                         {notif.score && (
                           <div className="score-chip">
-                            ✦ {notif.score} / {notif.maxScore}
+                            <Star size={12} /> {notif.score} / {notif.maxScore}
                           </div>
                         )}
                       </div>

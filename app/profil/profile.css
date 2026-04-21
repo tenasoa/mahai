@@ -536,6 +536,14 @@
   min-width: 0;
 }
 
+.ir-value-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
 .ir-icon {
   color: var(--gold);
   flex-shrink: 0;
@@ -545,6 +553,182 @@
   font-size: var(--text-base);
   color: var(--text);
   word-break: break-word;
+}
+
+/* Edit Trigger */
+.ir-edit-trigger {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--b2);
+  background: var(--surface);
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.info-row:hover .ir-edit-trigger {
+  opacity: 1;
+}
+
+.ir-edit-trigger:hover {
+  background: var(--gold-dim);
+  border-color: var(--gold-line);
+  color: var(--gold);
+  transform: scale(1.1);
+}
+
+/* Edit Wrap */
+.ir-edit-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  width: 100%;
+}
+
+.ir-input {
+  flex: 1;
+  padding: 0.55rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r);
+  font-family: var(--body);
+  font-size: 0.9rem;
+  color: var(--text);
+  outline: none;
+  box-shadow: 0 4px 12px rgba(201,168,76, 0.08);
+}
+
+.ir-edit-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.ir-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ir-btn-save {
+  background: var(--gold);
+  color: var(--void);
+  border: none;
+}
+
+.ir-btn-save:hover {
+  background: var(--gold-hi);
+  transform: scale(1.05);
+}
+
+.ir-btn-cancel {
+  background: var(--surface);
+  color: var(--text-3);
+  border: 1px solid var(--b2);
+}
+
+.ir-btn-cancel:hover {
+  background: var(--ruby-dim);
+  color: var(--ruby);
+  border-color: var(--ruby-line);
+}
+
+/* Telephones Management */
+.telephones-container {
+  padding: 0 2rem 2rem;
+}
+
+.phone-row {
+  border-bottom: 1px solid var(--b3);
+}
+
+.ir-btn-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0;
+}
+
+.phone-row:hover .ir-btn-delete {
+  opacity: 1;
+}
+
+.ir-btn-delete:hover {
+  color: var(--ruby);
+  background: var(--ruby-dim);
+}
+
+.add-phone-form {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px dashed var(--gold-line);
+  border-radius: var(--r-lg);
+}
+
+.ap-inputs {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ap-select {
+  width: 110px;
+  padding: 0.6rem;
+  background: var(--card);
+  border: 1px solid var(--b2);
+  border-radius: var(--r);
+  font-size: 0.8rem;
+  color: var(--text);
+  outline: none;
+}
+
+.ap-input {
+  flex: 1;
+  padding: 0.6rem 0.85rem;
+  background: var(--card);
+  border: 1px solid var(--b2);
+  border-radius: var(--r);
+  font-size: 0.85rem;
+  color: var(--text);
+  outline: none;
+}
+
+.ap-input:focus {
+  border-color: var(--gold-line);
+}
+
+.ap-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--gold);
+  color: var(--void);
+  border: none;
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ap-btn:hover {
+  background: var(--gold-hi);
+  transform: translateY(-1px);
 }
 
 .ir-visibility-cell {
@@ -974,7 +1158,10 @@
 }
 
 .tx-payment-amount {
-  color: var(--text-3) !important;
+  font-size: 0.7rem;
+  font-family: var(--mono);
+  color: var(--text-3);
+  margin-top: 0.2rem;
 }
 
 .tx-amount {
@@ -1218,7 +1405,7 @@ select.form-input {
   position: fixed;
   top: 80px;
   right: 1.5rem;
-  z-index: 2000;
+  z-index: var(--z-toast);
   animation: slideIn 0.3s ease;
 }
 
@@ -1316,9 +1503,149 @@ select.form-input {
   color: var(--text);
 }
 
-/* ═══════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════ */
+.info-row.is-editing {
+  background: var(--gold-dim);
+  border-radius: var(--r);
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.ir-edit-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.ir-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r);
+  padding: 0.5rem 0.75rem;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.ir-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+
+.ir-edit-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.ir-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.ir-btn-cancel {
+  background: var(--surface);
+  color: var(--text-3);
+}
+
+.ir-btn-cancel:hover {
+  color: var(--ruby);
+  border-color: var(--ruby-line);
+}
+
+.ir-btn-save {
+  background: var(--gold);
+  color: var(--void);
+}
+
+.ir-btn-save:hover {
+  background: var(--gold-hi);
+  transform: scale(1.1);
+}
+
+.ir-edit-trigger {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--b2);
+  background: transparent;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+  opacity: 0;
+}
+
+.info-row:hover .ir-edit-trigger {
+  opacity: 1;
+}
+
+.ir-edit-trigger:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Phone management styles */
+.ir-btn-add {
+  background: var(--gold-dim);
+  border: 1px solid var(--gold-line);
+  color: var(--gold);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ir-btn-add:hover {
+  background: var(--gold);
+  color: var(--void);
+  transform: scale(1.1);
+}
+
+.ir-btn-delete {
+  background: transparent;
+  border: 1px solid var(--b2);
+  color: var(--text-4);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ir-btn-delete:hover {
+  border-color: var(--ruby-line);
+  color: var(--ruby);
+  background: var(--ruby-dim);
+}
+
+.ir-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ... reste du fichier ... */
+
 
 @media (max-width: 1024px) {
   .profile-grid {
@@ -1448,4 +1775,27 @@ select.form-input {
   .lbc-amount {
     font-size: var(--text-3xl);
   }
+}
+
+/* ==========================================================
+   Utility classes (from style jsx)
+   ========================================================== */
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.p-10 {
+  padding: 3rem;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.text-rose {
+  color: #ff4d4f;
 }

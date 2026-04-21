@@ -2,7 +2,7 @@ import { query } from '@/lib/db'
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { FileText, Users, CreditCard, TrendingUp, AlertCircle, CheckCircle2, Clock, ArrowRight, Sparkles } from 'lucide-react'
+import { FileText, Users, CreditCard, TrendingUp, AlertCircle, CheckCircle2, Clock, ArrowRight, Sparkles, Settings, Smartphone, Package } from 'lucide-react'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 
 async function getDashboardData() {
@@ -82,6 +82,10 @@ export default async function AdminDashboard() {
           <p className="admin-subtitle">Statistiques et actions requises sur Mah.AI</p>
         </div>
         <div className="admin-header-actions">
+          <Link href="/admin/configuration" className="admin-btn admin-btn-outline">
+            <Settings size={16} />
+            Configuration
+          </Link>
           <Link href="/admin/sujets" className="admin-btn admin-btn-outline">
             <FileText size={16} />
             Voir les sujets
@@ -144,6 +148,52 @@ export default async function AdminDashboard() {
             <CheckCircle2 size={12} />
             Total rechargements validés
           </div>
+        </div>
+      </div>
+
+      {/* Raccourcis configuration */}
+      <div className="admin-card" style={{ marginTop: '2rem' }}>
+        <div className="admin-card-header">
+          <h2 className="admin-card-title">
+            <Settings size={18} />
+            Configuration du système
+          </h2>
+          <Link href="/admin/configuration" className="admin-btn admin-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+            Gérer tout
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', padding: '1.5rem' }}>
+          <Link href="/admin/configuration?tab=phones" className="admin-list-item" style={{ borderRadius: 'var(--r)', border: '1px solid var(--b2)', padding: '1rem', textDecoration: 'none' }}>
+            <div className="admin-list-icon" style={{ background: 'var(--blue-dim)', color: 'var(--blue)' }}>
+              <Smartphone size={18} />
+            </div>
+            <div className="admin-list-content">
+              <div className="admin-list-title">Numéros Mobile Banking</div>
+              <div className="admin-list-desc">Orange, MVola, Airtel</div>
+            </div>
+            <ArrowRight size={14} style={{ color: 'var(--text-4)' }} />
+          </Link>
+          <Link href="/admin/configuration?tab=packs" className="admin-list-item" style={{ borderRadius: 'var(--r)', border: '1px solid var(--b2)', padding: '1rem', textDecoration: 'none' }}>
+            <div className="admin-list-icon" style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
+              <Package size={18} />
+            </div>
+            <div className="admin-list-content">
+              <div className="admin-list-title">Packs de crédits</div>
+              <div className="admin-list-desc">Prix, bonus, popularité</div>
+            </div>
+            <ArrowRight size={14} style={{ color: 'var(--text-4)' }} />
+          </Link>
+          <Link href="/admin/configuration?tab=settings" className="admin-list-item" style={{ borderRadius: 'var(--r)', border: '1px solid var(--b2)', padding: '1rem', textDecoration: 'none' }}>
+            <div className="admin-list-icon" style={{ background: 'var(--sage-dim)', color: 'var(--sage)' }}>
+              <Settings size={18} />
+            </div>
+            <div className="admin-list-content">
+              <div className="admin-list-title">Paramètres système</div>
+              <div className="admin-list-desc">Bonus, parrainage, etc.</div>
+            </div>
+            <ArrowRight size={14} style={{ color: 'var(--text-4)' }} />
+          </Link>
         </div>
       </div>
 

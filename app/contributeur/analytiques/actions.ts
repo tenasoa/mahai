@@ -19,11 +19,29 @@ async function getAuthenticatedContributor() {
   return { userId: user.id, role: user.role }
 }
 
-export async function getContributorAnalytics() {
+export type AnalyticsPeriod = '7d' | '30d' | '12m'
+
+function getPeriodConfig(period: AnalyticsPeriod) {
+  switch (period) {
+    case '7d':
+      return { interval: '7 days', grouping: "TO_CHAR(p.\"createdAt\", 'YYYY-MM-DD')", format: 'day' }
+    case '30d':
+      return { interval: '30 days', grouping: "TO_CHAR(p.\"createdAt\", 'YYYY-MM-DD')", format: 'day' }
+    case '12m':
+    default:
+      return { interval: '12 months', grouping: "TO_CHAR(p.\"createdAt\", 'YYYY-MM')", format: 'month' }
+  }
+}
+
+export async function getContributorAnalytics(period: AnalyticsPeriod = '12m') {
   const contributor = await getAuthenticatedContributor()
+  const { interval, grouping, format } = getPeriodConfig(period)
+
   if (!contributor) {
     return {
       user: { prenom: 'Utilisateur', nom: '', role: 'CONTRIBUTEUR' },
+      period,
+      format,
       stats: {
         totalEarnings: 0,
         totalSales: 0,
@@ -37,28 +55,28 @@ export async function getContributorAnalytics() {
   }
 
   try {
-    // Stats globales - sans downloadCount car la colonne peut ne pas exister
+    // Stats globales période - pondérées par filtrage temporel
     const statsResult = await query(`
       SELECT 
         COALESCE(SUM(p."creditsAmount" * 50), 0) as totalEarnings,
         COUNT(DISTINCT p.id) as totalSales,
-        COALESCE(AVG(s.rating), 0) as averageRating
+        COALESCE((SELECT AVG(s2.rating) FROM "Subject" s2 WHERE s2."authorId" = $1 AND s2.rating > 0), 0) as averageRating
       FROM "Subject" s
-      LEFT JOIN "Purchase" p ON s.id = p."subjectId"
+      LEFT JOIN "Purchase" p ON s.id = p."subjectId" AND p."createdAt" >= NOW() - INTERVAL '${interval}'
       WHERE s."authorId" = $1
     `, [contributor.userId])
 
-    // Historique des revenus (6 derniers mois)
+    // Historique des revenus (période demandée)
     const earningsHistoryResult = await query(`
       SELECT 
-        TO_CHAR(p."createdAt", 'YYYY-MM') as month,
+        ${grouping} as month,
         COUNT(*) as sales,
         SUM(p."creditsAmount" * 50) as earnings
       FROM "Purchase" p
       JOIN "Subject" s ON p."subjectId" = s.id
       WHERE s."authorId" = $1
-        AND p."createdAt" >= NOW() - INTERVAL '6 months'
-      GROUP BY TO_CHAR(p."createdAt", 'YYYY-MM')
+        AND p."createdAt" >= NOW() - INTERVAL '${interval}'
+      GROUP BY ${grouping}
       ORDER BY month ASC
     `, [contributor.userId])
 
@@ -101,6 +119,8 @@ export async function getContributorAnalytics() {
 
     return {
       user: { prenom: 'Contributeur', nom: '', role: 'CONTRIBUTEUR' },
+      period,
+      format,
       stats: {
         totalEarnings: statsResult.rows[0]?.totalEarnings || 0,
         totalSales: statsResult.rows[0]?.totalSales || 0,
@@ -116,6 +136,8 @@ export async function getContributorAnalytics() {
     // Si certaines colonnes n'existent pas, retourner des données vides
     return {
       user: { prenom: 'Contributeur', nom: '', role: 'CONTRIBUTEUR' },
+      period,
+      format,
       stats: {
         totalEarnings: 0,
         totalSales: 0,

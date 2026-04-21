@@ -1,10 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { CreditCard, Zap, Gift, Phone } from 'lucide-react'
-import { MOBILE_MONEY_PROVIDERS } from '@/data/mobile-money-providers'
+import { CreditCard, Gift, Phone, ShieldCheck, Sparkles, Zap, ChevronDown } from 'lucide-react'
+import { MOBILE_MONEY_PROVIDERS, type MobileMoneyProviderId } from '@/data/mobile-money-providers'
+
+function detectOperator(phone: string): MobileMoneyProviderId | '' {
+  const p = phone.replace(/\s/g, '')
+  const prefix3 = p.substring(0, 3)
+  if (['034', '038'].includes(prefix3)) return 'mvola'
+  if (['032', '037'].includes(prefix3)) return 'orange'
+  if (prefix3 === '033') return 'airtel'
+  return ''
+}
 
 interface CreditPack {
   id: string
@@ -48,11 +57,50 @@ const creditPacks: CreditPack[] = [
 
 export default function CreditsPageClient() {
   const router = useRouter()
-  const [selectedPack, setSelectedPack] = useState<string | null>(null)
+  const [selectedPack, setSelectedPack] = useState<string>('moyen')
   const [phone, setPhone] = useState('')
-  const [operator, setOperator] = useState('')
+  const [operator, setOperator] = useState<MobileMoneyProviderId | ''>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [userPhones, setUserPhones] = useState<{id: string, phone: string, provider: string, label?: string}[]>([])
+
+  // Charger les numéros de l'utilisateur
+  useEffect(() => {
+    async function fetchUserPhones() {
+      try {
+        const response = await fetch('/api/user/phones')
+        if (response.ok) {
+          const data = await response.json()
+          setUserPhones(data)
+          if (data.length > 0) {
+            const first = data[0]
+            setPhone(first.phone)
+            const detected = detectOperator(first.phone)
+            setOperator(detected || first.provider)
+          }
+        }
+      } catch (err) {
+        console.error('Erreur lors du chargement des numéros', err)
+      }
+    }
+    fetchUserPhones()
+  }, [])
+
+  const selectedPackData = useMemo(
+    () => creditPacks.find((pack) => pack.id === selectedPack) ?? null,
+    [selectedPack],
+  )
+
+  const selectedOperator = useMemo(
+    () => MOBILE_MONEY_PROVIDERS.find((provider) => provider.id === operator),
+    [operator],
+  )
+
+  const totalCredits = selectedPackData
+    ? selectedPackData.credits + selectedPackData.bonus
+    : 0
+
+  const formatAmount = (value: number) => `${value.toLocaleString('fr-MG')} Ar`
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -98,135 +146,195 @@ export default function CreditsPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
-      <div className="max-w-5xl mx-auto px-content py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-h1 font-bold text-text mb-4">
+    <div className="min-h-screen bg-void">
+      <div className="mx-auto max-w-[1180px] px-4 pb-14 pt-1 md:px-8">
+        <div className="mb-4 text-center">
+          <p className="mb-1 inline-flex items-center gap-2 rounded-full border border-gold-line bg-gold-dim px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-gold">
+            <Sparkles className="h-3.5 w-3.5" />
+            Recharge de crédits
+          </p>
+          <h1 className="mb-1 text-h1 font-semibold text-text">
             Acheter des Crédits
           </h1>
-          <p className="text-text-muted text-lg">
-            Choisissez votre pack et payez avec Mobile Money
+          <p className="mx-auto max-w-2xl text-sm text-text-2">
+            Sélectionnez un pack, choisissez votre numéro, puis confirmez le paiement.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="mb-3 grid gap-3 md:grid-cols-3">
           {creditPacks.map((pack) => (
-            <div
+            <article
               key={pack.id}
               onClick={() => setSelectedPack(pack.id)}
-              className={`relative cursor-pointer transition-all hover:scale-[1.02] ${
-                selectedPack === pack.id ? 'scale-[1.02]' : ''
+              className={`relative overflow-hidden rounded-2xl border bg-card p-3 transition-all cursor-pointer ${
+                selectedPack === pack.id
+                  ? 'border-gold shadow-[0_0_30px_rgba(168,120,42,0.15)] ring-1 ring-gold'
+                  : 'border-border-1 hover:-translate-y-0.5 hover:border-gold-line'
               }`}
             >
               {pack.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                  <span className="bg-teal text-bg px-4 py-1 rounded-full text-sm font-medium">
+                <div className="absolute right-3 top-3 z-10">
+                  <span className="rounded-full border border-gold-line bg-gold-dim px-3 py-1 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-gold">
                     Plus populaire
                   </span>
                 </div>
               )}
-              <div className={`card h-full ${selectedPack === pack.id ? 'border-teal' : ''}`}>
-                <div className="flex items-center justify-center mb-4">
-                  <pack.icon className="w-12 h-12 text-teal" />
-                </div>
-                <h3 className="text-h3 font-bold text-text text-center mb-4">
-                  {pack.name}
-                </h3>
-                <div className="text-center mb-4">
-                  <div className="text-4xl font-bold text-teal">
-                    {pack.credits + pack.bonus}
-                  </div>
-                  <div className="text-text-muted">crédits</div>
-                  {pack.bonus > 0 && (
-                    <div className="text-sm text-green mt-1">+{pack.bonus} crédits offerts</div>
-                  )}
-                </div>
-                <div className="text-center mb-6">
-                  <div className="text-3xl font-bold text-text">
-                    {pack.price.toLocaleString('fr-MG')} Ar
-                  </div>
-                </div>
-                <div className={`w-full py-3 text-center font-semibold rounded-lg transition-colors ${
-                  selectedPack === pack.id
-                    ? 'bg-teal text-bg'
-                    : 'bg-bg3 text-text-muted'
-                }`}>
-                  {selectedPack === pack.id ? 'Sélectionné' : 'Choisir'}
+
+              <div className="mb-2 flex items-center justify-between">
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gold-line bg-gold-dim">
+                  <pack.icon className="h-4 w-4 text-gold" />
                 </div>
               </div>
-            </div>
+
+              <h3 className="mb-1 text-h3 font-semibold text-text">{pack.name}</h3>
+              <p className="mb-2 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-text-3">
+                {pack.credits} crédits de base
+              </p>
+
+              <div className="mb-2">
+                <div className="text-2xl font-semibold leading-none text-gold">{pack.credits + pack.bonus}</div>
+                <p className="mt-1 text-sm text-text-2">crédits utilisables</p>
+                {pack.bonus > 0 && (
+                  <p className="mt-2 inline-flex items-center rounded-full bg-sage-dim px-2.5 py-1 text-xs font-medium text-sage">
+                    +{pack.bonus} offerts
+                  </p>
+                )}
+              </div>
+
+              <p className="mb-2 text-lg font-semibold text-text">{formatAmount(pack.price)}</p>
+
+              <button
+                type="button"
+                onClick={() => setSelectedPack(pack.id)}
+                className={`group relative w-full overflow-hidden rounded-xl border py-2.5 transition-all duration-500 ${
+                  selectedPack === pack.id
+                    ? 'border-gold bg-gradient-to-r from-gold to-gold-hi text-void shadow-[0_10px_20px_rgba(168,120,42,0.3)]'
+                    : 'border-gold-line bg-gold-dim text-text-2 hover:border-gold hover:bg-gold-dim/80 hover:text-gold'
+                }`}
+              >
+                <div className="relative z-10 flex flex-col items-center gap-0.5">
+                  <span className="text-xs font-bold uppercase tracking-widest">
+                    {selectedPack === pack.id ? 'Pack Sélectionné' : 'Choisir ce pack'}
+                  </span>
+                  <span className={`font-display text-lg font-medium ${selectedPack === pack.id ? 'opacity-90' : 'text-gold'}`}>
+                    {formatAmount(pack.price)}
+                  </span>
+                </div>
+                {selectedPack === pack.id && (
+                  <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:200%_100%] animate-shimmer"></div>
+                )}
+              </button>
+            </article>
           ))}
         </div>
 
-        <div className="card max-w-xl mx-auto">
-          <h2 className="text-h3 font-bold text-text text-center mb-6">
-            Moyens de paiement
-          </h2>
+        <form
+          onSubmit={handleSubmit}
+          className="grid gap-3 rounded-2xl border border-border-1 bg-card p-3 md:grid-cols-[1.35fr,1fr] md:p-4"
+        >
+          <section>
+            <h2 className="mb-1 text-h3 font-semibold text-text">Moyen de paiement</h2>
+            <p className="mb-2 text-sm text-text-2">Choisissez votre numéro — l'opérateur est détecté automatiquement.</p>
 
-          <div className="grid md:grid-cols-3 gap-3 mb-6">
-            {MOBILE_MONEY_PROVIDERS.map((provider) => (
-              <div
-                key={provider.id}
-                onClick={() => setOperator(provider.id)}
-                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
-                  operator === provider.id
-                    ? 'border-teal bg-bg3'
-                    : 'border-white/10 hover:border-white/20'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/15 bg-white/5 overflow-hidden">
-                  <Image
-                    src={provider.logoPath}
-                    alt={provider.alt}
-                    width={40}
-                    height={40}
-                    className="h-full w-full object-cover"
-                  />
+            <div className="space-y-2">
+              <label className="block text-[0.65rem] font-bold uppercase tracking-[0.2em] text-text-3">
+                Numéro de téléphone
+              </label>
+
+              <div className="relative">
+                <select
+                  value={phone}
+                  onChange={(e) => {
+                    const selected = e.target.value
+                    setPhone(selected)
+                    const detected = detectOperator(selected)
+                    if (detected) setOperator(detected)
+                  }}
+                  className="w-full appearance-none rounded-xl border border-border-1 bg-surface py-2.5 pl-10 pr-10 font-mono text-sm text-text outline-none transition focus:border-gold focus:ring-4 focus:ring-gold-dim"
+                >
+                  <option value="">— Choisir un numéro —</option>
+                  {userPhones.map((up) => (
+                    <option key={up.id || up.phone} value={up.phone}>
+                      {up.phone}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Phone className="h-4 w-4 text-text-4" />
                 </div>
-                <div className="text-sm text-text">{provider.name}</div>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-text-4" />
+                </div>
               </div>
-            ))}
-          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+              {userPhones.length === 0 && (
+                <p className="text-xs text-text-3 italic">Aucun numéro enregistré. Ajoutez-en depuis votre profil.</p>
+              )}
+
+              {operator && (
+                <div className="flex items-center gap-2 rounded-xl border border-gold-line bg-gold-dim px-3 py-2">
+                  {(() => {
+                    const prov = MOBILE_MONEY_PROVIDERS.find(p => p.id === operator)
+                    return prov ? (
+                      <>
+                        <div className="h-7 w-7 overflow-hidden rounded-full border border-gold-line bg-void">
+                          <Image src={prov.logoPath} alt={prov.alt} width={28} height={28} className="h-full w-full object-cover" />
+                        </div>
+                        <span className="text-xs font-semibold tracking-wider text-gold uppercase">{prov.name}</span>
+                        <span className="ml-auto text-[0.6rem] font-mono text-gold/60 uppercase">détecté auto</span>
+                      </>
+                    ) : null
+                  })()}
+                </div>
+              )}
+            </div>
+
             {error && (
-              <div className="p-3 text-sm bg-rose/10 text-rose border border-rose/20 rounded-lg">
+              <div className="mt-3 rounded-xl border border-ruby-line bg-ruby-dim px-4 py-3 text-sm text-ruby">
                 {error}
               </div>
             )}
+          </section>
 
+          <aside className="rounded-2xl border border-gold-line bg-gradient-to-b from-gold-dim to-transparent p-3 md:p-4 flex flex-col justify-between">
             <div>
-              <label className="block text-sm font-medium text-text-muted mb-2">
-                Numéro Mobile Money
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+261 34 XX XXX XX"
-                  className="w-full pl-10 pr-4 py-3 bg-bg3 border border-white/10 rounded-lg text-text placeholder-text-muted2 focus:outline-none focus:border-teal/50"
-                />
+              <h3 className="mb-2 text-lg font-semibold text-text">Résumé de paiement</h3>
+              <div className="space-y-2 rounded-xl border border-border-1 bg-card p-3">
+                <div className="flex justify-between items-center">
+                  <p className="text-[0.6rem] uppercase tracking-[0.15em] text-text-3">Pack sélectionné</p>
+                  <p className="font-medium text-text text-sm">{selectedPackData?.name}</p>
+                </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-[0.6rem] uppercase tracking-[0.15em] text-text-3">Via l'opérateur</p>
+                  <p className="font-medium text-text text-sm">{selectedOperator?.name || '—'}</p>
+                </div>
+                <div className="border-t border-border-1 pt-2">
+                  <p className="text-[0.6rem] uppercase tracking-[0.15em] text-text-3 mb-1">Total crédits</p>
+                  <p className="text-3xl font-semibold text-gold tracking-tight">{totalCredits} <span className="text-xs uppercase tracking-widest font-mono text-text-3">crédits</span></p>
+                </div>
+                <div>
+                  <p className="text-[0.6rem] uppercase tracking-[0.15em] text-text-3 mb-1">Montant à payer</p>
+                  <p className="text-xl font-semibold text-text">{selectedPackData ? formatAmount(selectedPackData.price) : '—'}</p>
+                </div>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 btn-primary rounded-lg font-semibold disabled:opacity-50"
-            >
-              {loading ? 'Traitement...' : 'Payer maintenant'}
-            </button>
-          </form>
+            <div className="mt-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-gold bg-gradient-to-r from-gold to-gold-hi px-5 py-3 text-base font-bold text-void shadow-[0_10px_30px_rgba(168,120,42,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <ShieldCheck className="h-5 w-5" />
+                {loading ? 'Traitement...' : `Payer ${selectedPackData ? formatAmount(selectedPackData.price) : ''}`}
+              </button>
 
-          <div className="mt-6 p-4 bg-bg3 rounded-lg">
-            <p className="text-sm text-text-muted text-center">
-              💡 Paiement sécurisé via Mobile Money<br />
-              MVola, Orange Money ou Airtel Money
-            </p>
-          </div>
-        </div>
+              <p className="mt-2 text-center text-[0.65rem] text-text-3 uppercase tracking-widest">
+                Sécurisé par protocole SSL/TLS
+              </p>
+            </div>
+          </aside>
+        </form>
       </div>
     </div>
   )

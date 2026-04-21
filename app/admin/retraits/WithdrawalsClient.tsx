@@ -7,6 +7,7 @@ import { Download, FileText, Zap, CheckCircle, XCircle, AlertCircle, Clock, Cred
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { useToast } from '@/lib/hooks/useToast'
 import { processWithdrawal, runBulkPayments } from './actions'
+import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
 
 interface Withdrawal {
   id: string
@@ -134,7 +135,8 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
   return (
     <div className="admin-page-content">
       <ToastContainer />
-      
+      <AdminBreadcrumb items={[{ label: 'Finances' }, { label: 'Retraits' }]} />
+
       {/* Header Section */}
       <div className="admin-header">
         <div>
@@ -248,14 +250,22 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
               {cycle.daysLeft} jours restants
             </div>
           </div>
-          <button 
-            className="admin-btn admin-btn-primary" 
-            style={{ marginLeft: 'auto' }}
-            onClick={handleBulkPayment}
-            disabled={selectedIds.length === 0 || processing}
-          >
-            ⚡ Exécuter les paiements sélectionnés
-          </button>
+          
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem' }}>
+            <button 
+              className="admin-btn admin-btn-outline"
+              onClick={() => toast.info('Rapport', 'Génération du rapport détaillé...')}
+            >
+              Rapport détaillé
+            </button>
+            <button 
+              className="admin-btn admin-btn-primary" 
+              onClick={handleBulkPayment}
+              disabled={selectedIds.length === 0 || processing}
+            >
+              ⚡ Verser aux sélectionnés ({selectedIds.length})
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}

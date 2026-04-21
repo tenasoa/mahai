@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 
 type VariantKey = '404' | '403' | '500' | 'session'
 
@@ -9,6 +11,23 @@ export default function NotFound() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [currentVariant, setCurrentVariant] = useState<VariantKey>('404')
   const [searchQuery, setSearchInput] = useState('')
+  const [canGoBack, setCanGoBack] = useState(false)
+  const router = useRouter()
+
+  // Détecte si on peut vraiment revenir en arrière (même origine)
+  useEffect(() => {
+    setCanGoBack(typeof window !== 'undefined' && window.history.length > 1)
+  }, [])
+
+  const handleGoBack = () => {
+    if (typeof window === 'undefined') return
+    // Tentative retour historique ; fallback vers accueil si pas d'historique exploitable
+    if (window.history.length > 1) {
+      router.back()
+    } else {
+      router.push('/')
+    }
+  }
 
   const variants = {
     '404': { code: '404', errCode: 'PAGE_NOT_FOUND', title: "Cette page n'existe <em>pas encore</em>", sub: "Le sujet que vous cherchez a peut-être été déplacé, supprimé ou n'a jamais existé. L'IA a cherché partout — sans succès." },
@@ -196,6 +215,32 @@ export default function NotFound() {
           <p style={{ fontSize: '0.9rem', color: 'var(--text-2)', lineHeight: 1.75, maxWidth: '480px', margin: '0 auto 2.5rem' }} dangerouslySetInnerHTML={{ __html: variant.sub }} />
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem', justifyContent: 'center', marginBottom: '2.5rem' }}>
+            {canGoBack && (
+              <button
+                type="button"
+                onClick={handleGoBack}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: 'var(--gold)',
+                  border: '1px solid var(--gold)',
+                  borderRadius: '8px',
+                  padding: '0.65rem 1.1rem',
+                  fontSize: '0.8rem',
+                  color: 'var(--void)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--body)',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(201, 168, 76, 0.2)'
+                }}
+                aria-label="Retour à la page précédente"
+              >
+                <ArrowLeft size={14} strokeWidth={2.5} />
+                Retour
+              </button>
+            )}
             {[
               { label: 'Accueil', icon: '🏠', href: '/' },
               { label: 'Catalogue', icon: '📚', href: '/catalogue' },

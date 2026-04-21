@@ -66,6 +66,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${cormorant.variable} ${outfit.variable} ${dmMono.variable} min-h-screen bg-void text-text antialiased font-[family-name:var(--body)]`}
+        suppressHydrationWarning
       >
         <a href="#main-content" className="skip-link">
           Aller au contenu principal
@@ -74,7 +75,12 @@ export default function RootLayout({
         <LuxuryCursor />
         <ScrollToTop />
         <ConditionalNavbar />
-        <div id="main-content" tabIndex={-1} className="shell-main-anchor">
+        <div
+          id="main-content"
+          tabIndex={-1}
+          className="shell-main-anchor"
+          suppressHydrationWarning
+        >
           {children}
         </div>
         <MobileBottomNav />

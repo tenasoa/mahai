@@ -223,16 +223,20 @@ export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
   if (!mounted) return null
 
   return createPortal(
-    <div style={{ 
-      position: 'fixed', 
-      top: '12px', 
-      right: '12px', 
-      zIndex: 99999,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'flex-end',
-      pointerEvents: 'none',
-    }}>
+    <div 
+      aria-live="polite"
+      aria-atomic="true"
+      style={{ 
+        position: 'fixed', 
+        top: '12px', 
+        right: '12px', 
+        zIndex: 99999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        pointerEvents: 'none',
+      }}
+    >
       {toasts.map((toast) => (
         <Toast
           key={toast.id}

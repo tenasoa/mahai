@@ -48,10 +48,19 @@ export default async function ExamPage({ params }: ExamPageProps) {
 
   // Normaliser le type pour le client
   const normalizedQuestions = questions.map((q: any) => ({
+    ...q,
     id: q.id,
     numero: q.numero,
     texte: q.texte,
-    type: (q.type === 'réponse' || q.type === 'rponse' || q.type === 'libre') ? '郎答' : q.type,
+    type:
+      q.type === 'réponse' ||
+      q.type === 'rponse' ||
+      q.type === 'libre' ||
+      q.type === 'text'
+        ? 'text'
+        : q.type === 'numérique' || q.type === 'numeric'
+          ? 'numerique'
+          : 'qcm',
     options: q.options ? (Array.isArray(q.options) ? q.options : JSON.parse(q.options)) : undefined,
     points: q.points,
   }))

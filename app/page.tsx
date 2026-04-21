@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useMultiReveal } from "@/lib/hooks";
@@ -8,6 +9,11 @@ import { MOBILE_MONEY_PROVIDERS } from "@/data/mobile-money-providers";
 import "./landing.css";
 
 export default function LandingPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = "Mah.AI — Accueil";
+  }, []);
+
   // Reveal on scroll
   useMultiReveal(".reveal", {
     threshold: 0.1,

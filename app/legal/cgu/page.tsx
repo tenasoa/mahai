@@ -16,6 +16,7 @@ export default function CGUPage() {
 
   // Simulate initial loading
   useEffect(() => {
+    document.title = "Mah.AI — CGU & Confidentialité"
     const timer = setTimeout(() => setLoading(false), 800)
     return () => clearTimeout(timer)
   }, [])

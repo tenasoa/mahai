@@ -2,6 +2,8 @@ import { getCreditTransactionsAdmin, validateCreditTransaction, rejectCreditTran
 import Link from 'next/link'
 import { Clock, CheckCircle2, XCircle, Wallet } from 'lucide-react'
 import { CreditsTable } from '@/components/admin/CreditsTable'
+import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
+import { AdminPaginationLinks } from '@/components/admin/AdminPaginationLinks'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
@@ -43,6 +45,7 @@ export default async function AdminCreditsPage({
 
   return (
     <div className="admin-page-content">
+      <AdminBreadcrumb items={[{ label: 'Finances' }, { label: 'Mobile Banking' }]} />
       <div className="admin-header">
         <div>
           <div className="admin-header-badge" style={{ background: 'var(--amber-dim)', borderColor: 'var(--amber-line)', color: 'var(--amber)' }}>
@@ -94,42 +97,13 @@ export default async function AdminCreditsPage({
           onReject={handleReject}
         />
         
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '1rem 1.25rem',
-            background: 'var(--surface)',
-            borderTop: '1px solid var(--b1)',
-            borderRadius: '0 0 var(--r-lg) var(--r-lg)',
-            fontFamily: 'var(--mono)',
-            fontSize: '0.75rem',
-            color: 'var(--text-3)'
-          }}>
-            <span>
-              {(page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, pagination.total)} sur {pagination.total}
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Link
-                href={`/admin/credits?tab=${tab}&page=${Math.max(1, page - 1)}`}
-                className={`admin-btn admin-btn-outline ${page === 1 ? 'admin-btn-disabled' : ''}`}
-                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
-              >
-                Précédent
-              </Link>
-              <span>Page {page} sur {pagination.totalPages}</span>
-              <Link
-                href={`/admin/credits?tab=${tab}&page=${Math.min(pagination.totalPages, page + 1)}`}
-                className={`admin-btn admin-btn-outline ${page === pagination.totalPages ? 'admin-btn-disabled' : ''}`}
-                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
-              >
-                Suivant
-              </Link>
-            </div>
-          </div>
-        )}
+        <AdminPaginationLinks
+          currentPage={page}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.total}
+          itemsPerPage={PAGE_SIZE}
+          buildUrl={(p) => `/admin/credits?tab=${tab}&page=${p}`}
+        />
       </div>
     </div>
   )

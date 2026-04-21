@@ -158,7 +158,7 @@
   position: fixed;
   top: 100px;
   left: 1rem;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   background: var(--card);
   border: 1px solid var(--b1);
   border-radius: var(--r);
@@ -201,7 +201,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 1000;
+    z-index: var(--z-drawer);
     transform: translateX(-100%);
     transition: transform var(--transition-base);
   }

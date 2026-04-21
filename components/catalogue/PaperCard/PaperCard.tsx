@@ -4,7 +4,6 @@ import { useState } from 'react'
 import styles from './PaperCard.module.css'
 
 export interface PaperCardProps {
-  id: string
   title: string
   examType: string
   year: number
@@ -20,13 +19,13 @@ export interface PaperCardProps {
   isAi?: boolean
   isUnlocked?: boolean
   isWished?: boolean
+  layout?: 'grid' | 'list'
   onPreview?: () => void
   onBuy?: () => void
   onWishlist?: () => void
 }
 
 export function PaperCard({
-  id,
   title,
   examType,
   year,
@@ -42,6 +41,7 @@ export function PaperCard({
   isAi = false,
   isUnlocked = false,
   isWished = false,
+  layout = 'grid',
   onPreview,
   onBuy,
   onWishlist,
@@ -53,7 +53,7 @@ export function PaperCard({
 
   return (
     <article
-      className={`${styles.paperCard} ${isHovered ? styles.hovered : ''}`}
+      className={`${styles.paperCard} ${isHovered ? styles.hovered : ''} ${layout === 'list' ? styles.listLayout : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -120,9 +120,11 @@ export function PaperCard({
           {isFree ? 'Gratuit' : `${price} cr`}
         </div>
         <div className={styles.actions}>
-          <button className={styles.previewButton} onClick={onPreview}>
-            Aperçu
-          </button>
+          {!isUnlocked && (
+            <button className={styles.previewButton} onClick={onPreview}>
+              Aperçu
+            </button>
+          )}
           {(onBuy && !isUnlocked) ? (
             <button className={styles.buyButton} onClick={onBuy}>
               Acheter

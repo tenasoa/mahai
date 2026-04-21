@@ -60,16 +60,16 @@ export function LuxuryFooter() {
             <div className={styles.footerColTitle}>Plateforme</div>
             <ul className={styles.footerLinks}>
               <li>
-                <Link href="/#how">Comment ça marche</Link>
+                <Link href="/comment-ca-marche">Comment ça marche</Link>
               </li>
               <li>
                 <Link href="/recharge">Tarifs crédits</Link>
               </li>
               <li>
-                <Link href="/contributeur">Devenir contributeur</Link>
+                <Link href="/devenir-contributeur">Devenir contributeur</Link>
               </li>
               <li>
-                <Link href="/#features">Correction IA</Link>
+                <Link href="/correction-ia">Correction IA</Link>
               </li>
             </ul>
           </div>
@@ -83,7 +83,7 @@ export function LuxuryFooter() {
             </div>
             <ul className={styles.footerLinks}>
               <li>
-                <Link href="/#about">À propos</Link>
+                <Link href="/a-propos">À propos</Link>
               </li>
               <li>
                 <Link href="/blog">Blog</Link>
@@ -106,7 +106,7 @@ export function LuxuryFooter() {
           <div className={styles.footerLegal}>
             <Link href="/legal/confidentialite">Confidentialité</Link>
             <Link href="/legal/cgu">CGU</Link>
-            <Link href="/legal/mentions">Mentions légales</Link>
+            <Link href="/legal/mentions-legales">Mentions légales</Link>
           </div>
         </div>
       </div>

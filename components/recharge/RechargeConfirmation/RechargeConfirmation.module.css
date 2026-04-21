@@ -118,7 +118,7 @@
   gap: var(--space-lg);
 }
 
-.summary {
+.summaryCard {
   background: var(--gold-dim);
   border: 1px solid var(--gold-line);
   border-radius: var(--r-lg);
@@ -139,18 +139,11 @@
   color: var(--text-2);
 }
 
-.value {
+.valuePrice {
   font-family: var(--mono);
-  font-size: var(--text-base);
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text);
-}
-
-.valueBonus {
-  font-family: var(--mono);
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--sage);
 }
 
 .valueTotal {
@@ -168,9 +161,9 @@
 
 /* === DETAILS === */
 
-.details {
+.detailsList {
   background: var(--surface);
-  border: 1px solid var(--b1);
+  border: 1px solid var(--gold-line);
   border-radius: var(--r);
   padding: var(--space-md);
   display: flex;
@@ -178,22 +171,132 @@
   gap: var(--space-sm);
 }
 
-.detailRow {
+.detailItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.detailLabel {
-  font-size: var(--text-sm);
+/* === MERCHANT PHONE CARD === */
+
+.merchantPhoneCard {
+  background: var(--gold-dim);
+  border: 2px solid var(--gold);
+  border-radius: var(--r-lg);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.merchantPhoneCard.unavailable {
+  background: var(--surface);
+  border-color: var(--ruby);
+  border-style: dashed;
+}
+
+.merchantPhoneLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--text-3);
 }
 
-.detailValue {
+.merchantPhoneNumber {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  background: var(--void);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.merchantPhoneValue {
   font-family: var(--mono);
-  font-size: var(--text-sm);
-  color: var(--text);
-  font-weight: 500;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.4rem 0.75rem;
+  background: var(--gold);
+  color: var(--void);
+  border: none;
+  border-radius: var(--r);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copyButton:hover:not(:disabled) {
+  background: var(--gold-hi);
+  transform: translateY(-1px);
+}
+
+.copyButton:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+
+/* === INSTRUCTION === */
+
+.instructionBox {
+  background: var(--void);
+  border: 1px dashed var(--gold-line);
+  padding: var(--space-md);
+  border-radius: var(--r);
+}
+
+/* === FORM === */
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.inputLabel {
+  font-size: 0.7rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.codeInput {
+  background: var(--surface);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--r);
+  padding: var(--space-md);
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-align: center;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.codeInput:focus {
+  background: var(--void);
+  box-shadow: 0 0 15px var(--gold-line);
 }
 
 /* === ACTIONS === */

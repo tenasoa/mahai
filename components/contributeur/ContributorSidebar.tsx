@@ -7,9 +7,10 @@ import {
   LayoutDashboard,
   FileText,
   PlusCircle,
-  CreditCard,
+  Wallet,
   BarChart3,
-  User,
+  GraduationCap,
+  ShieldCheck,
   Menu,
   X,
   ChevronRight,
@@ -85,7 +86,7 @@ export function ContributorSidebar({
         {
           href: "/contributeur/retraits",
           label: "Retraits Gains",
-          icon: CreditCard,
+          icon: Wallet,
         },
         {
           href: "/contributeur/analytiques",
@@ -102,27 +103,37 @@ export function ContributorSidebar({
         className={`sidebar ${isCollapsed ? "collapsed" : ""}`}
         id="sidebar"
       >
-        <Link href="/" className="sb-logo">
-          <span className="sb-logo-text">
-            Mah
-            <span className="sb-gem" />
-            AI
-          </span>
-        </Link>
-
-        <div className="sb-user">
-          <div className="sb-avatar">
-            {user.profilePicture ? (
-              <img src={user.profilePicture} alt="Profile" />
-            ) : (
-              (user.prenom?.charAt(0) || "C").toUpperCase()
-            )}
-          </div>
-          <div>
-            <div className="sb-name">
-              {user.prenom} {user.nom}
-            </div>
-            <div className="sb-badge">Contributeur certifié ✦</div>
+        {/* Header logo style Comet (bouton toggle intégré) */}
+        <div
+          className="sb-logo"
+          onClick={isCollapsed ? onToggle : undefined}
+        >
+          <div className="sb-logo-row">
+            <Link
+              href="/"
+              className="sb-logo-main"
+              onClick={(e) => { if (isCollapsed) e.preventDefault() }}
+              aria-label="Mah.AI"
+            >
+              {isCollapsed ? (
+                <span className="sb-logo-compact">M<span className="sb-gem" /></span>
+              ) : (
+                <span className="sb-logo-text">
+                  Mah
+                  <span className="sb-gem" />
+                  AI
+                </span>
+              )}
+            </Link>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggle() }}
+              className="sb-toggle-inline"
+              title={isCollapsed ? "Déployer le menu" : "Réduire le menu"}
+              aria-label={isCollapsed ? "Déployer le menu" : "Réduire le menu"}
+            >
+              {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
           </div>
         </div>
 
@@ -131,16 +142,7 @@ export function ContributorSidebar({
             <div className="sb-e-label">Revenus totaux</div>
             <div className="sb-e-val">
               {stats.earnings.toLocaleString("fr-FR")}
-              <span
-                style={{
-                  fontFamily: "var(--mono)",
-                  fontSize: "0.7rem",
-                  color: "var(--gold-lo)",
-                }}
-              >
-                {" "}
-                Ar
-              </span>
+              <span className="sb-e-unit">Ar</span>
             </div>
             <div className="sb-e-sub">
               +{stats.monthEarnings.toLocaleString("fr-FR")} Ar ce mois
@@ -149,26 +151,9 @@ export function ContributorSidebar({
         )}
 
         <nav className="sb-nav">
-          <div style={{ marginTop: '0.75rem', marginBottom: '1.5rem' }}>
-              <div className="sb-section"><span className="sb-section-text">Navigation rapide</span></div>
-              <Link className={`sb-link ${pathname === '/dashboard' ? 'active' : ''}`} href="/dashboard" title="Espace Étudiant">
-                <User size={18} strokeWidth={1.5} className="sb-icon" />
-                <span className="sb-link-text">Espace Étudiant</span>
-              </Link>
-              {user.role?.toLowerCase() === 'admin' && (
-                <Link className={`sb-link ${pathname.startsWith('/admin') ? 'active' : ''}`} href="/admin" title="Panel Admin">
-                  <LayoutDashboard size={18} strokeWidth={1.5} className="sb-icon" />
-                  <span className="sb-link-text">Panel Admin</span>
-                </Link>
-              )}
-          </div>
-
           {navItems.map((section, idx) => (
             <div key={idx}>
-              <div
-                className="sb-section"
-                style={{ marginTop: idx > 0 ? "0.75rem" : 0 }}
-              >
+              <div className="sb-section">
                 <span className="sb-section-text">{section.section}</span>
               </div>
               {section.links.map((link) => {
@@ -183,7 +168,8 @@ export function ContributorSidebar({
                     key={link.href}
                     className={`sb-link ${isActive ? "active" : ""}`}
                     href={link.href}
-                    title={link.label}
+                    title={isCollapsed ? link.label : undefined}
+                    data-tooltip={link.label}
                   >
                     <Icon size={18} strokeWidth={1.5} className="sb-icon" />
                     <span className="sb-link-text">{link.label}</span>
@@ -195,35 +181,68 @@ export function ContributorSidebar({
               })}
             </div>
           ))}
+
+          {/* Navigation rapide en bas (harmonisé avec admin) */}
+          <div className="sb-quick-nav">
+            <div className="sb-section">
+              <span className="sb-section-text">Navigation rapide</span>
+            </div>
+            <Link
+              className={`sb-link ${pathname === '/dashboard' ? 'active' : ''}`}
+              href="/dashboard"
+              title={isCollapsed ? 'Espace Étudiant' : undefined}
+              data-tooltip="Espace Étudiant"
+            >
+              <GraduationCap size={18} strokeWidth={1.5} className="sb-icon" />
+              <span className="sb-link-text">Espace Étudiant</span>
+            </Link>
+            {user.role?.toLowerCase() === 'admin' && (
+              <Link
+                className={`sb-link ${pathname.startsWith('/admin') ? 'active' : ''}`}
+                href="/admin"
+                title={isCollapsed ? 'Panel Admin' : undefined}
+                data-tooltip="Panel Admin"
+              >
+                <ShieldCheck size={18} strokeWidth={1.5} className="sb-icon" />
+                <span className="sb-link-text">Panel Admin</span>
+              </Link>
+            )}
+          </div>
         </nav>
 
-        {/* Theme Toggle Button */}
-        <div className="sb-bottom">
+        {/* Footer : theme toggle compact + profil utilisateur */}
+        <div className="sb-footer">
           <button
             onClick={toggleTheme}
             className="sb-theme-toggle"
             title={`Passer en mode ${theme === "dark" ? "clair" : "sombre"}`}
+            data-tooltip={`Mode ${theme === "dark" ? "clair" : "sombre"}`}
             aria-label={`Passer en mode ${theme === "dark" ? "clair" : "sombre"}`}
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            {!isCollapsed && (
-              <span className="sb-theme-text">
-                Mode {theme === "dark" ? "clair" : "sombre"}
-              </span>
-            )}
+            {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            <span className="sb-theme-text">
+              Mode {theme === "dark" ? "clair" : "sombre"}
+            </span>
           </button>
+
+          <Link
+            href="/dashboard"
+            className="sb-user"
+            title={isCollapsed ? `${user.prenom} ${user.nom}` : undefined}
+            data-tooltip={`${user.prenom} ${user.nom}`}
+          >
+            {user.profilePicture ? (
+              <img src={user.profilePicture} alt={`${user.prenom} ${user.nom}`} className="sb-av" />
+            ) : (
+              <div className="sb-av">{(user.prenom?.charAt(0) || "C").toUpperCase()}</div>
+            )}
+            <div className="sb-user-info">
+              <div className="sb-user-name">{user.prenom} {user.nom}</div>
+              <div className="sb-user-role">Contributeur certifié ✦</div>
+            </div>
+          </Link>
         </div>
       </aside>
-
-      {/* Toggle Button - Outside Sidebar */}
-      <button
-        className="sidebar-toggle"
-        onClick={onToggle}
-        title={isCollapsed ? "Déployer le menu" : "Réduire le menu"}
-        aria-label={isCollapsed ? "Déployer le menu" : "Réduire le menu"}
-      >
-        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button>
     </>
   );
 }

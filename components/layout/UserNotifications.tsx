@@ -423,6 +423,7 @@ export function UserNotifications() {
 
                     {/* Dismiss */}
                     <button
+                      aria-label="Ignorer cette notification"
                       onClick={(e) => {
                         e.stopPropagation()
                         dismissNotification(notif.id)
@@ -440,7 +441,7 @@ export function UserNotifications() {
                       onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-2)'}
                       onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-4)'}
                     >
-                      <X size={14} />
+                      <X size={14} aria-hidden="true" />
                     </button>
                   </div>
                 ))

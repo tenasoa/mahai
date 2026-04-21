@@ -8,46 +8,13 @@ import { useState, useEffect, useId } from 'react'
 import Link from 'next/link'
 import { useToast, ToastContainer } from '@/components/ui/Toast'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
+import './auth-forms.css'
 
-const fieldLabelStyle = {
-  fontFamily: 'var(--mono)',
-  fontSize: '0.62rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.14em',
-  color: 'var(--text-3)',
-  display: 'block',
-  marginBottom: '0.55rem'
-} as const
-
-const fieldInputStyle = {
-  width: '100%',
-  background: 'var(--surface)',
-  border: '1px solid var(--b2)',
-  borderRadius: 'var(--r)',
-  padding: '0.75rem 1rem',
-  fontFamily: 'var(--body)',
-  fontSize: '0.88rem',
-  color: 'var(--text)',
-  outline: 'none',
-  transition: 'border-color 0.2s, box-shadow 0.2s',
-  WebkitAppearance: 'none'
-} as const
-
-const fieldErrorStyle = {
-  marginTop: '0.5rem',
-  fontSize: '0.6rem',
-  color: 'var(--ruby)',
-  fontFamily: 'var(--mono)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em'
-} as const
-
-const inlineInteractiveStyle = {
-  transition: 'color 0.2s, border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s'
-} as const
+const REMEMBER_ME_KEY = 'mahai_remember_email'
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { toasts, addToast, removeToast } = useToast()
   const emailFieldId = useId()
@@ -55,19 +22,38 @@ export function LoginForm() {
   const emailErrorId = `${emailFieldId}-error`
   const passwordErrorId = `${passwordFieldId}-error`
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   })
 
+  // Load saved email on mount
+  useEffect(() => {
+    setMounted(true)
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem(REMEMBER_ME_KEY)
+      if (savedEmail) {
+        setValue('email', savedEmail)
+        setRememberMe(true)
+      }
+    }
+  }, [setValue])
+
   const onSubmit = async (data: LoginFormData) => {
+    // Gérer "Se souvenir de moi"
+    if (typeof window !== 'undefined') {
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_ME_KEY, data.email)
+      } else {
+        localStorage.removeItem(REMEMBER_ME_KEY)
+      }
+    }
+
     const result = await loginUser(data)
     if (result?.error) {
       addToast(result.error, 'error')
@@ -77,25 +63,24 @@ export function LoginForm() {
   }
 
   if (!mounted) {
-    return <div style={{ minHeight: '300px' }} />
+    return <div className="auth-skeleton" />
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="auth-form-wrapper">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-          <label htmlFor={emailFieldId} className="form-label" style={fieldLabelStyle}>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="auth-form">
+        <div className="auth-form-group">
+          <label htmlFor={emailFieldId} className="auth-label">
             Adresse e-mail
           </label>
-          <div className="form-input-wrap" style={{ position: 'relative' }}>
+          <div className="auth-input-wrap">
             <input
               id={emailFieldId}
               {...register('email')}
               type="email"
-              className="form-input luxury-form-input"
-              style={fieldInputStyle}
+              className="auth-input"
               placeholder="votre@email.com"
               autoComplete="email"
               aria-invalid={errors.email ? 'true' : 'false'}
@@ -103,23 +88,22 @@ export function LoginForm() {
             />
           </div>
           {errors.email && (
-            <p id={emailErrorId} role="alert" style={fieldErrorStyle}>
+            <p id={emailErrorId} role="alert" className="auth-error">
               {errors.email.message}
             </p>
           )}
         </div>
 
-        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-          <label htmlFor={passwordFieldId} className="form-label" style={fieldLabelStyle}>
+        <div className="auth-form-group">
+          <label htmlFor={passwordFieldId} className="auth-label">
             Mot de passe
           </label>
-          <div className="form-input-wrap" style={{ position: 'relative' }}>
+          <div className="auth-input-wrap">
             <input
               id={passwordFieldId}
               {...register('password')}
               type={showPassword ? 'text' : 'password'}
-              className="form-input luxury-form-input luxury-form-input-with-action"
-              style={fieldInputStyle}
+              className="auth-input auth-input-with-action"
               placeholder="••••••••"
               autoComplete="current-password"
               aria-invalid={errors.password ? 'true' : 'false'}
@@ -128,132 +112,46 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="luxury-icon-button"
+              className="auth-icon-btn"
               aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
               aria-pressed={showPassword}
-              style={{
-                position: 'absolute',
-                right: '1rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--text-3)',
-                background: 'none',
-                border: 'none',
-                fontSize: '0.9rem',
-                cursor: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '4px',
-                ...inlineInteractiveStyle
-              }}
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
           {errors.password && (
-            <p id={passwordErrorId} role="alert" style={fieldErrorStyle}>
+            <p id={passwordErrorId} role="alert" className="auth-error">
               {errors.password.message}
             </p>
           )}
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '1.5rem'
-          }}
-        >
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'none',
-              fontSize: '0.78rem',
-              color: 'var(--text-2)'
-            }}
-          >
+        <div className="auth-checkbox-row">
+          <label className="auth-checkbox-label">
             <input
               type="checkbox"
-              style={{
-                accentColor: 'var(--gold)',
-                width: '14px',
-                height: '14px',
-                cursor: 'none'
-              }}
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="auth-checkbox"
             />
             Se souvenir de moi
           </label>
-          <Link
-            href="/auth/forgot-password"
-            className="luxury-inline-link"
-            style={{
-              fontFamily: 'var(--mono)',
-              fontSize: '0.62rem',
-              color: 'var(--gold)',
-              textDecoration: 'none',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              ...inlineInteractiveStyle
-            }}
-          >
+          <Link href="/auth/forgot-password" className="auth-link">
             Mot de passe oublié ?
           </Link>
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="luxury-primary-button"
-          style={{
-            width: '100%',
-            fontFamily: 'var(--body)',
-            fontSize: '0.9rem',
-            fontWeight: 500,
-            padding: '0.9rem',
-            borderRadius: 'var(--r)',
-            background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
-            color: 'var(--void)',
-            border: 'none',
-            cursor: 'none',
-            letterSpacing: '0.04em',
-            marginTop: '0.5rem',
-            boxShadow: '0 4px 20px rgba(201,168,76,0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            ...inlineInteractiveStyle
-          }}
-        >
+        <button type="submit" disabled={isSubmitting} className="auth-submit-btn">
           {isSubmitting ? 'Connexion...' : (
             <>
-              Se connecter <LogIn className="w-4 h-4" />
+              Se connecter <LogIn size={18} />
             </>
           )}
         </button>
 
-        <div
-          style={{
-            marginTop: '1.5rem',
-            textAlign: 'center',
-            fontSize: '0.8rem',
-            color: 'var(--text-3)'
-          }}
-        >
+        <div className="auth-footer">
           Pas encore de compte ?{' '}
-          <Link
-            href="/auth/register"
-            className="luxury-inline-link"
-            style={{
-              color: 'var(--gold)',
-              textDecoration: 'none',
-              ...inlineInteractiveStyle
-            }}
-          >
+          <Link href="/auth/register" className="auth-footer-link">
             Créer un compte gratuit →
           </Link>
         </div>

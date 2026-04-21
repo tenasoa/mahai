@@ -7,7 +7,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 500;
+  z-index: var(--z-navbar);
   border-bottom: 1px solid var(--b1);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -180,7 +180,7 @@
   border-radius: var(--r-lg);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   padding: 0.5rem 0;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   animation: fadeIn 0.2s ease;
 }
 

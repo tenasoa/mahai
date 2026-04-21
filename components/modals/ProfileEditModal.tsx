@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, User, MapPin, GraduationCap, Phone, Building, BookOpen } from 'lucide-react'
 import { MADAGASCAR_REGIONS, getDistrictsByRegion } from '@/lib/data/madagascar-geo'
 import {
@@ -22,6 +22,32 @@ interface ProfileEditModalProps {
 }
 
 export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = false }: ProfileEditModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') { e.preventDefault(); onClose(); return }
+    if (e.key === 'Tab' && modalRef.current) {
+      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      if (!focusable.length) return
+      const first = focusable[0], last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
+  }, [onClose])
+
+  useEffect(() => {
+    if (!isOpen) return
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyDown)
+    setTimeout(() => { modalRef.current?.querySelector<HTMLElement>('button, input')?.focus() }, 0)
+    return () => {
+      document.body.style.overflow = ''
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, handleKeyDown])
+
   const [formData, setFormData] = useState({
     // Informations personnelles - TOUT pré-rempli avec les données existantes
     prenom: userData?.prenom || '',
@@ -177,12 +203,17 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
   const isHigherEd = ['UNIVERSITE', 'FACULTE', 'INSTITUT', 'FORMATION'].includes(formData.educationLevel);
 
   return (
-    <div className={`modal-overlay ${isOpen ? 'open' : ''}`}>
-      <div className="modal-container profile-edit-modal">
+    <div
+      className={`modal-overlay ${isOpen ? 'open' : ''}`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profile-edit-title"
+    >
+      <div ref={modalRef} className="modal-container profile-edit-modal">
         <div className="modal-header">
-          <h2 className="modal-title">Compléter mon profil</h2>
-          <button onClick={onClose} className="modal-close">
-            <X size={20} />
+          <h2 id="profile-edit-title" className="modal-title">Compléter mon profil</h2>
+          <button onClick={onClose} className="modal-close" aria-label="Fermer">
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
@@ -397,7 +428,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     {formData.matieresPreferees.map((subject: string) => (
                       <span key={subject} className="tag">
                         {subject}
-                        <button type="button" onClick={() => removeSubject(subject)} className="tag-remove">×</button>
+                        <button type="button" onClick={() => removeSubject(subject)} className="tag-remove" aria-label={`Supprimer ${subject}`}>×</button>
                       </span>
                     ))}
                   </div>
@@ -451,7 +482,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                     {formData.objectifsEtude.map((objective: string) => (
                       <span key={objective} className="tag">
                         {objective}
-                        <button type="button" onClick={() => removeObjective(objective)} className="tag-remove">×</button>
+                        <button type="button" onClick={() => removeObjective(objective)} className="tag-remove" aria-label={`Supprimer ${objective}`}>×</button>
                       </span>
                     ))}
                   </div>

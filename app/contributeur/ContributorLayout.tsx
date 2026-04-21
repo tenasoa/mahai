@@ -38,17 +38,20 @@ export function ContributorLayout({ children, user, stats }: ContributorLayoutPr
   }
 
   return (
-    <div className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <div className="contributor-noise" />
-      
-      <ContributorSidebar 
-        user={user} 
+    <div
+      className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`}
+      suppressHydrationWarning
+    >
+      <div className="contributor-noise" suppressHydrationWarning />
+
+      <ContributorSidebar
+        user={user}
         stats={stats}
         isCollapsed={isCollapsed}
         onToggle={handleToggle}
       />
 
-      <main className="main">
+      <main className="main" suppressHydrationWarning>
         {children}
       </main>
     </div>
