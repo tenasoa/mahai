@@ -39,8 +39,24 @@ export async function getContributorWithdrawals() {
     }
   }
 
+  // Calcul des revenus (Purchase + Subject existent toujours)
+  const earningsResult = await query(`
+    SELECT COALESCE(SUM("creditsAmount" * 50), 0) as totalEarnings
+    FROM "Purchase" p
+    JOIN "Subject" s ON p."subjectId" = s.id
+    WHERE s."authorId" = $1
+  `, [contributor.userId])
+
+  const totalEarnings = Number(earningsResult.rows[0]?.totalEarnings) || 0
+
+  // Queries sur la table Withdrawal (peut ne pas exister encore)
+  let withdrawals: any[] = []
+  let totalWithdrawn = 0
+  let pending = 0
+  let thisMonth = 0
+  let withdrawalCount = 0
+
   try {
-    // Récupérer les retraits
     const withdrawalsResult = await query(`
       SELECT w.*, u.prenom, u.nom, u.phone
       FROM "Withdrawal" w
@@ -49,10 +65,10 @@ export async function getContributorWithdrawals() {
       ORDER BY w."createdAt" DESC
       LIMIT 50
     `, [contributor.userId])
+    withdrawals = withdrawalsResult.rows || []
 
-    // Stats
     const statsResult = await query(`
-      SELECT 
+      SELECT
         COALESCE(SUM(amount), 0) as total,
         COALESCE(SUM(CASE WHEN status = 'PENDING' THEN amount ELSE 0 END), 0) as pending,
         COALESCE(SUM(CASE WHEN EXTRACT(MONTH FROM "createdAt") = EXTRACT(MONTH FROM NOW()) THEN amount ELSE 0 END), 0) as thisMonth,
@@ -61,56 +77,33 @@ export async function getContributorWithdrawals() {
       WHERE "userId" = $1
     `, [contributor.userId])
 
-    // Solde disponible (revenus totaux - retraits)
-    const earningsResult = await query(`
-      SELECT COALESCE(SUM("creditsAmount" * 50), 0) as totalEarnings
-      FROM "Purchase" p
-      JOIN "Subject" s ON p."subjectId" = s.id
-      WHERE s."authorId" = $1
-    `, [contributor.userId])
-
     const withdrawnResult = await query(`
       SELECT COALESCE(SUM(amount), 0) as totalWithdrawn
       FROM "Withdrawal"
       WHERE "userId" = $1 AND status = 'COMPLETED'
     `, [contributor.userId])
 
-    const totalEarnings = earningsResult.rows[0]?.totalEarnings || 0
-    const totalWithdrawn = withdrawnResult.rows[0]?.totalWithdrawn || 0
-    const available = totalEarnings - totalWithdrawn
-
-    return {
-      user: { prenom: 'Contributeur', nom: '', role: 'CONTRIBUTEUR' },
-      withdrawals: withdrawalsResult.rows || [],
-      stats: {
-        totalWithdrawn: statsResult.rows[0]?.total || 0,
-        pending: statsResult.rows[0]?.pending || 0,
-        thisMonth: statsResult.rows[0]?.thisMonth || 0,
-        averageWithdrawal: statsResult.rows[0]?.count > 0 
-          ? statsResult.rows[0]?.total / statsResult.rows[0]?.count 
-          : 0
-      },
-      balance: {
-        available,
-        pending: statsResult.rows[0]?.pending || 0
-      }
-    }
+    totalWithdrawn = Number(withdrawnResult.rows[0]?.totalWithdrawn) || 0
+    pending = Number(statsResult.rows[0]?.pending) || 0
+    thisMonth = Number(statsResult.rows[0]?.thisMonth) || 0
+    withdrawalCount = Number(statsResult.rows[0]?.count) || 0
   } catch (error) {
-    console.error('Erreur getContributorWithdrawals:', error)
-    // Si la table n'existe pas encore, retourner des données vides
-    return {
-      user: { prenom: 'Contributeur', nom: '', role: 'CONTRIBUTEUR' },
-      withdrawals: [],
-      stats: {
-        totalWithdrawn: 0,
-        pending: 0,
-        thisMonth: 0,
-        averageWithdrawal: 0
-      },
-      balance: {
-        available: 0,
-        pending: 0
-      }
+    // Table Withdrawal pas encore créée — solde = revenus bruts
+    console.warn('Table Withdrawal non disponible:', error)
+  }
+
+  return {
+    user: { prenom: 'Contributeur', nom: '', role: 'CONTRIBUTEUR' },
+    withdrawals,
+    stats: {
+      totalWithdrawn,
+      pending,
+      thisMonth,
+      averageWithdrawal: withdrawalCount > 0 ? totalWithdrawn / withdrawalCount : 0
+    },
+    balance: {
+      available: totalEarnings - totalWithdrawn - pending,
+      pending
     }
   }
 }

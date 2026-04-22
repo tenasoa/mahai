@@ -131,9 +131,9 @@ export default function CGUPage() {
       </div>
 
       {/* Layout */}
-      <div className="max-w-7xl mx-auto px-6 py-12 pb-32 grid grid-cols-[220px_1fr] gap-12 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 py-12 pb-32 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-12 relative z-10">
         {/* TOC */}
-        <aside className="sticky top-32 max-h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
+        <aside className="hidden lg:block sticky top-32 max-h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
           <div className="font-mono text-[0.57rem] text-text-4 uppercase tracking-[0.16em] mb-3">
             Sommaire
           </div>

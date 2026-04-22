@@ -33,6 +33,9 @@ interface ContributorSidebarProps {
   };
   isCollapsed: boolean;
   onToggle: () => void;
+  isMobileOpen?: boolean;
+  onMobileOpen?: () => void;
+  onMobileClose?: () => void;
 }
 
 export function ContributorSidebar({
@@ -40,6 +43,9 @@ export function ContributorSidebar({
   stats,
   isCollapsed,
   onToggle,
+  isMobileOpen = false,
+  onMobileOpen,
+  onMobileClose,
 }: ContributorSidebarProps) {
   const pathname = usePathname();
   const [theme, setTheme] = useState<"light" | "dark">("dark");
@@ -50,6 +56,15 @@ export function ContributorSidebar({
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
   }, []);
+
+  // Fermer au touche Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isMobileOpen) onMobileClose?.();
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isMobileOpen, onMobileClose]);
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -99,8 +114,26 @@ export function ContributorSidebar({
 
   return (
     <>
+      {/* Bouton hamburger flottant (mobile) */}
+      <button
+        className="contrib-mobile-menu-btn"
+        onClick={onMobileOpen}
+        aria-label="Ouvrir le menu"
+      >
+        <Menu size={20} />
+      </button>
+
+      {/* Overlay mobile */}
+      {isMobileOpen && (
+        <div
+          className="contrib-mobile-overlay"
+          onClick={onMobileClose}
+          aria-hidden="true"
+        />
+      )}
+
       <aside
-        className={`sidebar ${isCollapsed ? "collapsed" : ""}`}
+        className={`sidebar ${isCollapsed ? "collapsed" : ""} ${isMobileOpen ? "mobile-open" : ""}`}
         id="sidebar"
       >
         {/* Header logo style Comet (bouton toggle intégré) */}
@@ -135,6 +168,16 @@ export function ContributorSidebar({
               {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
           </div>
+
+          {/* Bouton fermer (mobile uniquement) */}
+          <button
+            type="button"
+            className="sb-mobile-close"
+            onClick={(e) => { e.stopPropagation(); onMobileClose?.() }}
+            aria-label="Fermer le menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {stats && (

@@ -3,14 +3,13 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Home, BookOpen, PlusCircle, User, Zap } from 'lucide-react'
+import { Home, LayoutDashboard, BookOpen, PlusCircle, User, Zap, LogIn, UserPlus } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/useAuth'
 
 interface NavItem {
   href: string
   icon: React.ReactNode
   label: string
-  requiresAuth?: boolean
 }
 
 export function MobileBottomNav() {
@@ -19,40 +18,21 @@ export function MobileBottomNav() {
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
 
-  // Navigation items
-  const navItems: NavItem[] = [
-    {
-      href: '/dashboard',
-      icon: <Home size={20} />,
-      label: 'Accueil',
-      requiresAuth: true,
-    },
-    {
-      href: '/catalogue',
-      icon: <BookOpen size={20} />,
-      label: 'Catalogue',
-    },
-    {
-      href: '/recharge',
-      icon: <Zap size={20} />,
-      label: 'Crédits',
-      requiresAuth: true,
-    },
-    {
-      href: '/contributeur',
-      icon: <PlusCircle size={20} />,
-      label: 'Contribuer',
-      requiresAuth: true,
-    },
-    {
-      href: '/profil',
-      icon: <User size={20} />,
-      label: 'Profil',
-      requiresAuth: true,
-    },
+  const authNavItems: NavItem[] = [
+    { href: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Tableau de bord' },
+    { href: '/catalogue', icon: <BookOpen size={20} />, label: 'Catalogue' },
+    { href: '/recharge', icon: <Zap size={20} />, label: 'Crédits' },
+    { href: '/contributeur', icon: <PlusCircle size={20} />, label: 'Contribuer' },
+    { href: '/profil', icon: <User size={20} />, label: 'Profil' },
   ]
 
-  // Handle scroll to show/hide navigation
+  const guestNavItems: NavItem[] = [
+    { href: '/', icon: <Home size={20} />, label: 'Accueil' },
+    { href: '/catalogue', icon: <BookOpen size={20} />, label: 'Catalogue' },
+    { href: '/auth/login', icon: <LogIn size={20} />, label: 'Connexion' },
+    { href: '/auth/register', icon: <UserPlus size={20} />, label: 'Inscription' },
+  ]
+
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY
@@ -64,23 +44,17 @@ export function MobileBottomNav() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [lastScrollY])
 
-  // Filter items based on auth status
-  const visibleItems = userId
-    ? navItems
-    : navItems.filter(item => !item.requiresAuth)
-
-  // Don't show on auth pages or landing
   const isAuthPage = pathname?.startsWith('/auth')
-  const isLanding = pathname === '/'
   const isAdmin = pathname?.startsWith('/admin')
 
-  if (isAuthPage || isLanding || isAdmin) {
+  if (isAuthPage || isAdmin) {
     return null
   }
 
+  const visibleItems = userId ? authNavItems : guestNavItems
+
   return (
     <>
-      {/* Mobile Bottom Navigation */}
       <nav
         className={`mobile-bottom-nav ${isVisible ? 'visible' : 'hidden'}`}
         role="navigation"
@@ -88,7 +62,9 @@ export function MobileBottomNav() {
       >
         <div className="mobile-nav-container">
           {visibleItems.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
+            const isActive = item.href === '/'
+              ? pathname === '/'
+              : pathname === item.href || pathname?.startsWith(item.href + '/')
             return (
               <Link
                 key={item.href}
@@ -105,7 +81,6 @@ export function MobileBottomNav() {
         </div>
       </nav>
 
-      {/* Spacer to prevent content from being hidden behind nav */}
       <div className="mobile-nav-spacer" />
     </>
   )

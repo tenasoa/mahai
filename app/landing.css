@@ -887,14 +887,25 @@
 /* ═══════════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MOBILE FIRST
+═══════════════════════════════════════════════ */
+
+/* Tablette large ≤ 1100px */
 @media (max-width: 1100px) {
-  .hero-inner { grid-template-columns: 1fr; gap: 4rem; padding-top: 9rem; }
+  .hero-inner {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+    padding: 8rem 2rem 5rem;
+  }
   .hero-visual { max-width: 540px; margin: 0 auto; }
   .features-grid { grid-template-columns: 1fr 1fr; }
   .feat-card.hero-feat { grid-column: 1 / -1; grid-row: auto; }
   .how-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
 }
+
+/* Tablette ≤ 900px */
 @media (max-width: 900px) {
   .nav-links, .btn-nav-ghost { display: none; }
   .nav-burger { display: flex; }
@@ -905,18 +916,132 @@
   .price-card.popular:hover { transform: translateY(-2px); }
   .how-grid { grid-template-columns: 1fr; }
 }
+
+/* Mobile ≤ 640px */
 @media (max-width: 640px) {
-  .section { padding: 4.5rem 0; }
+  .section { padding: 4rem 0; }
+
+  /* Hero */
+  .hero-inner {
+    padding: 5.5rem 1.25rem 3rem;
+    gap: 2.5rem;
+  }
+  .hero-title { font-size: clamp(2.4rem, 8vw, 3.5rem); }
+  .hero-sub { font-size: .92rem; }
+  .hero-stats { gap: 1.25rem; flex-wrap: wrap; }
+  .hero-stat .num { font-size: 1.65rem; }
+
+  /* Boutons hero en pleine largeur */
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .btn-primary, .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Visual côté droit */
   .showcase-track { grid-template-columns: 1fr; }
   .features-grid { grid-template-columns: 1fr; }
-  .hero-stats { gap: 1.5rem; }
-  .hero-actions { flex-direction: column; align-items: flex-start; }
-  .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
-  .footer-bottom { flex-direction: column; align-items: flex-start; }
-  .ai-panel { position: static; width: 100%; margin-top: 1rem; }
+  .feat-card { padding: 1.75rem; }
+  .feat-card.hero-feat { padding: 1.75rem; }
+
+  /* Hero card stack simplifiée */
   .hero-card-stack { aspect-ratio: auto; }
   .paper-float-2, .paper-float-3 { display: none; }
   .paper-float-1 { position: static; width: 100%; }
+  .ai-panel { position: static; width: 100%; margin-top: 1rem; }
+
+  /* How it works */
+  .how-step { padding: 1.75rem 1.25rem; }
+  .how-num { font-size: 2.5rem; }
+
+  /* Pricing */
+  .price-card { padding: 1.75rem; }
+  .price-amount { font-size: 2.8rem; }
+
+  /* Testimonials */
+  .testi-card { padding: 1.5rem; }
+  .testi-quote { font-size: 2.5rem; }
+
+  /* CTA boutons pleine largeur */
+  .cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+
+  /* Footer */
+  .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; }
+
+  /* Toast en bas */
+  .toast-container { bottom: 1rem; right: 1rem; left: 1rem; }
+  .toast { min-width: 0; max-width: 100%; }
+}
+
+/* Petit mobile ≤ 480px */
+@media (max-width: 480px) {
+  .hero-inner { padding: 5rem 1rem 2.5rem; }
+  .hero-title { font-size: clamp(2rem, 9vw, 2.6rem); }
+  .hero-sub { font-size: .88rem; }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .75rem;
+    text-align: center;
+  }
+  .hero-stat .num { font-size: 1.4rem; }
+  .hero-stat .lbl { font-size: .62rem; }
+
+  .section { padding: 3rem 0; }
+
+  /* Comment ça marche : numéros plus petits */
+  .how-num { font-size: 2rem; }
+  .how-title { font-size: 1.1rem; }
+  .how-icon { width: 36px; height: 36px; font-size: 1rem; }
+
+  /* Features */
+  .feat-card { padding: 1.25rem; }
+  .feat-title { font-size: 1.4rem; }
+
+  /* Pricing */
+  .price-card { padding: 1.25rem; }
+  .price-amount { font-size: 2.4rem; }
+
+  /* CTA titre */
+  .cta-title { font-size: clamp(1.8rem, 7vw, 2.8rem); }
+  .cta-sub { font-size: .85rem; }
+  .cta-orb { width: 280px; height: 280px; }
+
+  /* Footer compact */
+  .footer { padding: 3rem 0 1.5rem; }
+  .footer-bottom { gap: .75rem; }
+  .footer-legal { gap: 1rem; flex-wrap: wrap; }
+}
+
+/* Très petit mobile ≤ 375px (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  .hero-inner { padding: 4.75rem .85rem 2rem; }
+  .hero-title { font-size: 2rem; }
+  .hero-stat .num { font-size: 1.25rem; }
+
+  .btn-primary, .btn-secondary {
+    padding: .75rem 1.25rem;
+    font-size: .82rem;
+  }
+
+  .feat-card { padding: 1rem; }
+  .price-card { padding: 1rem; }
+}
+
+/* Safe area pour les notchs (iPhone X+) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .footer { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -213,13 +213,8 @@ export default function AdminBlogPage() {
           <h1 className="admin-title">Articles de Blog</h1>
           <p className="admin-subtitle">Créez et gérez les articles de blog et les commentaires</p>
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="admin-card">
-        <div className="admin-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 className="admin-card-title">Tous les articles</h3>
-          <button 
+        <div className="admin-header-actions">
+          <button
             className="admin-btn admin-btn-primary"
             onClick={() => {
               setEditingPost(null)
@@ -240,6 +235,13 @@ export default function AdminBlogPage() {
             <Plus size={16} />
             Nouvel article
           </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="admin-card">
+        <div className="admin-card-header">
+          <h3 className="admin-card-title">Tous les articles</h3>
         </div>
         
         {loading ? (
@@ -278,19 +280,15 @@ export default function AdminBlogPage() {
                     </td>
                     <td>{post.author_name}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        {post.is_published ? (
-                          <span style={{ color: 'var(--sage)' }}>
-                            <Eye size={14} />
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--ruby)' }}>
-                            <EyeOff size={14} />
-                          </span>
-                        )}
+                      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span className={`status-badge ${post.is_published ? 'status-emerald' : 'status-gray'}`}>
+                          {post.is_published ? <Eye size={11} /> : <EyeOff size={11} />}
+                          {post.is_published ? 'Publié' : 'Brouillon'}
+                        </span>
                         {post.is_featured && (
-                          <span style={{ color: 'var(--gold)' }}>
-                            <Star size={14} fill="currentColor" />
+                          <span className="status-badge status-amber">
+                            <Star size={11} fill="currentColor" />
+                            À la une
                           </span>
                         )}
                       </div>

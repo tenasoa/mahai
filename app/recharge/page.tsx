@@ -368,7 +368,6 @@ export default function RechargePage() {
           <BalanceCard
             balance={appUser?.credits ?? 0}
             ariaryEquivalent={`≈ ${(appUser?.credits ?? 0) * 50} Ariary`}
-            onRecharge={() => setActiveTab("recharger")}
           />
         </div>
       </section>

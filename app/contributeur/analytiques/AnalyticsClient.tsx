@@ -8,6 +8,7 @@ import {
   ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight
 } from 'lucide-react'
 import { useToast } from '@/lib/hooks/useToast'
+import { ToastContainer } from '@/components/ui/ToastContainer'
 import type { AnalyticsPeriod } from './actions'
 
 const PAGE_SIZE = 10
@@ -147,6 +148,7 @@ export default function AnalyticsClient({
 
   return (
     <div className="admin-page-content">
+      <ToastContainer />
       {/* Header */}
       <div className="admin-header">
         <div>

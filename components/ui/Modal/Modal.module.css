@@ -5,15 +5,13 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: var(--overlay);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(8, 7, 5, 0.92);
   display: flex;
-  align-items: flex-start; /* Changé de center à flex-start */
+  align-items: flex-start;
   justify-content: center;
   z-index: var(--z-modal);
   padding: var(--space-xl);
-  overflow-y: auto; /* Permet le défilement de l'overlay */
+  overflow-y: auto;
   animation: fadeIn var(--transition-base);
 }
 

@@ -22,6 +22,7 @@ interface ContributorLayoutProps {
 
 export function ContributorLayout({ children, user, stats }: ContributorLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -30,6 +31,21 @@ export function ContributorLayout({ children, user, stats }: ContributorLayoutPr
       setIsCollapsed(saved === 'true')
     }
   }, [])
+
+  // Fermer le menu mobile au changement de page
+  useEffect(() => {
+    setIsMobileOpen(false)
+  }, [pathname])
+
+  // Bloquer le scroll quand menu mobile ouvert
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isMobileOpen])
 
   const handleToggle = () => {
     const newState = !isCollapsed
@@ -49,6 +65,9 @@ export function ContributorLayout({ children, user, stats }: ContributorLayoutPr
         stats={stats}
         isCollapsed={isCollapsed}
         onToggle={handleToggle}
+        isMobileOpen={isMobileOpen}
+        onMobileOpen={() => setIsMobileOpen(true)}
+        onMobileClose={() => setIsMobileOpen(false)}
       />
 
       <main id="main-content" className="main" suppressHydrationWarning>

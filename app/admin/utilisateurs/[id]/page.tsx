@@ -122,7 +122,7 @@ export default async function AdminUserDetailPage({
           Retour aux utilisateurs
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', position: 'relative', zIndex: 1 }}>
+        <div className="admin-banner-inner" style={{ display: 'flex', alignItems: 'center', gap: '2rem', position: 'relative', zIndex: 1 }}>
           <div style={{ position: 'relative' }}>
             {userDetail.profilePicture ? (
               <img 

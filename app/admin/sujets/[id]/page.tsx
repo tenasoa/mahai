@@ -1,7 +1,7 @@
 import { getSubjectDetailAdmin, updateSubjectStatus } from '@/actions/admin/subjects'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, FileText, CheckCircle2, AlertCircle, XCircle, BookOpen, Tag, Calendar, DollarSign, User, Download, Eye, Clock, Edit3 } from 'lucide-react'
+import { ArrowLeft, FileText, CheckCircle2, AlertCircle, XCircle, BookOpen, Tag, Calendar, DollarSign, User, Download, Eye, Clock, Edit3, ExternalLink } from 'lucide-react'
 
 export const metadata = {
   title: 'Modération Sujet — Admin Mah.AI'
@@ -87,15 +87,16 @@ export default async function AdminSubjectDetailPage({
           </div>
         </div>
         <div className="admin-header-actions" style={{ display: 'flex', gap: '0.75rem' }}>
-          <a
-            href={subject.pdfUrl}
+          <Link
+            href={`/sujet/${p.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="admin-btn admin-btn-outline"
+            title="Voir le sujet tel qu'affiché aux étudiants"
           >
-            <Eye size={16} />
+            <ExternalLink size={16} />
             Voir le sujet
-          </a>
+          </Link>
           {subject.correctionUrl && (
             <a
               href={subject.correctionUrl}

@@ -294,8 +294,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55);
   z-index: var(--z-modal-backdrop);
   animation: fadeIn 0.2s ease;
 }
@@ -2007,6 +2006,103 @@
 
 .tx-reject-input {
   margin-top: 0.5rem;
+}
+
+/* ═══════════════════════
+   RESPONSIVE — GRILLES & PAGES DÉTAIL
+   ═══════════════════════ */
+
+/* Collapse les grilles 2 colonnes (inline style → !important nécessaire) */
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-form-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Banner utilisateur : passe en colonne sur tablette */
+  .admin-banner-inner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1.5rem !important;
+  }
+
+  .admin-detail-banner {
+    padding: 1.75rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Info grid : 2 colonnes max sur mobile */
+  .admin-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    padding: 1.25rem;
+  }
+
+  /* Tabs scrollables horizontalement */
+  .admin-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+
+  .admin-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Modal blog large → plein écran sur mobile */
+  .admin-overlay {
+    padding: 0.5rem;
+  }
+
+  /* Titre utilisateur dans le banner */
+  .admin-detail-banner .admin-title {
+    font-size: 1.6rem !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Info grid : 1 colonne sur très petit écran */
+  .admin-info-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  /* Items qui prennent 2 colonnes → reset */
+  .admin-info-item[style*="grid-column: span 2"],
+  .admin-info-item[style*="gridColumn: span 2"] {
+    grid-column: span 1 !important;
+  }
+
+  /* Modal : hauteur max safe sur petits écrans */
+  .admin-modal {
+    max-height: 95vh !important;
+    border-radius: var(--r) !important;
+  }
+
+  /* Blog modal → retirer la hauteur fixe */
+  .admin-modal[style*="height: 90vh"] {
+    height: 95vh !important;
+  }
+
+  .admin-detail-banner {
+    padding: 1.25rem !important;
+  }
+
+  .admin-banner-inner img,
+  .admin-banner-inner > div:first-child > div {
+    width: 72px !important;
+    height: 72px !important;
+    font-size: 1.5rem !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
