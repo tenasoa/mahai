@@ -185,7 +185,9 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
     } else {
       document.body.style.overflow = "unset";
     }
-    return () => document.body.style.overflow = "unset";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isMobileOpen]);
 
   // Charger le thème depuis localStorage
