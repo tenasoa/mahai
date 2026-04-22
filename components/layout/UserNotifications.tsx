@@ -178,12 +178,18 @@ export function UserNotifications() {
   }
 
   const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
+    // Force UTC parsing : les dates Supabase/Prisma sont en UTC mais sans 'Z'
+    // new Date("2024-01-15T12:00:00") → heure locale (UTC+3 MG) → décalage +3h
+    const utcString = dateString && !dateString.endsWith('Z') && !dateString.includes('+')
+      ? dateString + 'Z'
+      : dateString
+    const date = new Date(utcString)
     const now = new Date()
     const diff = now.getTime() - date.getTime()
     const hours = Math.floor(diff / 3600000)
     const minutes = Math.floor(diff / 60000)
-    
+
+    if (minutes < 1) return `À l'instant`
     if (minutes < 60) return `Il y a ${minutes} min`
     if (hours < 24) return `Il y a ${hours}h`
     return `Il y a ${Math.floor(hours / 24)}j`

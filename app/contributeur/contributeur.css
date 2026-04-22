@@ -11,6 +11,8 @@
   background: var(--void);
   color: var(--text);
   display: flex;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .contributor-noise {
@@ -1890,11 +1892,15 @@
   .sidebar-collapsed .main {
     margin-left: 0 !important;
     padding: 0 !important; /* admin-page-content gère son propre padding */
+    overflow-x: hidden; /* Empêche le débordement horizontal */
+    width: 100%;
+    max-width: 100vw;
   }
 
   /* Clearance pour le bouton hamburger (top) */
   .admin-page-content {
     padding-top: 4rem !important;
+    overflow-x: hidden;
   }
 
   /* Réinitialiser le collapsed sur mobile : tout est visible */
@@ -1971,10 +1977,31 @@
    RESPONSIVE CONTRIBUTEUR PAGES (sujets, retraits, analytiques)
    ═══════════════════════ */
 @media (max-width: 768px) {
-  /* KPI grid : 2 colonnes sur tablette */
+  /* KPI grid : 2 colonnes — minmax(0,1fr) force le rétrécissement sous le contenu min */
   .kpi-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem;
+  }
+
+  /* Empêcher les valeurs KPI de forcer la largeur */
+  .kpi-value {
+    font-size: 1.4rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kpi-card {
+    padding: 1.25rem !important;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .kpi-title {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Split analytics → colonne unique */
