@@ -1549,6 +1549,7 @@
   }
   .admin-sidebar.mobile-open {
     transform: translateX(0);
+    z-index: calc(var(--z-modal-backdrop) + 1); /* Au-dessus de l'overlay (900 → 901) */
   }
   /* Désactiver les tooltips en mode collapsé sur mobile (la sidebar est toujours en mode complet) */
   .admin-sidebar.collapsed .sb-section,

@@ -1835,6 +1835,42 @@
    (miroir du comportement admin)
    ═══════════════════════ */
 
+/* Bouton hamburger flottant — Contributeur (base : caché sur desktop) */
+.contrib-mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: calc(var(--z-modal-backdrop) + 1);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r);
+  background: var(--card);
+  border: 1px solid var(--b1);
+  color: var(--text);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s;
+}
+
+.contrib-mobile-menu-btn:hover {
+  background: var(--gold-dim);
+  border-color: var(--gold-line);
+  color: var(--gold);
+}
+
+/* Overlay mobile — Contributeur (base : caché) */
+.contrib-mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: var(--z-modal-backdrop);
+  animation: fadeIn 0.2s ease;
+}
+
 @media (max-width: 1024px) {
   /* Le sidebar se cache hors-écran */
   .sidebar {
@@ -1846,6 +1882,7 @@
   /* Ouverture */
   .sidebar.mobile-open {
     transform: translateX(0);
+    z-index: calc(var(--z-modal-backdrop) + 1); /* Au-dessus de l'overlay (900 → 901) */
   }
 
   /* La zone principale prend toute la largeur */
@@ -1924,38 +1961,3 @@
   }
 }
 
-/* Bouton hamburger flottant — Contributeur */
-.contrib-mobile-menu-btn {
-  display: none;
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: calc(var(--z-navbar) + 10);
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r);
-  background: var(--card);
-  border: 1px solid var(--b1);
-  color: var(--text);
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: var(--shadow-md);
-  transition: all 0.2s;
-}
-
-.contrib-mobile-menu-btn:hover {
-  background: var(--gold-dim);
-  border-color: var(--gold-line);
-  color: var(--gold);
-}
-
-/* Overlay mobile — Contributeur */
-.contrib-mobile-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  z-index: calc(var(--z-navbar) + 5);
-  animation: fadeIn 0.2s ease;
-}
