@@ -1889,6 +1889,12 @@
   .main,
   .sidebar-collapsed .main {
     margin-left: 0 !important;
+    padding: 0 !important; /* admin-page-content gère son propre padding */
+  }
+
+  /* Clearance pour le bouton hamburger (top) */
+  .admin-page-content {
+    padding-top: 4rem !important;
   }
 
   /* Réinitialiser le collapsed sur mobile : tout est visible */
@@ -1958,6 +1964,95 @@
   /* Masquer le toggle collapse sur mobile */
   .sb-toggle-inline {
     display: none;
+  }
+}
+
+/* ═══════════════════════
+   RESPONSIVE CONTRIBUTEUR PAGES (sujets, retraits, analytiques)
+   ═══════════════════════ */
+@media (max-width: 768px) {
+  /* KPI grid : 2 colonnes sur tablette */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem;
+  }
+
+  /* Split analytics → colonne unique */
+  .contrib-split,
+  .contrib-split-analytics {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Card header : empile titre + action */
+  .contrib-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .contrib-search-wrap {
+    width: 100%;
+  }
+
+  .contrib-search-input {
+    width: 100%;
+  }
+
+  /* Tabs horizontalement scrollables */
+  .admin-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Retrait : actions inline */
+  .contrib-row-actions {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  /* Dashboard header empilé */
+  .dash-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .dash-welcome {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* KPI grid : 1 colonne sur très petit écran */
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Padding page réduit */
+  .admin-page-content {
+    padding: 4rem 1rem 6rem !important;
+  }
+
+  /* Admin modal plein écran */
+  .admin-overlay .admin-modal,
+  .contrib-modal-overlay .admin-modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--r);
+    margin: 0.5rem;
+  }
+
+  /* Operator buttons en colonne */
+  .admin-modal-receipt-grid {
+    grid-template-columns: 1fr;
   }
 }
 

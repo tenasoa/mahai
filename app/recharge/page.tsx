@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useTransactionsRealtime } from "@/lib/hooks/useTransactionsRealtime";
+import { useToast } from "@/lib/hooks/useToast";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { LuxuryNavbar } from "@/components/layout/LuxuryNavbar";
 import { RechargePageSkeleton } from "@/components/ui/PageSkeletons";
+import { ToastContainer } from "@/components/ui/ToastContainer";
 import { Button } from "@/components/ui";
 import {
   Zap,
@@ -17,8 +19,6 @@ import {
   CheckCircle,
   ArrowRight,
   Copy,
-  AlertCircle,
-  X,
 } from "lucide-react";
 import { rechargeCreditsAction } from "@/actions/profile";
 import {
@@ -73,6 +73,7 @@ const OPERATORS: Provider[] = [
 export default function RechargePage() {
   const router = useRouter();
   const { userId, appUser, loading: authLoading } = useAuth();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"historique" | "recharger">(
     "recharger",
@@ -88,10 +89,6 @@ export default function RechargePage() {
   // États pour les transactions
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -208,12 +205,11 @@ export default function RechargePage() {
             ? "validée"
             : "refusée";
 
-      setNotification({
-        type: lastTransaction.status === "COMPLETED" ? "success" : "error",
-        message: `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`,
-      });
-
-      setTimeout(() => setNotification(null), 5000);
+      if (lastTransaction.status === "COMPLETED") {
+        toast.success("Transaction", `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`);
+      } else {
+        toast.error("Transaction", `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`);
+      }
     }
   }, [newTransactionCount]);
 
@@ -265,7 +261,7 @@ export default function RechargePage() {
 
   const handleRecharge = () => {
     if (!phoneNumber || !selectedProvider || !selectedAmount) {
-      setNotification({ type: "error", message: "Veuillez sélectionner un numéro et un pack" });
+      toast.error("Validation", "Veuillez sélectionner un numéro et un pack");
       return;
     }
     setShowConfirmation(true);
@@ -274,10 +270,7 @@ export default function RechargePage() {
   const handleConfirmPayment = async (senderCode?: string) => {
     const code = senderCode?.trim() || transferCode.trim();
     if (!code) {
-      setNotification({
-        type: "error",
-        message: "Veuillez entrer le code de transfert reçu",
-      });
+      toast.error("Validation", "Veuillez entrer le code de transfert reçu");
       return;
     }
     // Mettre à jour transferCode si le code vient de la modale
@@ -286,7 +279,7 @@ export default function RechargePage() {
     }
 
     if (!selectedAmount || selectedAmount.price <= 0 || selectedAmount.credits <= 0) {
-      setNotification({ type: "error", message: "Montant invalide" });
+      toast.error("Validation", "Montant invalide");
       return;
     }
 
@@ -302,22 +295,19 @@ export default function RechargePage() {
       });
 
       if (result.success) {
-        setNotification({
-          type: "success",
-          message: `Votre demande de ${selectedAmount?.credits || 0} crédits a été enregistrée. Validation sous 12h.`,
-        });
+        toast.success(
+          "Demande enregistrée",
+          `Votre demande de ${selectedAmount?.credits || 0} crédits a été enregistrée. Validation sous 12h.`,
+        );
         setShowConfirmation(false);
         setTransferCode("");
         await loadTransactions();
         setActiveTab("historique");
       } else {
-        setNotification({
-          type: "error",
-          message: result.error || "Erreur lors de la validation",
-        });
+        toast.error("Erreur", result.error || "Erreur lors de la validation");
       }
     } catch {
-      setNotification({ type: "error", message: "Erreur serveur" });
+      toast.error("Erreur", "Erreur serveur");
     } finally {
       setProcessing(false);
     }
@@ -552,16 +542,7 @@ export default function RechargePage() {
         onConfirm={handleConfirmPayment}
       />
 
-      {/* NOTIFICATION */}
-      {notification && (
-        <div className={`notification ${notification.type}`}>
-          <AlertCircle size={16} />
-          <span>{notification.message}</span>
-          <button onClick={() => setNotification(null)}>
-            <X size={16} />
-          </button>
-        </div>
-      )}
+      <ToastContainer />
     </div>
   );
 }

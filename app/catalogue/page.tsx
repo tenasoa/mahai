@@ -240,42 +240,6 @@ function CatalogueContent() {
     <>
       <LuxuryCursor />
 
-      {/* NAVBAR */}
-      <nav className="nav">
-        <div className="nav-inner">
-          <Link href="/" className="logo">
-            Mah<span className="logo-gem"></span>AI
-          </Link>
-
-          {/* Right actions */}
-          <div className="nav-right">
-            {userId ? (
-              <>
-                <div className="credit-badge">
-                  <span className="credit-icon">💎</span>
-                  {appUser?.credits ?? 0} cr
-                </div>
-                <Link href="/recharge" className="btn-sm btn-ghost">
-                  Recharger
-                </Link>
-                <div className="avatar">
-                  {(appUser?.prenom?.charAt(0) || "U").toUpperCase()}
-                </div>
-              </>
-            ) : (
-              <>
-                <Link href="/auth/login" className="btn-sm btn-ghost">
-                  Connexion
-                </Link>
-                <Link href="/auth/register" className="btn-sm btn-gold">
-                  Inscription
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
-
       {/* MAIN CONTENT */}
       <div className={`page-layout ${guestMode ? "guest-mode" : ""}`}>
         {/* MAIN AREA */}
@@ -452,7 +416,7 @@ function CatalogueContent() {
             </div>
             <button
               className="btn-buy"
-              onClick={() => openBuyModal(currentSubject)}
+              onClick={() => { setPreviewModalOpen(false); openBuyModal(currentSubject); }}
             >
               Acheter pour {currentSubject.price} crédits
             </button>
