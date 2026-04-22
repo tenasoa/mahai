@@ -3,6 +3,7 @@
 import styles from './TransactionHistory.module.css'
 
 export type TransactionType = 'in' | 'out' | 'bonus'
+export type TransactionStatus = 'pending' | 'completed' | 'refused'
 
 export interface Transaction {
   id: string
@@ -10,6 +11,7 @@ export interface Transaction {
   title: string
   amount: number
   date: string
+  status?: TransactionStatus
   meta?: string
   icon?: string
 }
@@ -65,10 +67,11 @@ export function TransactionHistory({
           {monthTransactions.map((tx) => (
             <div
               key={tx.id}
-              className={`${styles.txRow} ${styles[tx.type]}`}
+              className={`${styles.txRow} ${styles[tx.type]} ${tx.status === 'pending' ? styles.pending : ''} ${tx.status === 'refused' ? styles.refused : ''}`}
               onClick={() => onTransactionClick?.(tx)}
               role="button"
               tabIndex={0}
+              aria-label={`${tx.title}, ${tx.amount} crédits${tx.status === 'pending' ? ', en attente de validation' : ''}`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
@@ -76,14 +79,22 @@ export function TransactionHistory({
                 }
               }}
             >
-              <div className={`${styles.txIcon} ${styles[tx.type]}`}>
-                {tx.icon || getIconForType(tx.type)}
+              <div className={`${styles.txIcon} ${styles[tx.type]} ${tx.status === 'pending' ? styles.pendingIcon : ''}`}>
+                {tx.status === 'pending' ? '⏳' : tx.icon || getIconForType(tx.type)}
               </div>
               <div className={styles.txBody}>
-                <div className={styles.txTitle}>{tx.title}</div>
+                <div className={styles.txTitle}>
+                  {tx.title}
+                  {tx.status === 'pending' && (
+                    <span className={styles.statusBadge} aria-label="En attente de validation">En attente</span>
+                  )}
+                  {tx.status === 'refused' && (
+                    <span className={styles.statusBadgeRefused} aria-label="Recharge refusée">Refusé</span>
+                  )}
+                </div>
                 <div className={styles.txMeta}>{tx.meta || tx.date}</div>
               </div>
-              <div className={`${styles.txAmount} ${styles[tx.type === 'in' || tx.type === 'bonus' ? 'positive' : 'negative']}`}>
+              <div className={`${styles.txAmount} ${tx.status === 'pending' ? styles.amountPending : tx.status === 'refused' ? styles.amountRefused : styles[tx.type === 'in' || tx.type === 'bonus' ? 'positive' : 'negative']}`}>
                 {tx.type === 'in' || tx.type === 'bonus' ? '+' : '-'}{tx.amount} cr
               </div>
             </div>

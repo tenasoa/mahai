@@ -126,6 +126,12 @@ export default function RechargePage() {
                 : tx.type === "ACHAT"
                   ? "out"
                   : "bonus",
+            status:
+              tx.status === "PENDING"
+                ? "pending"
+                : tx.status === "REFUSED" || tx.status === "REJECTED"
+                  ? "refused"
+                  : "completed",
             title:
               tx.type === "ACHAT"
                 ? `Déblocage — ${tx.description || "Sujet"}`
@@ -328,6 +334,8 @@ export default function RechargePage() {
         ? "Orange Money"
         : "Airtel Money";
 
+  const pendingCount = transactions.filter(tx => tx.status === "pending").length;
+
   return (
     <div className="credits-page">
       <LuxuryCursor />
@@ -345,6 +353,18 @@ export default function RechargePage() {
             simplement via Mobile Money.
           </p>
 
+          {/* Bandeau recharge en attente */}
+          {pendingCount > 0 && (
+            <div className="info-banner" role="status" aria-live="polite" style={{ marginTop: '1rem' }}>
+              <Clock size={16} />
+              <span>
+                {pendingCount === 1
+                  ? "1 recharge en attente de validation admin (délai habituel : quelques heures)"
+                  : `${pendingCount} recharges en attente de validation admin`}
+              </span>
+            </div>
+          )}
+
           <BalanceCard
             balance={appUser?.credits ?? 0}
             ariaryEquivalent={`≈ ${(appUser?.credits ?? 0) * 50} Ariary`}
@@ -354,7 +374,7 @@ export default function RechargePage() {
       </section>
 
       {/* MAIN */}
-      <main className="main">
+      <main id="main-content" className="main">
         <div className="content">
           {/* TABS */}
           <div className="tabs">

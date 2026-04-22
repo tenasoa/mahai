@@ -17,15 +17,27 @@
 }
 
 .subject-breadcrumbs {
+  margin-bottom: 0.75rem;
+}
+
+.subject-breadcrumbs ol {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
   font-family: var(--mono);
   font-size: 0.58rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-3);
-  margin-bottom: 0.75rem;
+}
+
+.subject-breadcrumbs li + li::before {
+  content: '/';
+  margin-right: 0.45rem;
+  color: var(--text-3);
 }
 
 .subject-breadcrumbs a {
@@ -34,6 +46,10 @@
 }
 
 .subject-breadcrumbs a:hover {
+  color: var(--gold);
+}
+
+.subject-breadcrumbs [aria-current="page"] {
   color: var(--gold);
 }
 

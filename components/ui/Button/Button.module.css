@@ -182,6 +182,21 @@
 
 /* === REDUCED MOTION === */
 
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .spinner {
+    animation: none;
+    border-style: dashed;
+  }
+}
+
 [data-reduced-motion="true"] .btn {
   transition: none;
 }

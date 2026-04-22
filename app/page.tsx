@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useMultiReveal } from "@/lib/hooks";
@@ -9,9 +9,25 @@ import { MOBILE_MONEY_PROVIDERS } from "@/data/mobile-money-providers";
 import "./landing.css";
 
 export default function LandingPage() {
+  const heroAmbientRef = useRef<HTMLDivElement>(null);
+
   // Set page title
   useEffect(() => {
     document.title = "Mah.AI — Accueil";
+  }, []);
+
+  // Pause orb animations when hero is off-screen (battery/CPU saving)
+  useEffect(() => {
+    const el = heroAmbientRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        el.classList.toggle("orbs-paused", !entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // Reveal on scroll
@@ -24,7 +40,7 @@ export default function LandingPage() {
     <div style={{ minHeight: "100vh" }}>
       {/* ═══════ HERO ═══════ */}
       <section className="hero">
-        <div className="hero-ambient">
+        <div ref={heroAmbientRef} className="hero-ambient">
           <div className="ambient-orb orb-1"></div>
           <div className="ambient-orb orb-2"></div>
           <div className="ambient-orb orb-3"></div>

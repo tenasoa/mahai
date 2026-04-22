@@ -51,7 +51,7 @@ export function ContributorLayout({ children, user, stats }: ContributorLayoutPr
         onToggle={handleToggle}
       />
 
-      <main className="main" suppressHydrationWarning>
+      <main id="main-content" className="main" suppressHydrationWarning>
         {children}
       </main>
     </div>

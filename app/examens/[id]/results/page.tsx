@@ -51,7 +51,7 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
       <LuxuryCursor />
       
       <Suspense fallback={<ExamenResultsSkeleton />}>
-        <main className="results-container">
+        <main id="main-content" className="results-container">
           <div className="results-header luxury-card">
             <div className="rh-left">
               <div className="rh-trophy">

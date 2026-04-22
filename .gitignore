@@ -1,61 +1,83 @@
-```
-# Dependencies
+# ==========================================
+# Dépendances
+# ==========================================
 node_modules/
-.git_disabled/
 
-# Environment
+# ==========================================
+# Variables d'environnement (SECRETS)
+# ==========================================
 .env
 .env.local
 .env.*
+!.env.example
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-.ENV
+# ==========================================
+# Build Next.js
+# ==========================================
+.next/
+out/
+next-env.d.ts
 
-# Build outputs
-dist/
-build/
-*.egg-info/
-.eggs/
+# ==========================================
+# TypeScript
+# ==========================================
+*.tsbuildinfo
 
-# Logs
-*.log
+# ==========================================
+# Vercel
+# ==========================================
+.vercel/
 
-# Coverage
-.coverage
-coverage/
-htmlcov/
+# ==========================================
+# Git interne (ancien .git renommé)
+# ==========================================
+.git_disabled/
 
-# IDE
+# ==========================================
+# Fichiers de test ad-hoc
+# ==========================================
+test-*.js
+test-*.ts
+out.txt
+
+# ==========================================
+# Config locale d'éditeur/IDE
+# ==========================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *.tmp
+.claude/launch.json
 
+# ==========================================
 # OS
+# ==========================================
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Testing
+# ==========================================
+# Logs
+# ==========================================
+*.log
+
+# ==========================================
+# Python (si scripts utilitaires)
+# ==========================================
+__pycache__/
+*.pyc
+*.pyo
+.Python
+env/
+venv/
+.venv/
+
+# ==========================================
+# Coverage / Tests
+# ==========================================
+.coverage
+coverage/
+htmlcov/
 .pytest_cache/
 .mypy_cache/
-
-# Next.js
-.next/
-out/
-
-# Vercel
-.vercel/
-
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-```

@@ -166,6 +166,27 @@ function CatalogueContent() {
     refresh();
   }, [pageSize, refresh]);
 
+  // Escape key closes whichever modal is open + body scroll lock
+  useEffect(() => {
+    const anyModalOpen = previewModalOpen || buyModalOpen;
+    if (anyModalOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setPreviewModalOpen(false);
+          setBuyModalOpen(false);
+        }
+      };
+      document.addEventListener('keydown', handleEsc);
+      return () => {
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', handleEsc);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [previewModalOpen, buyModalOpen]);
+
   if (loading) return <CataloguePageSkeleton />;
 
   // Mapper les sujets pour PaperCard
@@ -258,7 +279,7 @@ function CatalogueContent() {
       {/* MAIN CONTENT */}
       <div className={`page-layout ${guestMode ? "guest-mode" : ""}`}>
         {/* MAIN AREA */}
-        <main className={`main-area ${guestMode ? "guest-mode" : ""}`}>
+        <main id="main-content" className={`main-area ${guestMode ? "guest-mode" : ""}`}>
           <div className="main-content-wrapper">
             {/* Page Title */}
             <h1 className="serif">
@@ -380,15 +401,19 @@ function CatalogueContent() {
         <div
           className="modal-overlay"
           onClick={() => setPreviewModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="preview-modal-title"
         >
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button
               className="modal-close"
               onClick={() => setPreviewModalOpen(false)}
+              aria-label="Fermer"
             >
               ×
             </button>
-            <h2 className="modal-title">{currentSubject.title}</h2>
+            <h2 id="preview-modal-title" className="modal-title">{currentSubject.title}</h2>
             <div className="modal-preview modal-preview-rich">
               <div className="preview-sheet">
                 <div className="preview-sheet-head">
@@ -437,15 +462,22 @@ function CatalogueContent() {
 
       {/* Buy Modal */}
       {buyModalOpen && currentSubject && (
-        <div className="modal-overlay" onClick={() => setBuyModalOpen(false)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setBuyModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="buy-modal-title"
+        >
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button
               className="modal-close"
               onClick={() => setBuyModalOpen(false)}
+              aria-label="Fermer"
             >
               ×
             </button>
-            <h2 className="modal-title">Confirmer l'achat</h2>
+            <h2 id="buy-modal-title" className="modal-title">Confirmer l'achat</h2>
             <div className="modal-buy-info">
               <p className="modal-buy-heading">{currentSubject.title}</p>
               <div className="modal-buy-row">

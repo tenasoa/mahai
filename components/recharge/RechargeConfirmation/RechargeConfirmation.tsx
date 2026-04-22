@@ -234,10 +234,11 @@ export function RechargeConfirmation({
                    En confirmant, vous déclarez avoir effectué le paiement de {price.toLocaleString()} Ar. Votre solde sera mis à jour après vérification.
                  </p>
                </div>
-             </div>
-           </Modal>
-         </div>
-       )
+             )}
+      </div>
+      </Modal>
+    </div>
+  )
 }
 
 export default RechargeConfirmation

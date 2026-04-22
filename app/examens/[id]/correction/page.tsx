@@ -49,7 +49,7 @@ export default async function ExamCorrectionPage({ params }: CorrectionPageProps
       <LuxuryCursor />
 
       <Suspense fallback={<ExamenCorrectionSkeleton />}>
-        <main className="correction-container">
+        <main id="main-content" className="correction-container">
           <div className="mb-8">
             <Link href={`/examens/${id}/results`} className="luxury-back-link">
               <ArrowRight size={14} className="rotate-180" />

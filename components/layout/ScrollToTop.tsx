@@ -20,10 +20,8 @@ export function ScrollToTop() {
   }, [])
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    })
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' })
   }
 
   if (!isVisible) return null
@@ -31,14 +29,11 @@ export function ScrollToTop() {
   return (
     <button
       onClick={scrollToTop}
-      className="fixed bottom-8 right-8 z-[100] flex h-12 w-12 items-center justify-center rounded-full bg-gold shadow-lg transition-all hover:scale-110 active:scale-95"
-      style={{
-        background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))',
-        color: 'var(--void)',
-      }}
-      aria-label="Retour en haut"
+      className="fixed bottom-8 right-8 z-[100] flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all hover:scale-110 active:scale-95"
+      style={{ background: 'linear-gradient(135deg, var(--gold), var(--gold-hi))', color: 'var(--void)' }}
+      aria-label="Retour en haut de la page"
     >
-      <ArrowUp size={24} strokeWidth={2.5} />
+      <ArrowUp size={24} strokeWidth={2.5} aria-hidden="true" />
     </button>
   )
 }

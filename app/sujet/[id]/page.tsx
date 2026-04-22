@@ -341,11 +341,13 @@ export default function SujetDetailPage() {
 
       <header className="subject-header">
         <div className="subject-header-inner">
-          <div className="subject-breadcrumbs">
-            <Link href="/catalogue">Catalogue</Link>
-            <span>/</span>
-            <span>{subject.matiere}</span>
-          </div>
+          <nav className="subject-breadcrumbs" aria-label="Fil d'Ariane">
+            <ol>
+              <li><Link href="/">Accueil</Link></li>
+              <li><Link href="/catalogue">Catalogue</Link></li>
+              <li aria-current="page">{subject.matiere}</li>
+            </ol>
+          </nav>
 
           <div className="subject-tags">
             <span className="tag">{subject.type}</span>
@@ -371,7 +373,7 @@ export default function SujetDetailPage() {
         </div>
       </header>
 
-      <main className="subject-main">
+      <main id="main-content" className="subject-main">
         <section className="subject-content">
           <div className="mode-switcher">
             <button

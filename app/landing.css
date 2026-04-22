@@ -40,6 +40,11 @@
   66% { transform: translate(-20px, 15px) scale(.95); }
 }
 
+/* Pause orbs when hero is off-screen (IntersectionObserver) */
+.orbs-paused .ambient-orb {
+  animation-play-state: paused;
+}
+
 /* Hero grid lines */
 .hero-grid {
   position: absolute; inset: 0;
