@@ -93,17 +93,18 @@ export default function NotificationsPage() {
     }
   }
 
-  const getTimeAgo = (dateString: string) => {
+  const getTimeAgo = (dateString: unknown) => {
+    if (!dateString) return 'Date inconnue'
     // Force UTC parsing : les dates Supabase/Prisma sont en UTC mais sans 'Z'
     // new Date("2024-01-15T12:00:00") → heure locale (UTC+3 MG) → décalage +3h
-    const utcString = dateString && !dateString.endsWith('Z') && !dateString.includes('+')
-      ? dateString + 'Z'
-      : dateString
+    const str = String(dateString)
+    const utcString = !str.endsWith('Z') && !str.includes('+') ? str + 'Z' : str
     const date = new Date(utcString)
+    if (isNaN(date.getTime())) return 'Date inconnue'
     const now = new Date()
     const diff = now.getTime() - date.getTime()
-    const hours = Math.floor(diff / 3600000)
     const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
 
     if (minutes < 1) return `À l'instant`
     if (minutes < 60) return `Il y a ${minutes} min`
