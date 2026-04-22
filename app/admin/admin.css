@@ -2106,6 +2106,101 @@
   }
 }
 
+/* ═══════════════════════════════════════════════
+   TABLE → CARD VIEW (Mobile ≤ 640px)
+   Transforme chaque ligne de tableau en carte empilée.
+   S'applique à toutes les pages admin + contributeur.
+═══════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Désactiver le scroll horizontal — les cartes remplacent le tableau */
+  .table-wrapper {
+    overflow-x: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Table → block */
+  .admin-table {
+    display: block;
+    width: 100%;
+    border-collapse: separate;
+  }
+
+  /* Masquer les en-têtes de colonnes */
+  .admin-table thead {
+    display: none;
+  }
+
+  /* Corps → flex colonne avec espacement */
+  .admin-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  /* Chaque ligne → carte */
+  .admin-table tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    background: var(--lift);
+    border: 1px solid var(--b2);
+    border-radius: var(--r);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .admin-table tr:hover {
+    border-color: var(--b1);
+  }
+
+  /* Chaque cellule → ligne de carte */
+  .admin-table td {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 0.875rem;
+    border-bottom: 1px solid var(--b3);
+    font-size: 0.85rem;
+    color: var(--text-2);
+    min-width: 0;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .admin-table td:last-child {
+    border-bottom: none;
+  }
+
+  /* Ligne vide (colspan) → pleine largeur */
+  .admin-table td[colspan] {
+    justify-content: center;
+  }
+
+  /* Première cellule : contenu principal — plus visible */
+  .admin-table td:first-child {
+    padding: 0.75rem 0.875rem;
+    color: var(--text);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--b2);
+  }
+
+  /* Dernière cellule (actions) : aligne à droite + séparateur */
+  .admin-table td:last-child:not([colspan]) {
+    justify-content: flex-end;
+    gap: 0.375rem;
+    padding: 0.625rem 0.875rem;
+    background: rgba(255,255,255,0.01);
+    flex-wrap: wrap;
+  }
+
+  /* Hover sur les lignes */
+  .admin-table tr:hover td {
+    background: transparent;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pending-dot { animation: none; }
   .receipt-modal, .admin-overlay { animation: none; }
