@@ -391,22 +391,22 @@ function CatalogueContent() {
       {/* Preview Modal */}
       {previewModalOpen && currentSubject && (
         <div
-          className="modal-overlay"
+          className="catalogue-modal-overlay"
           onPointerDown={(e) => handleOverlayPointerDown(e, () => setPreviewModalOpen(false))}
           role="dialog"
           aria-modal="true"
           aria-labelledby="preview-modal-title"
         >
-          <div className="modal-content" onPointerDown={(e) => e.stopPropagation()}>
+          <div className="catalogue-modal-content" onPointerDown={(e) => e.stopPropagation()}>
             <button
-              className="modal-close"
+              className="catalogue-modal-close"
               onClick={() => setPreviewModalOpen(false)}
               aria-label="Fermer"
             >
               ×
             </button>
-            <h2 id="preview-modal-title" className="modal-title">{currentSubject.title}</h2>
-            <div className="modal-preview modal-preview-rich">
+            <h2 id="preview-modal-title" className="catalogue-modal-title">{currentSubject.title}</h2>
+            <div className="catalogue-modal-preview catalogue-modal-preview-rich">
               <div className="preview-sheet">
                 <div className="preview-sheet-head">
                   <span>{currentSubject.examType}</span>
@@ -443,7 +443,7 @@ function CatalogueContent() {
               </div>
             </div>
             <button
-              className="btn-buy"
+              className="catalogue-btn-buy"
               onClick={() => { setPreviewModalOpen(false); openBuyModal(currentSubject); }}
             >
               Acheter pour {currentSubject.price} crédits
@@ -455,50 +455,50 @@ function CatalogueContent() {
       {/* Buy Modal */}
       {buyModalOpen && currentSubject && (
         <div
-          className="modal-overlay"
+          className="catalogue-modal-overlay"
           onPointerDown={(e) => handleOverlayPointerDown(e, () => setBuyModalOpen(false))}
           role="dialog"
           aria-modal="true"
           aria-labelledby="buy-modal-title"
         >
-          <div className="modal-content" onPointerDown={(e) => e.stopPropagation()}>
+          <div className="catalogue-modal-content" onPointerDown={(e) => e.stopPropagation()}>
             <button
-              className="modal-close"
+              className="catalogue-modal-close"
               onClick={() => setBuyModalOpen(false)}
               aria-label="Fermer"
             >
               ×
             </button>
-            <h2 id="buy-modal-title" className="modal-title">Confirmer l'achat</h2>
-            <div className="modal-buy-info">
-              <p className="modal-buy-heading">{currentSubject.title}</p>
-              <div className="modal-buy-row">
+            <h2 id="buy-modal-title" className="catalogue-modal-title">Confirmer l'achat</h2>
+            <div className="catalogue-modal-buy-info">
+              <p className="catalogue-modal-buy-heading">{currentSubject.title}</p>
+              <div className="catalogue-modal-buy-row">
                 <span>Prix du sujet</span>
                 <strong>{currentSubject.price} crédits</strong>
               </div>
-              <div className="modal-buy-row">
+              <div className="catalogue-modal-buy-row">
                 <span>Votre solde actuel</span>
                 <strong>{appUser?.credits ?? 0} crédits</strong>
               </div>
-              <div className="modal-buy-row total">
+              <div className="catalogue-modal-buy-row total">
                 <span>Solde après achat</span>
                 <strong>
                   {(appUser?.credits ?? 0) - currentSubject.price} crédits
                 </strong>
               </div>
             </div>
-            <p className="modal-buy-footnote">
+            <p className="catalogue-modal-buy-footnote">
               Achat immédiat, accès permanent, correction IA incluse.
             </p>
-            <div className="modal-actions">
+            <div className="catalogue-modal-actions">
               <button
-                className="btn-cancel"
+                className="catalogue-btn-cancel"
                 onClick={() => setBuyModalOpen(false)}
               >
                 Annuler
               </button>
               <button
-                className="btn-confirm"
+                className="catalogue-btn-confirm"
                 onClick={confirmBuy}
                 disabled={isPurchasing}
               >
