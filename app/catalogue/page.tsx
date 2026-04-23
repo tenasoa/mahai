@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { useCatalogue } from "@/lib/hooks/useCatalogue";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -51,14 +50,6 @@ function CatalogueContent() {
 
   const toastIdRef = useRef(0);
   const lastToastTime = useRef<number>(0);
-  const [isCompact, setIsCompact] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsCompact(window.innerWidth < 1024);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   const {
     subjects,
@@ -119,10 +110,6 @@ function CatalogueContent() {
       setAuthModalOpen(true);
       return;
     }
-    if (isCompact) {
-      router.push(`/catalogue/preview/${subject.id}`);
-      return;
-    }
     setCurrentSubject(subject);
     setPreviewModalOpen(true);
   };
@@ -130,10 +117,6 @@ function CatalogueContent() {
   const openBuyModal = (subject: any) => {
     if (isGuest) {
       setAuthModalOpen(true);
-      return;
-    }
-    if (isCompact) {
-      router.push(`/catalogue/buy/${subject.id}`);
       return;
     }
     setCurrentSubject(subject);
