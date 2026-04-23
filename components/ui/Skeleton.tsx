@@ -10,9 +10,9 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-white/[0.03] border border-white/[0.05]",
+        "animate-pulse rounded-md bg-[color:var(--surface)] border border-[color:var(--gold-line)]",
         "after:content-[''] after:block after:h-full after:w-full",
-        "after:bg-gradient-to-r after:from-transparent after:via-white/[0.05] after:to-transparent",
+        "after:bg-gradient-to-r after:from-transparent after:via-[color:var(--gold-dim)] after:to-transparent",
         "after:translate-x-[-100%] after:animate-[shimmer_2s_infinite]",
         "overflow-hidden relative",
         className

@@ -177,16 +177,31 @@ export function UserNotifications() {
     }
   }
 
-  const getTimeAgo = (dateString: unknown) => {
-    if (!dateString) return 'Date inconnue'
-    // Force UTC parsing : les dates Supabase/Prisma sont en UTC mais sans 'Z'
-    // new Date("2024-01-15T12:00:00") → heure locale (UTC+3 MG) → décalage +3h
-    const str = String(dateString)
-    const utcString = !str.endsWith('Z') && !str.includes('+') ? str + 'Z' : str
-    const date = new Date(utcString)
+  const getTimeAgo = (dateInput: unknown) => {
+    if (!dateInput) return 'Date inconnue'
+
+    let date: Date
+
+    if (dateInput instanceof Date) {
+      // pg driver ou Next.js RSC peut passer un objet Date directement
+      date = dateInput
+    } else {
+      const str = String(dateInput).trim()
+      // PostgreSQL envoie parfois "2024-01-15 09:00:00+00" (espace au lieu de T)
+      const iso = str.replace(' ', 'T')
+      // Détecter si un indicateur de fuseau horaire est déjà présent
+      // Accepte : Z, +HH:MM, -HH:MM, +HHMM, -HHMM, +HH, -HH
+      const hasTimezone = iso.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(iso)
+      const utcStr = hasTimezone ? iso : iso + 'Z'
+      date = new Date(utcStr)
+    }
+
     if (isNaN(date.getTime())) return 'Date inconnue'
+
     const now = new Date()
     const diff = now.getTime() - date.getTime()
+    if (diff < 0) return `À l'instant`
+
     const minutes = Math.floor(diff / 60000)
     const hours = Math.floor(diff / 3600000)
 

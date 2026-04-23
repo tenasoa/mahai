@@ -770,7 +770,18 @@ export async function getUserActiveTransactionsAction() {
       [context.userId],
     );
 
-    return { success: true, data: result.rows };
+    // Normaliser createdAt en ISO string UTC (le driver pg peut retourner un
+    // objet Date ou une chaîne sans 'Z' selon la config de la colonne)
+    const rows = result.rows.map((row: any) => ({
+      ...row,
+      createdAt: row.createdAt instanceof Date
+        ? row.createdAt.toISOString()
+        : typeof row.createdAt === 'string' && !row.createdAt.endsWith('Z')
+          ? new Date(row.createdAt).toISOString()
+          : row.createdAt,
+    }));
+
+    return { success: true, data: rows };
   } catch (error) {
     console.error("Erreur getUserActiveTransactionsAction:", error);
     return {

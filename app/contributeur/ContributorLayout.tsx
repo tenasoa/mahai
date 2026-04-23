@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { ContributorSidebar } from '@/components/contributeur/ContributorSidebar'
+import { ToastContainer } from '@/components/ui/ToastContainer'
+
+// Routes éditeur — rendu full-width sans sidebar contributeur
+const EDITOR_PATHS = ['/contributeur/sujets/nouveau', '/edit']
 
 interface ContributorLayoutProps {
   children: React.ReactNode
@@ -53,6 +57,18 @@ export function ContributorLayout({ children, user, stats }: ContributorLayoutPr
     localStorage.setItem('mahai_contributor_sidebar_collapsed', String(newState))
   }
 
+  const isEditorPage = EDITOR_PATHS.some(p => pathname.includes(p))
+
+  // Full-width mode for editor pages
+  if (isEditorPage) {
+    return (
+      <>
+        {children}
+        <ToastContainer />
+      </>
+    )
+  }
+
   return (
     <div
       className={`contributor-dashboard-page ${isCollapsed ? 'sidebar-collapsed' : ''}`}
@@ -73,6 +89,7 @@ export function ContributorLayout({ children, user, stats }: ContributorLayoutPr
       <main id="main-content" className="main" suppressHydrationWarning>
         {children}
       </main>
+      <ToastContainer />
     </div>
   )
 }

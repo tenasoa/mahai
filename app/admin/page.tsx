@@ -96,7 +96,7 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/credits" className="admin-btn admin-btn-primary">
             <CreditCard size={16} />
-            Dépôts Mobile Banking
+            Dépôts
             {data.kpi.mobilemoney > 0 && (
               <span className="admin-btn-badge">{data.kpi.mobilemoney}</span>
             )}
@@ -266,12 +266,12 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {/* Dépôts Mobile Banking */}
+        {/* Dépôts */}
         <div className="admin-card">
           <div className="admin-card-header">
             <h2 className="admin-card-title">
               <CreditCard size={18} />
-              Dépôts Mobile Banking
+              Dépôts
             </h2>
             {data.kpi.mobilemoney > 0 && (
               <span className="status-badge status-amber">

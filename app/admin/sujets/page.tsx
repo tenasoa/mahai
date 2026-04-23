@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { FileText, CheckCircle2, AlertCircle, XCircle, ArrowRight, FolderOpen } from 'lucide-react'
 import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
 import { AdminPaginationLinks } from '@/components/admin/AdminPaginationLinks'
+import { AdminSearchBar } from '@/components/admin/AdminSearchBar'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
@@ -28,20 +29,24 @@ const PAGE_SIZE = 15
 export default async function AdminSubjectsPage({
   searchParams
 }: {
-  searchParams: Promise<{ status?: string, page?: string }>
+  searchParams: Promise<{ status?: string, page?: string, q?: string }>
 }) {
   const sp = await searchParams
   const statusTab = sp.status || 'ALL'
   const page = sp.page ? parseInt(sp.page, 10) : 1
+  const searchTerm = sp.q?.trim() || ''
 
-  const { subjects, pagination } = await getSubjectsAdmin(statusTab, undefined, page, PAGE_SIZE)
+  const { subjects, pagination } = await getSubjectsAdmin(statusTab, undefined, page, PAGE_SIZE, searchTerm)
 
   if (page > pagination.totalPages && pagination.totalPages > 0) {
-    redirect(`/admin/sujets?status=${statusTab}&page=${pagination.totalPages}`)
+    const qParam = searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''
+    redirect(`/admin/sujets?status=${statusTab}&page=${pagination.totalPages}${qParam}`)
   }
 
+  const qParam = searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''
+
   // Compter par statut pour les badges
-  const pendingCount = statusTab === 'PENDING' ? subjects.length : 0
+  const pendingCount = statusTab === 'PENDING' ? pagination.total : 0
 
   return (
     <div className="admin-page-content">
@@ -64,30 +69,35 @@ export default async function AdminSubjectsPage({
         )}
       </div>
 
+      {/* Search bar */}
+      <div style={{ marginBottom: '1rem' }}>
+        <AdminSearchBar placeholder="Rechercher par titre, matière, année, auteur…" paramName="q" />
+      </div>
+
       {/* Tabs améliorés */}
       <div className="admin-tabs">
         <Link
-          href="/admin/sujets?status=ALL"
+          href={`/admin/sujets?status=ALL${qParam}`}
           className={`admin-tab ${statusTab === 'ALL' ? 'admin-tab-active' : ''}`}
         >
           Tous
         </Link>
         <Link
-          href="/admin/sujets?status=PENDING"
+          href={`/admin/sujets?status=PENDING${qParam}`}
           className={`admin-tab ${statusTab === 'PENDING' ? 'admin-tab-active' : ''}`}
         >
           <AlertCircle size={16} />
           En attente
         </Link>
         <Link
-          href="/admin/sujets?status=PUBLISHED"
+          href={`/admin/sujets?status=PUBLISHED${qParam}`}
           className={`admin-tab ${statusTab === 'PUBLISHED' ? 'admin-tab-active' : ''}`}
         >
           <CheckCircle2 size={16} />
           Publiés
         </Link>
         <Link
-          href="/admin/sujets?status=REJECTED"
+          href={`/admin/sujets?status=REJECTED${qParam}`}
           className={`admin-tab ${statusTab === 'REJECTED' ? 'admin-tab-active' : ''}`}
         >
           <XCircle size={16} />
@@ -114,10 +124,16 @@ export default async function AdminSubjectsPage({
                     <div className="admin-empty-state">
                       <FileText className="admin-empty-state-icon" size={48} />
                       <div className="admin-empty-state-text">
-                        {statusTab === 'ALL' && "Aucun sujet dans le catalogue"}
-                        {statusTab === 'PENDING' && "Aucun sujet en attente de modération"}
-                        {statusTab === 'PUBLISHED' && "Aucun sujet publié"}
-                        {statusTab === 'REJECTED' && "Aucun sujet rejeté"}
+                        {searchTerm ? (
+                          <>Aucun sujet ne correspond à « {searchTerm} »</>
+                        ) : (
+                          <>
+                            {statusTab === 'ALL' && "Aucun sujet dans le catalogue"}
+                            {statusTab === 'PENDING' && "Aucun sujet en attente de modération"}
+                            {statusTab === 'PUBLISHED' && "Aucun sujet publié"}
+                            {statusTab === 'REJECTED' && "Aucun sujet rejeté"}
+                          </>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -190,7 +206,7 @@ export default async function AdminSubjectsPage({
           totalPages={pagination.totalPages}
           totalItems={pagination.total}
           itemsPerPage={PAGE_SIZE}
-          buildUrl={(p) => `/admin/sujets?status=${statusTab}&page=${p}`}
+          buildUrl={(p) => `/admin/sujets?status=${statusTab}&page=${p}${qParam}`}
         />
       </div>
     </div>

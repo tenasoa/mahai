@@ -166,7 +166,7 @@ export default function DashboardPage() {
       label: 'Crédits disponibles',
       value: appUser?.credits ?? 0,
       subtitle: 'Utilisables pour débloquer des sujets',
-      route: '/credits',
+      route: '/recharge',
       color: 'gold',
     },
     {
@@ -383,7 +383,7 @@ export default function DashboardPage() {
                     <div className="ai-sub">Ajoutez vos informations personnelles et académiques pour personnaliser votre expérience.</div>
                   </div>
                 </div>
-                <div className="activity-item" onClick={() => router.push('/credits')}>
+                <div className="activity-item" onClick={() => router.push('/recharge')}>
                   <div className="ai-dot credit"></div>
                   <div className="ai-content">
                     <div className="ai-title">Recharger mes crédits</div>

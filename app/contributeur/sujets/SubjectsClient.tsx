@@ -175,7 +175,7 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
           </p>
         </div>
         <div className="admin-header-actions">
-          <Link href="/contributeur/nouveau" className="admin-btn admin-btn-primary">
+          <Link href="/contributeur/sujets/nouveau" className="admin-btn admin-btn-primary">
             + Nouveau sujet
           </Link>
         </div>
@@ -334,7 +334,7 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
                             : `Aucun sujet ${statusFilter === 'PUBLISHED' ? 'publié' : statusFilter === 'PENDING' ? 'en attente' : statusFilter === 'REJECTED' ? 'rejeté' : 'brouillon'}.`}
                       </div>
                       {statusFilter === 'ALL' && !searchQuery && (
-                        <Link href="/contributeur/nouveau" className="admin-btn admin-btn-primary" style={{ marginTop: '1rem' }}>
+                        <Link href="/contributeur/sujets/nouveau" className="admin-btn admin-btn-primary" style={{ marginTop: '1rem' }}>
                           Créer mon premier sujet
                         </Link>
                       )}
@@ -388,7 +388,7 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
                           <Link href={`/sujet/${subject.id}`} className="admin-btn admin-btn-outline" title="Voir" aria-label="Voir le sujet">
                             <Eye size={14} />
                           </Link>
-                          <Link href={`/contributeur/nouveau?id=${subject.id}`} className="admin-btn admin-btn-outline" title="Modifier" aria-label="Modifier le sujet">
+                          <Link href={`/contributeur/sujets/${subject.id}/edit`} className="admin-btn admin-btn-outline" title="Modifier" aria-label="Modifier le sujet">
                             <Edit3 size={14} />
                           </Link>
                           <Link href={`/contributeur/sujets/${subject.id}/stats`} className="admin-btn admin-btn-outline" title="Statistiques" aria-label="Voir les statistiques">

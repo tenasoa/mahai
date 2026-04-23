@@ -78,14 +78,36 @@ export async function getUserDetailAdmin(userId: string) {
   // Récupérer les transactions de crédits
   const creditsResult = await query('SELECT * FROM "CreditTransaction" WHERE "userId" = $1 ORDER BY "createdAt" DESC', [userId])
 
-  // Récupérer les soumissions de sujets si c'est un contributeur ou prof
-  const submissionsResult = await query('SELECT * FROM "SubjectSubmission" WHERE "userId" = $1 ORDER BY "createdAt" DESC', [userId])
+  // Récupérer les soumissions de sujets (schémas legacy + nouveau schéma).
+  let submissions: any[] = []
+  try {
+    const submissionsResult = await query(
+      'SELECT * FROM "SubjectSubmission" WHERE "authorId" = $1 ORDER BY "createdAt" DESC',
+      [userId],
+    )
+    submissions = submissionsResult.rows
+  } catch (error: any) {
+    const message = String(error?.message || '')
+    if (message.toLowerCase().includes('colonne') || message.toLowerCase().includes('column')) {
+      try {
+        const legacyResult = await query(
+          'SELECT * FROM "SubjectSubmission" WHERE "userId" = $1 ORDER BY "createdAt" DESC',
+          [userId],
+        )
+        submissions = legacyResult.rows
+      } catch (legacyError) {
+        console.warn('SubjectSubmission query failed on both schemas:', legacyError)
+      }
+    } else {
+      console.warn('SubjectSubmission query failed:', error)
+    }
+  }
 
   return {
     ...user,
     purchases: purchasesResult.rows,
     creditHistory: creditsResult.rows,
-    submissions: submissionsResult.rows
+    submissions
   }
 }
 
@@ -97,9 +119,131 @@ export async function updateUserRoleAdmin(userId: string, newRole: string) {
   if (!allowedRoles.includes(newRole)) throw new Error("Rôle invalide")
 
   await query('UPDATE "User" SET role = $1, "updatedAt" = NOW() WHERE id = $2', [newRole, userId])
-  
+
   revalidatePath('/admin/utilisateurs')
   revalidatePath(`/admin/utilisateurs/${userId}`)
-  
+
+  return { success: true }
+}
+
+export async function adjustUserCreditsAdmin(
+  userId: string,
+  delta: number,
+  reason: string,
+) {
+  const isAdmin = await checkAdmin()
+  if (!isAdmin) throw new Error("Non autorisé")
+
+  const supabase = await createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error("Session introuvable")
+
+  if (!Number.isFinite(delta) || delta === 0) {
+    throw new Error("Montant invalide")
+  }
+  if (!reason || !reason.trim()) {
+    throw new Error("Un motif est requis")
+  }
+
+  const userResult = await query('SELECT credits FROM "User" WHERE id = $1', [userId])
+  const current = userResult.rows[0]
+  if (!current) throw new Error("Utilisateur introuvable")
+
+  const currentCredits = Number(current.credits || 0)
+  const newBalance = currentCredits + delta
+
+  if (newBalance < 0) {
+    throw new Error("Le solde ne peut pas être négatif")
+  }
+
+  await query(
+    'UPDATE "User" SET credits = $1, "updatedAt" = NOW() WHERE id = $2',
+    [newBalance, userId],
+  )
+
+  try {
+    const crypto = await import('crypto')
+    await query(
+      `INSERT INTO "CreditTransaction" (
+        id, "userId", type, amount, "creditsCount", status, "paymentMethod",
+        description, "validatedAt", "validatedBy", "createdAt", "updatedAt"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, NOW(), NOW())`,
+      [
+        crypto.randomUUID(),
+        userId,
+        delta > 0 ? 'EARN' : 'SPEND',
+        0,
+        Math.abs(delta),
+        'COMPLETED',
+        'ADMIN_ADJUSTMENT',
+        `[Admin] ${reason.trim()}`,
+        session.user.id,
+      ],
+    )
+  } catch (e) {
+    console.warn('Credit adjustment log failed:', e)
+  }
+
+  revalidatePath('/admin/utilisateurs')
+  revalidatePath(`/admin/utilisateurs/${userId}`)
+
+  return { success: true, newBalance }
+}
+
+export async function updateUserInfoAdmin(
+  userId: string,
+  data: {
+    prenom?: string
+    nom?: string
+    email?: string
+    phone?: string
+    pseudo?: string
+    schoolLevel?: string
+    region?: string
+    district?: string
+    bio?: string
+  },
+) {
+  const isAdmin = await checkAdmin()
+  if (!isAdmin) throw new Error("Non autorisé")
+
+  const updates: string[] = []
+  const values: any[] = []
+  let paramIndex = 1
+
+  const allowedFields: Record<string, string> = {
+    prenom: 'prenom',
+    nom: 'nom',
+    email: 'email',
+    phone: 'phone',
+    pseudo: 'pseudo',
+    schoolLevel: 'schoolLevel',
+    region: 'region',
+    district: 'district',
+    bio: 'bio',
+  }
+
+  for (const [key, column] of Object.entries(allowedFields)) {
+    const value = (data as any)[key]
+    if (value !== undefined) {
+      updates.push(`"${column}" = $${paramIndex}`)
+      values.push(value === '' ? null : value)
+      paramIndex++
+    }
+  }
+
+  if (updates.length === 0) {
+    return { success: true }
+  }
+
+  updates.push(`"updatedAt" = NOW()`)
+  values.push(userId)
+
+  const sql = `UPDATE "User" SET ${updates.join(', ')} WHERE id = $${paramIndex}`
+  await query(sql, values)
+
+  revalidatePath('/admin/utilisateurs')
+  revalidatePath(`/admin/utilisateurs/${userId}`)
+
   return { success: true }
 }

@@ -14,15 +14,17 @@ interface NavItem {
 
 export function MobileBottomNav() {
   const pathname = usePathname()
-  const { userId } = useAuth()
+  const { userId, appUser } = useAuth()
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
+
+  const isContributor = appUser?.role === 'CONTRIBUTEUR' || appUser?.role === 'PROFESSEUR' || appUser?.role === 'ADMIN'
 
   const authNavItems: NavItem[] = [
     { href: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Tableau de bord' },
     { href: '/catalogue', icon: <BookOpen size={20} />, label: 'Catalogue' },
     { href: '/recharge', icon: <Zap size={20} />, label: 'Crédits' },
-    { href: '/contributeur', icon: <PlusCircle size={20} />, label: 'Contribuer' },
+    ...(isContributor ? [{ href: '/contributeur', icon: <PlusCircle size={20} />, label: 'Contribuer' }] : []),
     { href: '/profil', icon: <User size={20} />, label: 'Profil' },
   ]
 
@@ -46,8 +48,10 @@ export function MobileBottomNav() {
 
   const isAuthPage = pathname?.startsWith('/auth')
   const isAdmin = pathname?.startsWith('/admin')
+  const isEditorPage = pathname?.includes('/contributeur/sujets/nouveau') ||
+                       pathname?.match(/^\/contributeur\/sujets\/[^/]+\/edit/)
 
-  if (isAuthPage || isAdmin) {
+  if (isAuthPage || isAdmin || isEditorPage) {
     return null
   }
 

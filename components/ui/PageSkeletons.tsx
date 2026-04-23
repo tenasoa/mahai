@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 // ============================================================================
 function SkeletonShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       <div className="max-w-[1280px] mx-auto px-6 py-24 space-y-6">{children}</div>
     </div>
   )
@@ -18,7 +18,7 @@ function SkeletonShell({ children }: { children: React.ReactNode }) {
 // ============================================================================
 export function DashboardPageSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar skeleton */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -85,7 +85,7 @@ export function DashboardPageSkeleton() {
 // ============================================================================
 export function ProfilePageSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar skeleton */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -153,7 +153,7 @@ export function ProfilePageSkeleton() {
 // ============================================================================
 export function CataloguePageSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar skeleton */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -211,7 +211,7 @@ export function CataloguePageSkeleton() {
 // ============================================================================
 export function RechargePageSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar skeleton */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -309,7 +309,7 @@ export function RechargePageSkeleton() {
 // ============================================================================
 export function AuthPageSkeleton() {
   return (
-    <div className="min-h-screen bg-void px-6 py-16 flex items-start justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-void page-skeleton-root px-6 py-16 flex items-start justify-center relative overflow-hidden">
       {/* Ambient orbs */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold/10 rounded-full blur-3xl" />
@@ -366,7 +366,7 @@ export function AuthPageSkeleton() {
 // ============================================================================
 export function ExamensPageSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar skeleton */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -424,7 +424,7 @@ export function ExamensPageSkeleton() {
 // ============================================================================
 export function ExamenDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar skeleton */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -488,7 +488,7 @@ export function ExamenDetailSkeleton() {
 // ============================================================================
 export function SujetDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar skeleton */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -572,7 +572,7 @@ export function SujetDetailSkeleton() {
 // ============================================================================
 export function PaymentConfirmationSkeleton() {
   return (
-    <div className="min-h-screen bg-void flex items-center justify-center p-4">
+    <div className="min-h-screen bg-void page-skeleton-root flex items-center justify-center p-4">
       <div className="max-w-md w-full rounded-2xl border border-[var(--b1)] bg-[var(--card)] p-8 space-y-5">
         <Skeleton className="h-14 w-14 rounded-full mx-auto" />
         <Skeleton className="h-9 w-3/4 mx-auto" />
@@ -590,7 +590,7 @@ export function PaymentConfirmationSkeleton() {
 // ============================================================================
 export function OnboardingPageSkeleton() {
   return (
-    <div className="min-h-screen bg-void flex items-center justify-center p-6">
+    <div className="min-h-screen bg-void page-skeleton-root flex items-center justify-center p-6">
       <div className="max-w-2xl w-full space-y-8">
         {/* Progress */}
         <div className="flex items-center gap-4">
@@ -637,7 +637,7 @@ export function OnboardingPageSkeleton() {
 // ============================================================================
 export function RoleSelectionSkeleton() {
   return (
-    <div className="min-h-screen bg-void flex items-center justify-center p-6">
+    <div className="min-h-screen bg-void page-skeleton-root flex items-center justify-center p-6">
       <div className="max-w-4xl w-full space-y-8">
         <div className="text-center space-y-4">
           <Skeleton className="h-10 w-64 mx-auto" />
@@ -664,7 +664,7 @@ export function RoleSelectionSkeleton() {
 // ============================================================================
 export function VerifyEmailSkeleton() {
   return (
-    <div className="min-h-screen bg-void flex items-center justify-center p-6">
+    <div className="min-h-screen bg-void page-skeleton-root flex items-center justify-center p-6">
       <div className="max-w-md w-full rounded-2xl border border-[var(--b1)] bg-[var(--card)] p-8 space-y-6">
         <Skeleton className="h-16 w-16 rounded-full mx-auto" />
         <div className="text-center space-y-2">
@@ -691,7 +691,7 @@ export function VerifyEmailSkeleton() {
 // ============================================================================
 export function LandingPageSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -739,7 +739,7 @@ export function LandingPageSkeleton() {
 // ============================================================================
 export function NotFoundSkeleton() {
   return (
-    <div className="min-h-screen bg-void flex items-center justify-center p-6">
+    <div className="min-h-screen bg-void page-skeleton-root flex items-center justify-center p-6">
       <div className="text-center space-y-6">
         <Skeleton className="h-32 w-32 mx-auto rounded-full" />
         <Skeleton className="h-12 w-64 mx-auto" />
@@ -755,7 +755,7 @@ export function NotFoundSkeleton() {
 // ============================================================================
 export function MaintenancePageSkeleton() {
   return (
-    <div className="min-h-screen bg-void flex items-center justify-center p-6">
+    <div className="min-h-screen bg-void page-skeleton-root flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center space-y-6">
         <Skeleton className="h-24 w-24 mx-auto rounded-full" />
         <Skeleton className="h-10 w-64 mx-auto" />
@@ -772,7 +772,7 @@ export function MaintenancePageSkeleton() {
 // ============================================================================
 export function LegalPageSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -810,7 +810,7 @@ export function LegalPageSkeleton() {
 // ============================================================================
 export function PublicProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -866,7 +866,7 @@ export function PublicProfileSkeleton() {
 // ============================================================================
 export function ExamenCorrectionSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -920,7 +920,7 @@ export function ExamenCorrectionSkeleton() {
 // ============================================================================
 export function ExamenResultsSkeleton() {
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-void page-skeleton-root">
       {/* Navbar */}
       <div className="border-b border-[var(--b1)] bg-[var(--card)]">
         <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -965,3 +965,4 @@ export function ExamenResultsSkeleton() {
     </div>
   )
 }
+

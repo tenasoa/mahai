@@ -218,7 +218,7 @@
       color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-x: hidden;
     scrollbar-width: thin;
-    scrollbar-color: var(--gold-line) var(--void);
+    scrollbar-color: transparent transparent;
   }
 
   [data-custom-cursor="true"] body,
@@ -363,13 +363,56 @@
     padding: 0 var(--page-gutter) var(--space-page-y);
   }
 
+  /* Loading badge inspired by Design Luxury splash-screen */
+  .page-skeleton-root {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .page-skeleton-root::before {
+    content: "";
+    position: fixed;
+    top: calc(78px + env(safe-area-inset-top));
+    right: max(1rem, env(safe-area-inset-right));
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid var(--gold-line);
+    border-top-color: var(--gold);
+    border-right-color: var(--gold-lo);
+    box-shadow: 0 0 16px var(--gold-glow);
+    animation: pageLoaderSpin 1.15s linear infinite;
+    pointer-events: none;
+    z-index: 120;
+  }
+
+  .page-skeleton-root::after {
+    content: "Chargement...";
+    position: fixed;
+    top: calc(84px + env(safe-area-inset-top));
+    right: calc(max(1rem, env(safe-area-inset-right)) + 42px);
+    padding: 0.28rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid var(--gold-line);
+    background: color-mix(in srgb, var(--card) 84%, transparent);
+    color: var(--text-3);
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    animation: pageLoaderPulse 1.6s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 120;
+  }
+
   .section {
     padding: 7rem 0;
     position: relative;
   }
 
   ::-webkit-scrollbar {
-    width: 10px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -377,13 +420,50 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--gold-lo);
-    border-radius: 5px;
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.3s ease;
   }
 
-  ::-webkit-scrollbar-thumb:hover {
+  *:hover::-webkit-scrollbar-thumb {
+    background: var(--gold-lo);
+  }
+
+  *:hover::-webkit-scrollbar-thumb:hover {
     background: var(--gold);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* MODAL SCROLL LOCK                                           */
+/* Classe ajoutée sur <html> quand un modal est ouvert.        */
+/* Plus fiable que body.style.overflow sur iOS / Android.      */
+/* ═══════════════════════════════════════════════════════════ */
+html.modal-open,
+html.modal-open body {
+  overflow: hidden !important;
+  /* iOS Safari : empêche le scroll sous le modal */
+  touch-action: none;
+}
+
+/* Permettre le scroll à l'intérieur du modal lui-même */
+html.modal-open .modal-content {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* SCROLLBARS — masquées par défaut, visibles au survol        */
+/* ═══════════════════════════════════════════════════════════ */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+*:hover {
+  scrollbar-color: var(--gold-line) transparent;
 }
 
 /* ═══════════════════════════════════════════════════════════ */
@@ -955,6 +1035,25 @@
   }
 }
 
+@keyframes pageLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pageLoaderPulse {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: translateX(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(-2px);
+  }
+}
+
 @keyframes envFloat {
   0%,
   100% {
@@ -1120,6 +1219,16 @@
     --space-hero-y: 3rem;
   }
 
+  .page-skeleton-root::before {
+    top: calc(70px + env(safe-area-inset-top));
+    width: 30px;
+    height: 30px;
+  }
+
+  .page-skeleton-root::after {
+    display: none;
+  }
+
   .mobile-bottom-nav {
     display: block;
   }
@@ -1215,6 +1324,11 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  .page-skeleton-root::before,
+  .page-skeleton-root::after {
+    animation: none !important;
+  }
 }
 
 /* Contraste élevé — accessibilité */
@@ -1226,8 +1340,10 @@
     --gold-line: var(--gold);
   }
 
-  ::-webkit-scrollbar-thumb { background: var(--gold); }
-  ::-webkit-scrollbar-track  { background: var(--void); }
+  /* En contraste élevé : scrollbar toujours visible pour l'accessibilité */
+  * { scrollbar-color: var(--gold) var(--void) !important; }
+  *::-webkit-scrollbar-thumb { background: var(--gold) !important; }
+  *::-webkit-scrollbar-track  { background: var(--void) !important; }
 
   button, [role="button"] {
     border-width: 2px;

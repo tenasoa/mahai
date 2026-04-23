@@ -898,7 +898,12 @@
     gap: 4rem;
     padding: 8rem 2rem 5rem;
   }
-  .hero-visual { max-width: 540px; margin: 0 auto; }
+  .hero-visual {
+    max-width: 540px;
+    margin: 0 auto;
+    /* Empêche les cartes absolues de déborder dans la colonne texte */
+    overflow: hidden;
+  }
   .features-grid { grid-template-columns: 1fr 1fr; }
   .feat-card.hero-feat { grid-column: 1 / -1; grid-row: auto; }
   .how-grid { grid-template-columns: repeat(2, 1fr); }
@@ -915,6 +920,15 @@
   .price-card.popular { transform: none; }
   .price-card.popular:hover { transform: translateY(-2px); }
   .how-grid { grid-template-columns: 1fr; }
+}
+
+/* Grand mobile ≤ 768px — cartes hero en positionnement statique */
+/* (évite le chevauchement ai-panel / texte sur les écrans entre 640px et 768px) */
+@media (max-width: 768px) {
+  .hero-card-stack { aspect-ratio: auto; overflow: visible; }
+  .paper-float-2, .paper-float-3 { display: none; }
+  .paper-float-1 { position: static; width: 100%; }
+  .ai-panel { position: static; width: 100%; margin-top: 1rem; }
 }
 
 /* Mobile ≤ 640px */
@@ -948,11 +962,7 @@
   .feat-card { padding: 1.75rem; }
   .feat-card.hero-feat { padding: 1.75rem; }
 
-  /* Hero card stack simplifiée */
-  .hero-card-stack { aspect-ratio: auto; }
-  .paper-float-2, .paper-float-3 { display: none; }
-  .paper-float-1 { position: static; width: 100%; }
-  .ai-panel { position: static; width: 100%; margin-top: 1rem; }
+  /* Hero card stack : déjà géré par ≤768px, rien à redéfinir ici */
 
   /* How it works */
   .how-step { padding: 1.75rem 1.25rem; }

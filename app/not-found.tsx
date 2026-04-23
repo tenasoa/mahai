@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 type VariantKey = '404' | '403' | '500' | 'session'
 
@@ -13,6 +14,7 @@ export default function NotFound() {
   const [searchQuery, setSearchInput] = useState('')
   const [canGoBack, setCanGoBack] = useState(false)
   const router = useRouter()
+  const { userId } = useAuth()
 
   // Détecte si on peut vraiment revenir en arrière (même origine)
   useEffect(() => {
@@ -186,14 +188,6 @@ export default function NotFound() {
         <canvas ref={canvasRef} className="fixed inset-0 z-1 pointer-events-none opacity-35" />
         <div className="fixed inset-0 z-0 pointer-events-none opacity-[var(--noise-op)]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
 
-        <nav className="fixed top-0 left-0 right-0 z-[300] border-b border-b1 backdrop-blur-xl" style={{ backgroundColor: 'var(--nav-bg)' }}>
-          <div className="max-w-[1200px] mx-auto px-6 h-[62px] flex items-center">
-            <Link href="/" style={{ color: 'var(--text)', textDecoration: 'none', fontFamily: 'var(--display)', fontSize: '1.5rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              Mah<span style={{ width: '7px', height: '7px', background: 'var(--gold)', borderRadius: '50%', boxShadow: '0 0 10px var(--gold-glow)', animation: 'gp 3s ease-in-out infinite' }} />AI
-            </Link>
-          </div>
-        </nav>
-
         <div className="relative z-[2] flex flex-col items-center justify-center py-20 px-8 text-center min-h-screen">
           <div style={{ position: 'relative', marginBottom: '2rem' }}>
             <div className="four-text" data-text={variant.code}>
@@ -241,12 +235,20 @@ export default function NotFound() {
                 Retour
               </button>
             )}
-            {[
-              { label: 'Accueil', icon: '🏠', href: '/' },
-              { label: 'Catalogue', icon: '📚', href: '/catalogue' },
-              { label: 'Mon dashboard', icon: '📊', href: '/dashboard' },
-              { label: 'Se connecter', icon: '🔑', href: '/auth/login' }
-            ].map((link) => (
+            {(userId
+              ? [
+                  { label: 'Accueil', icon: '🏠', href: '/' },
+                  { label: 'Catalogue', icon: '📚', href: '/catalogue' },
+                  { label: 'Mon dashboard', icon: '📊', href: '/dashboard' },
+                  { label: 'Mon profil', icon: '👤', href: '/profil' },
+                ]
+              : [
+                  { label: 'Accueil', icon: '🏠', href: '/' },
+                  { label: 'Catalogue', icon: '📚', href: '/catalogue' },
+                  { label: 'Se connecter', icon: '🔑', href: '/auth/login' },
+                  { label: "S'inscrire", icon: '✨', href: '/auth/register' },
+                ]
+            ).map((link) => (
               <Link key={link.label} href={link.href} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--card)', border: '1px solid var(--b1)', borderRadius: '8px', padding: '0.65rem 1.1rem', fontSize: '0.8rem', color: 'var(--text-2)', textDecoration: 'none', transition: 'all 0.2s' }}>
                 <span style={{ fontSize: '0.95rem' }}>{link.icon}</span> {link.label}
               </Link>

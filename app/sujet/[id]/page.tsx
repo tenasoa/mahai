@@ -576,7 +576,7 @@ export default function SujetDetailPage() {
             ) : (
               <div className="unlocked-badge">Sujet débloqué — accès permanent</div>
             )}
-            <button className="sd-btn-secondary" onClick={() => router.push('/credits')}>
+            <button className="sd-btn-secondary" onClick={() => router.push('/recharge')}>
               Recharger mes crédits
             </button>
           </div>

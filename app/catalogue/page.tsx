@@ -51,6 +51,14 @@ function CatalogueContent() {
 
   const toastIdRef = useRef(0);
   const lastToastTime = useRef<number>(0);
+  const [isCompact, setIsCompact] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsCompact(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const {
     subjects,
@@ -111,6 +119,10 @@ function CatalogueContent() {
       setAuthModalOpen(true);
       return;
     }
+    if (isCompact) {
+      router.push(`/catalogue/preview/${subject.id}`);
+      return;
+    }
     setCurrentSubject(subject);
     setPreviewModalOpen(true);
   };
@@ -120,8 +132,21 @@ function CatalogueContent() {
       setAuthModalOpen(true);
       return;
     }
+    if (isCompact) {
+      router.push(`/catalogue/buy/${subject.id}`);
+      return;
+    }
     setCurrentSubject(subject);
     setBuyModalOpen(true);
+  };
+
+  // Fermeture de l'overlay : seulement si le pointeur est directement sur l'overlay
+  // (pas sur le contenu du modal). onPointerDown est immunisé aux ghost clicks mobiles.
+  const handleOverlayPointerDown = (
+    e: React.PointerEvent<HTMLDivElement>,
+    closeFn: () => void
+  ) => {
+    if (e.target === e.currentTarget) closeFn();
   };
 
   const confirmBuy = async () => {
@@ -166,11 +191,14 @@ function CatalogueContent() {
     refresh();
   }, [pageSize, refresh]);
 
-  // Escape key closes whichever modal is open + body scroll lock
+  // Scroll lock + Escape key quand un modal est ouvert
+  // Utilise une classe CSS sur <html> plutôt que body.style.overflow (plus fiable iOS/Android)
   useEffect(() => {
     const anyModalOpen = previewModalOpen || buyModalOpen;
+    const html = document.documentElement;
+
     if (anyModalOpen) {
-      document.body.style.overflow = 'hidden';
+      html.classList.add('modal-open');
       const handleEsc = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           setPreviewModalOpen(false);
@@ -179,11 +207,11 @@ function CatalogueContent() {
       };
       document.addEventListener('keydown', handleEsc);
       return () => {
-        document.body.style.overflow = '';
+        html.classList.remove('modal-open');
         document.removeEventListener('keydown', handleEsc);
       };
     } else {
-      document.body.style.overflow = '';
+      html.classList.remove('modal-open');
     }
   }, [previewModalOpen, buyModalOpen]);
 
@@ -364,12 +392,12 @@ function CatalogueContent() {
       {previewModalOpen && currentSubject && (
         <div
           className="modal-overlay"
-          onClick={() => setPreviewModalOpen(false)}
+          onPointerDown={(e) => handleOverlayPointerDown(e, () => setPreviewModalOpen(false))}
           role="dialog"
           aria-modal="true"
           aria-labelledby="preview-modal-title"
         >
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onPointerDown={(e) => e.stopPropagation()}>
             <button
               className="modal-close"
               onClick={() => setPreviewModalOpen(false)}
@@ -428,12 +456,12 @@ function CatalogueContent() {
       {buyModalOpen && currentSubject && (
         <div
           className="modal-overlay"
-          onClick={() => setBuyModalOpen(false)}
+          onPointerDown={(e) => handleOverlayPointerDown(e, () => setBuyModalOpen(false))}
           role="dialog"
           aria-modal="true"
           aria-labelledby="buy-modal-title"
         >
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onPointerDown={(e) => e.stopPropagation()}>
             <button
               className="modal-close"
               onClick={() => setBuyModalOpen(false)}

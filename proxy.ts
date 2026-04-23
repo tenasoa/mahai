@@ -7,7 +7,7 @@ const ONBOARDING_PENDING_COOKIE = "mahai-onboarding-pending";
 const protectedRoutes = [
   "/dashboard",
   "/profil",
-  "/credits",
+  "/recharge",
   "/examens",
   "/auth/onboarding",
 ];

@@ -1,11 +1,12 @@
 import { getUserDetailAdmin, updateUserRoleAdmin } from '@/actions/admin/users'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { 
-  ArrowLeft, User, CreditCard, ShoppingBag, 
-  History, Mail, Phone, Calendar, Award, 
-  Edit3, ShieldCheck, MapPin, GraduationCap 
+import {
+  ArrowLeft, User, CreditCard, ShoppingBag,
+  History, Mail, Phone, Calendar, Award,
+  Edit3, ShieldCheck, MapPin, GraduationCap
 } from 'lucide-react'
+import { AdminCreditAdjuster, AdminUserInfoEditor } from './UserActions'
 
 export const metadata = {
   title: 'Détail Utilisateur — Admin Mah.AI'
@@ -250,6 +251,7 @@ export default async function AdminUserDetailPage({
                   <User size={20} className="text-gold" />
                   Informations de <em>Profil</em>
                 </h2>
+                <AdminUserInfoEditor user={userDetail} />
               </div>
               <div className="admin-info-grid">
                 <div className="admin-info-item">
@@ -377,12 +379,14 @@ export default async function AdminUserDetailPage({
                     {userDetail.credits || 0}<span style={{ color: 'var(--gold)', fontSize: '1rem', marginLeft: '0.5rem' }}>cr</span>
                   </div>
                   <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
-                    <button className="admin-btn admin-btn-outline" style={{ flex: 1, fontSize: '0.75rem', padding: '0.5rem' }}>
+                    <Link
+                      href={`/admin/utilisateurs/${p.id}?tab=credits`}
+                      className="admin-btn admin-btn-outline"
+                      style={{ flex: 1, fontSize: '0.75rem', padding: '0.5rem', textAlign: 'center', justifyContent: 'center' }}
+                    >
                       Historique
-                    </button>
-                    <button className="admin-btn admin-btn-outline" style={{ flex: 1, fontSize: '0.75rem', padding: '0.5rem' }}>
-                      Ajuster le solde
-                    </button>
+                    </Link>
+                    <AdminCreditAdjuster user={userDetail} />
                   </div>
                 </div>
               </div>

@@ -280,28 +280,51 @@
 
 @media (max-width: 768px) {
   .amountsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .amountCard {
+    min-height: 84px;
+    padding: 0.8rem;
+  }
+
+  .popularBadge {
+    top: -8px;
+    right: 8px;
+    left: auto;
+    transform: none;
+  }
+
+  .amountCredits {
+    font-size: 1.35rem;
+  }
+
+  .summaryTotal {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .amountsGrid {
     grid-template-columns: 1fr;
   }
 
   .amountCard {
     flex-direction: row;
-    justify-content: flex-start;
-    min-height: 76px;
-    padding: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 74px;
+    text-align: left;
+    gap: 0.6rem;
   }
 
-  .popularBadge {
-    top: auto;
-    bottom: -8px;
-    left: auto;
-    right: 0;
+  .amountPrice {
+    font-size: 0.78rem;
   }
 
-  .amountCredits {
-    font-size: 1.5rem;
-  }
-
-  .summaryTotal {
-    font-size: 1.25rem;
+  .phoneSelect {
+    min-height: 44px;
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
   }
 }

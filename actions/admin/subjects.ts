@@ -17,7 +17,7 @@ async function checkAdmin() {
   return user?.role === 'ADMIN' ? user : null
 }
 
-export async function getSubjectsAdmin(status?: string, year?: string, page?: number, pageSize?: number) {
+export async function getSubjectsAdmin(status?: string, year?: string, page?: number, pageSize?: number, searchTerm?: string) {
   const adminUser = await checkAdmin()
   if (!adminUser) throw new Error("Non autorisé")
 
@@ -25,16 +25,37 @@ export async function getSubjectsAdmin(status?: string, year?: string, page?: nu
   const params: any[] = []
   let paramIndex = 1
 
-  if (status && status !== 'ALL') {
+  const normalizedStatus = status?.toUpperCase().trim()
+  if (normalizedStatus && normalizedStatus !== 'ALL') {
     whereClause += ` AND s.status = $${paramIndex}`
-    params.push(status)
+    params.push(normalizedStatus)
     paramIndex++
   }
 
   if (year && year !== 'ALL') {
-    whereClause += ` AND s.year = $${paramIndex}`
+    whereClause += ` AND CAST(s.annee AS TEXT) = $${paramIndex}`
     params.push(year)
     paramIndex++
+  }
+
+  const normalizedSearch = searchTerm?.trim()
+  if (normalizedSearch) {
+    const tokens = normalizedSearch.split(/\s+/).filter(Boolean).slice(0, 6)
+
+    for (const token of tokens) {
+      whereClause += ` AND (
+        COALESCE(s.titre, '') ILIKE $${paramIndex}
+        OR COALESCE(s.matiere, '') ILIKE $${paramIndex}
+        OR COALESCE(s.type, '') ILIKE $${paramIndex}
+        OR COALESCE(s.serie, '') ILIKE $${paramIndex}
+        OR CAST(s.annee AS TEXT) ILIKE $${paramIndex}
+        OR COALESCE(u.prenom, '') ILIKE $${paramIndex}
+        OR COALESCE(u.nom, '') ILIKE $${paramIndex}
+        OR COALESCE(u.email, '') ILIKE $${paramIndex}
+      )`
+      params.push(`%${token}%`)
+      paramIndex++
+    }
   }
 
   // Count total for pagination
@@ -50,9 +71,10 @@ export async function getSubjectsAdmin(status?: string, year?: string, page?: nu
   let sql = `
     SELECT
         s.id, s.titre as title, s.type, s.matiere as motiere, s.annee as year,
-        s.serie as series, s.pages, s.credits, s.difficulte, s.langue,
+        s.serie as series, s.pages as "pagesCount", s.credits, s.difficulte as grade, s.langue,
         s.format, s.badge, s.status, s."createdAt",
         u.prenom as "authorPrenom", u.nom as "authorNom", u.role as "authorRole",
+        u."profilePicture" as "authorProfilePicture",
         u."profilePicture" as "authorAvatarUrl",
         u.id as "authorId"
     FROM "Subject" s
@@ -63,10 +85,10 @@ export async function getSubjectsAdmin(status?: string, year?: string, page?: nu
   // Add pagination
   if (page && pageSize) {
     const offset = (page - 1) * pageSize
-    sql += ` ORDER BY s."createdAt" DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`
+    sql += ` ORDER BY s."createdAt" DESC, s.id DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`
     params.push(pageSize, offset)
   } else {
-    sql += ' ORDER BY s."createdAt" DESC'
+    sql += ' ORDER BY s."createdAt" DESC, s.id DESC'
   }
 
   const result = await query(sql, params)

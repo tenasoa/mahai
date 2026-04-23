@@ -32,7 +32,17 @@ export function TransactionHistory({
   if (isLoading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.spinner} />
+        <div className={styles.luxLoader} aria-hidden="true">
+          <span className={styles.loaderRing} />
+          <span className={`${styles.loaderRing} ${styles.loaderRingInner}`} />
+          <span className={styles.loaderDot} />
+        </div>
+        <div className={styles.loadingBars} aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
         <p>Chargement des transactions...</p>
       </div>
     )

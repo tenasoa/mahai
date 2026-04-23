@@ -30,14 +30,122 @@
   }
 }
 
-/*
+/* ═══════════════════════════════════
+   MOBILE REDESIGN ≤ 768px
+═══════════════════════════════════ */
 @media (max-width: 768px) {
+  .footer {
+    padding: 2.5rem 0 5.5rem; /* bas élevé : barre nav mobile en bas */
+    margin-top: 3rem;
+  }
+
+  .container {
+    padding: 0 1.25rem;
+  }
+
   .footerGrid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    align-items: start;
+    margin-bottom: 0;
+  }
+
+  /* Brand : pleine largeur, séparateur bas */
+  .footerBrand {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--b2);
+  }
+
+  .footerLogo {
+    font-size: 1.2rem;
+  }
+
+  .footerTagline {
+    font-size: 0.82rem;
+  }
+
+  /* Catalogue — colonne gauche */
+  .footerGrid > *:nth-child(2) {
+    padding: 1.5rem 1rem 1.5rem 0;
+  }
+
+  /* Plateforme — colonne droite, séparateur gauche */
+  .footerGrid > *:nth-child(3) {
+    padding: 1.5rem 0 1.5rem 1rem;
+    border-left: 1px solid var(--b3);
+  }
+
+  .footerColTitle {
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.875rem;
+  }
+
+  .footerLinks {
+    gap: 0.6rem;
+  }
+
+  .footerLinks a {
+    font-size: 0.82rem;
+  }
+
+  /* Mah.AI — pleine largeur, liens horizontaux */
+  .footerGrid > *:last-child {
+    grid-column: 1 / -1;
+    padding: 1.25rem 0 0;
+    border-top: 1px solid var(--b3);
+  }
+
+  .footerGrid > *:last-child .footerLinks {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+  }
+
+  /* Bottom */
+  .footerBottom {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .footerCopy {
+    font-size: 0.68rem;
+  }
+
+  .footerLegal {
+    gap: 0.875rem;
+    flex-wrap: wrap;
+  }
+
+  .footerLegal a {
+    font-size: 0.68rem;
   }
 }
-*/
+
+/* ═══════════════════════════════════
+   TRÈS PETIT MOBILE ≤ 480px
+═══════════════════════════════════ */
+@media (max-width: 480px) {
+  .footerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Plateforme passe en dessous de Catalogue */
+  .footerGrid > *:nth-child(3) {
+    padding: 1.25rem 0 1.25rem 0;
+    border-left: none;
+    border-top: 1px solid var(--b3);
+  }
+
+  .footer {
+    padding-bottom: 6rem; /* plus d'espace pour nav mobile */
+  }
+}
 
 /* === BRAND SECTION === */
 

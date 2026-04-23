@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -49,6 +50,7 @@ export interface AppUser {
 }
 
 export function useAuth() {
+  const pathname = usePathname()
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [appUser, setAppUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -69,32 +71,39 @@ export function useAuth() {
     const supabase = createClient()
     let isMounted = true
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const syncSession = async () => {
+      // getUser() fait un appel réseau qui re-lit les cookies fraîchement
+      // définis par une Server Action (login/logout). getSession() renvoie
+      // un cache en mémoire qui peut être obsolète après un login server-side.
+      const { data: { user: freshUser } } = await supabase.auth.getUser()
       if (!isMounted) return
-      
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
-      const uid = session?.user?.id ?? null
+
+      const uid = freshUser?.id ?? null
+
+      setUser(freshUser ?? null)
       setUserId(uid)
-      
+
       if (uid) {
-        fetchAppUser(uid)
+        await fetchAppUser(uid)
+      } else {
+        setAppUser(null)
       }
       setLoading(false)
-    })
+    }
 
-    // Listen for auth changes
+    syncSession()
+
+    // Listen for auth changes (côté client uniquement — login/logout client-side)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return
-      
+
       const currentUser = session?.user ?? null
       setUser(currentUser)
       const uid = session?.user?.id ?? null
       setUserId(uid)
-      
+
       if (uid) {
         fetchAppUser(uid)
       } else {
@@ -103,11 +112,24 @@ export function useAuth() {
       setLoading(false)
     })
 
+    // Re-synchroniser quand l'onglet reprend le focus (ex: après login
+    // server-side, changement de compte dans un autre onglet, etc.)
+    const handleFocus = () => {
+      if (isMounted) syncSession()
+    }
+    const handleVisibility = () => {
+      if (!document.hidden && isMounted) syncSession()
+    }
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibility)
+
     return () => {
       isMounted = false
       subscription.unsubscribe()
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [fetchAppUser])
+  }, [fetchAppUser, pathname])
 
   return { user, appUser, setAppUser, userId, loading, isAuthenticated: !!user }
 }

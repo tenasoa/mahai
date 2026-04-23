@@ -89,7 +89,7 @@ export function ContributorSidebar({
           badge: stats?.totalSubjects,
         },
         {
-          href: "/contributeur/nouveau",
+          href: "/contributeur/sujets/nouveau",
           label: "Nouveau sujet",
           icon: PlusCircle,
         },

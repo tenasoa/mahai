@@ -118,7 +118,7 @@ export default function ContributorDashboardClient({
         </div>
 
         <div className="admin-header-actions">
-          <Link href="/contributeur/nouveau" className="admin-btn admin-btn-primary">
+          <Link href="/contributeur/sujets/nouveau" className="admin-btn admin-btn-primary">
             <Edit3 size={16} />
             Nouveau sujet
           </Link>
@@ -210,7 +210,7 @@ export default function ContributorDashboardClient({
 
       {/* Quick actions (U6) */}
       <div className="contrib-quick-actions">
-        <Link href="/contributeur/nouveau" className="contrib-quick-action">
+        <Link href="/contributeur/sujets/nouveau" className="contrib-quick-action">
           <div className="contrib-quick-action-icon">
             <PlusCircle size={20} />
           </div>

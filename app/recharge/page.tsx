@@ -11,14 +11,11 @@ import { RechargePageSkeleton } from "@/components/ui/PageSkeletons";
 import { ToastContainer } from "@/components/ui/ToastContainer";
 import { Button } from "@/components/ui";
 import {
-  Zap,
   Smartphone,
   Info,
   Shield,
   Clock,
   CheckCircle,
-  ArrowRight,
-  Copy,
 } from "lucide-react";
 import { rechargeCreditsAction } from "@/actions/profile";
 import {
@@ -32,42 +29,12 @@ import {
 
 import "./recharge.css";
 
-// Type local pour les opérateurs
-type Provider = {
-  id: 'mvola' | 'orange' | 'airtel'
-  name: string
-  color: string
-  available: boolean
-}
-
 // Packs par défaut (fallback si l'API échoue)
 const DEFAULT_PACKS: PaymentAmount[] = [
   { credits: 50, price: 2500, bonus: 0 },
   { credits: 150, price: 7500, bonus: 10, popular: true },
   { credits: 300, price: 15000, bonus: 25 },
   { credits: 500, price: 25000, bonus: 75 },
-];
-
-// Opérateurs Mobile Money
-const OPERATORS: Provider[] = [
-  {
-    id: "mvola",
-    name: "MVola",
-    color: "#00A8E8",
-    available: true,
-  },
-  {
-    id: "orange",
-    name: "Orange Money",
-    color: "#FF7900",
-    available: true,
-  },
-  {
-    id: "airtel",
-    name: "Airtel Money",
-    color: "#FF0000",
-    available: true,
-  },
 ];
 
 export default function RechargePage() {

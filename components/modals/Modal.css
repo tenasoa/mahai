@@ -259,7 +259,7 @@
   display: block;
 }
 
-/* Scrollbar for Modal */
+/* Scrollbar du modal — masquée par défaut, visible au survol du contenu */
 .modal-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -269,11 +269,16 @@
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-  background: var(--gold-line);
+  background: transparent;
   border-radius: 3px;
+  transition: background 0.3s ease;
 }
 
-.modal-content::-webkit-scrollbar-thumb:hover {
+.modal-content:hover::-webkit-scrollbar-thumb {
+  background: var(--gold-line);
+}
+
+.modal-content:hover::-webkit-scrollbar-thumb:hover {
   background: var(--gold);
 }
 

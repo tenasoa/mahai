@@ -22,19 +22,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 3px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--void);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gold-lo);
-  border-radius: var(--r);
-}
+/* Scrollbar : géré globalement par globals.css (masqué par défaut, visible au survol) */
 
 /* ═══════════════════════════════════════════════
    NAVIGATION
@@ -347,6 +335,8 @@ body {
   z-index: var(--z-modal);
   animation: fadeIn 0.2s ease;
   padding: 1rem;
+  /* Bloquer les gestures de scroll qui traverseraient l'overlay sur mobile */
+  touch-action: none;
 }
 
 .modal-content {

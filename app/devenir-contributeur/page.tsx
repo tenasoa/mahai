@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getCurrentUserAndApplication } from './actions'
 import CandidatureForm from './CandidatureForm'
+import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 
 function getStatusLabel(status?: string) {
   if (status === 'APPROVED') return 'Approuvée'
@@ -33,7 +34,8 @@ export default async function BecomeContributorPage() {
   )
 
   return (
-    <main id="main-content" className="min-h-screen bg-void px-4 pb-16 pt-28 md:px-8">
+    <>
+    <main id="main-content" className="min-h-screen bg-void px-4 pb-0 pt-28 md:px-8">
       <div className="mx-auto max-w-[1020px] space-y-6">
         <section className="rounded-2xl border border-gold-line bg-gradient-to-br from-gold-dim to-transparent p-6 md:p-8">
           <p className="mb-2 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-gold">
@@ -206,5 +208,7 @@ export default async function BecomeContributorPage() {
         )}
       </div>
     </main>
+    <LuxuryFooter />
+    </>
   )
 }

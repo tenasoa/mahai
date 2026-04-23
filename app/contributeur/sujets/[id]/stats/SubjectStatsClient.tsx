@@ -100,7 +100,7 @@ export default function SubjectStatsClient({
             <Eye size={14} />
             Voir
           </Link>
-          <Link href={`/contributeur/nouveau?id=${subject.id}`} className="admin-btn admin-btn-outline">
+          <Link href={`/contributeur/sujets/${subject.id}/edit`} className="admin-btn admin-btn-outline">
             <Edit3 size={14} />
             Modifier
           </Link>

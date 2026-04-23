@@ -204,18 +204,109 @@
   gap: var(--space-md);
 }
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--b2);
+.luxLoader {
+  width: 46px;
+  height: 46px;
+  position: relative;
+}
+
+.loaderRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px solid var(--b2);
   border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 1.05s linear infinite;
+}
+
+.loaderRingInner {
+  inset: 7px;
+  border-top-color: var(--gold-lo);
+  opacity: 0.65;
+  animation-duration: 1.55s;
+  animation-direction: reverse;
+}
+
+.loaderDot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loaderDot::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gold);
+  box-shadow: 0 0 12px var(--gold-glow);
+  animation: gemPulseTx 1.4s ease-in-out infinite;
+}
+
+.loadingBars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 18px;
+}
+
+.loadingBars span {
+  width: 3px;
+  border-radius: 999px;
+  background: var(--gold);
+  opacity: 0.45;
+  animation: barAnimTx 1.2s ease-in-out infinite;
+}
+
+.loadingBars span:nth-child(1) {
+  height: 10px;
+  animation-delay: 0s;
+}
+
+.loadingBars span:nth-child(2) {
+  height: 16px;
+  animation-delay: 0.15s;
+}
+
+.loadingBars span:nth-child(3) {
+  height: 12px;
+  animation-delay: 0.3s;
+}
+
+.loadingBars span:nth-child(4) {
+  height: 18px;
+  animation-delay: 0.45s;
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes gemPulseTx {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px var(--gold-glow);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(201, 168, 76, 0.32);
+  }
+}
+
+@keyframes barAnimTx {
+  0%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scaleY(1.35);
+    opacity: 1;
   }
 }
 
@@ -237,7 +328,9 @@
   transform: none;
 }
 
-[data-reduced-motion="true"] .spinner {
+[data-reduced-motion="true"] .loaderRing,
+[data-reduced-motion="true"] .loadingBars span,
+[data-reduced-motion="true"] .loaderDot::after {
   animation-duration: 2s;
 }
 
