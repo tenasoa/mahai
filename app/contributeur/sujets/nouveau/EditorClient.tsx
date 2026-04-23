@@ -75,6 +75,7 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
   const [showOnboarding, setShowOnboarding] = useState(isNewSubject)
   const [draftId, setDraftId] = useState<string | null>(initialDraftId || null)
   const [saveState, setSaveState] = useState<SaveState>('idle')
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
   const [wordCount, setWordCount] = useState(0)
   const [discFilter, setDiscFilter] = useState('Toutes')
   const [outline, setOutline] = useState<OutlineItem[]>([])
@@ -99,6 +100,7 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingContent = useRef<object | null>(null)
   const lastSavedContent = useRef<object | null>(null)
+  const lastSavedSnapshot = useRef<string | null>(null)
 
   // Body class pour masquer le global mobile nav
   useEffect(() => {
@@ -164,9 +166,18 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
   // ── Auto-save ──────────────────────────────────────────────────────
   const doSave = useCallback(async (contentOverride?: object) => {
     if (!draftId) return
-    setSaveState('saving')
     const contentToSave = contentOverride ?? pendingContent.current ?? editorRef.current?.getJSON() ?? {}
     pendingContent.current = contentToSave
+
+    // Skip si rien n'a changé depuis le dernier save réussi
+    const serializedNow = JSON.stringify({
+      content: contentToSave, meta, prix, prixMode, visibilite,
+    })
+    if (serializedNow === lastSavedSnapshot.current && saveState !== 'error') {
+      return { success: true as const }
+    }
+
+    setSaveState('saving')
 
     const result = await saveSubjectDraft(draftId, {
       title:          meta.title,
@@ -194,18 +205,26 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
 
     if (result.success) {
       setSaveState('saved')
+      setLastSavedAt(Date.now())
       lastSavedContent.current = contentToSave
+      lastSavedSnapshot.current = serializedNow
     } else {
       setSaveState('error')
       toast.error('Erreur de sauvegarde', (result as any).error || 'Réessayez ou vérifiez votre connexion.')
     }
     return result
-  }, [draftId, meta, prix, prixMode, visibilite, toast])
+  }, [draftId, meta, prix, prixMode, visibilite, saveState, toast])
 
   const triggerSave = useCallback((content?: object) => {
     if (saveTimer.current) clearTimeout(saveTimer.current)
     if (content) pendingContent.current = content
     saveTimer.current = setTimeout(() => { doSave() }, SAVE_DEBOUNCE)
+  }, [doSave])
+
+  // Sauvegarde manuelle (bouton Retry ou Cmd+S)
+  const forceSave = useCallback(() => {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null }
+    doSave(editorRef.current?.getJSON())
   }, [doSave])
 
   // Re-trigger save quand meta / prix / visibilité changent
@@ -216,19 +235,36 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meta, prix, prixMode, visibilite])
 
-  // Sauvegarde avant fermeture de la page
+  // Sauvegarde avant fermeture de la page + avertissement navigateur si save en cours
   useEffect(() => {
-    const handler = () => {
+    const handler = (e: BeforeUnloadEvent) => {
+      // Flush timer : tente une dernière sauvegarde (async, best-effort)
       if (saveTimer.current) {
         clearTimeout(saveTimer.current)
         saveTimer.current = null
-        // tentative synchrone (best-effort) — le navigateur peut ignorer
         doSave()
+      }
+      // Bloque la fermeture si une sauvegarde est en cours ou en erreur
+      if (saveState === 'saving' || saveState === 'error') {
+        e.preventDefault()
+        e.returnValue = ''
       }
     }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [doSave])
+  }, [doSave, saveState])
+
+  // Raccourci Cmd/Ctrl + S pour sauvegarde manuelle
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        forceSave()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [forceSave])
 
   // ── Content change handler ─────────────────────────────────────────
   const handleContentChange = useCallback((json: object, words: number, newOutline: OutlineItem[]) => {
@@ -317,8 +353,10 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
         saveState={saveState}
         wordCount={wordCount}
         canSubmit={canSubmit}
+        lastSavedAt={lastSavedAt}
         onPreview={handlePreview}
         onSubmit={handleSubmit}
+        onRetrySave={forceSave}
         isNewSubject={isNewSubject}
       />
 
