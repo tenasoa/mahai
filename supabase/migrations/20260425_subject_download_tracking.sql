@@ -5,12 +5,16 @@
 -- avec un identifiant unique. Cet identifiant est imprimé en filigrane sur le
 -- PDF généré, ce qui permet de remonter à l'utilisateur en cas de revente
 -- frauduleuse en dehors de la plateforme.
+-- ----------------------------------------------------------------------------
+-- NB: User.id et Subject.id sont déclarés en TEXT (cf. migrations_manual/01_structure.sql),
+--     donc les FK doivent aussi être en TEXT. On garde gen_random_uuid()::text pour
+--     conserver des identifiants opaques et uniques sans dépendre d'une séquence.
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS "SubjectDownload" (
-  id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  "userId"    UUID         NOT NULL,
-  "subjectId" UUID         NOT NULL,
+  id            TEXT        PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  "userId"      TEXT        NOT NULL,
+  "subjectId"   TEXT        NOT NULL,
   -- Code court (8 caractères) inscrit en filigrane visible. Permet de retrouver
   -- la ligne complète sans avoir à inscrire l'UUID complet sur le document.
   "watermarkCode" VARCHAR(12) NOT NULL UNIQUE,
