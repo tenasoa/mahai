@@ -48,7 +48,7 @@ out.txt
 *.swp
 *.swo
 *.tmp
-.claude/launch.json
+.claude/
 
 # ==========================================
 # OS

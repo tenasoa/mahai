@@ -48,6 +48,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^14.2.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^29.5.12",
     "@types/katex": "^0.16.8",
     "@types/node": "^22.10.5",

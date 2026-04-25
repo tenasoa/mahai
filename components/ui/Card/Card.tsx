@@ -15,6 +15,7 @@ export interface CardProps {
   onClick?: () => void
   role?: string
   ariaLabel?: string
+  tabIndex?: number
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
@@ -29,6 +30,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       onClick,
       role,
       ariaLabel,
+      tabIndex,
     },
     ref
   ) => {
@@ -44,7 +46,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         onClick={onClick}
         role={role}
         aria-label={ariaLabel}
-        tabIndex={interactive ? 0 : undefined}
+        tabIndex={tabIndex !== undefined ? tabIndex : interactive ? 0 : undefined}
         onKeyDown={(e) => {
           if (onClick && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault()

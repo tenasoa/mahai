@@ -680,7 +680,19 @@ export async function rechargeCreditsAction(data: {
 }
 
 /**
+ * Aide à router une notification (id préfixé `notif:` ou `tx:`) vers la
+ * bonne table.
+ */
+function splitNotificationId(prefixedId: string): { table: 'Notification' | 'CreditTransaction'; id: string } {
+  if (prefixedId.startsWith('notif:')) return { table: 'Notification', id: prefixedId.slice(6) }
+  if (prefixedId.startsWith('tx:'))    return { table: 'CreditTransaction', id: prefixedId.slice(3) }
+  // Backward-compat : ancien id non préfixé = transaction
+  return { table: 'CreditTransaction', id: prefixedId }
+}
+
+/**
  * Marquer toutes les notifications comme lues pour l'utilisateur connecté
+ * (Notification + CreditTransaction).
  */
 export async function markAllNotificationsAsReadAction() {
   const context = await getAuthenticatedContext();
@@ -691,6 +703,18 @@ export async function markAllNotificationsAsReadAction() {
       `UPDATE "CreditTransaction" SET "isRead" = true WHERE "userId" = $1 AND "isRead" = false`,
       [context.userId],
     );
+
+    // Best-effort sur la table Notification (peut ne pas exister si la
+    // migration n'est pas encore passée — ne bloque pas).
+    try {
+      await query(
+        `UPDATE "Notification" SET "isRead" = true, "readAt" = NOW()
+         WHERE "userId" = $1 AND "isRead" = false`,
+        [context.userId],
+      )
+    } catch (e) {
+      console.warn('markAllNotifications (Notification table) skipped:', e)
+    }
 
     revalidatePath("/notifications");
     return {
@@ -714,10 +738,19 @@ export async function markNotificationAsReadAction(notificationId: string) {
   if ("error" in context) return { success: false, error: context.error };
 
   try {
-    await query(
-      `UPDATE "CreditTransaction" SET "isRead" = true WHERE "id" = $1 AND "userId" = $2`,
-      [notificationId, context.userId],
-    );
+    const { table, id } = splitNotificationId(notificationId)
+    if (table === 'Notification') {
+      await query(
+        `UPDATE "Notification" SET "isRead" = true, "readAt" = NOW()
+         WHERE id = $1 AND "userId" = $2`,
+        [id, context.userId],
+      )
+    } else {
+      await query(
+        `UPDATE "CreditTransaction" SET "isRead" = true WHERE id = $1 AND "userId" = $2`,
+        [id, context.userId],
+      )
+    }
 
     revalidatePath("/notifications");
     return { success: true };
@@ -738,10 +771,18 @@ export async function dismissNotificationAction(notificationId: string) {
   if ("error" in context) return { success: false, error: context.error };
 
   try {
-    await query(
-      `UPDATE "CreditTransaction" SET "isDismissed" = true WHERE "id" = $1 AND "userId" = $2`,
-      [notificationId, context.userId],
-    );
+    const { table, id } = splitNotificationId(notificationId)
+    if (table === 'Notification') {
+      await query(
+        `UPDATE "Notification" SET "isDismissed" = true WHERE id = $1 AND "userId" = $2`,
+        [id, context.userId],
+      )
+    } else {
+      await query(
+        `UPDATE "CreditTransaction" SET "isDismissed" = true WHERE id = $1 AND "userId" = $2`,
+        [id, context.userId],
+      )
+    }
 
     revalidatePath("/notifications");
     return { success: true };
@@ -751,6 +792,110 @@ export async function dismissNotificationAction(notificationId: string) {
       success: false,
       error: "Erreur lors de la suppression de la notification",
     };
+  }
+}
+
+/**
+ * Récupérer le flux unifié de notifications de l'utilisateur :
+ *   - entrées de la table Notification (révision, validation, etc.)
+ *   - transactions CreditTransaction (recharge, achat) compatibles
+ * Le résultat est trié par date décroissante.
+ *
+ * Forme : `{ id, type, title, body, link, createdAt, read, source }`
+ *   - id préfixé `notif:` ou `tx:` pour pouvoir agir dessus.
+ */
+export async function getUserNotificationsAction() {
+  const context = await getAuthenticatedContext();
+  if ("error" in context) return { success: false, error: context.error };
+
+  try {
+    const items: Array<{
+      id: string
+      type: string
+      title: string
+      body: string
+      link: string | null
+      createdAt: string
+      read: boolean
+      source: 'notification' | 'transaction'
+      metadata?: Record<string, unknown>
+    }> = []
+
+    // 1) Table Notification (best-effort)
+    try {
+      const notifRes = await query(
+        `SELECT id, type, title, body, link, "createdAt", "isRead", metadata
+         FROM "Notification"
+         WHERE "userId" = $1 AND "isDismissed" = false
+         ORDER BY "createdAt" DESC
+         LIMIT 30`,
+        [context.userId],
+      )
+      for (const row of notifRes.rows) {
+        items.push({
+          id: `notif:${row.id}`,
+          type: String(row.type),
+          title: row.title,
+          body: row.body || '',
+          link: row.link,
+          createdAt: row.createdAt instanceof Date
+            ? row.createdAt.toISOString()
+            : String(row.createdAt),
+          read: Boolean(row.isRead),
+          source: 'notification',
+          metadata: row.metadata || {},
+        })
+      }
+    } catch (e) {
+      // Migration Notification pas encore passée — on continue avec les
+      // transactions seules.
+      console.warn('getUserNotificationsAction (Notification) skipped:', e)
+    }
+
+    // 2) CreditTransaction (rétro-compat : crédits/achats)
+    try {
+      const txRes = await query(
+        `SELECT id, type, status, amount, "creditsCount", description, "createdAt", "isRead"
+         FROM "CreditTransaction"
+         WHERE "userId" = $1 AND "isDismissed" = false
+         ORDER BY "createdAt" DESC
+         LIMIT 30`,
+        [context.userId],
+      )
+      for (const tx of txRes.rows) {
+        const credits = tx.creditsCount ?? Math.abs(tx.amount ?? 0)
+        const title =
+          tx.type === 'RECHARGE'
+            ? tx.status === 'PENDING'
+              ? 'Recharge en attente'
+              : 'Recharge créditée'
+            : tx.type === 'ACHAT'
+              ? 'Achat de sujet'
+              : 'Transaction'
+        items.push({
+          id: `tx:${tx.id}`,
+          type: tx.type === 'RECHARGE' ? 'credit' : tx.type === 'ACHAT' ? 'sujet' : 'alert',
+          title,
+          body: tx.description || `${tx.type === 'RECHARGE' ? '+' : ''}${credits} crédits${tx.status === 'PENDING' ? ' (en attente)' : ''}`,
+          link: '/recharge',
+          createdAt: tx.createdAt instanceof Date
+            ? tx.createdAt.toISOString()
+            : String(tx.createdAt),
+          read: Boolean(tx.isRead),
+          source: 'transaction',
+        })
+      }
+    } catch (e) {
+      console.warn('getUserNotificationsAction (CreditTransaction) skipped:', e)
+    }
+
+    // Tri global décroissant
+    items.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))
+
+    return { success: true, data: items.slice(0, 40) }
+  } catch (error) {
+    console.error('Erreur getUserNotificationsAction:', error);
+    return { success: false, error: 'Erreur lors du chargement des notifications' };
   }
 }
 

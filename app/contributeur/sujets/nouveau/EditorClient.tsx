@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Editor } from '@tiptap/react'
 
@@ -102,8 +102,11 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
   const lastSavedContent = useRef<object | null>(null)
   const lastSavedSnapshot = useRef<string | null>(null)
 
-  // Body class pour masquer le global mobile nav
-  useEffect(() => {
+  // Body class pour masquer le global mobile nav.
+  // useLayoutEffect : appliqué AVANT le premier paint pour éviter tout flash
+  // de la navbar globale ou du mobile-bottom-nav. Garde SSR via typeof window.
+  const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
+  useIsoLayoutEffect(() => {
     document.body.classList.add('editor-active')
     return () => document.body.classList.remove('editor-active')
   }, [])

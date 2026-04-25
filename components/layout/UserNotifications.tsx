@@ -6,22 +6,22 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { Bell, Check, X, ChevronRight } from 'lucide-react'
-import { 
-  markAllNotificationsAsReadAction, 
+import {
+  markAllNotificationsAsReadAction,
   dismissNotificationAction,
-  getUserActiveTransactionsAction 
+  getUserNotificationsAction
 } from '@/actions/profile'
 
 interface Notification {
   id: string
-  type: 'correction' | 'credit' | 'sujet' | 'system' | 'mvola' | 'alert'
+  type: string
   title: string
   body: string
   createdAt: string
   read: boolean
   score?: number
   maxScore?: number
-  link?: string
+  link?: string | null
   linkText?: string
 }
 
@@ -35,14 +35,16 @@ export function UserNotifications() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  // Écouter les notifications en temps réel
+  // Écouter les notifications en temps réel — deux sources :
+  //  1. CreditTransaction (recharges, achats)
+  //  2. Notification (révisions, validations, etc.)
   useEffect(() => {
     if (!userId) return
 
     const supabase = createClient()
 
-    const channel = supabase
-      .channel('user-notifications-dropdown')
+    const txChannel = supabase
+      .channel('user-tx-notifications-dropdown')
       .on(
         'postgres_changes',
         {
@@ -53,7 +55,7 @@ export function UserNotifications() {
         },
         (payload) => {
           const newNotif: Notification = {
-            id: payload.new.id,
+            id: `tx:${payload.new.id}`,
             type: payload.new.type === 'RECHARGE' ? 'credit' : 'alert',
             title: payload.new.type === 'RECHARGE' ? 'Recharge créditée' : 'Transaction mise à jour',
             body: `${Math.abs(payload.new.creditsCount || payload.new.amount)} crédits ${payload.new.status === 'COMPLETED' ? 'validés' : 'en attente'}`,
@@ -69,11 +71,39 @@ export function UserNotifications() {
       )
       .subscribe()
 
+    const notifChannel = supabase
+      .channel('user-app-notifications-dropdown')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'Notification',
+          filter: `userId=eq.${userId}`
+        },
+        (payload) => {
+          const row = payload.new as any
+          const newNotif: Notification = {
+            id: `notif:${row.id}`,
+            type: String(row.type || 'SYSTEM'),
+            title: row.title || 'Notification',
+            body: row.body || '',
+            createdAt: row.createdAt,
+            read: Boolean(row.isRead),
+            link: row.link || null,
+          }
+          setNotifications(prev => [newNotif, ...prev])
+          if (!row.isRead) setNotificationCount(prev => prev + 1)
+        }
+      )
+      .subscribe()
+
     // Charger les notifications réelles depuis la base
     loadRealNotifications()
 
     return () => {
-      supabase.removeChannel(channel)
+      supabase.removeChannel(txChannel)
+      supabase.removeChannel(notifChannel)
     }
   }, [userId])
 
@@ -99,21 +129,17 @@ export function UserNotifications() {
 
   const loadRealNotifications = async () => {
     try {
-      const result = await getUserActiveTransactionsAction()
+      const result = await getUserNotificationsAction()
 
       if (result.success && result.data) {
-        const realNotifications: Notification[] = result.data.slice(0, 10).map((tx: any) => ({
-          id: tx.id,
-          type: tx.type === 'RECHARGE' ? 'credit' : tx.type === 'ACHAT' ? 'sujet' : 'alert',
-          title: tx.type === 'RECHARGE'
-            ? 'Recharge Mobile Money'
-            : tx.type === 'ACHAT'
-            ? 'Achat de sujet'
-            : 'Transaction',
-          body: tx.description || `${tx.type === 'RECHARGE' ? '+' : ''}${tx.creditsCount || Math.abs(tx.amount)} crédits`,
-          createdAt: tx.createdAt,
-          read: tx.isRead || false,
-          link: '/recharge'
+        const realNotifications: Notification[] = result.data.slice(0, 10).map((n: any) => ({
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          body: n.body,
+          createdAt: n.createdAt,
+          read: Boolean(n.read),
+          link: n.link,
         }))
         setNotifications(realNotifications)
         setNotificationCount(realNotifications.filter(n => !n.read).length)
@@ -165,15 +191,35 @@ export function UserNotifications() {
     }
   }
 
-  const getNotificationIcon = (type: string) => {
+  const categorize = (type: string): 'credit' | 'sujet' | 'alert' | 'system' => {
     switch (type) {
-      case 'correction': return '🤖'
+      case 'credit':
+      case 'RECHARGE':
+        return 'credit'
+      case 'sujet':
+      case 'SUBMISSION_PUBLISHED':
+      case 'SUBMISSION_PENDING':
+      case 'REVISION_REQUESTED':
+      case 'APPLICATION_APPROVED':
+      case 'WITHDRAWAL_APPROVED':
+        return 'sujet'
+      case 'alert':
+      case 'SUBMISSION_REJECTED':
+      case 'WITHDRAWAL_REJECTED':
+      case 'WITHDRAWAL_REQUESTED':
+      case 'APPLICATION_REJECTED':
+        return 'alert'
+      default:
+        return 'system'
+    }
+  }
+
+  const getNotificationIcon = (type: string) => {
+    switch (categorize(type)) {
       case 'credit': return '✦'
-      case 'sujet': return '📚'
-      case 'system': return '⚙'
-      case 'mvola': return '📱'
-      case 'alert': return '⚠'
-      default: return '🔔'
+      case 'sujet':  return '📚'
+      case 'alert':  return '⚠'
+      default:       return '🔔'
     }
   }
 
@@ -214,7 +260,7 @@ export function UserNotifications() {
   if (!userId) return null
 
   return (
-    <>
+    <div style={{ position: 'relative', display: 'inline-flex' }}>
       {/* Bouton Bell dans la navbar */}
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -391,8 +437,8 @@ export function UserNotifications() {
                       fontSize: '1.1rem',
                       flexShrink: 0,
                       border: '1px solid',
-                      background: notif.type === 'credit' ? 'var(--gold-dim)' : notif.type === 'sujet' ? 'var(--amber-dim)' : 'var(--b2)',
-                      borderColor: notif.type === 'credit' ? 'var(--gold-line)' : notif.type === 'sujet' ? 'var(--amber-line)' : 'var(--b1)'
+                      background: categorize(notif.type) === 'credit' ? 'var(--gold-dim)' : categorize(notif.type) === 'sujet' ? 'var(--amber-dim)' : categorize(notif.type) === 'alert' ? 'var(--ruby-dim)' : 'var(--b2)',
+                      borderColor: categorize(notif.type) === 'credit' ? 'var(--gold-line)' : categorize(notif.type) === 'sujet' ? 'var(--amber-line)' : categorize(notif.type) === 'alert' ? 'var(--ruby-line)' : 'var(--b1)'
                     }}>
                       {getNotificationIcon(notif.type)}
                     </div>
@@ -516,6 +562,6 @@ export function UserNotifications() {
           50% { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(155, 35, 53, 0); }
         }
       `}</style>
-    </>
+    </div>
   )
 }

@@ -6,11 +6,11 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import {
   CheckCircle2, AlertCircle, XCircle, File, Edit3, BarChart3, Eye, Trash2,
   Search, ChevronUp, ChevronDown, ChevronsUpDown,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Undo2, RotateCcw, MessageSquare
 } from 'lucide-react'
 import { useToast } from '@/lib/hooks/useToast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { requestSubjectDeletion } from './actions'
+import { requestSubjectDeletion, cancelSubmission, deleteSubmissionDraft } from './actions'
 
 interface ContributorSubjectsClientProps {
   user: {
@@ -19,31 +19,46 @@ interface ContributorSubjectsClientProps {
     role: string
   }
   subjects: any[]
+  submissions: any[]
   stats: {
     published: number
     pending: number
     rejected: number
     draft: number
+    submitted: number
+    submissionDrafts: number
+    revisionRequested: number
   }
 }
 
-type StatusFilter = 'ALL' | 'PUBLISHED' | 'PENDING' | 'REJECTED' | 'DRAFT'
+type StatusFilter =
+  | 'ALL'
+  | 'PUBLISHED'
+  | 'PENDING'
+  | 'REJECTED'
+  | 'DRAFT'
+  | 'SOUMIS'
+  | 'REVISION_REQUESTED'
 type SortKey = 'titre' | 'ventes' | 'revenus'
 type SortDir = 'asc' | 'desc'
 
 const PAGE_SIZE = 10
 
-function formatStatus(status: string) {
+function formatStatus(status: string, source?: string) {
   const config: Record<string, { label: string; class: string; icon: any }> = {
     PUBLISHED: { label: 'Publié', class: 'pub', icon: CheckCircle2 },
     PENDING: { label: 'En attente', class: 'pend', icon: AlertCircle },
     REJECTED: { label: 'Rejeté', class: 'rej', icon: XCircle },
-    DRAFT: { label: 'Brouillon', class: 'draft', icon: File }
+    DRAFT: { label: 'Brouillon', class: 'draft', icon: File },
+    SOUMIS: { label: 'Soumis', class: 'submitted', icon: AlertCircle },
+    SUBMITTED: { label: 'Soumis', class: 'submitted', icon: AlertCircle },
+    REVISION_REQUESTED: { label: 'À réviser', class: 'revision', icon: RotateCcw }
   }
+  if (source === 'SUBMISSION' && status === 'SUBMITTED') return config.SOUMIS
   return config[status] || { label: status, class: 'draft', icon: File }
 }
 
-export default function ContributorSubjectsClient({ user, subjects, stats }: ContributorSubjectsClientProps) {
+export default function ContributorSubjectsClient({ user, subjects, submissions, stats }: ContributorSubjectsClientProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const toast = useToast()
@@ -57,8 +72,13 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [currentPage, setCurrentPage] = useState(1)
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<
+    | { id: string; title: string; kind: 'subject' | 'submission' }
+    | null
+  >(null)
   const [deleting, setDeleting] = useState(false)
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; title: string } | null>(null)
+  const [cancelling, setCancelling] = useState(false)
 
   // Reset page à 1 quand filtre/recherche change
   useEffect(() => {
@@ -69,10 +89,16 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
     if (!deleteTarget) return
     setDeleting(true)
     try {
-      const result = await requestSubjectDeletion(deleteTarget.id)
+      const result =
+        deleteTarget.kind === 'submission'
+          ? await deleteSubmissionDraft(deleteTarget.id)
+          : await requestSubjectDeletion(deleteTarget.id)
       if (result.success) {
+        const immediatelyRemoved =
+          deleteTarget.kind === 'submission' ||
+          ('immediatelyRemoved' in result && (result as { immediatelyRemoved?: boolean }).immediatelyRemoved)
         toast.success(
-          result.immediatelyRemoved ? 'Sujet supprimé' : 'Demande envoyée',
+          immediatelyRemoved ? 'Sujet supprimé' : 'Demande envoyée',
           result.message || 'Opération effectuée'
         )
         setDeleteTarget(null)
@@ -87,9 +113,40 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
     }
   }
 
+  const handleCancelSubmission = async () => {
+    if (!cancelTarget) return
+    setCancelling(true)
+    try {
+      const result = await cancelSubmission(cancelTarget.id)
+      if (result.success) {
+        toast.success('Soumission annulée', result.message || 'Le sujet est repassé en brouillon')
+        setCancelTarget(null)
+        startTransition(() => router.refresh())
+      } else {
+        toast.error('Erreur', result.error || "Impossible d'annuler la soumission")
+      }
+    } catch (e) {
+      toast.error('Erreur', 'Une erreur est survenue')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  // Fusionner les soumissions avec les sujets
+  const allItems = useMemo(() => {
+    // Normaliser les soumissions pour avoir le même format
+    const normalizedSubmissions = submissions.map((sub: any) => ({
+      ...sub,
+      titre: sub.title,
+      status: sub.status === 'SUBMITTED' ? 'SOUMIS' : sub.status,
+      isSubmission: true
+    }))
+    return [...subjects, ...normalizedSubmissions]
+  }, [subjects, submissions])
+
   // Filtrage + recherche + tri (B2 + U2)
   const processedSubjects = useMemo(() => {
-    let list = [...subjects]
+    let list = [...allItems]
 
     // Filtre statut
     if (statusFilter !== 'ALL') {
@@ -100,9 +157,9 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
       list = list.filter(s =>
-        (s.titre || '').toLowerCase().includes(q) ||
+        (s.titre || s.title || '').toLowerCase().includes(q) ||
         (s.matiere || '').toLowerCase().includes(q) ||
-        (s.series || '').toLowerCase().includes(q) ||
+        (s.series || s.serie || '').toLowerCase().includes(q) ||
         (s.grade || '').toLowerCase().includes(q)
       )
     }
@@ -126,7 +183,7 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
     }
 
     return list
-  }, [subjects, statusFilter, searchQuery, sortKey, sortDir])
+  }, [allItems, statusFilter, searchQuery, sortKey, sortDir])
 
   // Pagination (U1)
   const totalPages = Math.max(1, Math.ceil(processedSubjects.length / PAGE_SIZE))
@@ -151,12 +208,16 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
       : <ChevronDown size={12} className="sort-indicator" />
   }
 
-  const totalSubjects = subjects.length
+  const totalSubjects = allItems.length
+  const totalDrafts = stats.draft + stats.submissionDrafts
 
   const statusTabs: { key: StatusFilter; label: string; count: number }[] = [
     { key: 'ALL', label: 'Tous les sujets', count: totalSubjects },
-    { key: 'PUBLISHED', label: 'Publiés', count: stats.published },
+    { key: 'DRAFT', label: 'Brouillons', count: totalDrafts },
+    { key: 'REVISION_REQUESTED', label: 'À réviser', count: stats.revisionRequested },
+    { key: 'SOUMIS', label: 'Soumis', count: stats.submitted },
     { key: 'PENDING', label: 'En attente', count: stats.pending },
+    { key: 'PUBLISHED', label: 'Publiés', count: stats.published },
     { key: 'REJECTED', label: 'Rejetés', count: stats.rejected }
   ]
 
@@ -254,15 +315,27 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
 
       {/* Tabs Filter */}
       <div className="admin-tabs">
-        {statusTabs.map(tab => (
-          <button
-            key={tab.key}
-            className={`admin-tab ${statusFilter === tab.key ? 'admin-tab-active' : ''}`}
-            onClick={() => setStatusFilter(tab.key)}
-          >
-            {tab.label} <span className="admin-tab-count">{tab.count}</span>
-          </button>
-        ))}
+        {statusTabs.map(tab => {
+          const isUrgentRevision = tab.key === 'REVISION_REQUESTED' && tab.count > 0
+          return (
+            <button
+              key={tab.key}
+              className={`admin-tab ${statusFilter === tab.key ? 'admin-tab-active' : ''}`}
+              onClick={() => setStatusFilter(tab.key)}
+              style={
+                isUrgentRevision && statusFilter !== tab.key
+                  ? {
+                      borderColor: 'var(--amber-line)',
+                      color: 'var(--amber)',
+                      background: 'var(--amber-dim)',
+                    }
+                  : undefined
+              }
+            >
+              {tab.label} <span className="admin-tab-count">{tab.count}</span>
+            </button>
+          )
+        })}
       </div>
 
       <div className="admin-card">
@@ -331,7 +404,12 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
                           ? `Aucun sujet ne correspond à "${searchQuery}".`
                           : statusFilter === 'ALL'
                             ? 'Vous n\'avez pas encore créé de sujet.'
-                            : `Aucun sujet ${statusFilter === 'PUBLISHED' ? 'publié' : statusFilter === 'PENDING' ? 'en attente' : statusFilter === 'REJECTED' ? 'rejeté' : 'brouillon'}.`}
+                            : statusFilter === 'PUBLISHED'  ? 'Aucun sujet publié pour le moment.'
+                            : statusFilter === 'SOUMIS'     ? 'Aucune soumission en cours de validation.'
+                            : statusFilter === 'PENDING'    ? 'Aucun sujet en attente.'
+                            : statusFilter === 'REJECTED'   ? 'Aucun sujet rejeté — bonne nouvelle !'
+                            : statusFilter === 'REVISION_REQUESTED' ? 'Aucune révision demandée par l\'administration.'
+                            : 'Aucun brouillon.'}
                       </div>
                       {statusFilter === 'ALL' && !searchQuery && (
                         <Link href="/contributeur/sujets/nouveau" className="admin-btn admin-btn-primary" style={{ marginTop: '1rem' }}>
@@ -343,22 +421,54 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
                 </tr>
               ) : (
                 pagedSubjects.map((subject: any) => {
-                  const status = formatStatus(subject.status)
+                  const status = formatStatus(subject.status, subject.source)
                   const StatusIcon = status.icon
+                  const isSubmission = subject.isSubmission || subject.source === 'SUBMISSION'
 
                   let badgeClass = 'status-gray'
                   if (subject.status === 'PUBLISHED') badgeClass = 'status-green'
-                  if (subject.status === 'PENDING') badgeClass = 'status-amber'
+                  if (subject.status === 'PENDING' || subject.status === 'SOUMIS') badgeClass = 'status-amber'
                   if (subject.status === 'REJECTED') badgeClass = 'status-ruby'
+                  if (subject.status === 'REVISION_REQUESTED') badgeClass = 'status-amber'
+
+                  const isRevisionRequested = subject.status === 'REVISION_REQUESTED'
+                  const adminNote: string | null = subject.notes || null
 
                   return (
-                    <tr key={subject.id}>
+                    <tr key={subject.id} style={isSubmission && subject.status === 'SOUMIS' ? { background: 'var(--amber-dim)' } : undefined}>
                       <td>
                         <div className="contrib-subject-cell">
                           <span className="contrib-subject-title">{subject.titre}</span>
                           <span className="contrib-subject-meta">
-                            {subject.matiere || 'Matière N/A'} · {subject.series || 'Toutes séries'}
+                            {subject.matiere || 'Matière N/A'} · {subject.series || subject.serie || 'Toutes séries'}
+                            {subject.status === 'SOUMIS' && <span style={{ color: 'var(--amber)', marginLeft: '0.5rem' }}>• En validation</span>}
+                            {isRevisionRequested && <span style={{ color: 'var(--amber)', marginLeft: '0.5rem' }}>• Révision demandée par l'admin</span>}
                           </span>
+                          {isRevisionRequested && adminNote && (
+                            <div
+                              style={{
+                                marginTop: '0.5rem',
+                                padding: '0.625rem 0.75rem',
+                                background: 'var(--amber-dim)',
+                                border: '1px solid var(--amber-line)',
+                                borderRadius: 'var(--r, 6px)',
+                                display: 'flex',
+                                gap: '0.5rem',
+                                alignItems: 'flex-start',
+                                maxWidth: '520px',
+                              }}
+                            >
+                              <MessageSquare size={14} style={{ color: 'var(--amber)', flexShrink: 0, marginTop: 2 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--amber)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.15rem' }}>
+                                  Message de l'admin
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-2)', whiteSpace: 'pre-wrap', lineHeight: 1.45 }}>
+                                  {adminNote}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td>
@@ -369,39 +479,118 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          <span className="status-badge status-blue" style={{ fontSize: '0.7rem' }}>{subject.grade || 'N/A'}</span>
-                          <span style={{ fontFamily: 'var(--mono)', fontSize: '0.8rem', color: 'var(--text-3)' }}>{subject.year || '—'}</span>
+                          <span className="status-badge status-blue" style={{ fontSize: '0.7rem' }}>{subject.grade || subject.examType || 'N/A'}</span>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: '0.8rem', color: 'var(--text-3)' }}>{subject.year || subject.anneeScolaire || '—'}</span>
                         </div>
                       </td>
                       <td>
                         <span style={{ fontFamily: 'var(--mono)', fontSize: '0.9rem', color: subject.ventes ? 'var(--text)' : 'var(--text-4)' }}>
-                          {subject.ventes || '0'}
+                          {isSubmission ? '—' : (subject.ventes || '0')}
                         </span>
                       </td>
                       <td>
                         <span style={{ fontFamily: 'var(--mono)', fontWeight: 500, color: subject.revenus ? 'var(--gold)' : 'var(--text-4)' }}>
-                          {subject.revenus ? `${Number(subject.revenus).toLocaleString('fr-FR')} Ar` : '0 Ar'}
+                          {isSubmission ? `${subject.prix || 0} crédits` : (subject.revenus ? `${Number(subject.revenus).toLocaleString('fr-FR')} Ar` : '0 Ar')}
                         </span>
                       </td>
                       <td>
                         <div className="contrib-row-actions">
-                          <Link href={`/sujet/${subject.id}`} className="admin-btn admin-btn-outline" title="Voir" aria-label="Voir le sujet">
-                            <Eye size={14} />
-                          </Link>
-                          <Link href={`/contributeur/sujets/${subject.id}/edit`} className="admin-btn admin-btn-outline" title="Modifier" aria-label="Modifier le sujet">
-                            <Edit3 size={14} />
-                          </Link>
-                          <Link href={`/contributeur/sujets/${subject.id}/stats`} className="admin-btn admin-btn-outline" title="Statistiques" aria-label="Voir les statistiques">
-                            <BarChart3 size={14} />
-                          </Link>
-                          <button
-                            className="admin-btn admin-btn-outline admin-btn-reject"
-                            title="Supprimer"
-                            aria-label="Supprimer le sujet"
-                            onClick={() => setDeleteTarget({ id: subject.id, title: subject.titre })}
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          {(() => {
+                            const st = subject.status as string
+                            const isPublished = st === 'PUBLISHED'
+                            const isSubmitted = st === 'SOUMIS' || st === 'PENDING'
+                            const isDraft = st === 'DRAFT'
+                            const isRejected = st === 'REJECTED'
+                            const isRevision = st === 'REVISION_REQUESTED'
+                            const canEdit = isDraft || isRejected || isRevision
+                            const canView = isPublished
+                            const canCancel = isSubmission && st === 'SOUMIS'
+                            const canDelete = !isPublished // garde les ventes des sujets publiés
+                            const canStats = !isSubmission && isPublished
+
+                            return (
+                              <>
+                                {canView && (
+                                  <Link
+                                    href={`/sujet/${subject.id}`}
+                                    className="admin-btn admin-btn-outline"
+                                    title="Voir"
+                                    aria-label="Voir le sujet"
+                                  >
+                                    <Eye size={14} />
+                                  </Link>
+                                )}
+
+                                {canEdit ? (
+                                  <Link
+                                    href={`/contributeur/sujets/${subject.id}/edit`}
+                                    className="admin-btn admin-btn-outline"
+                                    title="Modifier"
+                                    aria-label="Modifier le sujet"
+                                  >
+                                    <Edit3 size={14} />
+                                  </Link>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="admin-btn admin-btn-outline"
+                                    title={
+                                      isSubmitted
+                                        ? 'Annulez la soumission pour pouvoir rééditer'
+                                        : 'Édition indisponible pour ce statut'
+                                    }
+                                    aria-label="Édition désactivée"
+                                    disabled
+                                    style={{ opacity: 0.45, cursor: 'not-allowed' }}
+                                  >
+                                    <Edit3 size={14} />
+                                  </button>
+                                )}
+
+                                {canCancel && (
+                                  <button
+                                    type="button"
+                                    className="admin-btn admin-btn-outline"
+                                    title="Annuler la soumission"
+                                    aria-label="Annuler la soumission"
+                                    onClick={() =>
+                                      setCancelTarget({ id: subject.id, title: subject.titre })
+                                    }
+                                  >
+                                    <Undo2 size={14} />
+                                  </button>
+                                )}
+
+                                {canStats && (
+                                  <Link
+                                    href={`/contributeur/sujets/${subject.id}/stats`}
+                                    className="admin-btn admin-btn-outline"
+                                    title="Statistiques"
+                                    aria-label="Voir les statistiques"
+                                  >
+                                    <BarChart3 size={14} />
+                                  </Link>
+                                )}
+
+                                {canDelete && (
+                                  <button
+                                    className="admin-btn admin-btn-outline admin-btn-reject"
+                                    title="Supprimer"
+                                    aria-label="Supprimer le sujet"
+                                    onClick={() =>
+                                      setDeleteTarget({
+                                        id: subject.id,
+                                        title: subject.titre,
+                                        kind: isSubmission ? 'submission' : 'subject',
+                                      })
+                                    }
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </>
+                            )
+                          })()}
                         </div>
                       </td>
                     </tr>
@@ -465,9 +654,23 @@ export default function ContributorSubjectsClient({ user, subjects, stats }: Con
         onClose={() => !deleting && setDeleteTarget(null)}
         onConfirm={handleDelete}
         title={`Supprimer "${deleteTarget?.title ?? ''}" ?`}
-        description="Si ce sujet n'a pas de ventes, il sera immédiatement retiré. Sinon une demande sera envoyée à l'administration pour préserver les achats existants."
+        description={
+          deleteTarget?.kind === 'submission'
+            ? 'Ce brouillon et ses images seront supprimés définitivement. Cette action est irréversible.'
+            : "Si ce sujet n'a pas de ventes, il sera immédiatement retiré. Sinon une demande sera envoyée à l'administration pour préserver les achats existants."
+        }
         confirmLabel={deleting ? 'Suppression…' : 'Supprimer définitivement'}
         variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={!!cancelTarget}
+        onClose={() => !cancelling && setCancelTarget(null)}
+        onConfirm={handleCancelSubmission}
+        title={`Annuler la soumission de "${cancelTarget?.title ?? ''}" ?`}
+        description="Le sujet repassera en brouillon et sortira de la file d'attente de validation. Vous pourrez ensuite le rééditer puis le resoumettre."
+        confirmLabel={cancelling ? 'Annulation…' : 'Annuler la soumission'}
+        variant="warning"
       />
     </div>
   )

@@ -245,24 +245,27 @@ function QuestionView({ node, updateAttributes, deleteNode, getPos, editor }: an
         <span className="ed-question-num">{autoIndex}.</span>
         <NodeViewContent className="ed-question-content" />
         <div className="ed-question-meta">
+          {hasPoints && (
+            <>
+              <input
+                className="ed-points-input"
+                type="number"
+                min={0}
+                value={pts}
+                onChange={e => setPts(e.target.value)}
+                onBlur={() => updateAttributes({ points: Number(pts) })}
+                style={{ width: '40px' }}
+              />
+              <span className="ed-points-label">pts</span>
+            </>
+          )}
           <button
-            className={`ed-ctrl-btn ed-points-toggle${hasPoints ? ' active' : ''}`}
+            className="ed-ctrl-btn ed-points-toggle"
             onClick={togglePoints}
             title={hasPoints ? 'Retirer les points' : 'Ajouter des points'}
           >
-            {hasPoints ? 'pts' : '—'}
+            {hasPoints ? '×' : '+'}
           </button>
-          {hasPoints && (
-            <input
-              className="ed-points-input"
-              type="number"
-              min={0}
-              value={pts}
-              onChange={e => setPts(e.target.value)}
-              onBlur={() => updateAttributes({ points: Number(pts) })}
-              style={{ width: '40px' }}
-            />
-          )}
           <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode}>✕</button>
         </div>
       </div>
@@ -280,7 +283,7 @@ export const QuestionExtension = Node.create({
     return {
       numero:    { default: 1 },
       points:    { default: 2 },
-      hasPoints: { default: true },
+      hasPoints: { default: false },
     }
   },
 

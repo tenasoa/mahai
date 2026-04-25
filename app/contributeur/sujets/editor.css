@@ -20,22 +20,14 @@
   padding-top: calc(56px + 38px + 46px + 1.25rem); /* navbar + discbar + toolbar */
 }
 
+/* Tablette + mobile : on masque LES DEUX sidebars → accès uniquement via la
+   MobileBar (boutons « Infos » et « Paramètres »). */
 @media (max-width: 1100px) {
-  .editor-body {
-    grid-template-columns: 1fr 280px;
-  }
-  .editor-sidebar-left {
-    display: none;
-  }
-}
-
-/* Tablette et mobile : on masque les deux sidebars → accès via MobileBar */
-@media (max-width: 900px) {
   .editor-body {
     grid-template-columns: 1fr;
     padding: 1rem 0.75rem;
-    padding-top: calc(56px + 46px + 0.75rem); /* navbar + toolbar (DiscBar cachée) */
-    padding-bottom: 72px; /* espace pour MobileBar */
+    padding-top: calc(56px + 46px + 0.75rem); /* navbar + toolbar (DiscBar masquée) */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
   .editor-sidebar-left,
   .editor-sidebar-right {
@@ -362,7 +354,7 @@
   color: var(--text-3);
 }
 
-.ed-panel-body { padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.ed-panel-body { padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--b2) transparent; }
 
 /* Form fields */
 .ed-field { display: flex; flex-direction: column; gap: 0.3rem; }
@@ -1424,7 +1416,18 @@
 .ed-step-dot.active { background: var(--gold); }
 
 /* ─── OUTLINE ────────────────────────────────────────────────────── */
-.ed-outline { display: flex; flex-direction: column; gap: 0.15rem; }
+.ed-outline { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.15rem;
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--b2) transparent;
+}
+
+.ed-outline::-webkit-scrollbar { width: 3px; }
+.ed-outline::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
 
 .ed-outline-item {
   display: flex;
@@ -1456,15 +1459,21 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 56px;
-  background: rgba(var(--void-rgb), 0.9);
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(var(--void-rgb), 0.96);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--b1);
-  z-index: 400;
+  /* Z-index très élevé : doit toujours dominer le canvas, le header global,
+     et tout résidu d'autre navbar pendant l'édition. */
+  z-index: 999;
   align-items: stretch;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
 }
 
-@media (max-width: 768px) { .editor-mobile-bar { display: flex; } }
+/* Affichage de la MobileBar sur tablette + mobile (même breakpoint que les
+   sidebars masquées : impossible d'accéder aux métadonnées/paramètres autrement). */
+@media (max-width: 1100px) { .editor-mobile-bar { display: flex; } }
 
 .ed-mobile-tab {
   flex: 1;
@@ -1492,19 +1501,19 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.5);
-  z-index: 700;
+  z-index: 1000;
 }
 
 .ed-mobile-drawer {
   position: fixed;
-  bottom: 56px;
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   max-height: 70vh;
   background: var(--card);
   border-top: 1px solid var(--b1);
   border-radius: 12px 12px 0 0;
-  z-index: 701;
+  z-index: 1001;
   overflow-y: auto;
   animation: drawerUp 0.25s var(--ease-out);
 }
@@ -1576,14 +1585,25 @@
   transition: width 0.3s ease;
 }
 
-/* ─── BODY EN MODE ÉDITEUR — sécurité : masque tout nav/footer global ── */
+/* ─── BODY EN MODE ÉDITEUR — sécurité : masque tout nav/footer global ──
+   Deux mécanismes redondants pour éviter tout flash :
+   1) règle CSS pure via :has() — appliquée dès le premier paint, sans JS
+   2) classe `.editor-active` posée par useEffect — fallback pour navigateurs
+      sans support :has() (très minoritaires aujourd'hui). */
+body:has(.editor-page) .mobile-bottom-nav,
+body:has(.editor-page) .mobile-nav-spacer,
+body:has(.editor-page) .luxury-navbar,
+body:has(.editor-page) .luxury-footer,
 body.editor-active .mobile-bottom-nav,
 body.editor-active .mobile-nav-spacer,
 body.editor-active .luxury-navbar,
 body.editor-active .luxury-footer {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
+body:has(.editor-page),
 body.editor-active {
   /* Pas de scroll-lock (l'éditeur gère son propre overflow) — mais réserve un
      léger fallback anti-FOUC si la transition de layout bouge */
@@ -1738,7 +1758,7 @@ body.editor-active {
    RESPONSIVE MOBILE — corrections fines pour l'éditeur
    ═════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   /* Navbar compact */
   .editor-navbar {
     padding: 0 0.75rem;
@@ -1761,7 +1781,7 @@ body.editor-active {
   /* DiscBar cachée : pas utile en édition */
   .editor-discbar { display: none; }
 
-  /* Toolbar : scroll horizontal + buttons tactiles */
+  /* Toolbar : scroll horizontal + buttons tactiles + indicateur de scroll */
   .editor-toolbar {
     top: 56px; /* juste sous la navbar, la discbar est masquée */
     padding: 0 0.5rem;
@@ -1770,19 +1790,23 @@ body.editor-active {
     scrollbar-width: none;
     flex-wrap: nowrap;
     gap: 0.15rem;
+    /* Dégradé droite pour indiquer qu'on peut scroller la barre */
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 24px), transparent 100%);
+            mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 24px), transparent 100%);
   }
   .editor-toolbar::-webkit-scrollbar { display: none; }
   .editor-tb-btn {
-    min-width: 34px;
-    width: 34px;
-    height: 34px;
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
     font-size: 0.9rem;
   }
   .editor-tb-btn--wide {
     min-width: auto;
     width: auto;
-    padding: 0 0.6rem;
+    padding: 0 0.65rem;
     font-size: 0.7rem;
+    height: 36px;
   }
 
   /* Canvas plein écran sur mobile */

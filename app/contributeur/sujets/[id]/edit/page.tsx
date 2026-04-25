@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { query } from '@/lib/db'
 import { getSubjectDraft } from '../../editor-actions'
 import EditorClient from '../../nouveau/EditorClient'
 
@@ -19,11 +20,19 @@ export default async function EditSubjectPage({ params }: Props) {
 
   if (!session) redirect('/auth/login')
 
+  const userRes = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
+  const user = userRes.rows[0]
+
+  if (!user || !['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR', 'VALIDATEUR', 'VERIFICATEUR'].includes(user.role)) {
+    redirect('/dashboard')
+  }
+
   const draft = await getSubjectDraft(id)
 
   if (!draft) notFound()
 
-  if (draft.status !== 'DRAFT') {
+  // Éditable si brouillon, ou si l'admin a demandé une révision
+  if (draft.status !== 'DRAFT' && draft.status !== 'REVISION_REQUESTED') {
     redirect('/contributeur/sujets')
   }
 

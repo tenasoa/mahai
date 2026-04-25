@@ -45,9 +45,15 @@ export async function getContributorDashboard(period: DashboardPeriod = '30d') {
     'SELECT COUNT(*) FROM "Subject" WHERE "authorId" = $1 AND status = $2',
     [userId, 'PUBLISHED']
   )
+  // Sujets en attente dans Subject (ancien système)
   const subjectsPendingRes = await query(
     'SELECT COUNT(*) FROM "Subject" WHERE "authorId" = $1 AND status = $2',
     [userId, 'PENDING']
+  )
+  // Soumissions en attente de validation (nouveau système)
+  const submissionsPendingRes = await query(
+    'SELECT COUNT(*) FROM "SubjectSubmission" WHERE "authorId" = $1 AND status = $2',
+    [userId, 'SUBMITTED']
   )
 
   // Ventes et revenus sur la période courante
@@ -108,6 +114,16 @@ export async function getContributorDashboard(period: DashboardPeriod = '30d') {
     [userId]
   )
 
+  // Soumissions de l'utilisateur (nouveau système)
+  const mySubmissionsRes = await query(
+    `SELECT id, title, matiere, "examType", "anneeScolaire", 
+            serie, status, "createdAt", "updatedAt"
+     FROM "SubjectSubmission"
+     WHERE "authorId" = $1
+     ORDER BY "createdAt" DESC`,
+    [userId]
+  )
+
   const currentSales = parseInt(currentRes.rows[0]?.sales || '0', 10)
   const currentRevenue = parseInt(currentRes.rows[0]?.revenue || '0', 10)
   const prevSales = parseInt(prevRes.rows[0]?.sales || '0', 10)
@@ -118,12 +134,17 @@ export async function getContributorDashboard(period: DashboardPeriod = '30d') {
     return Math.round(((curr - prev) / prev) * 1000) / 10 // 1 décimale
   }
 
+  const submissionsPendingCount = parseInt(submissionsPendingRes.rows[0].count)
+  const subjectsPendingCount = parseInt(subjectsPendingRes.rows[0].count)
+
   return {
     user,
     period,
     kpi: {
       published: parseInt(subjectsPublishedRes.rows[0].count),
-      pending: parseInt(subjectsPendingRes.rows[0].count),
+      pending: subjectsPendingCount,
+      pendingSubmissions: submissionsPendingCount,
+      totalPending: subjectsPendingCount + submissionsPendingCount,
       sales: currentSales,
       revenue: currentRevenue,
       averageRating: parseFloat(ratingRes.rows[0]?.avg_rating || '0'),
@@ -132,6 +153,7 @@ export async function getContributorDashboard(period: DashboardPeriod = '30d') {
       salesTrend: computeTrend(currentSales, prevSales)
     },
     topSubjects: topSubjectsRes.rows,
-    allSubjects: allSubjectsRes.rows
+    allSubjects: allSubjectsRes.rows,
+    submissions: mySubmissionsRes.rows
   }
 }

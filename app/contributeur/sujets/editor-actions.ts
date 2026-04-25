@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { notifyAdmins } from '@/lib/notifications'
 import crypto from 'crypto'
 
 async function getAuthenticatedContributor() {
@@ -276,7 +277,19 @@ export async function submitSubject(id: string) {
       'UPDATE "SubjectSubmission" SET status = $1, "updatedAt" = NOW() WHERE id = $2',
       ['SUBMITTED', id]
     )
+
+    // Notifier les administrateurs qu'une soumission attend validation
+    await notifyAdmins({
+      type: 'SUBMISSION_PENDING',
+      title: 'Nouvelle soumission à valider',
+      body: `« ${sub.title || 'Sans titre'} » — ${sub.matiere || 'Matière inconnue'}`,
+      link: `/admin/sujets/${id}/review`,
+      metadata: { submissionId: id, authorId: contributor.userId },
+    })
+
     revalidatePath('/contributeur/sujets')
+    revalidatePath('/admin/soumissions')
+    revalidatePath('/notifications')
     return { success: true as const }
   } catch (error) {
     console.error('submitSubject:', error)

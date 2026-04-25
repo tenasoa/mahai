@@ -15,6 +15,12 @@ export interface ModalProps {
   closeOnEsc?: boolean
   showCloseButton?: boolean
   ariaLabel?: string
+  /**
+   * Désactive la fermeture (overlay/Esc/bouton ✕) le temps qu'une opération
+   * asynchrone se termine. Utile pour les modales de confirmation pendant
+   * un appel réseau.
+   */
+  isLoading?: boolean
 }
 
 export function Modal({
@@ -28,6 +34,7 @@ export function Modal({
   closeOnEsc = true,
   showCloseButton = true,
   ariaLabel,
+  isLoading = false,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElement = useRef<Element | null>(null)
@@ -35,7 +42,7 @@ export function Modal({
   // Trap focus inside modal
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!closeOnEsc) return
+      if (!closeOnEsc || isLoading) return
 
       if (e.key === 'Escape') {
         e.preventDefault()
@@ -62,7 +69,7 @@ export function Modal({
         }
       }
     },
-    [onClose, closeOnEsc]
+    [onClose, closeOnEsc, isLoading]
   )
 
   useEffect(() => {
@@ -100,7 +107,7 @@ export function Modal({
   }, [isOpen, handleKeyDown])
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (closeOnOverlayClick && e.target === e.currentTarget) {
+    if (closeOnOverlayClick && !isLoading && e.target === e.currentTarget) {
       onClose()
     }
   }
@@ -121,7 +128,7 @@ export function Modal({
         className={`${styles.content} ${styles[size]}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {(title || showCloseButton) && (
+        {(title || (showCloseButton && !isLoading)) && (
           <div className={styles.header}>
             {title && (
               <div>
@@ -132,7 +139,7 @@ export function Modal({
               </div>
             )}
 
-            {showCloseButton && (
+            {showCloseButton && !isLoading && (
               <button
                 onClick={onClose}
                 className={styles.closeButton}

@@ -17,10 +17,14 @@ async function getContributorSubjects() {
     redirect('/dashboard')
   }
 
-  // Récupérer tous les sujets de l'utilisateur
+  // Récupérer tous les sujets de l'utilisateur — inclut les métadonnées
+  // enrichies copiées depuis SubjectSubmission lors de la publication.
   const subjectsResult = await query(
-    `SELECT s.id, s.titre, s.matiere, s.difficulte as grade, s.annee as year, 
+    `SELECT s.id, s.titre, s.matiere, s.difficulte as grade, s.annee as year,
             s.serie as series, s.format, s.credits, s.status, s."createdAt",
+            s.duree, s.coefficient, s.filiere, s.niveau,
+            s."examType", s."anneeScolaire", s."dateOfficielle",
+            s."customMeta",
             COUNT(p.id) as ventes,
             s.credits * COUNT(p.id) as revenus
      FROM "Subject" s
@@ -50,10 +54,35 @@ async function getContributorSubjects() {
     stats[row.status.toLowerCase() === 'published' ? 'published' : row.status.toLowerCase() === 'pending' ? 'pending' : row.status.toLowerCase() === 'rejected' ? 'rejected' : 'draft'] = parseInt(row.count)
   })
 
+  // Récupérer les soumissions (SubjectSubmission) — tous statuts
+  const submissionsResult = await query(
+    `SELECT id, title, matiere, "examType", "anneeScolaire", serie,
+            prix, status, notes, "reviewedAt", "createdAt",
+            'SUBMISSION' as source
+     FROM "SubjectSubmission"
+     WHERE "authorId" = $1
+     ORDER BY "createdAt" DESC`,
+    [session.user.id]
+  )
+
+  // Compter les soumissions par statut
+  const submissionStats = { submitted: 0, draft: 0, revision: 0 }
+  submissionsResult.rows.forEach((row: any) => {
+    if (row.status === 'SUBMITTED') submissionStats.submitted++
+    else if (row.status === 'DRAFT') submissionStats.draft++
+    else if (row.status === 'REVISION_REQUESTED') submissionStats.revision++
+  })
+
   return {
     user,
     subjects: subjectsResult.rows,
-    stats
+    submissions: submissionsResult.rows,
+    stats: {
+      ...stats,
+      submitted: submissionStats.submitted,
+      submissionDrafts: submissionStats.draft,
+      revisionRequested: submissionStats.revision
+    }
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
+import { notify } from '@/lib/notifications'
 
 async function checkAdmin() {
   const supabase = await createSupabaseServerClient()
@@ -111,24 +112,56 @@ export async function processWithdrawal(id: string, action: 'approve' | 'reject'
   }
 
   try {
+    // Récupérer infos du retrait pour notifier l'utilisateur
+    const withdrawalRes = await query(
+      `SELECT "userId", amount, "paymentMethod" FROM "Withdrawal" WHERE id = $1 LIMIT 1`,
+      [id]
+    )
+    const withdrawal = withdrawalRes.rows[0]
+
     if (action === 'approve') {
       await query(`
-        UPDATE "Withdrawal" 
+        UPDATE "Withdrawal"
         SET status = 'PROCESSING', "processedAt" = NOW()
         WHERE id = $1
       `, [id])
     } else if (action === 'reject') {
       await query(`
-        UPDATE "Withdrawal" 
+        UPDATE "Withdrawal"
         SET status = 'FAILED', "rejectionReason" = $2, "processedAt" = NOW()
         WHERE id = $1
       `, [id, reason || ''])
     } else if (action === 'send') {
       await query(`
-        UPDATE "Withdrawal" 
+        UPDATE "Withdrawal"
         SET status = 'COMPLETED', "transactionId" = $2, "processedAt" = NOW()
         WHERE id = $1
       `, [id, `TXN-${Date.now()}`])
+    }
+
+    // Notification au contributeur
+    if (withdrawal?.userId) {
+      const amountFr = Number(withdrawal.amount || 0).toLocaleString('fr-FR')
+      if (action === 'reject') {
+        await notify({
+          userId: withdrawal.userId,
+          type: 'WITHDRAWAL_REJECTED',
+          title: 'Retrait refusé',
+          body: `Votre demande de ${amountFr} Ar a été refusée${reason ? ` — ${reason}` : '.'}`,
+          link: '/contributeur/retraits',
+          metadata: { withdrawalId: id, reason: reason || null },
+        })
+      } else if (action === 'send') {
+        await notify({
+          userId: withdrawal.userId,
+          type: 'WITHDRAWAL_APPROVED',
+          title: 'Retrait envoyé',
+          body: `${amountFr} Ar viennent d'être envoyés via ${withdrawal.paymentMethod || 'Mobile Money'}.`,
+          link: '/contributeur/retraits',
+          metadata: { withdrawalId: id },
+        })
+      }
+      // 'approve' = passage en PROCESSING, pas encore de notif terminale
     }
 
     return { success: true }
@@ -146,14 +179,37 @@ export async function runBulkPayments(withdrawalIds: string[]) {
 
   try {
     const placeholders = withdrawalIds.map((_, i) => `$${i + 1}`).join(',')
+
+    // Charger les destinataires AVANT update pour notifier après
+    const recipientsRes = await query(
+      `SELECT id, "userId", amount, "paymentMethod"
+       FROM "Withdrawal"
+       WHERE id IN (${placeholders})
+         AND status IN ('PENDING', 'PROCESSING')`,
+      withdrawalIds
+    )
+
     await query(`
-      UPDATE "Withdrawal" 
-      SET status = 'COMPLETED', 
+      UPDATE "Withdrawal"
+      SET status = 'COMPLETED',
           "transactionId" = 'BULK-' || EXTRACT(EPOCH FROM NOW())::TEXT,
           "processedAt" = NOW()
       WHERE id IN (${placeholders})
         AND status IN ('PENDING', 'PROCESSING')
     `, withdrawalIds)
+
+    // Notifier chaque contributeur du paiement reçu
+    for (const w of recipientsRes.rows) {
+      const amountFr = Number(w.amount || 0).toLocaleString('fr-FR')
+      await notify({
+        userId: w.userId,
+        type: 'WITHDRAWAL_APPROVED',
+        title: 'Retrait envoyé',
+        body: `${amountFr} Ar viennent d'être envoyés via ${w.paymentMethod || 'Mobile Money'}.`,
+        link: '/contributeur/retraits',
+        metadata: { withdrawalId: w.id, batched: true },
+      })
+    }
 
     return { success: true, message: `${withdrawalIds.length} paiements envoyés` }
   } catch (error) {

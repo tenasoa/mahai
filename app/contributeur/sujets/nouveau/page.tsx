@@ -16,7 +16,7 @@ export default async function NouveauSujetPage() {
   const userRes = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
   const user = userRes.rows[0]
 
-  if (!user || !['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR'].includes(user.role)) {
+  if (!user || !['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR', 'VALIDATEUR', 'VERIFICATEUR'].includes(user.role)) {
     redirect('/dashboard')
   }
 

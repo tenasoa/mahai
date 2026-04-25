@@ -1,6 +1,7 @@
 import { getSubjectsAdmin } from '@/actions/admin/subjects'
+import { getPendingSubmissions } from '@/actions/admin/submissions'
 import Link from 'next/link'
-import { FileText, CheckCircle2, AlertCircle, XCircle, ArrowRight, FolderOpen } from 'lucide-react'
+import { FileText, CheckCircle2, AlertCircle, XCircle, ArrowRight, FolderOpen, Clock } from 'lucide-react'
 import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
 import { AdminPaginationLinks } from '@/components/admin/AdminPaginationLinks'
 import { AdminSearchBar } from '@/components/admin/AdminSearchBar'
@@ -36,7 +37,18 @@ export default async function AdminSubjectsPage({
   const page = sp.page ? parseInt(sp.page, 10) : 1
   const searchTerm = sp.q?.trim() || ''
 
+  // Fetch subjects from Subject table
   const { subjects, pagination } = await getSubjectsAdmin(statusTab, undefined, page, PAGE_SIZE, searchTerm)
+  
+  // Fetch pending submissions from SubjectSubmission table when on PENDING tab
+  let pendingSubmissions: any[] = []
+  if (statusTab === 'PENDING' || statusTab === 'ALL') {
+    try {
+      pendingSubmissions = await getPendingSubmissions()
+    } catch (e) {
+      // Silently fail if user is not admin (already handled in getSubjectsAdmin)
+    }
+  }
 
   if (page > pagination.totalPages && pagination.totalPages > 0) {
     const qParam = searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''
@@ -46,7 +58,7 @@ export default async function AdminSubjectsPage({
   const qParam = searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : ''
 
   // Compter par statut pour les badges
-  const pendingCount = statusTab === 'PENDING' ? pagination.total : 0
+  const pendingCount = (statusTab === 'PENDING' ? pagination.total : 0) + pendingSubmissions.length
 
   return (
     <div className="admin-page-content">
@@ -118,7 +130,59 @@ export default async function AdminSubjectsPage({
               </tr>
             </thead>
             <tbody>
-              {subjects.length === 0 ? (
+              {/* Pending Submissions from SubjectSubmission table */}
+              {pendingSubmissions.length > 0 && (statusTab === 'PENDING' || statusTab === 'ALL') && (
+                <>
+                  {pendingSubmissions.map((submission) => (
+                    <tr key={submission.id} style={{ background: 'var(--amber-dim)' }}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                          <div className="admin-list-icon" style={{ background: 'var(--amber)', color: '#000', width: 42, height: 42, borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Clock size={18} />
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '0.95rem' }}>{submission.title || 'Sans titre'}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--amber)', fontFamily: 'var(--mono)' }}>
+                              Soumis le {formatDate(submission.createdAt)} • En attente de validation
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-2)' }}>
+                          {submission.matiere} • {submission.examType} ({submission.anneeScolaire})
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--amber)', fontFamily: 'var(--mono)', marginTop: '0.25rem' }}>
+                          {submission.prix} crédits • Soumission contributeur
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div className="sb-av" style={{ width: 32, height: 32, fontSize: '0.75rem' }}>
+                            {(submission.authorPrenom?.charAt(0) || '')}{(submission.authorNom?.charAt(0) || '')}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 500, fontSize: '0.85rem', color: 'var(--amber)' }}>{submission.authorPrenom} {submission.authorNom}</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-4)', fontFamily: 'var(--mono)' }}>{submission.authorEmail}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="status-badge status-amber"><Clock size={12}/> À valider</span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <Link href={`/admin/sujets/${submission.id}/review`} className="admin-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', background: 'var(--amber)', color: '#000' }}>
+                          Réviser
+                          <ArrowRight size={14} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </>
+              )}
+              
+              {/* Existing subjects from Subject table */}
+              {subjects.length === 0 && pendingSubmissions.length === 0 ? (
                 <tr>
                   <td colSpan={5}>
                     <div className="admin-empty-state">

@@ -153,6 +153,23 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
     enabled: true,
   });
 
+  // Compteur de soumissions à valider (rafraîchi à chaque changement de page)
+  const [submissionsCount, setSubmissionsCount] = useState(0);
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const { getPendingSubmissionsCount } = await import('@/actions/admin/submissions')
+        const n = await getPendingSubmissionsCount()
+        if (!cancelled) setSubmissionsCount(n)
+      } catch {
+        /* silencieux */
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [pathname]);
+
   // Persistance du sidebar
   useEffect(() => {
     const saved = localStorage.getItem("mahai_admin_sidebar_collapsed");
@@ -311,7 +328,10 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
                 const isActive =
                   pathname === link.href ||
                   (link.href !== "/admin" && pathname?.startsWith(link.href));
-                const showBadge = link.badge === "credits" && pendingCount > 0;
+                const isCreditsBadge = link.badge === "credits" && pendingCount > 0
+                const isSujetsBadge = link.badge === "sujets" && submissionsCount > 0
+                const showBadge = isCreditsBadge || isSujetsBadge
+                const badgeValue = isCreditsBadge ? pendingCount : isSujetsBadge ? submissionsCount : 0
 
                 return (
                   <Link
@@ -330,7 +350,7 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
                     <span className="sb-link-text">{link.label}</span>
                     {showBadge ? (
                       <span className="sb-notification-badge">
-                        {pendingCount}
+                        {badgeValue}
                       </span>
                     ) : null}
                   </Link>

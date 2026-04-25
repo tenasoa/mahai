@@ -2,6 +2,7 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
+import { notifyAdmins } from '@/lib/notifications'
 
 async function getAuthenticatedContributor() {
   const supabase = await createSupabaseServerClient()
@@ -153,17 +154,26 @@ export async function requestWithdrawal(amount: number, phoneNumber: string, pay
     }
 
     // Créer la demande de retrait
+    const withdrawalId = crypto.randomUUID()
     await query(`
       INSERT INTO "Withdrawal" ("id", "userId", "amount", "phoneNumber", "status", "paymentMethod")
       VALUES ($1, $2, $3, $4, $5, $6)
     `, [
-      crypto.randomUUID(),
+      withdrawalId,
       contributor.userId,
       amount,
       phoneNumber,
       'PENDING',
       paymentMethod
     ])
+
+    await notifyAdmins({
+      type: 'WITHDRAWAL_REQUESTED',
+      title: 'Nouvelle demande de retrait',
+      body: `${amount.toLocaleString('fr-FR')} Ar à traiter (${paymentMethod})`,
+      link: '/admin/retraits',
+      metadata: { withdrawalId, amount, paymentMethod },
+    })
 
     return { success: true, message: 'Demande de retrait envoyée' }
   } catch (error) {

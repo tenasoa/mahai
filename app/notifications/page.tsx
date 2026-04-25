@@ -3,25 +3,26 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { Bell, Check, X, Zap, CreditCard, BookOpen, Settings, AlertTriangle, Sparkles, Library, AlertCircle, Star } from 'lucide-react'
-import { 
-  markAllNotificationsAsReadAction, 
+import {
+  markAllNotificationsAsReadAction,
   dismissNotificationAction,
-  getUserActiveTransactionsAction 
+  getUserNotificationsAction
 } from '@/actions/profile'
 
 interface Notification {
   id: string
-  type: 'correction' | 'credit' | 'sujet' | 'system' | 'mvola' | 'alert'
+  type: string
   title: string
   body: string
   createdAt: string
   read: boolean
   score?: number
   maxScore?: number
-  link?: string
+  link?: string | null
   linkText?: string
 }
 
@@ -41,23 +42,48 @@ export default function NotificationsPage() {
     loadRealNotifications()
   }, [])
 
+  // Realtime : recharger la liste à toute nouvelle notification ou
+  // transaction concernant l'utilisateur connecté.
+  useEffect(() => {
+    if (!userId) return
+    const supabase = createClient()
+    const refresh = () => loadRealNotifications()
+
+    const txChannel = supabase
+      .channel(`notifs-page-tx-${userId}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'CreditTransaction', filter: `userId=eq.${userId}` },
+        refresh
+      )
+      .subscribe()
+
+    const notifChannel = supabase
+      .channel(`notifs-page-notif-${userId}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'Notification', filter: `userId=eq.${userId}` },
+        refresh
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(txChannel)
+      supabase.removeChannel(notifChannel)
+    }
+  }, [userId])
+
   const loadRealNotifications = async () => {
     try {
-      const result = await getUserActiveTransactionsAction()
+      const result = await getUserNotificationsAction()
 
       if (result.success && result.data) {
-        const realNotifications: Notification[] = result.data.map((tx: any) => ({
-          id: tx.id,
-          type: tx.type === 'RECHARGE' ? 'credit' : tx.type === 'ACHAT' ? 'sujet' : 'alert',
-          title: tx.type === 'RECHARGE'
-            ? (tx.status === 'PENDING' ? 'Recharge en attente' : 'Recharge créditée')
-            : tx.type === 'ACHAT'
-            ? 'Achat de sujet'
-            : 'Transaction',
-          body: tx.description || `${tx.type === 'RECHARGE' ? '+' : ''}${tx.creditsCount || Math.abs(tx.amount)} crédits ${tx.status === 'PENDING' ? '(en attente)' : ''}`,
-          createdAt: tx.createdAt,
-          read: tx.isRead || false,
-          link: '/recharge'
+        const realNotifications: Notification[] = result.data.map((n: any) => ({
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          body: n.body,
+          createdAt: n.createdAt,
+          read: Boolean(n.read),
+          link: n.link,
         }))
         setNotifications(realNotifications)
       }
@@ -84,12 +110,48 @@ export default function NotificationsPage() {
     }
   }
 
-  const getNotificationIcon = (type: string) => {
+  // Catégorise un type brut (enum Notification ou type tx) en une famille
+  // utilisée pour les onglets et l'icône.
+  const categorize = (type: string): 'credit' | 'sujet' | 'alert' | 'system' => {
     switch (type) {
+      case 'credit':
+      case 'RECHARGE':
+        return 'credit'
+      case 'sujet':
+      case 'SUBMISSION_PUBLISHED':
+      case 'SUBMISSION_PENDING':
+      case 'REVISION_REQUESTED':
+      case 'APPLICATION_APPROVED':
+      case 'WITHDRAWAL_APPROVED':
+        return 'sujet'
+      case 'alert':
+      case 'SUBMISSION_REJECTED':
+      case 'WITHDRAWAL_REJECTED':
+      case 'WITHDRAWAL_REQUESTED':
+      case 'APPLICATION_REJECTED':
+        return 'alert'
+      default:
+        return 'system'
+    }
+  }
+
+  // Libellé français court pour l'étiquette (« notif-tag »).
+  const tagLabel = (type: string): string => {
+    switch (categorize(type)) {
+      case 'credit': return 'Crédit'
+      case 'sujet':  return 'Sujet'
+      case 'alert':  return 'Alerte'
+      default:       return 'Système'
+    }
+  }
+
+  const getNotificationIcon = (type: string) => {
+    const cat = categorize(type)
+    switch (cat) {
       case 'credit': return { icon: <Sparkles size={16} />, class: 'ni-credit' }
-      case 'sujet': return { icon: <Library size={16} />, class: 'ni-sujet' }
-      case 'alert': return { icon: <AlertCircle size={16} />, class: 'ni-alert' }
-      default: return { icon: <Bell size={16} />, class: 'ni-system' }
+      case 'sujet':  return { icon: <Library size={16} />, class: 'ni-sujet' }
+      case 'alert':  return { icon: <AlertCircle size={16} />, class: 'ni-alert' }
+      default:       return { icon: <Bell size={16} />, class: 'ni-system' }
     }
   }
 
@@ -128,7 +190,7 @@ export default function NotificationsPage() {
 
   const filterNotifications = (type: string) => {
     if (type === 'all') return notifications
-    return notifications.filter(n => n.type === type)
+    return notifications.filter(n => categorize(n.type) === type)
   }
 
   const groupByTime = (notifs: Notification[]) => {
@@ -262,7 +324,7 @@ export default function NotificationsPage() {
                       </div>
                       <div className="notif-meta">
                         <span className="notif-time">{getTimeAgo(notif.createdAt)}</span>
-                        <span className="notif-tag">{notif.type}</span>
+                        <span className="notif-tag">{tagLabel(notif.type)}</span>
                       </div>
                       {notif.link && (
                         <div style={{ marginTop: '0.5rem' }}>

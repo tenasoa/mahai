@@ -98,3 +98,88 @@ export async function requestSubjectDeletion(subjectId: string, reason?: string)
     return { success: false, error: 'Erreur lors de la demande de suppression' }
   }
 }
+
+/**
+ * Annule une soumission en attente de validation.
+ * La soumission repasse en DRAFT et disparaît de la file d'attente admin.
+ * Le contributeur peut ensuite la rééditer.
+ */
+export async function cancelSubmission(submissionId: string) {
+  const contributor = await getAuthenticatedContributor()
+  if (!contributor) return { success: false, error: 'Non autorisé' }
+
+  try {
+    const res = await query(
+      'SELECT "authorId", status, title FROM "SubjectSubmission" WHERE id = $1',
+      [submissionId]
+    )
+    const sub = res.rows[0]
+    if (!sub) return { success: false, error: 'Soumission introuvable' }
+    if (sub.authorId !== contributor.userId) {
+      return { success: false, error: 'Cette soumission ne vous appartient pas' }
+    }
+    if (sub.status !== 'SUBMITTED') {
+      return { success: false, error: "Cette soumission n'est pas en attente de validation" }
+    }
+
+    await query(
+      `UPDATE "SubjectSubmission"
+       SET status = 'DRAFT', "updatedAt" = NOW()
+       WHERE id = $1`,
+      [submissionId]
+    )
+
+    revalidatePath('/contributeur/sujets')
+    revalidatePath('/contributeur')
+    revalidatePath('/admin/soumissions')
+
+    return {
+      success: true,
+      message: 'Soumission annulée — le sujet est repassé en brouillon.',
+    }
+  } catch (error) {
+    console.error('Erreur cancelSubmission:', error)
+    return { success: false, error: "Erreur lors de l'annulation de la soumission" }
+  }
+}
+
+/**
+ * Supprime définitivement un brouillon de soumission (SubjectSubmission.status = DRAFT).
+ * Les images Vercel Blob associées sont supprimées via CASCADE.
+ */
+export async function deleteSubmissionDraft(submissionId: string) {
+  const contributor = await getAuthenticatedContributor()
+  if (!contributor) return { success: false, error: 'Non autorisé' }
+
+  try {
+    const res = await query(
+      'SELECT "authorId", status FROM "SubjectSubmission" WHERE id = $1',
+      [submissionId]
+    )
+    const sub = res.rows[0]
+    if (!sub) return { success: false, error: 'Brouillon introuvable' }
+    if (sub.authorId !== contributor.userId) {
+      return { success: false, error: 'Ce brouillon ne vous appartient pas' }
+    }
+    if (
+      sub.status !== 'DRAFT' &&
+      sub.status !== 'REJECTED' &&
+      sub.status !== 'REVISION_REQUESTED'
+    ) {
+      return {
+        success: false,
+        error: 'Seul un brouillon, un sujet rejeté ou en révision peut être supprimé directement',
+      }
+    }
+
+    await query('DELETE FROM "SubjectSubmission" WHERE id = $1', [submissionId])
+
+    revalidatePath('/contributeur/sujets')
+    revalidatePath('/contributeur')
+
+    return { success: true, message: 'Brouillon supprimé.' }
+  } catch (error) {
+    console.error('Erreur deleteSubmissionDraft:', error)
+    return { success: false, error: 'Erreur lors de la suppression du brouillon' }
+  }
+}
