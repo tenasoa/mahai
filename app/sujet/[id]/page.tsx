@@ -24,6 +24,7 @@ import { getCurrentUserCredits, purchaseCurrentUserSubject } from '@/actions/use
 import { convertSubjectToExamAction } from '@/actions/examen'
 import { SujetDetailSkeleton } from '@/components/ui/PageSkeletons'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
 import './detail.css'
 
 type AccessState = 'locked' | 'unlocked'
@@ -48,6 +49,7 @@ interface SubjectPayload {
   bareme?: number | null
   duree?: string | null
   nbExercices?: number | null
+  content?: any
 }
 
 interface ToastMessage {
@@ -136,7 +138,7 @@ export default function SujetDetailPage() {
         ])
 
         if (subjectData) {
-          setSubject(subjectData)
+          setSubject(subjectData as unknown as SubjectPayload)
           setAccessState(subjectData.isUnlocked ? 'unlocked' : 'locked')
         }
 
@@ -265,7 +267,8 @@ export default function SujetDetailPage() {
       return
     }
 
-    pushToast('info', 'Le téléchargement PDF sera activé avec le stockage sécurisé final.')
+    // Le téléchargement tracé (filigrane unique) vit sur /consult.
+    router.push(`/sujet/${subject?.id}/consult`)
   }
 
   if (loading) {
@@ -407,35 +410,29 @@ export default function SujetDetailPage() {
               <div className="lecture-head">
                 <div>
                   <h2>Lecture du sujet</h2>
-                  <p>Version HTML sans saisie, idéale pour lire calmement l’énoncé.</p>
+                  <p>
+                    {accessState === 'locked'
+                      ? 'Aperçu : les premières parties sont visibles, débloquez pour la suite.'
+                      : 'Version HTML complète, idéale pour lire calmement l’énoncé.'}
+                  </p>
                 </div>
                 <button className="sd-btn-secondary" onClick={handleDownloadPdf}>
                   <Download size={14} /> Télécharger PDF
                 </button>
               </div>
 
-              <div className="lecture-body">
-                <h3>Énoncé</h3>
-                <p>
-                  Exercice 1. Résoudre les questions suivantes avec un raisonnement complet. Toute réponse non justifiée sera partiellement notée.
-                </p>
-                <p>
-                  Exercice 2. Identifier les hypothèses, puis proposer une méthode de résolution adaptée aux données fournies.
-                </p>
-                <p className={accessState === 'locked' ? 'blurred' : ''}>
-                  Exercice 3. Développer la solution détaillée et valider le résultat final avec les unités appropriées.
-                </p>
-                <p className={accessState === 'locked' ? 'blurred' : ''}>
-                  Barème complet et annexe méthodologique disponibles après déblocage.
-                </p>
-              </div>
-
-              {accessState === 'locked' && (
-                <div className="locked-overlay">
-                  <p>Débloquez le sujet pour lire l’intégralité du contenu.</p>
-                  <button className="sd-btn-primary" onClick={requestUnlock}>Débloquer maintenant</button>
-                </div>
-              )}
+              <SubjectRenderer
+                content={subject.content}
+                lockAfter={accessState === 'locked' ? 2 : undefined}
+                lockOverlay={
+                  <div className="lecture-paywall">
+                    <p>Débloquez le sujet pour accéder à l’intégralité du contenu.</p>
+                    <button className="sd-btn-primary" onClick={requestUnlock}>
+                      Débloquer pour {subject.credits} crédits
+                    </button>
+                  </div>
+                }
+              />
             </article>
           )}
 
