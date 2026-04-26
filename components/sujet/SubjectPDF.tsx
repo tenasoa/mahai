@@ -21,6 +21,7 @@ import {
   StyleSheet,
   Font,
 } from '@react-pdf/renderer'
+import type { AICorrectionResult, AICorrectionItem } from '@/lib/ai/schemas'
 
 /* ─────────────────────────────────────────────────────────────────
    Polices : on utilise les polices PDF par défaut (Helvetica) pour
@@ -389,6 +390,126 @@ const styles = StyleSheet.create({
     color: '#888',
     fontStyle: 'italic',
   },
+
+  /* ───── AI CORRECTION (inline après chaque question) ───── */
+  aiCorr: {
+    marginTop: 4,
+    marginBottom: 10,
+    padding: 9,
+    paddingLeft: 12,
+    borderLeftWidth: 2.5,
+    borderLeftColor: '#6EAA8C',
+    borderLeftStyle: 'solid',
+    backgroundColor: '#f5faf7',
+    borderTopRightRadius: 3,
+    borderBottomRightRadius: 3,
+  },
+  aiCorrHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    gap: 6,
+  },
+  aiCorrLabel: {
+    fontSize: 7,
+    color: '#6EAA8C',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: 700,
+  },
+  aiCorrVerdict: {
+    fontSize: 7,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  aiCorrVerdictCorrect:   { color: '#3f7758', backgroundColor: '#dff0e6' },
+  aiCorrVerdictPartial:   { color: '#8a6c1c', backgroundColor: '#fbf1cb' },
+  aiCorrVerdictIncorrect: { color: '#9a3a4f', backgroundColor: '#fbe1e6' },
+  aiCorrVerdictMissing:   { color: '#666',    backgroundColor: '#ececec' },
+  aiCorrVerdictModel:     { color: '#3a6594', backgroundColor: '#e3ecf7' },
+
+  aiCorrUserAnswer: {
+    marginTop: 4,
+    marginBottom: 4,
+    padding: 6,
+    paddingLeft: 9,
+    borderLeftWidth: 1.5,
+    borderLeftColor: '#9bb7e0',
+    borderLeftStyle: 'solid',
+    backgroundColor: '#f0f4fb',
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
+  },
+  aiCorrSubLabel: {
+    fontSize: 6.5,
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 2,
+    fontWeight: 700,
+  },
+  aiCorrText: {
+    fontSize: 10,
+    color: '#222',
+    lineHeight: 1.5,
+  },
+  aiCorrFeedback: {
+    marginTop: 5,
+    paddingTop: 5,
+    borderTopWidth: 0.5,
+    borderTopColor: '#dcebe2',
+    borderTopStyle: 'solid',
+    fontSize: 9.5,
+    color: '#3f5f4e',
+    fontStyle: 'italic',
+    lineHeight: 1.5,
+  },
+  aiLatexInline: {
+    fontFamily: 'Courier',
+    fontSize: 10,
+    color: '#0c0c0e',
+  },
+
+  /* ───── AI SUMMARY (fin de PDF avec corrections) ───── */
+  aiSummary: {
+    marginTop: 24,
+    padding: 14,
+    borderWidth: 0.7,
+    borderColor: '#C9A84C',
+    borderStyle: 'solid',
+    borderRadius: 4,
+    backgroundColor: '#fdfcf6',
+  },
+  aiSummaryTitle: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#0c0c0e',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  aiSummaryRow: {
+    marginTop: 6,
+  },
+  aiSummaryRowLabel: {
+    fontSize: 8,
+    color: '#C9A84C',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: 700,
+    marginBottom: 3,
+  },
+  aiSummaryItem: {
+    fontSize: 10,
+    color: '#222',
+    marginBottom: 2,
+    lineHeight: 1.5,
+  },
 })
 
 /* ─── Watermark composant ───────────────────────────────────────── */
@@ -412,18 +533,101 @@ function renderInline(content: any[]): string {
   return content.map((c) => (typeof c?.text === 'string' ? c.text : '')).join('')
 }
 
+/* ─── AI corrections inline ──────────────────────────────────────── */
+interface RenderState {
+  itemsByOrder: AICorrectionItem[]
+  counter: { value: number }
+  mode: 'SUBMISSION' | 'DIRECT'
+}
+
+const VERDICT_STYLE: Record<string, { label: string; style: any }> = {
+  correct:   { label: 'Correct',         style: styles.aiCorrVerdictCorrect },
+  partial:   { label: 'Partiel',         style: styles.aiCorrVerdictPartial },
+  incorrect: { label: 'Incorrect',       style: styles.aiCorrVerdictIncorrect },
+  missing:   { label: 'Non répondu',     style: styles.aiCorrVerdictMissing },
+  model:     { label: 'Correction modèle', style: styles.aiCorrVerdictModel },
+}
+
+/**
+ * Découpe le texte en segments en alternant texte courant et passages LaTeX
+ * `$...$` ou `$$...$$`. Les LaTeX sont rendus en Courier (pas de KaTeX dans
+ * @react-pdf, donc on affiche le source — fonctionnel et lisible).
+ */
+function renderInlineLatex(text: string): React.ReactNode[] {
+  if (!text) return []
+  // Match $$...$$ d'abord (greedy fail-safe), puis $...$.
+  const re = /(\$\$[\s\S]+?\$\$)|(\$[^$\n]+?\$)/g
+  const parts: React.ReactNode[] = []
+  let last = 0
+  let match: RegExpExecArray | null
+  let i = 0
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > last) {
+      parts.push(text.slice(last, match.index))
+    }
+    parts.push(
+      <Text key={`l-${i++}`} style={styles.aiLatexInline}>
+        {match[0]}
+      </Text>,
+    )
+    last = match.index + match[0].length
+  }
+  if (last < text.length) parts.push(text.slice(last))
+  return parts.length > 0 ? parts : [text]
+}
+
+function CorrectionBlock({
+  item,
+  mode,
+}: {
+  item: AICorrectionItem
+  mode: 'SUBMISSION' | 'DIRECT'
+}): React.ReactElement {
+  const verdict = VERDICT_STYLE[item.verdict] || VERDICT_STYLE.model
+  return (
+    <View style={styles.aiCorr}>
+      <View style={styles.aiCorrHead}>
+        <Text style={styles.aiCorrLabel}>Correction IA</Text>
+        <Text style={[styles.aiCorrVerdict, verdict.style]}>{verdict.label}</Text>
+        {item.score ? (
+          <Text style={{ fontSize: 7, color: '#666', fontFamily: 'Courier' }}>
+            {item.score}
+          </Text>
+        ) : null}
+      </View>
+
+      {mode === 'SUBMISSION' && item.userAnswer ? (
+        <View style={styles.aiCorrUserAnswer}>
+          <Text style={styles.aiCorrSubLabel}>Votre réponse</Text>
+          <Text style={styles.aiCorrText}>{renderInlineLatex(item.userAnswer)}</Text>
+        </View>
+      ) : null}
+
+      <Text style={styles.aiCorrSubLabel}>
+        {mode === 'SUBMISSION' ? 'Solution attendue' : 'Correction'}
+      </Text>
+      <Text style={styles.aiCorrText}>{renderInlineLatex(item.correctAnswer || '')}</Text>
+
+      {item.feedback ? (
+        <Text style={styles.aiCorrFeedback}>{renderInlineLatex(item.feedback)}</Text>
+      ) : null}
+    </View>
+  )
+}
+
 interface NodeProps {
   node: any
   depth?: number
+  state?: RenderState
 }
 
-function NodeRenderer({ node, depth = 0 }: NodeProps): React.ReactElement | null {
+function NodeRenderer({ node, depth = 0, state }: NodeProps): React.ReactElement | null {
   if (!node) return null
   const { type, content, attrs, text } = node
 
   switch (type) {
     case 'doc':
-      return <>{(content || []).map((child: any, i: number) => <NodeRenderer key={i} node={child} />)}</>
+      return <>{(content || []).map((child: any, i: number) => <NodeRenderer key={i} node={child} state={state} />)}</>
 
     case 'paragraph': {
       const t = renderInline(content)
@@ -446,7 +650,10 @@ function NodeRenderer({ node, depth = 0 }: NodeProps): React.ReactElement | null
             <View key={i} style={styles.bullet}>
               <Text style={styles.bulletDot}>{ordered ? `${i + 1}.` : '•'}</Text>
               <View style={{ flex: 1 }}>
-                <NodeRenderer node={{ ...item, type: 'paragraph', content: item.content?.[0]?.content || [] }} />
+                <NodeRenderer
+                  node={{ ...item, type: 'paragraph', content: item.content?.[0]?.content || [] }}
+                  state={state}
+                />
               </View>
             </View>
           ))}
@@ -462,24 +669,25 @@ function NodeRenderer({ node, depth = 0 }: NodeProps): React.ReactElement | null
       )
 
     case 'partie':
+      // Pas de wrap={false} si on a des corrections (peuvent être longues).
       return (
-        <View style={styles.partie} wrap={false}>
+        <View style={styles.partie} wrap={!state}>
           <Text style={styles.partieLabel}>Partie {attrs?.numero || ''}</Text>
           {attrs?.titre ? <Text style={styles.partieTitle}>{attrs.titre}</Text> : null}
-          {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} />)}
+          {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} state={state} />)}
         </View>
       )
 
     case 'exercice':
       return (
-        <View style={styles.exercice} wrap={false}>
+        <View style={styles.exercice} wrap={!state}>
           <View style={styles.exerciceHeader}>
             <Text style={styles.exerciceLabel}>Exercice {attrs?.numero || ''}</Text>
             {attrs?.hasPoints !== false && attrs?.points ? (
               <Text style={styles.exercicePoints}>{attrs.points} pts</Text>
             ) : null}
           </View>
-          {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} />)}
+          {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} state={state} />)}
         </View>
       )
 
@@ -487,20 +695,51 @@ function NodeRenderer({ node, depth = 0 }: NodeProps): React.ReactElement | null
       return (
         <View style={styles.enonce}>
           <Text style={styles.enonceLabel}>Énoncé</Text>
-          {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} />)}
+          {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} state={state} />)}
         </View>
       )
 
-    case 'question':
+    case 'question': {
+      // Lookup correction par ordre d'apparition : Claude renvoie items[]
+      // dans le même ordre que les questions parcourues. Si l'utilisateur a
+      // répondu seulement à certaines questions (mode SUBMISSION), on essaie
+      // de matcher par questionLabel (suffixe Q<num>) avant de retomber sur
+      // l'index.
+      let correction: AICorrectionItem | undefined
+      if (state) {
+        const num = attrs?.numero
+        if (num) {
+          const matchByNum = state.itemsByOrder.find((it) => {
+            const re = new RegExp(`Q\\s*${num}\\b`, 'i')
+            return re.test(it.questionLabel || '')
+          })
+          if (matchByNum) {
+            correction = matchByNum
+            // marquer comme consommé pour éviter de la repiquer
+            state.itemsByOrder = state.itemsByOrder.filter((it) => it !== matchByNum)
+          }
+        }
+        if (!correction) {
+          correction = state.itemsByOrder[state.counter.value]
+          if (correction) state.counter.value++
+        }
+      }
+
       return (
-        <View style={styles.question} wrap={false}>
-          <Text style={styles.questionNum}>{attrs?.numero || '•'}.</Text>
-          <Text style={styles.questionContent}>{renderInline(content)}</Text>
-          {attrs?.hasPoints !== false && attrs?.points ? (
-            <Text style={styles.questionPoints}>({attrs.points} pts)</Text>
+        <View>
+          <View style={styles.question} wrap={false}>
+            <Text style={styles.questionNum}>{attrs?.numero || '•'}.</Text>
+            <Text style={styles.questionContent}>{renderInline(content)}</Text>
+            {attrs?.hasPoints !== false && attrs?.points ? (
+              <Text style={styles.questionPoints}>({attrs.points} pts)</Text>
+            ) : null}
+          </View>
+          {state && correction ? (
+            <CorrectionBlock item={correction} mode={state.mode} />
           ) : null}
         </View>
       )
+    }
 
     case 'annotation': {
       const variant = attrs?.type || 'note'
@@ -512,7 +751,7 @@ function NodeRenderer({ node, depth = 0 }: NodeProps): React.ReactElement | null
       return (
         <View style={[styles.annotation, variantStyle]} wrap={false}>
           <Text style={styles.annotationLabel}>{String(variant).toUpperCase()}</Text>
-          {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} />)}
+          {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} state={state} />)}
         </View>
       )
     }
@@ -579,6 +818,10 @@ interface Props {
   content: any
   meta: SubjectPDFMeta
   trace: SubjectPDFTrace
+  /** Correction IA optionnelle à intégrer inline après chaque question. */
+  aiCorrection?: AICorrectionResult | null
+  /** Mode de la correction — change l'étiquette des blocs (réponse vs. modèle). */
+  aiCorrectionMode?: 'SUBMISSION' | 'DIRECT'
 }
 
 function formatDateFr(iso: string): string {
@@ -593,8 +836,20 @@ function formatDateFr(iso: string): string {
   }
 }
 
-export default function SubjectPDF({ content, meta, trace }: Props) {
+export default function SubjectPDF({ content, meta, trace, aiCorrection, aiCorrectionMode }: Props) {
   const watermarkLabel = trace.userEmail || trace.userName
+
+  // État de rendu des corrections — on consomme items[] au fur et à mesure
+  // qu'on rencontre des nodes `question` dans l'arbre.
+  const renderState: RenderState | undefined = aiCorrection?.items?.length
+    ? {
+        itemsByOrder: [...aiCorrection.items],
+        counter: { value: 0 },
+        mode: aiCorrectionMode || 'DIRECT',
+      }
+    : undefined
+
+  const aiSummary = aiCorrection?.summary
 
   // Liste des métadonnées affichées sur la couverture (filtre les vides).
   const coverRows: { label: string; value: string }[] = [
@@ -674,8 +929,42 @@ export default function SubjectPDF({ content, meta, trace }: Props) {
         </View>
 
         <View>
-          <NodeRenderer node={content} />
+          <NodeRenderer node={content} state={renderState} />
         </View>
+
+        {aiSummary && (aiSummary.totalScore || aiSummary.strengths?.length || aiSummary.improvements?.length) ? (
+          <View style={styles.aiSummary} wrap={false}>
+            <Text style={styles.aiSummaryTitle}>
+              {aiCorrectionMode === 'SUBMISSION' ? 'Bilan de la correction IA' : 'Synthèse pédagogique'}
+            </Text>
+            {aiSummary.totalScore && aiSummary.totalScore !== '—' ? (
+              <View style={styles.aiSummaryRow}>
+                <Text style={styles.aiSummaryRowLabel}>Note globale</Text>
+                <Text style={[styles.aiSummaryItem, { fontWeight: 700, fontFamily: 'Courier' }]}>
+                  {aiSummary.totalScore}
+                </Text>
+              </View>
+            ) : null}
+            {aiSummary.strengths?.length ? (
+              <View style={styles.aiSummaryRow}>
+                <Text style={styles.aiSummaryRowLabel}>Points forts</Text>
+                {aiSummary.strengths.map((s, i) => (
+                  <Text key={i} style={styles.aiSummaryItem}>• {s}</Text>
+                ))}
+              </View>
+            ) : null}
+            {aiSummary.improvements?.length ? (
+              <View style={styles.aiSummaryRow}>
+                <Text style={styles.aiSummaryRowLabel}>
+                  {aiCorrectionMode === 'DIRECT' ? 'Conseils méthodologiques' : 'Axes de progrès'}
+                </Text>
+                {aiSummary.improvements.map((s, i) => (
+                  <Text key={i} style={styles.aiSummaryItem}>• {s}</Text>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         {/* Footer fixé sur chaque page */}
         <View style={styles.pageFooter} fixed>

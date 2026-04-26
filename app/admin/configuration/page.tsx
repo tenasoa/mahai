@@ -488,7 +488,9 @@ export default function AdminConfigurationPage() {
       'onboarding': 'Onboarding',
       'referral': 'Parrainage',
       'payment': 'Paiement',
-      'system': 'Système'
+      'system': 'Système',
+      'ai': 'IA',
+      'contact': 'Contact'
     }
     return categories[cat] || cat
   }

@@ -11,11 +11,14 @@
  *     3. Le filigrane et le pied de page contiennent le code de traçabilité.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Download, Loader2, Bot, GraduationCap } from 'lucide-react'
+import { ArrowLeft, Download, Loader2, GraduationCap, Sparkles } from 'lucide-react'
 import { recordSubjectDownload } from '@/actions/subject-download'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
+import { AICorrectionView } from '@/components/sujet/AICorrectionView'
+import { getLatestAICorrection } from '@/actions/ai-correction'
+import type { AICorrectionResult } from '@/lib/ai/schemas'
 import type { SubjectPDFMeta } from '@/components/sujet/SubjectPDF'
 
 interface ConsultSubject {
@@ -60,6 +63,36 @@ function slugifyForFilename(input: string): string {
 export function ConsultClient({ subject }: Props) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
+  const [aiCorrection, setAiCorrection] = useState<{
+    result: AICorrectionResult
+    mode: 'SUBMISSION' | 'DIRECT'
+    createdAt: string
+  } | null>(null)
+  const [includeCorrection, setIncludeCorrection] = useState<boolean>(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadCorrection() {
+      try {
+        const res = await getLatestAICorrection(subject.id)
+        if (cancelled) return
+        if (res.success && res.data) {
+          setAiCorrection({
+            result: res.data.result,
+            mode: res.data.mode,
+            createdAt: res.data.createdAt,
+          })
+        }
+      } catch (err) {
+        // L'absence de correction ne doit pas bloquer la consultation.
+        console.error('load latest AI correction error:', err)
+      }
+    }
+    void loadCorrection()
+    return () => {
+      cancelled = true
+    }
+  }, [subject.id])
 
   async function handleDownload() {
     if (isDownloading) return
@@ -96,6 +129,7 @@ export function ConsultClient({ subject }: Props) {
         authorName: subject.authorName || undefined,
       }
 
+      const shouldIncludeCorr = includeCorrection && !!aiCorrection
       const blob = await pdf(
         <SubjectPDF
           content={subject.content || { type: 'doc', content: [] }}
@@ -106,6 +140,8 @@ export function ConsultClient({ subject }: Props) {
             userName: trace.data.userName,
             downloadedAt: trace.data.downloadedAt,
           }}
+          aiCorrection={shouldIncludeCorr ? aiCorrection!.result : null}
+          aiCorrectionMode={shouldIncludeCorr ? aiCorrection!.mode : undefined}
         />
       ).toBlob()
 
@@ -144,6 +180,16 @@ export function ConsultClient({ subject }: Props) {
           </div>
 
           <div className="consult-actions">
+            {aiCorrection && (
+              <label className="consult-include-corr">
+                <input
+                  type="checkbox"
+                  checked={includeCorrection}
+                  onChange={(e) => setIncludeCorrection(e.target.checked)}
+                />
+                <span>Inclure la correction IA</span>
+              </label>
+            )}
             <button
               className="consult-btn-primary"
               onClick={handleDownload}
@@ -156,7 +202,10 @@ export function ConsultClient({ subject }: Props) {
                 </>
               ) : (
                 <>
-                  <Download size={16} /> Télécharger le PDF
+                  <Download size={16} />
+                  {aiCorrection && includeCorrection
+                    ? 'Télécharger PDF (sujet + correction)'
+                    : 'Télécharger le PDF'}
                 </>
               )}
             </button>
@@ -173,16 +222,42 @@ export function ConsultClient({ subject }: Props) {
       <main className="consult-main">
         <SubjectRenderer content={subject.content} />
 
-        {(subject.hasCorrectionIa || subject.hasCorrectionProf) && (
+        {aiCorrection && (
+          <section className="consult-ai-section">
+            <header className="consult-ai-section-head">
+              <div>
+                <p className="consult-ai-eyebrow">
+                  <Sparkles size={12} />
+                  {aiCorrection.mode === 'SUBMISSION'
+                    ? 'Votre correction IA'
+                    : 'Correction IA modèle'}
+                </p>
+                <h2>Correction IA générée pour ce sujet</h2>
+              </div>
+              <Link className="consult-ai-link" href={`/sujet/${subject.id}`}>
+                Refaire l'exercice
+              </Link>
+            </header>
+            <AICorrectionView
+              result={aiCorrection.result}
+              mode={aiCorrection.mode}
+              createdAt={aiCorrection.createdAt}
+            />
+          </section>
+        )}
+
+        {!aiCorrection && (subject.hasCorrectionIa || subject.hasCorrectionProf) && (
           <section className="consult-correction-grid">
             {subject.hasCorrectionIa && (
               <div className="consult-corr-card">
                 <div className="consult-corr-head">
-                  <Bot size={20} />
+                  <Sparkles size={20} />
                   <h2>Correction IA</h2>
                 </div>
-                <p>Correction détaillée générée par intelligence artificielle.</p>
-                <button className="consult-corr-btn">Voir la correction IA</button>
+                <p>Lancez une correction IA depuis la page du sujet pour la consulter ici.</p>
+                <Link className="consult-corr-btn" href={`/sujet/${subject.id}`}>
+                  Demander une correction IA
+                </Link>
               </div>
             )}
             {subject.hasCorrectionProf && (
@@ -260,7 +335,17 @@ export function ConsultClient({ subject }: Props) {
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .consult-actions { display: flex; gap: 0.5rem; }
+        .consult-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .consult-include-corr {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.78rem;
+          color: var(--text-2, rgba(255, 255, 255, 0.7));
+          cursor: pointer;
+          user-select: none;
+        }
+        .consult-include-corr input { accent-color: var(--gold, #C9A84C); cursor: pointer; }
         .consult-btn-primary {
           display: inline-flex;
           align-items: center;
@@ -299,6 +384,48 @@ export function ConsultClient({ subject }: Props) {
           max-width: 1080px;
           margin: 0 auto;
           padding: 2rem 1.25rem 4rem;
+        }
+
+        .consult-ai-section {
+          margin-top: 2.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .consult-ai-section-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .consult-ai-section-head h2 {
+          font-family: var(--font-display, serif);
+          font-size: 1.15rem;
+          margin: 0.2rem 0 0;
+          color: var(--text-1, #fff);
+        }
+        .consult-ai-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.7rem;
+          letter-spacing: 1.4px;
+          text-transform: uppercase;
+          color: var(--gold, #C9A84C);
+          margin: 0;
+        }
+        .consult-ai-link {
+          font-size: 0.82rem;
+          color: var(--gold, #C9A84C);
+          text-decoration: none;
+          padding: 0.4rem 0.8rem;
+          border: 1px solid var(--gold-line, rgba(201, 168, 76, 0.35));
+          border-radius: 8px;
+          transition: background 0.2s;
+        }
+        .consult-ai-link:hover {
+          background: var(--gold-dim, rgba(201, 168, 76, 0.08));
         }
 
         .consult-correction-grid {

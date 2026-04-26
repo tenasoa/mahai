@@ -25,10 +25,19 @@ import { convertSubjectToExamAction } from '@/actions/examen'
 import { SujetDetailSkeleton } from '@/components/ui/PageSkeletons'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
+import { AICorrectionView } from '@/components/sujet/AICorrectionView'
+import { extractQuestions, type ExtractedQuestion } from '@/lib/ai/extract-questions'
+import {
+  submitExerciseForCorrection,
+  requestDirectAICorrection,
+  getLatestAICorrection,
+  getAIPrices,
+} from '@/actions/ai-correction'
+import type { AICorrectionResult } from '@/lib/ai/schemas'
 import './detail.css'
 
 type AccessState = 'locked' | 'unlocked'
-type DisplayMode = 'lecture' | 'exercice' | 'solo' | 'groupe'
+type DisplayMode = 'lecture' | 'exercice' | 'solo' | 'groupe' | 'correction'
 
 interface SubjectPayload {
   id: string
@@ -58,45 +67,9 @@ interface ToastMessage {
   message: string
 }
 
-// NOTE: Le vrai contenu des exercices n'est pas encore disponible en base de données.
-// Cette fonction retourne un template d'exemple pour démonstration de l'interface.
-// TODO: Charger les vraies questions depuis la table Subject quand le champ content sera ajouté.
-function createExerciseTemplate(subject: SubjectPayload) {
-  return [
-    {
-      id: 'q1',
-      type: 'text',
-      label: `[DÉMO] Exercice 1 — Notions clés en ${subject.matiere}`,
-      placeholder: 'Votre définition structurée...',
-    },
-    {
-      id: 'q2',
-      type: 'textarea',
-      label: '[DÉMO] Exercice 2 — Résolution guidée',
-      placeholder: 'Rédigez votre raisonnement étape par étape...',
-    },
-    {
-      id: 'q3',
-      type: 'qcm',
-      label: '[DÉMO] Exercice 3 — Choix multiple',
-      options: [
-        'Option A: Méthode directe',
-        'Option B: Méthode par récurrence',
-        'Option C: Méthode graphique',
-      ],
-    },
-    {
-      id: 'q4',
-      type: 'checkbox',
-      label: '[DÉMO] Exercice 4 — Vérifications',
-      options: [
-        'J’ai vérifié les unités',
-        'J’ai justifié chaque étape',
-        'J’ai relu la conclusion',
-      ],
-    },
-  ]
-}
+// Le vrai contenu vient maintenant de subject.content (TipTap JSON) :
+// `extractQuestions(subject.content)` renvoie une question par node `question`
+// avec un identifiant stable utilisé comme clé du formulaire et envoyé à l'IA.
 
 export default function SujetDetailPage() {
   const params = useParams<{ id: string }>()
@@ -115,6 +88,17 @@ export default function SujetDetailPage() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [exerciseAnswers, setExerciseAnswers] = useState<Record<string, string>>({})
   const [toasts, setToasts] = useState<ToastMessage[]>([])
+  const [aiCorrection, setAiCorrection] = useState<{
+    result: AICorrectionResult
+    mode: 'SUBMISSION' | 'DIRECT'
+    createdAt: string
+  } | null>(null)
+  const [isRequestingDirect, setIsRequestingDirect] = useState(false)
+  const [showDirectConfirm, setShowDirectConfirm] = useState(false)
+  const [aiPrices, setAiPrices] = useState<{ priceSubmission: number; priceDirect: number }>({
+    priceSubmission: 3,
+    priceDirect: 8,
+  })
 
   const isGuest = !userId
 
@@ -132,9 +116,11 @@ export default function SujetDetailPage() {
 
       setLoading(true)
       try {
-        const [subjectData, userCredits] = await Promise.all([
+        const [subjectData, userCredits, prices, latestCorr] = await Promise.all([
           getSubjectById(params.id),
           userId ? getCurrentUserCredits() : Promise.resolve(0),
+          getAIPrices().catch(() => ({ priceSubmission: 3, priceDirect: 8 })),
+          userId ? getLatestAICorrection(params.id).catch(() => null) : Promise.resolve(null),
         ])
 
         if (subjectData) {
@@ -143,6 +129,15 @@ export default function SujetDetailPage() {
         }
 
         setCredits(userCredits)
+        setAiPrices(prices)
+
+        if (latestCorr && 'success' in latestCorr && latestCorr.success && latestCorr.data) {
+          setAiCorrection({
+            result: latestCorr.data.result,
+            mode: latestCorr.data.mode,
+            createdAt: latestCorr.data.createdAt,
+          })
+        }
       } catch (error) {
         console.error('load subject error', error)
       } finally {
@@ -153,9 +148,9 @@ export default function SujetDetailPage() {
     void loadSubject()
   }, [params?.id, userId])
 
-  const exerciseTemplate = useMemo(
-    () => (subject ? createExerciseTemplate(subject) : []),
-    [subject],
+  const exerciseQuestions: ExtractedQuestion[] = useMemo(
+    () => (subject?.content ? extractQuestions(subject.content) : []),
+    [subject?.content],
   )
 
   const answeredExerciseCount = useMemo(
@@ -220,16 +215,80 @@ export default function SujetDetailPage() {
   }
 
   const submitExerciseForAI = async () => {
+    if (!subject) return
     if (accessState === 'locked') {
       requestUnlock()
       return
     }
+    if (exerciseQuestions.length === 0) {
+      pushToast('error', 'Aucune question détectée dans ce sujet.')
+      return
+    }
 
     setIsSubmittingExercise(true)
-    setTimeout(() => {
+    try {
+      // Map: clé question (stable) → libellé + réponse — pour que l'IA voit
+      // l'énoncé et la réponse côte à côte.
+      const answersForAI: Record<string, string> = {}
+      for (const q of exerciseQuestions) {
+        const answer = exerciseAnswers[q.key]?.trim()
+        if (answer) answersForAI[q.label] = answer
+      }
+      if (Object.keys(answersForAI).length === 0) {
+        pushToast('error', 'Répondez à au moins une question avant de soumettre.')
+        return
+      }
+
+      const res = await submitExerciseForCorrection(subject.id, answersForAI)
+      if (!res.success) {
+        pushToast('error', res.error)
+        return
+      }
+
+      setAiCorrection({
+        result: res.data.result,
+        mode: 'SUBMISSION',
+        createdAt: new Date().toISOString(),
+      })
+      setCredits(res.data.creditsRemaining)
+      setDisplayMode('correction')
+      pushToast('success', `Correction IA prête. ${res.data.creditsCost} crédits débités.`)
+    } catch (err) {
+      console.error('submit AI correction error:', err)
+      pushToast('error', "L'IA n'a pas pu répondre. Réessayez plus tard.")
+    } finally {
       setIsSubmittingExercise(false)
-      pushToast('success', 'Réponses envoyées à l’IA. Votre correction détaillée sera disponible sous peu.')
-    }, 1300)
+    }
+  }
+
+  const requestDirectCorrection = async () => {
+    if (!subject) return
+    if (accessState === 'locked') {
+      requestUnlock()
+      return
+    }
+    setIsRequestingDirect(true)
+    try {
+      const res = await requestDirectAICorrection(subject.id)
+      if (!res.success) {
+        pushToast('error', res.error)
+        return
+      }
+      setAiCorrection({
+        result: res.data.result,
+        mode: 'DIRECT',
+        createdAt: new Date().toISOString(),
+      })
+      setCredits(res.data.creditsRemaining)
+      setDisplayMode('correction')
+      setShowDirectConfirm(false)
+      pushToast('success', `Correction IA modèle prête. ${res.data.creditsCost} crédits débités.`)
+    } catch (err) {
+      console.error('direct AI correction error:', err)
+      pushToast('error', "L'IA n'a pas pu produire la correction.")
+    } finally {
+      setIsRequestingDirect(false)
+    }
   }
 
   const startSoloExam = async () => {
@@ -298,6 +357,56 @@ export default function SujetDetailPage() {
         title="Authentification requise"
         message="Connectez-vous pour débloquer ce sujet et accéder aux modes avancés."
       />
+
+      {showDirectConfirm && (
+        <div className="sd-overlay" onClick={() => !isRequestingDirect && setShowDirectConfirm(false)}>
+          <div className="sd-modal" onClick={(event) => event.stopPropagation()}>
+            <h3>Demander la correction IA directe</h3>
+            <p className="sd-modal-subtitle">{subject.titre}</p>
+
+            <div className="sd-modal-summary">
+              <div>
+                <span>Coût</span>
+                <strong>{aiPrices.priceDirect} crédits</strong>
+              </div>
+              <div>
+                <span>Votre solde actuel</span>
+                <strong>{credits} crédits</strong>
+              </div>
+              <div className="total">
+                <span>Solde après débit</span>
+                <strong>{credits - aiPrices.priceDirect} crédits</strong>
+              </div>
+            </div>
+
+            <p className="sd-modal-note">
+              L'IA va générer le corrigé complet (toutes les questions résolues, méthodologie incluse).
+              Aucun crédit n'est débité si la génération échoue.
+            </p>
+
+            <div className="sd-modal-actions">
+              <button
+                className="sd-btn-secondary"
+                onClick={() => setShowDirectConfirm(false)}
+                disabled={isRequestingDirect}
+              >
+                Annuler
+              </button>
+              <button
+                className="sd-btn-primary"
+                onClick={requestDirectCorrection}
+                disabled={isRequestingDirect || credits < aiPrices.priceDirect}
+              >
+                {isRequestingDirect
+                  ? 'Génération…'
+                  : credits < aiPrices.priceDirect
+                  ? 'Crédits insuffisants'
+                  : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showPurchaseModal && (
         <div className="sd-overlay" onClick={() => setShowPurchaseModal(false)}>
@@ -440,92 +549,102 @@ export default function SujetDetailPage() {
             <section className="exercise-sheet">
               <div className="exercise-head">
                 <h2>Mode exercice interactif</h2>
-                <p style={{ color: 'var(--gold)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                  ⚠️ Mode démonstration — Le vrai contenu du sujet sera bientôt disponible.
+                <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', marginTop: '0.4rem' }}>
+                  Répondez à chaque question puis envoyez vos réponses à l'IA pour une correction détaillée.
                 </p>
               </div>
 
-              {/* Banner informatif */}
-              <div style={{
-                padding: '1rem 1.25rem',
-                background: 'var(--gold-dim)',
-                border: '1px dashed var(--gold-line)',
-                borderRadius: 'var(--r)',
-                marginBottom: '1.5rem',
-                fontSize: '0.82rem',
-                color: 'var(--text-2)',
-                lineHeight: 1.6
-              }}>
-                <strong style={{ color: 'var(--gold)' }}>Information :</strong> Les exercices affichés ci-dessous
-                sont un <strong>template de démonstration</strong> et ne correspondent pas encore au vrai contenu
-                de ce sujet. La mise en ligne des vraies questions est en cours de préparation.
-              </div>
-
-              {exerciseTemplate.map((item) => (
-                <div className="exercise-item" key={item.id}>
-                  <label>{item.label}</label>
-
-                  {item.type === 'text' && (
-                    <input
-                      value={exerciseAnswers[item.id] || ''}
-                      onChange={(event) => handleExerciseValue(item.id, event.target.value)}
-                      placeholder={item.placeholder}
-                    />
-                  )}
-
-                  {item.type === 'textarea' && (
-                    <textarea
-                      value={exerciseAnswers[item.id] || ''}
-                      onChange={(event) => handleExerciseValue(item.id, event.target.value)}
-                      placeholder={item.placeholder}
-                      rows={5}
-                    />
-                  )}
-
-                  {item.type === 'qcm' && (
-                    <div className="exercise-options">
-                      {item.options?.map((option) => (
-                        <label key={option}>
-                          <input
-                            type="radio"
-                            checked={exerciseAnswers[item.id] === option}
-                            onChange={() => handleExerciseValue(item.id, option)}
-                          />
-                          <span>{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-
-                  {item.type === 'checkbox' && (
-                    <div className="exercise-options">
-                      {item.options?.map((option) => {
-                        const checked = (exerciseAnswers[item.id] || '')
-                          .split(',')
-                          .filter(Boolean)
-                          .includes(option)
-                        return (
-                          <label key={option}>
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => handleCheckboxValue(item.id, option)}
-                            />
-                            <span>{option}</span>
-                          </label>
-                        )
-                      })}
-                    </div>
-                  )}
+              {exerciseQuestions.length === 0 ? (
+                <div style={{
+                  padding: '1.5rem',
+                  background: 'var(--surface)',
+                  borderRadius: 'var(--r)',
+                  textAlign: 'center',
+                  color: 'var(--text-3)',
+                }}>
+                  Ce sujet ne contient pas encore de questions structurées. Utilisez la correction IA directe ci-dessous.
                 </div>
-              ))}
+              ) : (
+                <>
+                  {exerciseQuestions.map((q) => (
+                    <div className="exercise-item" key={q.key}>
+                      <label>
+                        <strong style={{ color: 'var(--gold)' }}>{q.label}</strong>
+                        {q.points ? <span style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}> · {q.points} pts</span> : null}
+                        <span style={{ display: 'block', marginTop: '0.35rem' }}>{q.text}</span>
+                      </label>
+                      <textarea
+                        value={exerciseAnswers[q.key] || ''}
+                        onChange={(event) => handleExerciseValue(q.key, event.target.value)}
+                        placeholder="Rédigez votre réponse ici…"
+                        rows={4}
+                      />
+                    </div>
+                  ))}
 
-              <div className="exercise-footer">
-                <span>{answeredExerciseCount} / {exerciseTemplate.length} questions remplies</span>
-                <button className="sd-btn-primary" onClick={submitExerciseForAI} disabled={isSubmittingExercise || accessState === 'locked'}>
-                  {isSubmittingExercise ? 'Soumission...' : accessState === 'locked' ? 'Débloquez le sujet pour soumettre' : "Soumettre à l'IA"}
+                  <div className="exercise-footer">
+                    <span>
+                      {answeredExerciseCount} / {exerciseQuestions.length} questions remplies
+                      {' '}· <strong style={{ color: 'var(--gold)' }}>{aiPrices.priceSubmission} crédits</strong>
+                    </span>
+                    <button className="sd-btn-primary" onClick={submitExerciseForAI} disabled={isSubmittingExercise || accessState === 'locked'}>
+                      {isSubmittingExercise ? 'Correction en cours…' : accessState === 'locked' ? 'Débloquez pour soumettre' : `Soumettre à l'IA (${aiPrices.priceSubmission} cr.)`}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              <div style={{
+                marginTop: '1.5rem',
+                padding: '1rem',
+                background: 'rgba(155, 183, 224, 0.06)',
+                border: '1px dashed rgba(155, 183, 224, 0.3)',
+                borderRadius: 'var(--r)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '1rem',
+                flexWrap: 'wrap',
+              }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <p style={{ margin: 0, fontWeight: 500 }}>Correction IA directe</p>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-3)' }}>
+                    Obtenez le corrigé complet sans rédiger vos réponses (coût plus élevé).
+                  </p>
+                </div>
+                <button
+                  className="sd-btn-secondary"
+                  onClick={() => setShowDirectConfirm(true)}
+                  disabled={isRequestingDirect || accessState === 'locked'}
+                >
+                  <Sparkles size={14} />
+                  {isRequestingDirect ? 'Génération…' : `Correction directe (${aiPrices.priceDirect} cr.)`}
                 </button>
               </div>
+            </section>
+          )}
+
+          {displayMode === 'correction' && aiCorrection && (
+            <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button
+                  className="sd-btn-secondary"
+                  onClick={() => setDisplayMode(aiCorrection.mode === 'SUBMISSION' ? 'exercice' : 'lecture')}
+                >
+                  ← Retour
+                </button>
+                <button
+                  className="sd-btn-primary"
+                  onClick={() => router.push(`/sujet/${subject.id}/consult`)}
+                >
+                  <Download size={14} /> Télécharger le PDF (sujet + correction)
+                </button>
+              </div>
+              <AICorrectionView
+                result={aiCorrection.result}
+                mode={aiCorrection.mode}
+                createdAt={aiCorrection.createdAt}
+              />
             </section>
           )}
 
