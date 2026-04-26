@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
 import { ToastContainer } from '@/components/ui/ToastContainer'
+import { AIProviderPanel } from '@/components/admin/AIProviderPanel'
 import { useToast } from '@/lib/hooks/useToast'
 import { CurrencyConverter } from '@/lib/currency-converter'
 
@@ -63,7 +64,7 @@ type SystemSetting = {
   isEditable: boolean
 }
 
-type TabType = 'phones' | 'packs' | 'conversion' | 'settings' | 'contact'
+type TabType = 'phones' | 'packs' | 'conversion' | 'settings' | 'contact' | 'ai'
 
 type ContactInfo = {
   generalEmail: string
@@ -94,7 +95,7 @@ export default function AdminConfigurationPage() {
   const searchParams = useSearchParams()
   const initialTab = (searchParams.get('tab') as TabType) || 'phones'
   const [activeTab, setActiveTab] = useState<TabType>(
-    ['phones', 'packs', 'conversion', 'settings', 'contact'].includes(initialTab) ? initialTab : 'phones'
+    ['phones', 'packs', 'conversion', 'settings', 'contact', 'ai'].includes(initialTab) ? initialTab : 'phones'
   )
 
   // Sync tab with URL
@@ -229,7 +230,7 @@ export default function AdminConfigurationPage() {
         } finally {
           setHistoryLoading(false)
         }
-      } else if (activeTab === 'settings') {
+      } else if (activeTab === 'settings' || activeTab === 'ai') {
         const res = await fetch('/api/admin/settings')
         if (res.ok) {
           const data = await res.json()
@@ -540,6 +541,13 @@ export default function AdminConfigurationPage() {
         >
           <Settings size={16} />
           Paramètres Système
+        </button>
+        <button
+          onClick={() => changeTab('ai')}
+          className={`admin-tab ${activeTab === 'ai' ? 'admin-tab-active' : ''}`}
+        >
+          <Star size={16} />
+          IA (provider)
         </button>
         <button
           onClick={() => changeTab('contact')}
@@ -1584,6 +1592,106 @@ export default function AdminConfigurationPage() {
                 </table>
               </div>
             )}
+          </>
+        )}
+
+        {/* AI TAB */}
+        {activeTab === 'ai' && (
+          <>
+            <div className="admin-card-header">
+              <h3 className="admin-card-title">Configuration IA</h3>
+            </div>
+
+            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <AIProviderPanel
+                onChange={() => {
+                  // Recharge les settings pour rafraîchir la valeur de ai.provider
+                  // dans la liste éditable en dessous.
+                  void fetch('/api/admin/settings')
+                    .then((r) => r.json())
+                    .then((d) => setSettings(d.settings || []))
+                    .catch(() => {})
+                }}
+              />
+
+              <section>
+                <h4 style={{
+                  fontSize: '0.95rem',
+                  margin: '0 0 0.75rem',
+                  color: 'var(--text-1)',
+                  fontFamily: 'var(--font-display, serif)',
+                  fontWeight: 600,
+                }}>
+                  Paramètres IA détaillés
+                </h4>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-3)', margin: '0 0 1rem' }}>
+                  Tarifs (en crédits), modèles par provider et niveau d'effort. Modifiez la valeur souhaitée puis cliquez sur l'icône pour confirmer.
+                </p>
+
+                {loading ? (
+                  <div className="admin-empty-state">
+                    <Loader2 className="animate-spin" size={28} />
+                    <p>Chargement…</p>
+                  </div>
+                ) : settings.filter((s) => s.category === 'ai').length === 0 ? (
+                  <div className="admin-empty-state">
+                    <Settings size={36} style={{ opacity: 0.5 }} />
+                    <p>Aucun paramètre IA — appliquez la migration <code>20260427_ai_providers.sql</code>.</p>
+                  </div>
+                ) : (
+                  <div className="table-wrapper">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Paramètre</th>
+                          <th>Valeur</th>
+                          <th>Type</th>
+                          <th style={{ textAlign: 'right' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {settings
+                          .filter((s) => s.category === 'ai')
+                          .map((setting) => (
+                            <tr key={setting.id}>
+                              <td>
+                                <div style={{ fontWeight: 500 }}>{setting.label || setting.key}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                                  <code style={{
+                                    fontFamily: 'var(--font-mono, monospace)',
+                                    fontSize: '0.7rem',
+                                    color: 'var(--gold)',
+                                  }}>{setting.key}</code>
+                                  {setting.description ? ` — ${setting.description}` : ''}
+                                </div>
+                              </td>
+                              <td style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.88rem' }}>
+                                {setting.value}
+                              </td>
+                              <td>
+                                <span className="status-badge status-gray">{setting.type}</span>
+                              </td>
+                              <td style={{ textAlign: 'right' }}>
+                                {setting.isEditable ? (
+                                  <button
+                                    className="admin-btn admin-btn-sm admin-btn-outline"
+                                    aria-label={`Modifier ${setting.key}`}
+                                    onClick={() => openEditSetting(setting)}
+                                  >
+                                    <Edit2 size={14} aria-hidden="true" />
+                                  </button>
+                                ) : (
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>Verrouillé</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            </div>
           </>
         )}
 

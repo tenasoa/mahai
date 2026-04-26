@@ -2,53 +2,18 @@
 
 import { transaction, query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { type AICorrectionResult } from '@/lib/ai/schemas'
 import {
-  getAnthropic,
-  DEFAULT_AI_MODEL,
-  DEFAULT_EFFORT,
-  clampEffortForModel,
-  isAnthropicError,
-  type Effort,
-} from '@/lib/ai/claude'
-import {
-  SYSTEM_PROMPT_SUBMISSION,
-  SYSTEM_PROMPT_DIRECT,
-  tiptapToText,
-} from '@/lib/ai/prompts'
-import {
-  AI_CORRECTION_JSON_SCHEMA,
-  type AICorrectionResult,
-} from '@/lib/ai/schemas'
+  loadAIRuntimeConfig,
+  listProviderStatus,
+  getProviderById,
+  type ProviderStatus,
+} from '@/lib/ai/providers/factory'
+import { ProviderError } from '@/lib/ai/providers/types'
 
 /* ─────────────────── Helpers ─────────────────────────────────────────── */
 
 type Mode = 'SUBMISSION' | 'DIRECT'
-
-interface AISettings {
-  priceSubmission: number
-  priceDirect: number
-  model: string
-  effort: Effort
-}
-
-async function loadAISettings(): Promise<AISettings> {
-  const res = await query(
-    `SELECT key, value FROM "SystemSetting" WHERE category = 'ai'`
-  )
-  const map: Record<string, string> = {}
-  for (const row of res.rows) map[row.key] = row.value
-
-  const allowedEfforts: Effort[] = ['low', 'medium', 'high', 'max']
-  const rawEffort = (map['ai.effort'] || DEFAULT_EFFORT) as Effort
-  const effort = allowedEfforts.includes(rawEffort) ? rawEffort : DEFAULT_EFFORT
-
-  return {
-    priceSubmission: parseInt(map['ai.price.submission'] || '3', 10) || 3,
-    priceDirect: parseInt(map['ai.price.direct'] || '8', 10) || 8,
-    model: map['ai.model'] || DEFAULT_AI_MODEL,
-    effort,
-  }
-}
 
 interface SubjectRow {
   id: string
@@ -60,6 +25,29 @@ interface SubjectRow {
   anneeScolaire: string | null
   content: any
   authorId: string
+}
+
+/**
+ * Tarifs IA exposés au client (tarification + provider actif). Pas de fuite
+ * de clé API ; juste le bool « configuré » et le label.
+ */
+export async function getAIPrices(): Promise<{
+  priceSubmission: number
+  priceDirect: number
+  providerLabel: string
+}> {
+  // On ne lève pas si la clé API manque pour le provider actif — on veut
+  // toujours afficher les tarifs sur le UI étudiant.
+  const res = await query(`SELECT key, value FROM "SystemSetting" WHERE category = 'ai'`)
+  const map: Record<string, string> = {}
+  for (const row of res.rows) map[row.key] = row.value
+  const providerId = map['ai.provider'] || 'claude'
+  const providerLabel = getProviderById(providerId)?.label || 'IA'
+  return {
+    priceSubmission: parseInt(map['ai.price.submission'] || '3', 10) || 3,
+    priceDirect: parseInt(map['ai.price.direct'] || '8', 10) || 8,
+    providerLabel,
+  }
 }
 
 async function loadSubjectAndAccess(
@@ -110,127 +98,6 @@ async function loadSubjectAndAccess(
   }
 }
 
-/* ─────────────────── Appel Claude ────────────────────────────────────── */
-
-interface CallClaudeArgs {
-  mode: Mode
-  subject: SubjectRow
-  userAnswers?: Record<string, string>
-  settings: AISettings
-}
-
-async function callClaude({
-  mode,
-  subject,
-  userAnswers,
-  settings,
-}: CallClaudeArgs): Promise<{
-  result: AICorrectionResult
-  tokensIn: number
-  tokensOut: number
-  model: string
-}> {
-  const anthropic = getAnthropic()
-
-  const subjectText = tiptapToText(subject.content)
-  const meta = [
-    `Titre : ${subject.title}`,
-    `Matière : ${subject.matiere}`,
-    subject.examType && `Type : ${subject.examType}`,
-    subject.serie && `Série : ${subject.serie}`,
-    subject.anneeScolaire && `Année : ${subject.anneeScolaire}`,
-    subject.niveau && `Niveau : ${subject.niveau}`,
-  ]
-    .filter(Boolean)
-    .join('\n')
-
-  let userMessage: string
-  if (mode === 'SUBMISSION') {
-    const answersBlock = userAnswers
-      ? Object.entries(userAnswers)
-          .map(([k, v]) => `[${k}]\n${v?.trim() || '(non répondu)'}`)
-          .join('\n\n')
-      : '(aucune réponse fournie)'
-
-    userMessage = `${meta}
-
-ÉNONCÉ DU SUJET :
-${subjectText}
-
-═══════════════════════════════════════
-RÉPONSES DE L'ÉLÈVE :
-${answersBlock}
-═══════════════════════════════════════
-
-Corrige chaque réponse selon le format JSON demandé. Sois précis sur ce qui est correct/incorrect, propose la solution attendue et donne un retour pédagogique.`
-  } else {
-    userMessage = `${meta}
-
-ÉNONCÉ DU SUJET :
-${subjectText}
-
-Fournis la correction modèle complète (toutes les questions résolues), au format JSON demandé.`
-  }
-
-  const system = mode === 'SUBMISSION' ? SYSTEM_PROMPT_SUBMISSION : SYSTEM_PROMPT_DIRECT
-
-  // Adaptive thinking + effort. Pas de prefill (interdit sur Sonnet 4.6).
-  // output_config.format pour garantir la sortie JSON.
-  // Cache : on cache le system prompt (stable) et le contenu du sujet (stable
-  // pour un même sujet, varie entre sujets) — réutilisé entre soumission et
-  // correction directe pour le même sujet pendant 5 min.
-  const response = await anthropic.messages.create({
-    model: settings.model,
-    max_tokens: 16000,
-    thinking: { type: 'adaptive' },
-    output_config: {
-      effort: clampEffortForModel(settings.model, settings.effort),
-      format: { type: 'json_schema', schema: AI_CORRECTION_JSON_SCHEMA },
-    } as any, // SDK n'a pas encore typé output_config.format dans tous les cas
-    system: [
-      { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
-    ],
-    messages: [
-      {
-        role: 'user',
-        content: [{ type: 'text', text: userMessage }],
-      },
-    ],
-  })
-
-  // Extraire le JSON depuis le content (premier bloc texte).
-  const textBlock = response.content.find((b) => b.type === 'text') as
-    | { type: 'text'; text: string }
-    | undefined
-  if (!textBlock) {
-    throw new Error('Réponse IA vide ou inattendue.')
-  }
-
-  let parsed: AICorrectionResult
-  try {
-    parsed = JSON.parse(textBlock.text)
-  } catch {
-    // Fallback : essayer de récupérer le 1er bloc {...}
-    const match = textBlock.text.match(/\{[\s\S]*\}/)
-    if (!match) throw new Error('Sortie IA non-JSON.')
-    parsed = JSON.parse(match[0])
-  }
-
-  if (!parsed?.items || !Array.isArray(parsed.items)) {
-    throw new Error('Sortie IA mal structurée.')
-  }
-
-  return {
-    result: parsed,
-    tokensIn:
-      (response.usage.input_tokens || 0) +
-      (response.usage.cache_read_input_tokens || 0) +
-      (response.usage.cache_creation_input_tokens || 0),
-    tokensOut: response.usage.output_tokens || 0,
-    model: response.model,
-  }
-}
-
 /* ─────────────────── Server actions exportées ────────────────────────── */
 
 export type AICorrectionResponse =
@@ -269,8 +136,21 @@ async function processCorrection(
     }
 
     const { subject, credits } = accessRes
-    const settings = await loadAISettings()
-    const cost = mode === 'SUBMISSION' ? settings.priceSubmission : settings.priceDirect
+
+    // Résout le provider actif (Claude / Perplexity / …) + tarifs.
+    let runtime: Awaited<ReturnType<typeof loadAIRuntimeConfig>>
+    try {
+      runtime = await loadAIRuntimeConfig()
+    } catch (err) {
+      // Provider mal configuré ou clé API absente — message lisible côté UI.
+      console.error('AI runtime config error:', err)
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Configuration IA indisponible.',
+      }
+    }
+
+    const cost = mode === 'SUBMISSION' ? runtime.priceSubmission : runtime.priceDirect
 
     if (credits < cost) {
       return {
@@ -283,23 +163,32 @@ async function processCorrection(
       return { success: false, error: 'Aucune réponse à corriger.' }
     }
 
-    // Appel Claude AVANT de débiter — si l'IA échoue, l'utilisateur ne paie
-    // rien. La fenêtre de race (l'utilisateur lance deux corrections en
-    // parallèle avec exactement le solde nécessaire) est acceptée : la 2e
-    // se fera rejeter par la transaction qui suit.
-    let aiOutput: Awaited<ReturnType<typeof callClaude>>
+    // Appel IA AVANT de débiter — si l'IA échoue, l'utilisateur ne paie rien.
+    // La fenêtre de race (l'utilisateur lance deux corrections en parallèle
+    // avec exactement le solde nécessaire) est acceptée : la 2e sera rejetée
+    // par la transaction qui suit (UPDATE conditionnel).
+    let aiOutput: Awaited<ReturnType<typeof runtime.provider.correct>>
     try {
-      aiOutput = await callClaude({ mode, subject, userAnswers, settings })
+      aiOutput = await runtime.provider.correct({
+        mode,
+        subject,
+        userAnswers,
+        model: runtime.model,
+        effort: runtime.effort,
+      })
     } catch (err) {
       console.error('AI call error:', err)
-      if (isAnthropicError(err)) {
+      if (err instanceof ProviderError) {
         if (err.status === 429) {
           return { success: false, error: 'Service IA saturé, réessayez dans quelques secondes.' }
         }
         if (err.status === 401) {
-          return { success: false, error: 'Configuration serveur invalide (clé API).' }
+          return { success: false, error: `Clé API ${runtime.providerId} invalide ou manquante.` }
         }
-        return { success: false, error: `Erreur IA (${err.status}). Réessayez plus tard.` }
+        return {
+          success: false,
+          error: `Erreur ${runtime.provider.label}${err.status ? ` (${err.status})` : ''}. Réessayez plus tard.`,
+        }
       }
       return { success: false, error: "L'IA n'a pas pu produire une correction valide." }
     }
@@ -388,21 +277,6 @@ export async function requestDirectAICorrection(
 }
 
 /**
- * Expose les tarifs IA (lecture seule) au client. Sert à afficher
- * dynamiquement le coût avant de débiter.
- */
-export async function getAIPrices(): Promise<{
-  priceSubmission: number
-  priceDirect: number
-}> {
-  const settings = await loadAISettings()
-  return {
-    priceSubmission: settings.priceSubmission,
-    priceDirect: settings.priceDirect,
-  }
-}
-
-/**
  * Récupère la dernière correction IA d'un utilisateur sur un sujet (tous modes
  * confondus). Utilisé pour réafficher la correction sans repayer après refresh.
  */
@@ -449,4 +323,72 @@ export async function getLatestAICorrection(
     console.error('getLatestAICorrection error:', err)
     return { success: false, error: 'Erreur serveur.' }
   }
+}
+
+/* ─────────────────── Admin : multi-provider ──────────────────────────── */
+
+async function ensureAdmin(): Promise<{ ok: true; userId: string } | { ok: false; error: string }> {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user?.id) return { ok: false, error: 'Non authentifié.' }
+
+  const res = await query(`SELECT role FROM "User" WHERE id = $1`, [session.user.id])
+  if (!res.rows[0] || res.rows[0].role !== 'ADMIN') {
+    return { ok: false, error: 'Réservé aux administrateurs.' }
+  }
+  return { ok: true, userId: session.user.id }
+}
+
+/**
+ * Renvoie l'état de chaque provider IA (clé API présente, modèle, actif ou
+ * non) — sert à l'UI de bascule dans /admin/configuration.
+ */
+export async function getAIProviderStatus(): Promise<
+  | { success: true; data: { providers: ProviderStatus[]; activeId: string } }
+  | { success: false; error: string }
+> {
+  const adm = await ensureAdmin()
+  if (!adm.ok) return { success: false, error: adm.error }
+  try {
+    const providers = await listProviderStatus()
+    const active = providers.find((p) => p.isActive)
+    return {
+      success: true,
+      data: { providers, activeId: active?.id || 'claude' },
+    }
+  } catch (err) {
+    console.error('getAIProviderStatus error:', err)
+    return { success: false, error: 'Impossible de charger l\'état des providers.' }
+  }
+}
+
+/**
+ * Change le provider IA actif. Refuse si la clé API du nouveau provider
+ * n'est pas configurée — évite que l'admin se tire une balle dans le pied.
+ */
+export async function setAIProvider(
+  providerId: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  const adm = await ensureAdmin()
+  if (!adm.ok) return { success: false, error: adm.error }
+
+  const provider = getProviderById(providerId)
+  if (!provider) {
+    return { success: false, error: `Provider inconnu : "${providerId}".` }
+  }
+  if (!provider.isConfigured()) {
+    return {
+      success: false,
+      error: `Le provider ${provider.label} n'a pas de clé API configurée. Ajoutez ${
+        provider.id === 'claude' ? 'ANTHROPIC_API_KEY' : 'PERPLEXITY_API_KEY'
+      } dans .env.local avant de l'activer.`,
+    }
+  }
+
+  await query(
+    `UPDATE "SystemSetting" SET value = $1, "updatedAt" = NOW() WHERE key = 'ai.provider'`,
+    [provider.id]
+  )
+
+  return { success: true }
 }
