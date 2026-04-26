@@ -9,6 +9,13 @@ import TextAlign from '@tiptap/extension-text-align'
 import Highlight from '@tiptap/extension-highlight'
 import Typography from '@tiptap/extension-typography'
 import Placeholder from '@tiptap/extension-placeholder'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
+import Link from '@tiptap/extension-link'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { common, createLowlight } from 'lowlight'
 import { useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
@@ -23,6 +30,7 @@ import {
   FormulaExtension,
   SchemaExtension,
 } from './extensions'
+import { InlineMathExtension } from './inlineMath'
 import { OutlineItem } from './types'
 
 const lowlight = createLowlight(common)
@@ -101,6 +109,22 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(function EditorCanvas
         placeholder: 'Commencez par insérer une Partie avec ⊕ ou tapez directement…',
       }),
       CodeBlockLowlight.configure({ lowlight }),
+      Subscript,
+      Superscript,
+      Link.configure({
+        // Ouverture en nouvel onglet par défaut, autolink = false (on
+        // déclenche l'ajout via la toolbar pour éviter les surprises).
+        openOnClick: false,
+        autolink: false,
+        HTMLAttributes: {
+          rel: 'noopener noreferrer nofollow',
+          target: '_blank',
+        },
+      }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
       PartieExtension,
       ExerciceExtension,
       EnonceExtension,
@@ -108,6 +132,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(function EditorCanvas
       AnnotationExtension,
       FormulaExtension,
       SchemaExtension,
+      InlineMathExtension,
     ],
     content: initialContent || '',
     immediatelyRender: false,

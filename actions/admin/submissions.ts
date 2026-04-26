@@ -4,6 +4,7 @@ import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { notify } from '@/lib/notifications'
+import { CurrencyConverter } from '@/lib/currency-converter'
 import crypto from 'crypto'
 
 async function checkAdmin() {
@@ -16,6 +17,25 @@ async function checkAdmin() {
   const user = result.rows[0]
   
   return user?.role === 'ADMIN' ? user : null
+}
+
+async function getActiveArPerCredit(): Promise<number> {
+  try {
+    const result = await query(
+      `SELECT "arPerCredit"
+       FROM "CurrencyConfig"
+       WHERE "activeAt" <= NOW()
+       ORDER BY "activeAt" DESC
+       LIMIT 1`
+    )
+
+    const rate = Number(result.rows[0]?.arPerCredit)
+    if (Number.isFinite(rate) && rate > 0) return rate
+  } catch (error) {
+    console.warn('getActiveArPerCredit fallback:', error)
+  }
+
+  return 50
 }
 
 /**
@@ -117,6 +137,12 @@ export async function finalizeAndPublish(
   if (submission.status !== 'SUBMITTED') throw new Error("Cette soumission n'est pas en attente")
 
   const newSubjectId = crypto.randomUUID()
+  const arPrice = Number(submission.prix ?? 0)
+  const rate = await getActiveArPerCredit()
+  const convertedCredits = arPrice > 0
+    ? CurrencyConverter.arToCredits(arPrice, rate)
+    : Math.max(0, Number(finalData.credits || 0))
+  const finalCredits = finalData.badge === 'FREE' ? 0 : convertedCredits
 
   try {
     // Créer le sujet dans la table Subject — recopie l'intégralité des
@@ -153,7 +179,7 @@ export async function finalizeAndPublish(
       finalData.annee,
       finalData.serie || submission.serie || null,
       finalData.pages,
-      finalData.credits,
+      finalCredits,
       finalData.difficulte,
       finalData.badge,
       finalData.description || null,

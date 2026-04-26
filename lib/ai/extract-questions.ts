@@ -36,7 +36,16 @@ export function extractQuestions(content: any): ExtractedQuestion[] {
       nextCtx = { ...ctx, exercice: attrs?.numero ?? '?' }
     } else if (type === 'question') {
       const num = attrs?.numero ?? result.length + 1
-      const text = (children || []).map((c: any) => c?.text || '').join('').trim()
+      // Sérialise le contenu inline en gardant les formules KaTeX inline
+      // sous leur forme `$latex$` (sinon elles disparaîtraient du libellé).
+      const text = (children || [])
+        .map((c: any) => {
+          if (c?.type === 'text') return c.text || ''
+          if (c?.type === 'inlineMath') return `$${c.attrs?.latex || ''}$`
+          return c?.text || ''
+        })
+        .join('')
+        .trim()
       const labelParts: string[] = []
       if (ctx.partie) labelParts.push(`Partie ${ctx.partie}`)
       if (ctx.exercice) labelParts.push(`Ex. ${ctx.exercice}`)

@@ -14,6 +14,7 @@ import {
   ActiveFilters,
 } from "@/components/catalogue";
 import { purchaseCurrentUserSubject } from "@/actions/user";
+import { SubjectRenderer } from "@/components/sujet/SubjectRenderer";
 import "./catalogue.css";
 
 // Types d'examens disponibles
@@ -219,6 +220,7 @@ function CatalogueContent() {
     isUnlocked: subject.isUnlocked,
     isWished: isWished(subject.id),
     description: subject.description,
+    content: subject.content, // Add content field to mappedSubjects
   }));
 
   // Filtres actifs
@@ -390,39 +392,19 @@ function CatalogueContent() {
             </button>
             <h2 id="preview-modal-title" className="catalogue-modal-title">{currentSubject.title}</h2>
             <div className="catalogue-modal-preview catalogue-modal-preview-rich">
-              <div className="preview-sheet">
-                <div className="preview-sheet-head">
-                  <span>{currentSubject.examType}</span>
-                  <span>{currentSubject.year}</span>
-                </div>
-                <div className="preview-sheet-title">{currentSubject.subject}</div>
-                <div className="preview-sheet-lines">
-                  <p>
-                    {currentSubject.description ||
-                      "Exercice 1 — Résoudre les questions suivantes en détaillant vos étapes."}
-                  </p>
-                  <p>
-                    1. Identifier les données du problème et les hypothèses.
-                  </p>
-                  <p>
-                    2. Développer votre raisonnement dans un français clair.
-                  </p>
-                  <p className="preview-sheet-blurred">
-                    3. Justifier votre méthode puis conclure avec le résultat attendu.
-                  </p>
-                  <p className="preview-sheet-blurred">
-                    4. Barème et correction détaillée disponibles après achat.
-                  </p>
-                </div>
-                {currentSubject.pages <= 1 && (
-                  <div className="preview-single-page-note">
-                    Sujet sur une seule page : la partie basse est volontairement floutée.
-                  </div>
-                )}
-              </div>
-              <div className="preview-meta">
+              <div className="preview-meta preview-meta-top">
+                <span>{currentSubject.examType} · {currentSubject.subject}</span>
+                <span>{currentSubject.year}</span>
                 <span>{currentSubject.pages || 1} page(s)</span>
-                <span>Accès total après achat</span>
+              </div>
+              <div className="preview-renderer-wrap">
+                <SubjectRenderer // Replace fake hardcoded preview content with real SubjectRenderer
+                  content={currentSubject.content}
+                  lockAfter={currentSubject.isUnlocked ? undefined : 2}
+                  lockOverlay={
+                    <p className="preview-lock-hint">Achetez ce sujet pour accéder au contenu complet.</p>
+                  }
+                />
               </div>
             </div>
             <button

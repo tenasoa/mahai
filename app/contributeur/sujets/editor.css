@@ -864,6 +864,77 @@
 
 .ed-formula-render { min-height: 42px; display: flex; align-items: center; justify-content: center; }
 
+/* Inline Math (formule KaTeX dans le flux du texte) */
+.ed-inline-math {
+  display: inline;
+  cursor: pointer;
+  padding: 1px 4px;
+  margin: 0 1px;
+  border-radius: 3px;
+  background: rgba(201, 168, 76, 0.06);
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.ed-inline-math:hover {
+  background: rgba(201, 168, 76, 0.14);
+  border-color: var(--gold-line);
+}
+
+.ed-inline-math-selected,
+.ed-inline-math.ProseMirror-selectednode {
+  background: rgba(201, 168, 76, 0.22);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.ed-inline-math-render {
+  display: inline;
+}
+
+.ed-inline-math-render .katex {
+  font-size: 1em;
+}
+
+/* Toggle Inline / Bloc dans KaTeXModal */
+.ed-katex-mode-toggle {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+  padding: 0.3rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid var(--b1);
+}
+
+.ed-katex-mode-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-2);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.ed-katex-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-1);
+}
+
+.ed-katex-mode-btn.active {
+  background: var(--gold-dim);
+  color: var(--gold);
+  border: 1px solid var(--gold-line);
+}
+
 /* Schema */
 .ed-schema {
   border: 2px dashed var(--b1);
@@ -1855,3 +1926,281 @@ body.editor-active {
   .editor-save-badge { padding: 0.2rem 0.4rem; font-size: 0.55rem; }
   .editor-tb-btn { min-width: 30px; width: 30px; height: 30px; }
 }
+
+/* ─── MORE MENU ────────────────────────────────────────────────────── */
+.ed-more-menu {
+  min-width: 200px;
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: menuFadeIn 0.15s ease;
+  padding: 0.25rem 0;
+}
+
+.ed-more-menu-section { padding: 0.25rem 0; }
+
+.ed-more-menu-section-label {
+  padding: 0.35rem 0.85rem 0.15rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-4);
+}
+
+.ed-more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.85rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background 0.1s;
+}
+.ed-more-menu-item:hover,
+.ed-more-menu-item:focus-visible { background: var(--lift); outline: none; }
+.ed-more-menu-item.active { color: var(--gold); }
+
+.ed-more-menu-icon {
+  font-size: 0.8rem;
+  width: 18px;
+  text-align: center;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.ed-more-menu-kbd {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text-4);
+}
+
+.ed-more-menu-sep {
+  height: 1px;
+  background: var(--b1);
+  margin: 0.25rem 0;
+}
+
+/* ─── LINK POPOVER ──────────────────────────────────────────────────── */
+.ed-link-popover {
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  padding: 0.85rem 1rem;
+  min-width: 320px;
+  animation: menuFadeIn 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ed-link-input {
+  width: 100%;
+  background: var(--lift);
+  border: 1px solid var(--b1);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 0.45rem 0.65rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ed-link-input:focus { border-color: var(--gold); }
+
+.ed-link-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* ─── TABLE CONTEXT MENU ─────────────────────────────────────────────── */
+.ed-table-ctx {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  padding: 3px 4px;
+  animation: menuFadeIn 0.12s ease;
+}
+
+.ed-table-ctx-btn {
+  height: 26px;
+  padding: 0 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 0.72rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+.ed-table-ctx-btn:hover { background: var(--lift); color: var(--text); }
+.ed-table-ctx-del { color: var(--ruby) !important; }
+.ed-table-ctx-del:hover { background: rgba(224,85,117,0.12) !important; }
+
+.ed-table-ctx-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--b1);
+  margin: 0 2px;
+}
+
+/* ─── BUBBLE TOOLBAR ─────────────────────────────────────────────────── */
+.ed-bubble-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg, 0 8px 28px rgba(0,0,0,0.3));
+  padding: 4px 5px;
+}
+
+.ed-bubble-btn {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ed-bubble-btn:hover { background: var(--lift); color: var(--text); }
+.ed-bubble-btn.active { background: var(--gold-dim, rgba(255,200,80,0.18)); color: var(--gold); }
+
+.ed-bubble-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--b1);
+  margin: 0 2px;
+}
+
+/* ─── SHORTCUTS MODAL ────────────────────────────────────────────────── */
+.ed-shortcuts-modal {
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: 12px;
+  box-shadow: var(--shadow-xl, 0 24px 64px rgba(0,0,0,0.5));
+  width: min(640px, 96vw);
+  max-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ed-shortcuts-body {
+  overflow-y: auto;
+  padding: 1rem 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 520px) {
+  .ed-shortcuts-body { grid-template-columns: 1fr; }
+}
+
+.ed-shortcuts-section {}
+.ed-shortcuts-section-title {
+  font-size: 0.7rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-4);
+  margin-bottom: 0.5rem;
+}
+
+.ed-shortcuts-table { width: 100%; border-collapse: collapse; }
+.ed-shortcuts-table tr + tr td { border-top: 1px solid var(--b0, rgba(255,255,255,0.05)); }
+.ed-shortcuts-label { padding: 0.3rem 0; font-size: 0.8rem; color: var(--text-2); }
+.ed-shortcuts-kbd { padding: 0.3rem 0; text-align: right; }
+.ed-shortcuts-kbd kbd {
+  display: inline-block;
+  background: var(--lift);
+  border: 1px solid var(--b1);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-3);
+}
+
+/* ─── TABLE STYLES ───────────────────────────────────────────────────── */
+.editor-canvas table,
+.subject-renderer-wrap table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0;
+  font-size: 0.88rem;
+}
+
+.editor-canvas table td,
+.editor-canvas table th,
+.subject-renderer-wrap table td,
+.subject-renderer-wrap table th {
+  border: 1px solid var(--b1);
+  padding: 0.4rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.editor-canvas table th,
+.subject-renderer-wrap table th {
+  background: var(--lift);
+  font-weight: 600;
+  color: var(--text-2);
+  font-size: 0.78rem;
+}
+
+.editor-canvas table tr:nth-child(even) td,
+.subject-renderer-wrap table tr:nth-child(even) td {
+  background: rgba(255,255,255,0.02);
+}
+
+/* Cellule sélectionnée dans l'éditeur */
+.editor-canvas .selectedCell::after {
+  background: rgba(255, 200, 80, 0.15);
+  content: '';
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  position: absolute;
+}
+.editor-canvas td, .editor-canvas th { position: relative; }
+
+/* ─── SUB / SUP ──────────────────────────────────────────────────────── */
+.editor-canvas sub,
+.subject-renderer-wrap sub { font-size: 0.72em; vertical-align: sub; }
+.editor-canvas sup,
+.subject-renderer-wrap sup { font-size: 0.72em; vertical-align: super; }
+
+/* ─── LINKS ──────────────────────────────────────────────────────────── */
+.editor-canvas a,
+.subject-renderer-wrap a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.editor-canvas a:hover,
+.subject-renderer-wrap a:hover { opacity: 0.8; }

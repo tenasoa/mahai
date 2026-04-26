@@ -7,9 +7,23 @@ interface Props {
   onInsertMenu: (e: React.MouseEvent) => void
   onSymbols: (e: React.MouseEvent) => void
   onKaTeX: () => void
+  /** Ouvre la modale KaTeX en mode inline (formule au sein d'un paragraphe). */
+  onKaTeXInline?: () => void
+  /** Ouvre le popover « lien » ancré sur le bouton cliqué. */
+  onLink?: (e: React.MouseEvent) => void
+  /** Ouvre le menu « ⋯ Plus » ancré sur le bouton cliqué. */
+  onMore?: (e: React.MouseEvent) => void
 }
 
-export default function EditorToolbar({ editor, onInsertMenu, onSymbols, onKaTeX }: Props) {
+export default function EditorToolbar({
+  editor,
+  onInsertMenu,
+  onSymbols,
+  onKaTeX,
+  onKaTeXInline,
+  onLink,
+  onMore,
+}: Props) {
   if (!editor) return <div className="editor-toolbar" />
 
   const btn = (
@@ -37,11 +51,27 @@ export default function EditorToolbar({ editor, onInsertMenu, onSymbols, onKaTeX
 
   return (
     <div className="editor-toolbar">
-      {btn('B',  () => editor.chain().focus().toggleBold().run(),     editor.isActive('bold'),      'Gras')}
-      {btn('I',  () => editor.chain().focus().toggleItalic().run(),   editor.isActive('italic'),    'Italique')}
-      {btn('U',  () => editor.chain().focus().toggleUnderline().run(),editor.isActive('underline'), 'Souligné')}
+      {btn('B',  () => editor.chain().focus().toggleBold().run(),     editor.isActive('bold'),      'Gras (⌘B)')}
+      {btn('I',  () => editor.chain().focus().toggleItalic().run(),   editor.isActive('italic'),    'Italique (⌘I)')}
+      {btn('U',  () => editor.chain().focus().toggleUnderline().run(),editor.isActive('underline'), 'Souligné (⌘U)')}
       {btn('S̶', () => editor.chain().focus().toggleStrike().run(),    editor.isActive('strike'),    'Barré')}
       {btn('`',  () => editor.chain().focus().toggleCode().run(),     editor.isActive('code'),      'Code inline')}
+
+      {sep('s-script')}
+
+      {btn('X₂', () => editor.chain().focus().toggleSubscript().run(),   editor.isActive('subscript'),   'Indice (⌘,)')}
+      {btn('X²', () => editor.chain().focus().toggleSuperscript().run(), editor.isActive('superscript'), 'Exposant (⌘.)')}
+
+      {onLink && (
+        <button
+          className={`editor-tb-btn${editor.isActive('link') ? ' active' : ''}`}
+          onClick={onLink}
+          title="Insérer ou modifier un lien (⌘K)"
+          aria-label="Insérer un lien"
+        >
+          🔗
+        </button>
+      )}
 
       {sep('s1')}
 
@@ -77,15 +107,28 @@ export default function EditorToolbar({ editor, onInsertMenu, onSymbols, onKaTeX
       <button
         className="editor-tb-btn editor-tb-btn--wide"
         onClick={onKaTeX}
-        title="Formule mathématique"
+        title="Formule mathématique (bloc centré)"
+        aria-label="Insérer une formule en bloc"
       >
         ∑ Formule
       </button>
+
+      {onKaTeXInline && (
+        <button
+          className="editor-tb-btn editor-tb-btn--wide"
+          onClick={onKaTeXInline}
+          title="Formule inline ($x^2$ dans le texte) — Mod+M"
+          aria-label="Insérer une formule inline"
+        >
+          $ Inline
+        </button>
+      )}
 
       <button
         className="editor-tb-btn editor-tb-btn--wide"
         onClick={onSymbols}
         title="Symboles mathématiques"
+        aria-label="Insérer un symbole"
       >
         → Symboles
       </button>
@@ -96,10 +139,23 @@ export default function EditorToolbar({ editor, onInsertMenu, onSymbols, onKaTeX
         className="editor-tb-btn editor-tb-btn--wide"
         onClick={onInsertMenu}
         title="Insérer un bloc"
+        aria-label="Insérer un bloc structuré"
         style={{ color: 'var(--gold)', borderColor: 'var(--gold-line)' }}
       >
         ⊕ Insérer
       </button>
+
+      {onMore && (
+        <button
+          className="editor-tb-btn"
+          onClick={onMore}
+          title="Plus d'options : titres, tableau, séparateur, citation, code"
+          aria-label="Plus d'options"
+          aria-haspopup="menu"
+        >
+          ⋯
+        </button>
+      )}
     </div>
   )
 }

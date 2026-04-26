@@ -71,6 +71,26 @@
   color: var(--text-3);
 }
 
+.subject-editor-tags {
+  margin-top: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  color: var(--text-3);
+}
+
+.subject-editor-tag {
+  border: 1px solid var(--b1);
+  border-radius: 999px;
+  background: var(--surface);
+  padding: 0.18rem 0.52rem;
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .tag-locked {
   background: var(--ruby-dim);
   border-color: var(--ruby-line);
@@ -81,6 +101,12 @@
   background: var(--sage-dim);
   border-color: var(--sage-line);
   color: var(--sage);
+}
+
+.tag-exam {
+  background: var(--gold-dim);
+  border-color: var(--gold-line);
+  color: var(--gold);
 }
 
 .subject-header h1 {
@@ -96,6 +122,27 @@
   color: var(--text-2);
   line-height: 1.65;
   max-width: 760px;
+}
+
+.subject-etablissement {
+  margin: 0.1rem 0 0.55rem;
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.subject-date-off {
+  margin-top: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .subject-meta {

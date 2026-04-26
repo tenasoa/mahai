@@ -56,7 +56,7 @@ async function loadSubjectAndAccess(
 ): Promise<{ subject: SubjectRow; userRole: string; credits: number } | { error: string }> {
   const res = await query(
     `SELECT
-       s.id, s.title, s.titre, s.matiere, s.niveau, s."examType", s.serie,
+       s.id, s.titre AS title, s.matiere, s.niveau, s."examType", s.serie,
        s."anneeScolaire", s.content, s."authorId",
        u.role AS "viewerRole",
        u.credits AS "viewerCredits",
@@ -121,14 +121,15 @@ async function processCorrection(
   try {
     const supabase = await createSupabaseServerClient()
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-    if (!session?.user?.id) {
+    if (userError || !user?.id) {
       return { success: false, error: 'Non authentifié.' }
     }
 
-    const userId = session.user.id
+    const userId = user.id
 
     const accessRes = await loadSubjectAndAccess(userId, subjectId)
     if ('error' in accessRes) {
@@ -179,6 +180,20 @@ async function processCorrection(
     } catch (err) {
       console.error('AI call error:', err)
       if (err instanceof ProviderError) {
+        const rawMessage = (err.message || '').toLowerCase()
+        const isQuotaError =
+          rawMessage.includes('insufficient_quota') ||
+          rawMessage.includes('exceeded your current quota') ||
+          rawMessage.includes('quota')
+
+        if (isQuotaError) {
+          return {
+            success: false,
+            error:
+              'Le quota API du provider IA actif est épuisé. Réessayez plus tard ou demandez à un administrateur de basculer vers un autre provider (ex: Claude).',
+          }
+        }
+
         if (err.status === 429) {
           return { success: false, error: 'Service IA saturé, réessayez dans quelques secondes.' }
         }
@@ -292,9 +307,10 @@ export async function getLatestAICorrection(
   try {
     const supabase = await createSupabaseServerClient()
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session?.user?.id) return { success: false, error: 'Non authentifié.' }
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+    if (userError || !user?.id) return { success: false, error: 'Non authentifié.' }
 
     const res = await query(
       `SELECT id, mode, "aiResult", "createdAt"
@@ -302,7 +318,7 @@ export async function getLatestAICorrection(
        WHERE "userId" = $1 AND "subjectId" = $2
        ORDER BY "createdAt" DESC
        LIMIT 1`,
-      [session.user.id, subjectId]
+      [user.id, subjectId]
     )
 
     if (res.rows.length === 0) {
@@ -329,14 +345,17 @@ export async function getLatestAICorrection(
 
 async function ensureAdmin(): Promise<{ ok: true; userId: string } | { ok: false; error: string }> {
   const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user?.id) return { ok: false, error: 'Non authentifié.' }
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (userError || !user?.id) return { ok: false, error: 'Non authentifié.' }
 
-  const res = await query(`SELECT role FROM "User" WHERE id = $1`, [session.user.id])
+  const res = await query(`SELECT role FROM "User" WHERE id = $1`, [user.id])
   if (!res.rows[0] || res.rows[0].role !== 'ADMIN') {
     return { ok: false, error: 'Réservé aux administrateurs.' }
   }
-  return { ok: true, userId: session.user.id }
+  return { ok: true, userId: user.id }
 }
 
 /**

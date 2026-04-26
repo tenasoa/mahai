@@ -34,7 +34,7 @@ import type { AICorrectionResult, AICorrectionItem } from '@/lib/ai/schemas'
 const styles = StyleSheet.create({
   /* ───── PAGE & LAYOUT ───── */
   page: {
-    paddingTop: 56,
+    paddingTop: 52,
     paddingBottom: 64,
     paddingHorizontal: 48,
     fontFamily: 'Helvetica',
@@ -69,6 +69,51 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 8,
     maxWidth: 360,
+  },
+
+  compactExamHeader: {
+    marginTop: 4,
+    marginBottom: 10,
+    paddingBottom: 8,
+    borderBottomWidth: 0.7,
+    borderBottomColor: '#d8d2c0',
+    borderBottomStyle: 'solid',
+  },
+  compactExamTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 14,
+  },
+  compactExamCol: {
+    flex: 1,
+    flexDirection: 'column',
+    gap: 2,
+  },
+  compactExamLine: {
+    fontSize: 9,
+    color: '#202020',
+    lineHeight: 1.35,
+  },
+  compactExamLineStrong: {
+    fontSize: 9,
+    color: '#111',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    lineHeight: 1.35,
+  },
+  compactExamTitle: {
+    marginTop: 8,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#0c0c0e',
+    lineHeight: 1.2,
+  },
+  compactExamSubTitle: {
+    marginTop: 2,
+    textAlign: 'center',
+    fontSize: 9,
+    color: '#666',
   },
 
   /* ───── FOOTER (chaque page) ───── */
@@ -235,6 +280,51 @@ const styles = StyleSheet.create({
   bulletDot: {
     width: 12,
     color: '#C9A84C',
+  },
+  blockquote: {
+    marginVertical: 6,
+    padding: 8,
+    paddingLeft: 10,
+    borderLeftWidth: 2,
+    borderLeftColor: '#C9A84C',
+    borderLeftStyle: 'solid',
+    backgroundColor: '#fafaf7',
+  },
+  horizontalRule: {
+    height: 1,
+    backgroundColor: '#d8d2c0',
+    marginVertical: 10,
+  },
+  table: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    marginVertical: 8,
+    borderTopWidth: 0.5,
+    borderLeftWidth: 0.5,
+    borderColor: '#d8d2c0',
+    borderStyle: 'solid',
+  },
+  tableRow: {
+    flexDirection: 'row',
+  },
+  tableCell: {
+    flex: 1,
+    padding: 5,
+    borderRightWidth: 0.5,
+    borderBottomWidth: 0.5,
+    borderColor: '#d8d2c0',
+    borderStyle: 'solid',
+    minHeight: 20,
+  },
+  tableHeader: {
+    backgroundColor: '#f7f7f5',
+    fontWeight: 700,
+  },
+  tableText: {
+    fontSize: 9,
+    color: '#222',
+    lineHeight: 1.4,
   },
 
   /* ─── Partie / Exercice / Question / Énoncé / Annotation / Formula ─── */
@@ -530,14 +620,53 @@ function Watermark({ code, userLabel }: { code: string; userLabel: string }) {
 /* ─── Renderer récursif des nodes TipTap ────────────────────────── */
 function renderInline(content: any[]): string {
   if (!Array.isArray(content)) return ''
-  return content.map((c) => (typeof c?.text === 'string' ? c.text : '')).join('')
+  return content
+    .map((c) => {
+      if (typeof c?.text === 'string') return c.text
+      // Les inlineMath sont aplatis en `$latex$` — repris ensuite par
+      // `renderInlineLatex` qui les met en Courier dans le bloc IA.
+      if (c?.type === 'inlineMath') return `$${c?.attrs?.latex || ''}$`
+      return ''
+    })
+    .join('')
 }
 
 /* ─── AI corrections inline ──────────────────────────────────────── */
 interface RenderState {
-  itemsByOrder: AICorrectionItem[]
+  itemsByOrder?: AICorrectionItem[]
   counter: { value: number }
   mode: 'SUBMISSION' | 'DIRECT'
+  numbering: {
+    partie: number
+    exercice: number
+    question: number
+  }
+}
+
+function resolveNumero(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed || trimmed === '?') return null
+    const parsed = Number(trimmed)
+    if (Number.isFinite(parsed) && parsed > 0) return parsed
+  }
+  return null
+}
+
+function getDisplayNumero(
+  state: RenderState | undefined,
+  key: keyof RenderState['numbering'],
+  rawValue: unknown,
+): number {
+  const parsed = resolveNumero(rawValue)
+  if (!state) return parsed ?? 1
+  if (parsed) {
+    state.numbering[key] = Math.max(state.numbering[key], parsed)
+    return parsed
+  }
+  state.numbering[key] += 1
+  return state.numbering[key]
 }
 
 const VERDICT_STYLE: Record<string, { label: string; style: any }> = {
@@ -632,13 +761,15 @@ function NodeRenderer({ node, depth = 0, state }: NodeProps): React.ReactElement
     case 'paragraph': {
       const t = renderInline(content)
       if (!t) return <Text style={styles.paragraph}> </Text>
-      return <Text style={styles.paragraph}>{t}</Text>
+      // Si le paragraphe contient des `$...$` (formules inline KaTeX),
+      // on les rend en monospace Courier via renderInlineLatex.
+      return <Text style={styles.paragraph}>{renderInlineLatex(t)}</Text>
     }
 
     case 'heading': {
       const level = attrs?.level || 1
       const style = level === 1 ? styles.h1 : level === 2 ? styles.h2 : styles.h3
-      return <Text style={style}>{renderInline(content)}</Text>
+      return <Text style={style}>{renderInlineLatex(renderInline(content))}</Text>
     }
 
     case 'bulletList':
@@ -668,21 +799,64 @@ function NodeRenderer({ node, depth = 0, state }: NodeProps): React.ReactElement
         </View>
       )
 
+    case 'blockquote':
+      return (
+        <View style={styles.blockquote}>
+          {(content || []).map((c: any, i: number) => (
+            <NodeRenderer key={i} node={c} depth={depth + 1} state={state} />
+          ))}
+        </View>
+      )
+
+    case 'horizontalRule':
+      return <View style={styles.horizontalRule} />
+
+    case 'table':
+      return (
+        <View style={styles.table}>
+          {(content || []).map((row: any, rowIndex: number) => (
+            <View key={rowIndex} style={styles.tableRow}>
+              {(row.content || []).map((cell: any, cellIndex: number) => {
+                const isHeader = cell.type === 'tableHeader'
+                const textValue = (cell.content || [])
+                  .map((child: any) =>
+                    child?.type === 'paragraph'
+                      ? renderInline(child.content || [])
+                      : ''
+                  )
+                  .join(' ')
+                  .trim()
+                return (
+                  <View
+                    key={cellIndex}
+                    style={isHeader ? [styles.tableCell, styles.tableHeader] : styles.tableCell}
+                  >
+                    <Text style={styles.tableText}>{renderInlineLatex(textValue)}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          ))}
+        </View>
+      )
+
     case 'partie':
       // Pas de wrap={false} si on a des corrections (peuvent être longues).
+      const partieNumero = getDisplayNumero(state, 'partie', attrs?.numero)
       return (
         <View style={styles.partie} wrap={!state}>
-          <Text style={styles.partieLabel}>Partie {attrs?.numero || ''}</Text>
+          <Text style={styles.partieLabel}>Partie {partieNumero}</Text>
           {attrs?.titre ? <Text style={styles.partieTitle}>{attrs.titre}</Text> : null}
           {(content || []).map((c: any, i: number) => <NodeRenderer key={i} node={c} depth={depth + 1} state={state} />)}
         </View>
       )
 
     case 'exercice':
+      const exerciceNumero = getDisplayNumero(state, 'exercice', attrs?.numero)
       return (
         <View style={styles.exercice} wrap={!state}>
           <View style={styles.exerciceHeader}>
-            <Text style={styles.exerciceLabel}>Exercice {attrs?.numero || ''}</Text>
+            <Text style={styles.exerciceLabel}>Exercice {exerciceNumero}</Text>
             {attrs?.hasPoints !== false && attrs?.points ? (
               <Text style={styles.exercicePoints}>{attrs.points} pts</Text>
             ) : null}
@@ -700,14 +874,15 @@ function NodeRenderer({ node, depth = 0, state }: NodeProps): React.ReactElement
       )
 
     case 'question': {
+      const questionNumero = getDisplayNumero(state, 'question', attrs?.numero)
       // Lookup correction par ordre d'apparition : Claude renvoie items[]
       // dans le même ordre que les questions parcourues. Si l'utilisateur a
       // répondu seulement à certaines questions (mode SUBMISSION), on essaie
       // de matcher par questionLabel (suffixe Q<num>) avant de retomber sur
       // l'index.
       let correction: AICorrectionItem | undefined
-      if (state) {
-        const num = attrs?.numero
+      if (state?.itemsByOrder?.length) {
+        const num = questionNumero
         if (num) {
           const matchByNum = state.itemsByOrder.find((it) => {
             const re = new RegExp(`Q\\s*${num}\\b`, 'i')
@@ -728,8 +903,8 @@ function NodeRenderer({ node, depth = 0, state }: NodeProps): React.ReactElement
       return (
         <View>
           <View style={styles.question} wrap={false}>
-            <Text style={styles.questionNum}>{attrs?.numero || '•'}.</Text>
-            <Text style={styles.questionContent}>{renderInline(content)}</Text>
+            <Text style={styles.questionNum}>{questionNumero}.</Text>
+            <Text style={styles.questionContent}>{renderInlineLatex(renderInline(content))}</Text>
             {attrs?.hasPoints !== false && attrs?.points ? (
               <Text style={styles.questionPoints}>({attrs.points} pts)</Text>
             ) : null}
@@ -841,28 +1016,37 @@ export default function SubjectPDF({ content, meta, trace, aiCorrection, aiCorre
 
   // État de rendu des corrections — on consomme items[] au fur et à mesure
   // qu'on rencontre des nodes `question` dans l'arbre.
-  const renderState: RenderState | undefined = aiCorrection?.items?.length
-    ? {
-        itemsByOrder: [...aiCorrection.items],
-        counter: { value: 0 },
-        mode: aiCorrectionMode || 'DIRECT',
-      }
-    : undefined
+  const renderState: RenderState = {
+    itemsByOrder: aiCorrection?.items?.length ? [...aiCorrection.items] : undefined,
+    counter: { value: 0 },
+    mode: aiCorrectionMode || 'DIRECT',
+    numbering: {
+      partie: 0,
+      exercice: 0,
+      question: 0,
+    },
+  }
 
   const aiSummary = aiCorrection?.summary
 
-  // Liste des métadonnées affichées sur la couverture (filtre les vides).
-  const coverRows: { label: string; value: string }[] = [
-    { label: 'Matière',        value: meta.matiere },
-    { label: 'Type d\'examen', value: [meta.examType, meta.baccType, meta.bepcOption, meta.concoursType].filter(Boolean).join(' · ') },
-    { label: 'Série',          value: meta.serie || '' },
-    { label: 'Année',          value: meta.anneeScolaire || '' },
-    { label: 'Date officielle',value: meta.dateOfficielle || '' },
-    { label: 'Durée',          value: meta.duree || '' },
-    { label: 'Coefficient',    value: meta.coefficient ? String(meta.coefficient) : '' },
-    { label: 'Établissement',  value: [meta.etablissement, meta.filiere, meta.semestre].filter(Boolean).join(' · ') },
-    { label: 'Auteur',         value: meta.authorName || '' },
-  ].filter((r) => r.value && r.value.trim() !== '')
+  const examTypeLine = [meta.examType, meta.baccType, meta.bepcOption, meta.concoursType]
+    .filter(Boolean)
+    .join(' · ')
+
+  const leftHeaderLines = [
+    meta.etablissement || 'RÉPUBLIQUE DE MADAGASCAR',
+    meta.filiere ? `Filière : ${meta.filiere}` : '',
+    meta.authorName ? `Auteur : ${meta.authorName}` : '',
+  ].filter(Boolean)
+
+  const rightHeaderLines = [
+    meta.anneeScolaire ? `Année : ${meta.anneeScolaire}` : '',
+    meta.serie ? `Série : ${meta.serie}` : '',
+    meta.semestre ? `Semestre : ${meta.semestre}` : '',
+    meta.dateOfficielle ? `${meta.dateOfficielle}` : '',
+    meta.duree ? `Durée : ${meta.duree}` : '',
+    meta.coefficient ? `Coefficient : ${meta.coefficient}` : '',
+  ].filter(Boolean)
 
   return (
     <Document
@@ -872,48 +1056,6 @@ export default function SubjectPDF({ content, meta, trace, aiCorrection, aiCorre
       producer="Mah.AI"
       keywords={[meta.matiere, meta.examType, meta.anneeScolaire].filter(Boolean).join(', ')}
     >
-      {/* ───── Page de couverture ───── */}
-      <Page size="A4" style={styles.page}>
-        <Watermark code={trace.watermarkCode} userLabel={watermarkLabel} />
-
-        <View style={styles.cover}>
-          <View>
-            <View style={styles.coverTopBar} />
-            <Text style={styles.coverEyebrow}>SUJET D'EXAMEN</Text>
-            <Text style={styles.coverTitle}>{meta.title}</Text>
-            <Text style={styles.coverSubtitle}>
-              {[meta.matiere, meta.examType, meta.anneeScolaire].filter(Boolean).join(' — ')}
-            </Text>
-
-            <View style={styles.coverDivider} />
-
-            <View style={styles.coverMetaGrid}>
-              {coverRows.map((row, i) => (
-                <View key={i} style={styles.coverMetaRow}>
-                  <Text style={styles.coverMetaLabel}>{row.label}</Text>
-                  <Text style={styles.coverMetaValue}>{row.value}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.coverFooter}>
-            <Text style={styles.coverLogo}>
-              Mah<Text style={styles.coverLogoGold}>◆</Text>AI
-            </Text>
-            <Text style={styles.coverFooterLine}>
-              Plateforme EdTech — sujets d'examens nationaux malgaches
-            </Text>
-            <Text style={styles.coverFooterLine}>
-              Téléchargé le {formatDateFr(trace.downloadedAt)} par {trace.userName}
-            </Text>
-            <Text style={[styles.coverFooterLine, { fontFamily: 'Courier', color: '#C9A84C', marginTop: 6 }]}>
-              Code de traçabilité : {trace.watermarkCode}
-            </Text>
-          </View>
-        </View>
-      </Page>
-
       {/* ───── Page(s) de contenu ───── */}
       <Page size="A4" style={styles.page} wrap>
         <Watermark code={trace.watermarkCode} userLabel={watermarkLabel} />
@@ -929,6 +1071,30 @@ export default function SubjectPDF({ content, meta, trace, aiCorrection, aiCorre
         </View>
 
         <View>
+          <View style={styles.compactExamHeader}>
+            <View style={styles.compactExamTop}>
+              <View style={styles.compactExamCol}>
+                {leftHeaderLines.map((line, idx) => (
+                  <Text key={`l-${idx}`} style={idx === 0 ? styles.compactExamLineStrong : styles.compactExamLine}>
+                    {line}
+                  </Text>
+                ))}
+              </View>
+              <View style={styles.compactExamCol}>
+                {rightHeaderLines.map((line, idx) => (
+                  <Text key={`r-${idx}`} style={styles.compactExamLine}>
+                    {line}
+                  </Text>
+                ))}
+              </View>
+            </View>
+
+            <Text style={styles.compactExamTitle}>{meta.title}</Text>
+            <Text style={styles.compactExamSubTitle}>
+              {[examTypeLine, meta.matiere].filter(Boolean).join(' — ')}
+            </Text>
+          </View>
+
           <NodeRenderer node={content} state={renderState} />
         </View>
 

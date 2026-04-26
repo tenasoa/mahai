@@ -1,0 +1,398 @@
+/* ==========================================================================
+   SUBJECT RENDERER — Styles partagés pour le rendu lecture-seule TipTap.
+   Importé par SubjectRenderer.tsx et donc disponible sur toutes les pages
+   qui affichent le contenu d'un sujet (detail, consult, catalogue preview).
+   ========================================================================== */
+
+/* ─── CANVAS WRAPPER ──────────────────────────────────────────────── */
+.editor-canvas-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.editor-canvas {
+  background: var(--card);
+  border: 1px solid var(--b1);
+  border-radius: 8px;
+  min-height: 200px;
+  padding: 2rem 2.5rem 4rem;
+  font-family: var(--body);
+  font-size: 1rem;
+  line-height: 1.7;
+  position: relative;
+}
+
+/* ─── PROSEMIRROR BASE ────────────────────────────────────────────── */
+.editor-canvas .ProseMirror {
+  outline: none;
+}
+
+.editor-canvas .ProseMirror p { margin: 0 0 0.75em; }
+.editor-canvas .ProseMirror h1 { font-family: var(--display); font-size: 1.75rem; margin: 1em 0 0.5em; }
+.editor-canvas .ProseMirror h2 { font-family: var(--display); font-size: 1.4rem; margin: 1em 0 0.5em; }
+.editor-canvas .ProseMirror h3 { font-family: var(--display); font-size: 1.15rem; margin: 0.75em 0 0.4em; }
+
+.editor-canvas .ProseMirror ul {
+  list-style: disc outside;
+  padding-left: 1.75em;
+  margin: 0.5em 0;
+}
+.editor-canvas .ProseMirror ol {
+  list-style: decimal outside;
+  padding-left: 2em;
+  margin: 0.5em 0;
+}
+.editor-canvas .ProseMirror ol ol        { list-style-type: lower-alpha; }
+.editor-canvas .ProseMirror ol ol ol     { list-style-type: lower-roman; }
+.editor-canvas .ProseMirror ol ol ol ol  { list-style-type: decimal; }
+.editor-canvas .ProseMirror ul ul        { list-style-type: circle; }
+.editor-canvas .ProseMirror ul ul ul     { list-style-type: square; }
+.editor-canvas .ProseMirror ol ul,
+.editor-canvas .ProseMirror ul ol        { margin: 0.25em 0; }
+.editor-canvas .ProseMirror li {
+  margin-bottom: 0.25em;
+  padding-left: 0.15em;
+}
+.editor-canvas .ProseMirror li::marker {
+  color: var(--gold);
+  font-weight: 600;
+  font-family: var(--mono);
+}
+.editor-canvas .ProseMirror li p {
+  margin: 0;
+  display: inline;
+}
+.editor-canvas .ProseMirror li > p + ul,
+.editor-canvas .ProseMirror li > p + ol { margin-top: 0.25em; }
+
+.editor-canvas .ProseMirror code {
+  background: var(--surface);
+  border: 1px solid var(--b1);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  font-family: var(--mono);
+  font-size: 0.85em;
+}
+.editor-canvas .ProseMirror pre {
+  background: var(--depth);
+  border: 1px solid var(--b1);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+}
+.editor-canvas .ProseMirror pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.editor-canvas .ProseMirror blockquote {
+  border-left: 3px solid var(--text-3);
+  margin: 0;
+  padding: 0.5rem 1rem;
+  color: var(--text-2);
+  font-style: italic;
+}
+.editor-canvas .ProseMirror ::selection {
+  background: var(--gold-dim);
+}
+
+/* ─── CUSTOM BLOCKS ───────────────────────────────────────────────── */
+
+/* Partie */
+.ed-partie {
+  border: 1px solid var(--b1);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  background: var(--lift);
+  position: relative;
+  margin: 1rem 0;
+}
+.ed-partie::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--gold);
+  border-radius: 8px 0 0 8px;
+}
+.ed-partie-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.ed-partie-label {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+.ed-partie-title {
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: var(--body);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.ed-partie-content { padding-top: 0.5rem; }
+
+/* Exercice */
+.ed-exercice {
+  border: 1px dashed var(--b1);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  background: var(--depth);
+  margin: 0.75rem 0;
+  position: relative;
+}
+.ed-exercice-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.ed-exercice-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.ed-exercice-content { padding-top: 0.25rem; }
+
+/* Énoncé */
+.ed-enonce {
+  border-left: 3px solid var(--text-3);
+  background: var(--surface);
+  padding: 0.8rem 1.1rem;
+  font-style: italic;
+  margin: 0.75rem 0;
+  position: relative;
+}
+.ed-enonce-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--text-4);
+  margin-bottom: 0.4rem;
+  font-style: normal;
+}
+
+/* Question */
+.ed-question {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--b1);
+  border-radius: 4px;
+  padding: 0.6rem 0.85rem;
+  margin: 0.5rem 0;
+}
+.ed-question-num {
+  font-family: var(--mono);
+  color: var(--gold);
+  min-width: 28px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.ed-question-content { flex: 1; }
+.ed-question-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+/* Annotations */
+.ed-annotation {
+  border-radius: 4px;
+  padding: 0.65rem 1rem;
+  margin: 0.75rem 0;
+  position: relative;
+}
+.ed-annotation--amber { border: 1px solid var(--amber-line); background: var(--amber-dim); }
+.ed-annotation--sage  { border: 1px solid var(--sage-line);  background: var(--sage-dim);  }
+.ed-annotation--blue  { border: 1px solid var(--blue-line);  background: var(--blue-dim);  }
+.ed-annotation--ruby  { border: 1px solid var(--ruby-line);  background: var(--ruby-dim);  }
+.ed-annotation--neutre { border: 1px solid var(--b1); background: var(--surface); }
+.ed-annotation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+}
+.ed-annotation-icon { font-size: 0.9rem; }
+.ed-annotation-label {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+.ed-correction-toggle {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--sage);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Formula (bloc KaTeX) */
+.ed-formula {
+  background: var(--surface);
+  border: 1px solid var(--b1);
+  border-radius: 8px;
+  padding: 0.85rem 1.25rem;
+  text-align: center;
+  margin: 0.75rem 0;
+  position: relative;
+  overflow-x: auto;
+}
+.ed-formula-render {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Inline Math (KaTeX inline) */
+.ed-inline-math {
+  display: inline;
+  padding: 1px 4px;
+  margin: 0 1px;
+  border-radius: 3px;
+  background: rgba(201, 168, 76, 0.06);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.ed-inline-math-render { display: inline; }
+.ed-inline-math-render .katex { font-size: 1em; }
+
+/* Schema */
+.ed-schema {
+  border: 2px dashed var(--b1);
+  border-radius: 8px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  margin: 0.75rem 0;
+  position: relative;
+}
+.ed-schema-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Common block controls (visible only in editor mode) */
+.ed-bloc-controls {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ed-partie:hover .ed-bloc-controls,
+.ed-exercice:hover .ed-bloc-controls { opacity: 0; }
+
+.ed-ctrl-btn {
+  display: none;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--gold-line);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--gold);
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+.ed-ctrl-btn:hover { background: var(--gold-dim); }
+.ed-ctrl-del { border-color: var(--ruby-line); color: var(--ruby); }
+.ed-ctrl-del:hover { background: var(--ruby-dim); }
+.ed-ctrl-abs {
+  display: none;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ed-enonce:hover .ed-ctrl-abs,
+.ed-formula:hover .ed-ctrl-abs,
+.ed-schema:hover .ed-ctrl-abs { opacity: 0; }
+
+.ed-bloc-num { font-family: var(--mono); font-size: 0.8rem; font-weight: 600; }
+.ed-bloc-icon { font-size: 0.85rem; }
+
+.ed-points-input {
+  background: var(--surface);
+  border: 1px solid var(--b1);
+  border-radius: 2px;
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 0.15rem 0.3rem;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  caret-color: transparent;
+}
+.ed-points-input:focus { outline: none; border-color: var(--b1); }
+.ed-points-label { font-family: var(--mono); font-size: 0.65rem; color: var(--text-4); }
+
+/* ─── TABLE STYLES ────────────────────────────────────────────────── */
+.editor-canvas .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+}
+.editor-canvas .ProseMirror th,
+.editor-canvas .ProseMirror td {
+  border: 1px solid var(--b1);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.editor-canvas .ProseMirror th {
+  background: var(--depth);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+/* ─── READ-ONLY HARD OVERRIDES ───────────────────────────────────── */
+.subject-renderer-wrap .ed-bloc-controls,
+.subject-renderer-wrap .ed-ctrl-btn,
+.subject-renderer-wrap .ed-ctrl-abs {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.subject-renderer-wrap .ed-points-input {
+  pointer-events: none !important;
+  user-select: none !important;
+  caret-color: transparent !important;
+}

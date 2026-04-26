@@ -3,11 +3,25 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Editor } from '@tiptap/react'
 
+type KatexMode = 'block' | 'inline'
+
 interface Props {
   editor: Editor | null
   onClose: () => void
   initialLatex?: string
-  onInsert?: (latex: string) => void
+  /** Mode pré-sélectionné (toggle visible dans l'UI). */
+  defaultMode?: KatexMode
+  /**
+   * Si défini, l'utilisateur édite un node `inlineMath` existant.
+   * Le `pos` permet de cibler le node dans le doc lors de l'update.
+   */
+  editingInlineMath?: { latex: string; pos: number | null } | null
+  /**
+   * Callback custom pour l'insertion. Si non fourni, le défaut est :
+   *   - mode 'block' → insère un node `formula`
+   *   - mode 'inline' → insère un node `inlineMath`
+   */
+  onInsert?: (latex: string, mode: KatexMode) => void
 }
 
 const TABS = ['Algèbre', 'Analyse', 'Géométrie', 'Physique', 'Chimie']
@@ -58,12 +72,22 @@ const TEMPLATES: Record<string, Array<{ name: string; latex: string }>> = {
 
 const QUICK_SYMBOLS = ['α', 'β', 'γ', 'δ', 'π', 'θ', 'λ', 'μ', 'σ', 'ω', 'Σ', '∞', '±', '≤', '≥', '≠', '≈', '∈', '∫', '∂', '√', '→']
 
-export default function KaTeXModal({ editor, onClose, initialLatex = '', onInsert }: Props) {
+export default function KaTeXModal({
+  editor,
+  onClose,
+  initialLatex = '',
+  defaultMode = 'block',
+  editingInlineMath = null,
+  onInsert,
+}: Props) {
+  const [mode, setMode] = useState<KatexMode>(editingInlineMath ? 'inline' : defaultMode)
   const [activeTab, setActiveTab] = useState('Algèbre')
-  const [latex, setLatex] = useState(initialLatex)
+  const [latex, setLatex] = useState(editingInlineMath?.latex || initialLatex)
   const [previewHtml, setPreviewHtml] = useState('')
   const [previewError, setPreviewError] = useState('')
   const previewRef = useRef<HTMLDivElement>(null)
+
+  const isEditing = !!editingInlineMath
 
   useEffect(() => {
     if (!latex.trim()) {
@@ -71,10 +95,12 @@ export default function KaTeXModal({ editor, onClose, initialLatex = '', onInser
       setPreviewError('')
       return
     }
+    let cancelled = false
     import('katex').then(katex => {
+      if (cancelled) return
       try {
         const html = katex.default.renderToString(latex, {
-          displayMode: true,
+          displayMode: mode === 'block',
           throwOnError: true,
           output: 'html',
         })
@@ -85,13 +111,37 @@ export default function KaTeXModal({ editor, onClose, initialLatex = '', onInser
         setPreviewError(err.message || 'Erreur KaTeX')
       }
     })
-  }, [latex])
+    return () => { cancelled = true }
+  }, [latex, mode])
 
   const handleInsert = () => {
     if (!latex.trim()) return
+
     if (onInsert) {
-      onInsert(latex)
-    } else if (editor) {
+      onInsert(latex, mode)
+      onClose()
+      return
+    }
+
+    if (!editor) {
+      onClose()
+      return
+    }
+
+    if (mode === 'inline') {
+      if (isEditing && editingInlineMath?.pos != null) {
+        // Édition d'un node existant : on cible la position et on update
+        // les attrs.
+        editor
+          .chain()
+          .focus()
+          .setNodeSelection(editingInlineMath.pos)
+          .updateAttributes('inlineMath', { latex })
+          .run()
+      } else {
+        editor.chain().focus().setInlineMath(latex).run()
+      }
+    } else {
       editor.chain().focus().insertContent({
         type: 'formula',
         attrs: { latex },
@@ -100,19 +150,59 @@ export default function KaTeXModal({ editor, onClose, initialLatex = '', onInser
     onClose()
   }
 
+  const handleDelete = () => {
+    if (isEditing && editor && editingInlineMath?.pos != null) {
+      editor
+        .chain()
+        .focus()
+        .setNodeSelection(editingInlineMath.pos)
+        .deleteSelection()
+        .run()
+      onClose()
+    }
+  }
+
   const appendSymbol = (sym: string) => {
     setLatex(prev => prev + sym)
   }
+
+  const title = isEditing
+    ? 'Modifier la formule inline'
+    : mode === 'inline'
+    ? 'Formule inline ($x^2$ dans le texte)'
+    : 'Formule mathématique (bloc centré)'
 
   return (
     <div className="ed-katex-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="ed-katex-modal">
         <div className="ed-katex-modal-header">
-          <span className="ed-katex-modal-title">Formule mathématique</span>
-          <button className="editor-btn" onClick={onClose}>✕</button>
+          <span className="ed-katex-modal-title">{title}</span>
+          <button className="editor-btn" onClick={onClose} aria-label="Fermer">✕</button>
         </div>
 
         <div className="ed-katex-body">
+          {/* Toggle Inline / Bloc — seulement si pas en mode édition (édition = mode figé) */}
+          {!isEditing && (
+            <div className="ed-katex-mode-toggle">
+              <button
+                type="button"
+                className={`ed-katex-mode-btn${mode === 'inline' ? ' active' : ''}`}
+                onClick={() => setMode('inline')}
+                title="Inline : la formule s'insère dans le flux du texte ($x^2$)"
+              >
+                <span style={{ fontFamily: 'var(--mono, monospace)' }}>$x²$</span> Inline
+              </button>
+              <button
+                type="button"
+                className={`ed-katex-mode-btn${mode === 'block' ? ' active' : ''}`}
+                onClick={() => setMode('block')}
+                title="Bloc : la formule prend toute la largeur, centrée"
+              >
+                <span style={{ fontFamily: 'var(--mono, monospace)' }}>∑</span> Bloc
+              </button>
+            </div>
+          )}
+
           {/* Onglets */}
           <div className="ed-katex-tabs">
             {TABS.map(tab => (
@@ -147,7 +237,7 @@ export default function KaTeXModal({ editor, onClose, initialLatex = '', onInser
               className="ed-katex-input"
               value={latex}
               onChange={e => setLatex(e.target.value)}
-              placeholder="\frac{a}{b}"
+              placeholder={mode === 'inline' ? 'x^2 + y^2 = r^2' : '\\frac{a}{b}'}
               autoFocus
             />
           </div>
@@ -160,7 +250,7 @@ export default function KaTeXModal({ editor, onClose, initialLatex = '', onInser
               <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
             ) : (
               <span style={{ color: 'var(--text-4)', fontStyle: 'italic', fontSize: '0.82rem' }}>
-                Aperçu en temps réel
+                Aperçu en temps réel — mode {mode === 'inline' ? 'inline' : 'bloc'}
               </span>
             )}
           </div>
@@ -177,13 +267,22 @@ export default function KaTeXModal({ editor, onClose, initialLatex = '', onInser
         </div>
 
         <div className="ed-katex-footer">
+          {isEditing && (
+            <button
+              className="editor-btn"
+              onClick={handleDelete}
+              style={{ color: 'var(--ruby, #e05575)', borderColor: 'rgba(224,85,117,0.4)' }}
+            >
+              Supprimer
+            </button>
+          )}
           <button className="editor-btn" onClick={onClose}>Annuler</button>
           <button
             className="editor-btn editor-btn--primary"
             onClick={handleInsert}
             disabled={!latex.trim() || !!previewError}
           >
-            Insérer
+            {isEditing ? 'Mettre à jour' : 'Insérer'}
           </button>
         </div>
       </div>

@@ -18,6 +18,11 @@ import InsertMenu from '@/components/editor/InsertMenu'
 import SymbolsDropdown from '@/components/editor/SymbolsDropdown'
 import KaTeXModal from '@/components/editor/KaTeXModal'
 import PreviewModal from '@/components/editor/PreviewModal'
+import MoreMenu from '@/components/editor/MoreMenu'
+import LinkPopover from '@/components/editor/LinkPopover'
+import TableContextMenu from '@/components/editor/TableContextMenu'
+import BubbleToolbar from '@/components/editor/BubbleToolbar'
+import ShortcutsModal from '@/components/editor/ShortcutsModal'
 
 import {
   SubjectMetadata,
@@ -90,7 +95,12 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
   const [insertMenuPos, setInsertMenuPos] = useState<{ top: number; left: number } | null>(null)
   const [symbolsPos, setSymbolsPos] = useState<{ top: number; left: number } | null>(null)
   const [showKaTeX, setShowKaTeX] = useState(false)
+  const [katexMode, setKatexMode] = useState<'block' | 'inline'>('block')
+  const [editingInlineMath, setEditingInlineMath] = useState<{ latex: string; pos: number | null } | null>(null)
   const [showPreview, setShowPreview] = useState(false)
+  const [moreMenuPos, setMoreMenuPos] = useState<{ top: number; left: number } | null>(null)
+  const [linkPos, setLinkPos] = useState<{ top: number; left: number } | null>(null)
+  const [showShortcuts, setShowShortcuts] = useState(false)
 
   const [stats, setStats] = useState({ words: 0, pages: 0, questions: 0, readTime: 0 })
 
@@ -122,6 +132,25 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Listener inlineMath : ouvre la modale en mode inline ────────────
+  // Émis par l'extension inlineMath au clic sur un node existant ou via Mod-M.
+  useEffect(() => {
+    function handleInlineMathEdit(e: Event) {
+      const detail = (e as CustomEvent<{ latex: string; pos: number | null }>).detail
+      if (detail && detail.latex) {
+        // Édition d'un node existant
+        setEditingInlineMath({ latex: detail.latex, pos: detail.pos })
+      } else {
+        // Insertion : ouvre la modale en mode inline, pas en édition
+        setEditingInlineMath(null)
+      }
+      setKatexMode('inline')
+      setShowKaTeX(true)
+    }
+    window.addEventListener('mahai:inline-math:edit', handleInlineMathEdit)
+    return () => window.removeEventListener('mahai:inline-math:edit', handleInlineMathEdit)
   }, [])
 
   // ── Onboarding complete ────────────────────────────────────────────
@@ -328,16 +357,53 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
   // ── Validation badge navbar ─────────────────────────────────────────
   const canSubmit = !!(meta.title && meta.matiere && meta.examType && meta.anneeScolaire && prix > 0 && wordCount > 0 && draftId)
 
+  // ── Raccourci ⌘/ pour la modale raccourcis ────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+        e.preventDefault()
+        setShowShortcuts(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   // ── Overlays ────────────────────────────────────────────────────────
   const handleInsertMenu = (e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     setInsertMenuPos({ top: rect.bottom + 4, left: rect.left })
     setSymbolsPos(null)
+    setMoreMenuPos(null)
+    setLinkPos(null)
   }
   const handleSymbols = (e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     setSymbolsPos({ top: rect.bottom + 4, left: rect.left })
     setInsertMenuPos(null)
+    setMoreMenuPos(null)
+    setLinkPos(null)
+  }
+  const handleMore = (e: React.MouseEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setMoreMenuPos({ top: rect.bottom + 4, left: rect.left })
+    setInsertMenuPos(null)
+    setSymbolsPos(null)
+    setLinkPos(null)
+  }
+  const handleLink = (e: React.MouseEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setLinkPos({ top: rect.bottom + 4, left: rect.left })
+    setInsertMenuPos(null)
+    setSymbolsPos(null)
+    setMoreMenuPos(null)
+  }
+  const handleLinkFromBubble = () => {
+    // Depuis le bubble menu, on positionne le popover au centre du viewport
+    setLinkPos({ top: 120, left: Math.max(8, window.innerWidth / 2 - 160) })
+    setInsertMenuPos(null)
+    setSymbolsPos(null)
+    setMoreMenuPos(null)
   }
 
   const handlePreview = () => {
@@ -369,7 +435,10 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
         editor={editorInstance.current}
         onInsertMenu={handleInsertMenu}
         onSymbols={handleSymbols}
-        onKaTeX={() => setShowKaTeX(true)}
+        onKaTeX={() => { setKatexMode('block'); setEditingInlineMath(null); setShowKaTeX(true) }}
+        onKaTeXInline={() => { setKatexMode('inline'); setEditingInlineMath(null); setShowKaTeX(true) }}
+        onLink={handleLink}
+        onMore={handleMore}
       />
 
       {insertMenuPos && (
@@ -392,9 +461,29 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
       {showKaTeX && (
         <KaTeXModal
           editor={editorInstance.current}
-          onClose={() => setShowKaTeX(false)}
+          onClose={() => { setShowKaTeX(false); setEditingInlineMath(null) }}
+          defaultMode={katexMode}
+          editingInlineMath={editingInlineMath}
         />
       )}
+
+      {moreMenuPos && (
+        <MoreMenu
+          editor={editorInstance.current}
+          position={moreMenuPos}
+          onClose={() => setMoreMenuPos(null)}
+        />
+      )}
+
+      {linkPos && (
+        <LinkPopover
+          editor={editorInstance.current}
+          position={linkPos}
+          onClose={() => setLinkPos(null)}
+        />
+      )}
+
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
 
       {showPreview && (
         <PreviewModal
@@ -423,6 +512,12 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
             onChange={handleContentChange}
             onEditorReady={editor => { editorInstance.current = editor }}
           />
+          <BubbleToolbar
+            editor={editorInstance.current}
+            onLink={handleLinkFromBubble}
+            onKaTeXInline={() => { setKatexMode('inline'); setEditingInlineMath(null); setShowKaTeX(true) }}
+          />
+          <TableContextMenu editor={editorInstance.current} />
         </main>
 
         <aside className="editor-sidebar-right">

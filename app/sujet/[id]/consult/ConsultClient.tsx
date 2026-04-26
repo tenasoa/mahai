@@ -11,8 +11,9 @@
  *     3. Le filigrane et le pied de page contiennent le code de traçabilité.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Download, Loader2, GraduationCap, Sparkles } from 'lucide-react'
 import { recordSubjectDownload } from '@/actions/subject-download'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
@@ -61,6 +62,8 @@ function slugifyForFilename(input: string): string {
 }
 
 export function ConsultClient({ subject }: Props) {
+  const searchParams = useSearchParams()
+  const focusCorrection = searchParams.get('view') === 'correction'
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const [aiCorrection, setAiCorrection] = useState<{
@@ -69,6 +72,7 @@ export function ConsultClient({ subject }: Props) {
     createdAt: string
   } | null>(null)
   const [includeCorrection, setIncludeCorrection] = useState<boolean>(true)
+  const correctionSectionRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -93,6 +97,15 @@ export function ConsultClient({ subject }: Props) {
       cancelled = true
     }
   }, [subject.id])
+
+  useEffect(() => {
+    if (searchParams.get('view') !== 'correction') return
+    if (!aiCorrection) return
+    const id = window.setTimeout(() => {
+      correctionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+    return () => window.clearTimeout(id)
+  }, [searchParams, aiCorrection])
 
   async function handleDownload() {
     if (isDownloading) return
@@ -220,10 +233,18 @@ export function ConsultClient({ subject }: Props) {
       </header>
 
       <main className="consult-main">
+        {focusCorrection && (
+          <div className={`consult-correction-notice ${aiCorrection ? 'ready' : 'loading'}`} role="status">
+            {aiCorrection
+              ? '✅ Correction IA prête — consultez les explications ci-dessous puis téléchargez votre PDF.'
+              : '⏳ Préparation de votre correction IA…'}
+          </div>
+        )}
+
         <SubjectRenderer content={subject.content} />
 
         {aiCorrection && (
-          <section className="consult-ai-section">
+          <section className="consult-ai-section" ref={correctionSectionRef} id="ai-correction">
             <header className="consult-ai-section-head">
               <div>
                 <p className="consult-ai-eyebrow">
@@ -284,15 +305,15 @@ export function ConsultClient({ subject }: Props) {
         .consult-page {
           min-height: 100vh;
           background: var(--void);
-          color: var(--text-1, #fff);
+          color: var(--text);
         }
         .consult-header {
           position: sticky;
           top: 0;
           z-index: 30;
-          background: rgba(12, 12, 14, 0.92);
+          background: color-mix(in srgb, var(--void) 92%, transparent);
           backdrop-filter: saturate(160%) blur(10px);
-          border-bottom: 1px solid var(--border-1, rgba(255, 255, 255, 0.08));
+          border-bottom: 1px solid var(--b1);
         }
         .consult-header-inner {
           max-width: 1080px;
@@ -308,15 +329,15 @@ export function ConsultClient({ subject }: Props) {
           align-items: center;
           gap: 0.4rem;
           padding: 0.5rem 0.75rem;
-          color: var(--text-2, rgba(255, 255, 255, 0.7));
+          color: var(--text-2);
           text-decoration: none;
           font-size: 0.85rem;
           border-radius: 8px;
           transition: background 0.2s;
         }
         .consult-back:hover {
-          background: var(--lift, rgba(255, 255, 255, 0.04));
-          color: var(--text-1, #fff);
+          background: var(--lift);
+          color: var(--text);
         }
         .consult-title-block { min-width: 0; }
         .consult-eyebrow {
@@ -386,6 +407,25 @@ export function ConsultClient({ subject }: Props) {
           padding: 2rem 1.25rem 4rem;
         }
 
+        .consult-correction-notice {
+          margin-bottom: 1rem;
+          padding: 0.75rem 0.95rem;
+          border-radius: 10px;
+          font-size: 0.82rem;
+          line-height: 1.45;
+          border: 1px solid;
+        }
+        .consult-correction-notice.ready {
+          background: rgba(110, 170, 140, 0.1);
+          border-color: rgba(110, 170, 140, 0.35);
+          color: #2d6b4e;
+        }
+        .consult-correction-notice.loading {
+          background: var(--gold-dim, rgba(201, 168, 76, 0.08));
+          border-color: var(--gold-line, rgba(201, 168, 76, 0.35));
+          color: var(--gold, #C9A84C);
+        }
+
         .consult-ai-section {
           margin-top: 2.5rem;
           display: flex;
@@ -400,10 +440,10 @@ export function ConsultClient({ subject }: Props) {
           flex-wrap: wrap;
         }
         .consult-ai-section-head h2 {
-          font-family: var(--font-display, serif);
+          font-family: var(--display);
           font-size: 1.15rem;
           margin: 0.2rem 0 0;
-          color: var(--text-1, #fff);
+          color: var(--text);
         }
         .consult-ai-eyebrow {
           display: inline-flex;
@@ -437,8 +477,8 @@ export function ConsultClient({ subject }: Props) {
         .consult-corr-card {
           padding: 1.25rem;
           border-radius: 14px;
-          border: 1px solid var(--border-1, rgba(255, 255, 255, 0.08));
-          background: var(--card, rgba(255, 255, 255, 0.02));
+          border: 1px solid var(--b1);
+          background: var(--card);
         }
         .consult-corr-head {
           display: flex;
@@ -450,10 +490,10 @@ export function ConsultClient({ subject }: Props) {
         .consult-corr-head h2 {
           font-size: 1rem;
           margin: 0;
-          color: var(--text-1, #fff);
+          color: var(--text);
         }
         .consult-corr-card p {
-          color: var(--text-3, rgba(255, 255, 255, 0.6));
+          color: var(--text-3);
           font-size: 0.85rem;
           margin: 0 0 1rem;
         }
@@ -485,8 +525,8 @@ export function ConsultClient({ subject }: Props) {
           margin-top: 3rem;
           padding: 1rem 1.25rem;
           font-size: 0.78rem;
-          color: var(--text-3, rgba(255, 255, 255, 0.55));
-          border-top: 1px dashed var(--border-1, rgba(255, 255, 255, 0.1));
+          color: var(--text-3);
+          border-top: 1px dashed var(--b1);
           line-height: 1.6;
           text-align: center;
         }

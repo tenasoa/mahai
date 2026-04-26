@@ -15,6 +15,11 @@ import {
   Clock,
   Target,
   BrainCircuit,
+  Calendar,
+  Hash,
+  User,
+  Gauge,
+  Tag,
 } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -22,6 +27,7 @@ import { AuthModal } from '@/components/ui/AuthModal'
 import { getSubjectById } from '@/lib/supabase/subjects'
 import { getCurrentUserCredits, purchaseCurrentUserSubject } from '@/actions/user'
 import { convertSubjectToExamAction } from '@/actions/examen'
+import { recordSubjectDownload } from '@/actions/subject-download'
 import { SujetDetailSkeleton } from '@/components/ui/PageSkeletons'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
@@ -59,6 +65,17 @@ interface SubjectPayload {
   duree?: string | null
   nbExercices?: number | null
   content?: any
+  examType?: string | null
+  baccType?: string | null
+  bepcOption?: string | null
+  concoursType?: string | null
+  etablissement?: string | null
+  filiere?: string | null
+  semestre?: string | null
+  anneeScolaire?: string | null
+  dateOfficielle?: string | null
+  coefficient?: number | string | null
+  tags?: string[] | null
 }
 
 interface ToastMessage {
@@ -93,6 +110,8 @@ export default function SujetDetailPage() {
     mode: 'SUBMISSION' | 'DIRECT'
     createdAt: string
   } | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
   const [isRequestingDirect, setIsRequestingDirect] = useState(false)
   const [showDirectConfirm, setShowDirectConfirm] = useState(false)
   const [aiPrices, setAiPrices] = useState<{ priceSubmission: number; priceDirect: number }>({
@@ -251,7 +270,7 @@ export default function SujetDetailPage() {
         createdAt: new Date().toISOString(),
       })
       setCredits(res.data.creditsRemaining)
-      setDisplayMode('correction')
+      router.push(`/sujet/${subject.id}/consult?view=correction`)
       pushToast('success', `Correction IA prête. ${res.data.creditsCost} crédits débités.`)
     } catch (err) {
       console.error('submit AI correction error:', err)
@@ -280,8 +299,8 @@ export default function SujetDetailPage() {
         createdAt: new Date().toISOString(),
       })
       setCredits(res.data.creditsRemaining)
-      setDisplayMode('correction')
       setShowDirectConfirm(false)
+      router.push(`/sujet/${subject.id}/consult?view=correction`)
       pushToast('success', `Correction IA modèle prête. ${res.data.creditsCost} crédits débités.`)
     } catch (err) {
       console.error('direct AI correction error:', err)
@@ -320,14 +339,73 @@ export default function SujetDetailPage() {
     }
   }
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (accessState === 'locked') {
       requestUnlock()
       return
     }
+    if (!subject || isDownloading) return
+    setDownloadError(null)
+    setIsDownloading(true)
+    try {
+      const trace = await recordSubjectDownload(subject.id)
+      if (!trace.success) {
+        setDownloadError(trace.error || 'Téléchargement refusé.')
+        return
+      }
+      const slugify = (s: string) =>
+        s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/(^-|-$)/g, '').toLowerCase().slice(0, 60)
 
-    // Le téléchargement tracé (filigrane unique) vit sur /consult.
-    router.push(`/sujet/${subject?.id}/consult`)
+      const [{ pdf }, { default: SubjectPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/sujet/SubjectPDF'),
+      ])
+      const meta = {
+        title: subject.titre,
+        matiere: subject.matiere,
+        examType: subject.examType || subject.type || undefined,
+        baccType: subject.baccType || undefined,
+        bepcOption: subject.bepcOption || undefined,
+        concoursType: subject.concoursType || undefined,
+        etablissement: subject.etablissement || undefined,
+        filiere: subject.filiere || undefined,
+        semestre: subject.semestre || undefined,
+        serie: subject.serie || undefined,
+        anneeScolaire: subject.anneeScolaire || subject.annee || undefined,
+        dateOfficielle: subject.dateOfficielle || undefined,
+        duree: subject.duree || undefined,
+        coefficient: subject.coefficient ?? undefined,
+        authorName: subject.authorName || undefined,
+      }
+      const shouldIncludeCorr = !!aiCorrection
+      const blob = await pdf(
+        <SubjectPDF
+          content={subject.content || { type: 'doc', content: [] }}
+          meta={meta}
+          trace={{
+            watermarkCode: trace.data.watermarkCode,
+            userEmail: trace.data.userEmail,
+            userName: trace.data.userName,
+            downloadedAt: trace.data.downloadedAt,
+          }}
+          aiCorrection={shouldIncludeCorr ? aiCorrection!.result : null}
+          aiCorrectionMode={shouldIncludeCorr ? aiCorrection!.mode : undefined}
+        />
+      ).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `mahai-${slugify(subject.titre)}-${trace.data.watermarkCode}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 5000)
+    } catch (err) {
+      console.error('PDF download error:', err)
+      setDownloadError('Erreur lors de la génération du PDF.')
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   if (loading) {
@@ -462,26 +540,84 @@ export default function SujetDetailPage() {
           </nav>
 
           <div className="subject-tags">
-            <span className="tag">{subject.type}</span>
-            <span className="tag">{subject.annee}</span>
-            <span className="tag">{subject.serie || 'Tronc commun'}</span>
+            {(subject.examType || subject.type) && (
+              <span className="tag tag-exam">{subject.examType || subject.type}</span>
+            )}
+            {subject.baccType && (
+              <span className="tag">{subject.baccType === 'General' ? 'Général' : 'Technique'}</span>
+            )}
+            {subject.bepcOption && (
+              <span className="tag">Option {subject.bepcOption}</span>
+            )}
+            {subject.concoursType && (
+              <span className="tag">{subject.concoursType}</span>
+            )}
+            {subject.serie && (
+              <span className="tag">Série {subject.serie}</span>
+            )}
+            {subject.filiere && (
+              <span className="tag">{subject.filiere}</span>
+            )}
+            {subject.semestre && (
+              <span className="tag">{subject.semestre === 'S1' ? 'Semestre 1' : 'Final'}</span>
+            )}
+            {(subject.anneeScolaire || subject.annee) && (
+              <span className="tag">{subject.anneeScolaire || subject.annee}</span>
+            )}
             <span className={`tag ${accessState === 'locked' ? 'tag-locked' : 'tag-unlocked'}`}>
               {accessState === 'locked' ? 'Non débloqué' : 'Débloqué'}
             </span>
           </div>
 
           <h1>{subject.titre}</h1>
+
+          {subject.etablissement && (
+            <p className="subject-etablissement">{subject.etablissement}</p>
+          )}
+
           <p className="subject-subtitle">
             {subject.description ||
               'Sujet officiel avec lecture simple, entraînement interactif et mode examen blanc solo.'}
           </p>
 
+          {subject.dateOfficielle && (
+            <p className="subject-date-off">
+              <Calendar size={12} /> {subject.dateOfficielle}
+            </p>
+          )}
+
           <div className="subject-meta">
-            <span><FileText size={14} /> {subject.pages || 1} pages</span>
-            <span><Clock size={14} /> {subject.duree || '3h'}</span>
-            <span><Target size={14} /> {subject.nbExercices || 4} exercices</span>
-            <span><BrainCircuit size={14} /> Correction IA disponible</span>
+            {(subject.pages) && (
+              <span><FileText size={14} /> {subject.pages} page{subject.pages > 1 ? 's' : ''}</span>
+            )}
+            {subject.duree && (
+              <span><Clock size={14} /> {subject.duree}</span>
+            )}
+            {subject.nbExercices ? (
+              <span><Target size={14} /> {subject.nbExercices} exercice{subject.nbExercices > 1 ? 's' : ''}</span>
+            ) : null}
+            {(subject.coefficient || subject.bareme) && (
+              <span><Hash size={14} /> Coef.&nbsp;{subject.coefficient || subject.bareme}</span>
+            )}
+            {subject.difficulte && (
+              <span><Gauge size={14} /> {subject.difficulte}</span>
+            )}
+            {subject.authorName && (
+              <span><User size={14} /> {subject.authorName}</span>
+            )}
+            {subject.hasCorrectionIa && (
+              <span><BrainCircuit size={14} /> Correction IA</span>
+            )}
           </div>
+
+          {Array.isArray(subject.tags) && subject.tags.length > 0 && (
+            <div className="subject-editor-tags">
+              <Tag size={11} />
+              {subject.tags.map((t: string) => (
+                <span key={t} className="subject-editor-tag">{t}</span>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 
@@ -525,10 +661,13 @@ export default function SujetDetailPage() {
                       : 'Version HTML complète, idéale pour lire calmement l’énoncé.'}
                   </p>
                 </div>
-                <button className="sd-btn-secondary" onClick={handleDownloadPdf}>
-                  <Download size={14} /> Télécharger PDF
+                <button className="sd-btn-secondary" onClick={handleDownloadPdf} disabled={isDownloading}>
+                  <Download size={14} /> {isDownloading ? 'Préparation…' : 'Télécharger PDF'}
                 </button>
               </div>
+              {downloadError && (
+                <p style={{ color: 'var(--ruby)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{downloadError}</p>
+              )}
 
               <SubjectRenderer
                 content={subject.content}

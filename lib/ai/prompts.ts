@@ -92,7 +92,13 @@ export function tiptapToText(content: any): string {
       case 'question': {
         const num = attrs?.numero ?? '?'
         const pts = attrs?.points ? ` (${attrs.points} pts)` : ''
-        const inline = (children || []).map((c: any) => c?.text || '').join('')
+        const inline = (children || [])
+          .map((c: any) => {
+            if (c?.type === 'text') return c.text || ''
+            if (c?.type === 'inlineMath') return `$${c.attrs?.latex || ''}$`
+            return c?.text || ''
+          })
+          .join('')
         lines.push(`Q${num}.${pts ? ' ' + pts : ''} ${inline}`)
         break
       }
@@ -113,7 +119,16 @@ export function tiptapToText(content: any): string {
         break
       }
       case 'paragraph': {
-        const inline = (children || []).map((c: any) => c?.text || '').join('')
+        // Sérialise le contenu inline en gardant les formules KaTeX inline
+        // sous leur forme `$latex$` pour que le modèle puisse les lire
+        // exactement comme l'utilisateur les a écrites.
+        const inline = (children || [])
+          .map((c: any) => {
+            if (c?.type === 'text') return c.text || ''
+            if (c?.type === 'inlineMath') return `$${c.attrs?.latex || ''}$`
+            return c?.text || ''
+          })
+          .join('')
         if (inline.trim()) lines.push(inline)
         break
       }
@@ -129,6 +144,57 @@ export function tiptapToText(content: any): string {
         lines.push('```')
         children?.forEach((c: any) => walk(c, depth + 1))
         lines.push('```')
+        break
+      case 'table': {
+        // Rendu Markdown-like : chaque ligne séparée par |
+        const rows: string[][] = []
+        let isFirstRow = true
+        ;(children || []).forEach((row: any) => {
+          const cells = (row?.content || []).map((cell: any) =>
+            (cell?.content || [])
+              .map((c: any) => {
+                if (!c) return ''
+                if (c.type === 'paragraph') {
+                  return (c.content || [])
+                    .map((x: any) => {
+                      if (x?.type === 'text') return x.text || ''
+                      if (x?.type === 'inlineMath') return `$${x.attrs?.latex || ''}$`
+                      return ''
+                    })
+                    .join('')
+                }
+                return ''
+              })
+              .join(' ')
+              .trim()
+          )
+          rows.push(cells)
+          if (isFirstRow) {
+            isFirstRow = false
+          }
+        })
+        if (rows.length > 0) {
+          rows.forEach((cells, i) => {
+            lines.push('| ' + cells.join(' | ') + ' |')
+            if (i === 0) lines.push('|' + cells.map(() => '---').join('|') + '|')
+          })
+        }
+        break
+      }
+      case 'blockquote':
+        ;(children || []).forEach((c: any) => {
+          const innerLines: string[] = []
+          // Walk inside blockquote to extract text
+          if (c?.content) {
+            c.content.forEach((x: any) => {
+              if (x?.type === 'text') innerLines.push(x.text || '')
+            })
+          }
+          if (innerLines.length) lines.push('> ' + innerLines.join(''))
+        })
+        break
+      case 'horizontalRule':
+        lines.push('---')
         break
       case 'text':
         if (text) lines.push(text)

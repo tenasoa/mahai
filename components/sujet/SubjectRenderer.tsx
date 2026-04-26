@@ -14,12 +14,20 @@
 
 import { useEffect } from 'react'
 import 'katex/dist/katex.min.css'
+import './subject-renderer.css'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Highlight from '@tiptap/extension-highlight'
 import Typography from '@tiptap/extension-typography'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
+import Link from '@tiptap/extension-link'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { common, createLowlight } from 'lowlight'
 
@@ -32,6 +40,7 @@ import {
   FormulaExtension,
   SchemaExtension,
 } from '@/components/editor/extensions'
+import { InlineMathExtension } from '@/components/editor/inlineMath'
 
 const lowlight = createLowlight(common)
 
@@ -69,6 +78,20 @@ export function SubjectRenderer({ content, lockAfter, lockOverlay }: Props) {
       Highlight,
       Typography,
       CodeBlockLowlight.configure({ lowlight }),
+      Subscript,
+      Superscript,
+      Link.configure({
+        openOnClick: true,
+        autolink: false,
+        HTMLAttributes: {
+          rel: 'noopener noreferrer nofollow',
+          target: '_blank',
+        },
+      }),
+      Table.configure({ resizable: false }),
+      TableRow,
+      TableHeader,
+      TableCell,
       PartieExtension,
       ExerciceExtension,
       EnonceExtension,
@@ -76,6 +99,7 @@ export function SubjectRenderer({ content, lockAfter, lockOverlay }: Props) {
       AnnotationExtension,
       FormulaExtension,
       SchemaExtension,
+      InlineMathExtension,
     ],
     content: renderContent || '',
     editable: false,

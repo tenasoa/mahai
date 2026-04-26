@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { finalizeAndPublish, rejectSubmission, requestRevision } from '@/actions/admin/submissions'
+import { CurrencyConverter } from '@/lib/currency-converter'
 import {
   CheckCircle,
   XCircle,
@@ -130,6 +131,7 @@ export function ReviewForm({ submission }: { submission: Submission }) {
   const [rejectReason, setRejectReason] = useState('')
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
   const [editInfoMode, setEditInfoMode] = useState(false)
+  const [currencyRate, setCurrencyRate] = useState(50)
 
   const [formData, setFormData] = useState({
     titre: submission.title || '',
@@ -141,12 +143,40 @@ export function ReviewForm({ submission }: { submission: Submission }) {
     pages: submission.pages || 1,
     duree: submission.duree || '3h',
     coefficient: submission.coefficient || 1,
-    credits: submission.prix || 0,
+    credits: CurrencyConverter.arToCredits(Number(submission.prix || 0), 50),
     difficulte: submission.difficulte || 'MOYEN' as 'FACILE' | 'MOYEN' | 'DIFFICILE',
     badge: 'AI' as 'GOLD' | 'AI' | 'FREE',
     description: submission.description || '',
     notes: ''
   })
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadCurrencyRate = async () => {
+      try {
+        const res = await fetch('/api/admin/currency-config')
+        if (!res.ok) return
+        const data = await res.json()
+        const rate = Number(data?.config?.arPerCredit)
+        if (!Number.isFinite(rate) || rate <= 0) return
+
+        if (!isMounted) return
+        setCurrencyRate(rate)
+
+        const arPrice = Number(submission.prix || 0)
+        const converted = arPrice > 0 ? CurrencyConverter.arToCredits(arPrice, rate) : 0
+        setFormData(prev => ({ ...prev, credits: converted }))
+      } catch {
+        // fallback silencieux sur 50 Ar/cr
+      }
+    }
+
+    void loadCurrencyRate()
+    return () => {
+      isMounted = false
+    }
+  }, [submission.id, submission.prix])
 
   const handlePublish = async () => {
     if (!formData.titre.trim()) {
@@ -635,9 +665,16 @@ export function ReviewForm({ submission }: { submission: Submission }) {
                         }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             <CreditCard size={12} />
-                            Crédits
+                            Crédits (auto)
                           </span>
                         </label>
+                        <div style={{
+                          fontSize: '0.72rem',
+                          color: 'var(--text-3)',
+                          marginBottom: '0.35rem'
+                        }}>
+                          Prix soumis: {Number(submission.prix || 0).toLocaleString()} Ar • 1 cr = {currencyRate} Ar
+                        </div>
                         <input
                           type="number"
                           min="0"
@@ -794,7 +831,7 @@ export function ReviewForm({ submission }: { submission: Submission }) {
                         <span style={{ fontSize: '0.85rem', color: 'var(--text)', fontFamily: 'var(--mono)' }}>{formData.pages || '—'}</span>
                       </div>
                       <div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-3)', display: 'block', marginBottom: '0.25rem' }}>Crédits</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-3)', display: 'block', marginBottom: '0.25rem' }}>Crédits (convertis)</span>
                         <span style={{ fontSize: '0.85rem', color: 'var(--text)', fontFamily: 'var(--mono)' }}>{formData.credits || '—'}</span>
                       </div>
                       <div>
