@@ -3,24 +3,31 @@
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui";
 import { Phone, ChevronDown } from "lucide-react";
+import Image from "next/image";
 import styles from "./PaymentForm.module.css";
 
-type OperatorId = 'mvola' | 'orange' | 'airtel'
+type OperatorId = "mvola" | "orange" | "airtel";
 
-function detectOperator(phone: string): OperatorId | '' {
-  const p = phone.replace(/\s/g, '')
-  const prefix3 = p.substring(0, 3)
-  if (['034', '038'].includes(prefix3)) return 'mvola'
-  if (['032', '037'].includes(prefix3)) return 'orange'
-  if (prefix3 === '033') return 'airtel'
-  return ''
+function detectOperator(phone: string): OperatorId | "" {
+  const p = phone.replace(/\s/g, "");
+  const prefix3 = p.substring(0, 3);
+  if (["034", "038"].includes(prefix3)) return "mvola";
+  if (["032", "037"].includes(prefix3)) return "orange";
+  if (prefix3 === "033") return "airtel";
+  return "";
 }
 
 const OPERATOR_NAMES: Record<string, string> = {
-  mvola: 'MVola',
-  orange: 'Orange Money',
-  airtel: 'Airtel Money',
-}
+  mvola: "MVola",
+  orange: "Orange Money",
+  airtel: "Airtel Money",
+};
+
+const OPERATOR_LOGOS: Record<string, string> = {
+  mvola: "/mobile-banking/mvola.png",
+  orange: "/mobile-banking/orange-money.png",
+  airtel: "/mobile-banking/airtel-money.png",
+};
 
 export interface PaymentAmount {
   credits: number;
@@ -69,43 +76,45 @@ export function PaymentForm({
   const [localAmount, setLocalAmount] = useState<PaymentAmount | undefined>(
     selectedAmount,
   );
-  const [userPhones, setUserPhones] = useState<{id: string, phone: string, provider: string}[]>([]);
-  const [detectedOperator, setDetectedOperator] = useState('');
+  const [userPhones, setUserPhones] = useState<
+    { id: string; phone: string; provider: string }[]
+  >([]);
+  const [detectedOperator, setDetectedOperator] = useState("");
 
   useEffect(() => {
     async function fetchPhones() {
       try {
-        const res = await fetch('/api/user/phones')
+        const res = await fetch("/api/user/phones");
         if (res.ok) {
-          const data = await res.json()
-          setUserPhones(data)
+          const data = await res.json();
+          setUserPhones(data);
           if (data.length > 0 && !localPhone) {
-            const first = data[0]
-            setLocalPhone(first.phone)
-            onPhoneNumberChange?.(first.phone)
-            const det = detectOperator(first.phone)
+            const first = data[0];
+            setLocalPhone(first.phone);
+            onPhoneNumberChange?.(first.phone);
+            const det = detectOperator(first.phone);
             if (det) {
-              setDetectedOperator(det)
-              onProviderChange?.(det)
+              setDetectedOperator(det);
+              onProviderChange?.(det);
             }
           }
         }
       } catch (err) {
-        console.error('Erreur chargement numéros', err)
+        console.error("Erreur chargement numéros", err);
       }
     }
-    fetchPhones()
+    fetchPhones();
   }, []);
 
   const handlePhoneSelect = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value
-      setLocalPhone(value)
-      onPhoneNumberChange?.(value)
-      const det = detectOperator(value)
+      const value = e.target.value;
+      setLocalPhone(value);
+      onPhoneNumberChange?.(value);
+      const det = detectOperator(value);
       if (det) {
-        setDetectedOperator(det)
-        onProviderChange?.(det)
+        setDetectedOperator(det);
+        onProviderChange?.(det);
       }
     },
     [onPhoneNumberChange, onProviderChange],
@@ -118,7 +127,6 @@ export function PaymentForm({
     },
     [onAmountSelect],
   );
-
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -151,29 +159,70 @@ export function PaymentForm({
               aria-pressed={localAmount?.credits === amount.credits}
             >
               {amount.popular && (
-                <span className={styles.popularBadge}>Populaire</span>
+                <span className={styles.popularBadge}>Meilleure Offre</span>
               )}
               <div className={styles.amountCredits}>{amount.credits} cr</div>
               <div className={styles.amountPrice}>
                 {amount.price.toLocaleString()} Ar
               </div>
-              {amount.bonus && (
+              {amount.bonus && amount.bonus > 0 ? (
                 <div className={styles.amountBonus}>
                   +{amount.bonus} cr offerts
                 </div>
-              )}
+              ) : null}
             </button>
           ))}
         </div>
+
+        {/* Bonus Gauge */}
+        {amounts.length > 0 && (
+          <div className={styles.bonusGaugeSection}>
+            <div className={styles.bonusGaugeHeader}>
+              <span className={styles.bonusGaugeLabel}>Taux de bonus</span>
+              {localAmount && localAmount.bonus && (
+                <span className={styles.bonusGaugeValue}>
+                  {Math.round((localAmount.bonus / localAmount.credits) * 100)}%
+                </span>
+              )}
+            </div>
+            <div className={styles.bonusGaugeContainer}>
+              {amounts.map((amount, idx) => {
+                const bonusRate = amount.bonus
+                  ? Math.round((amount.bonus / amount.credits) * 100)
+                  : 0;
+                const isActive = localAmount?.credits === amount.credits;
+                const maxRate = Math.max(
+                  ...amounts.map((a) =>
+                    a.bonus ? Math.round((a.bonus / a.credits) * 100) : 0,
+                  ),
+                );
+                const fillWidth = (bonusRate / maxRate) * 100;
+
+                return (
+                  <div
+                    key={amount.credits}
+                    className={`${styles.bonusBar} ${isActive ? styles.active : ""}`}
+                    style={
+                      { "--fill-width": `${fillWidth}%` } as React.CSSProperties
+                    }
+                  >
+                    <div className={styles.bonusBarFill} />
+                  </div>
+                );
+              })}
+            </div>
+            <p className={styles.bonusGaugeHint}>
+              💰 Plus gros pack = plus de bonus! Achetez en gros et gagnez plus.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Phone Number — Dropdown */}
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Numéro Mobile Money</h3>
         <div className={styles.phoneSelectWrapper}>
-          <div className={styles.phoneIcon}>
-            <Phone size={16} />
-          </div>
+          <Phone size={18} className={styles.phoneIcon} />
           <select
             value={localPhone}
             onChange={handlePhoneSelect}
@@ -188,15 +237,30 @@ export function PaymentForm({
             ))}
           </select>
           <div className={styles.phoneChevron}>
-            <ChevronDown size={16} />
+            <ChevronDown size={18} />
           </div>
+          {(detectedOperator || providerId) && (
+            <div className={`${styles.operatorLogoContainer}`}>
+              <Image
+                src={OPERATOR_LOGOS[detectedOperator || providerId || ""]}
+                alt={OPERATOR_NAMES[detectedOperator || providerId || ""]}
+                width={24}
+                height={24}
+                className={styles.operatorLogo}
+              />
+            </div>
+          )}
         </div>
         {userPhones.length === 0 && (
-          <p className={styles.noPhoneMsg}>Aucun numéro enregistré. Ajoutez-en depuis votre profil.</p>
+          <p className={styles.noPhoneMsg}>
+            Aucun numéro enregistré. Ajoutez-en depuis votre profil.
+          </p>
         )}
         {(detectedOperator || providerId) && (
           <div className={styles.operatorBadge}>
-            <span className={styles.operatorName}>{OPERATOR_NAMES[detectedOperator || providerId || '']}</span>
+            <span className={styles.operatorName}>
+              {OPERATOR_NAMES[detectedOperator || providerId || ""]}
+            </span>
             <span className={styles.operatorAuto}>détecté auto</span>
           </div>
         )}
@@ -212,14 +276,14 @@ export function PaymentForm({
               {localAmount.credits} cr
             </span>
           </div>
-          {localAmount.bonus && (
+          {localAmount.bonus && localAmount.bonus > 0 ? (
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Bonus</span>
               <span className={styles.summaryValueBonus}>
                 +{localAmount.bonus} cr
               </span>
             </div>
-          )}
+          ) : null}
           <div className={styles.summaryDivider} />
           <div className={styles.summaryRow}>
             <span className={styles.summaryLabel}>Total à payer</span>

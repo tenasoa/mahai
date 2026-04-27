@@ -254,6 +254,13 @@ export const STRUCTURE_BLOCS = [
     color: "neutre",
     desc: "Tableau de répartition des points",
   },
+  {
+    value: "probleme",
+    label: "Problème",
+    icon: "P",
+    color: "ruby",
+    desc: "Problème structuré avec numérotation propre",
+  },
 ];
 
 export const MEDIA_BLOCS = [

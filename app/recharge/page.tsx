@@ -49,6 +49,7 @@ export default function RechargePage() {
   // États pour le paiement
   const [creditPacks, setCreditPacks] = useState<PaymentAmount[]>(DEFAULT_PACKS);
   const [selectedAmount, setSelectedAmount] = useState<PaymentAmount | undefined>(undefined);
+  const [globalArPerCredit, setGlobalArPerCredit] = useState<number>(50);
   const [selectedProvider, setSelectedProvider] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -201,6 +202,7 @@ export default function RechargePage() {
         if (res.ok) {
           const data = await res.json()
           if (data.packs && data.packs.length > 0) {
+            if (data.arPerCredit) { setGlobalArPerCredit(data.arPerCredit); }
             const packs = data.packs.map((p: any) => ({
               credits: p.credits,
               price: p.price,
@@ -292,6 +294,7 @@ export default function RechargePage() {
         : "Airtel Money";
 
   const pendingCount = transactions.filter(tx => tx.status === "pending").length;
+  const baseRate = globalArPerCredit;
 
   return (
     <div className="credits-page">
@@ -324,7 +327,7 @@ export default function RechargePage() {
 
           <BalanceCard
             balance={appUser?.credits ?? 0}
-            ariaryEquivalent={`≈ ${(appUser?.credits ?? 0) * 50} Ariary`}
+            ariaryEquivalent={`≈ ${(appUser?.credits ?? 0) * baseRate} Ariary`}
           />
         </div>
       </section>
@@ -513,3 +516,5 @@ export default function RechargePage() {
     </div>
   );
 }
+
+

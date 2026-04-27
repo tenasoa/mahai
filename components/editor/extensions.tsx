@@ -14,23 +14,20 @@ import { ROMAN_NUMERALS } from './types'
 function getNodeIndex(editor: any, pos: number, nodeName: string, parentOnly = false): number {
   if (!editor) return 1
   let count = 0
+  const BreakException = {}
   try {
     editor.state.doc.descendants((node: any, nodePos: number) => {
-      if (nodePos >= pos) return false
+      if (nodePos > pos) throw BreakException
       if (node.type.name === nodeName) {
-        if (parentOnly) {
-          // Pour questions, compter celles sous le même exercice/partie parent
-          count++
-        } else {
-          count++
-        }
+        if (node.attrs.resetNumbering) count = 0
+        count++
       }
       return true
     })
-  } catch {
-    return 1
+  } catch (e) {
+    if (e !== BreakException) return 1
   }
-  return count + 1
+  return Math.max(1, count)
 }
 
 function getRomanNumeral(n: number): string {
@@ -55,7 +52,7 @@ function PartieView({ node, updateAttributes, deleteNode, getPos, editor }: any)
     if (node.attrs.numero === '?' || node.attrs.numero === '') {
       updateAttributes({ numero: autoNum })
     }
-  }, [autoIndex])
+  }, [autoIndex, node.attrs.resetNumbering])
 
   const handleTitreBlur = () => {
     setEditingTitle(false)
@@ -84,6 +81,20 @@ function PartieView({ node, updateAttributes, deleteNode, getPos, editor }: any)
             )}
           </span>
           <div className="ed-bloc-controls">
+            <button
+              type="button"
+              className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
+              }}
+              title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
+              style={{ fontSize: '11px', fontWeight: 'bold' }}
+            >
+              ↺ 1
+            </button>
             <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
           </div>
         </div>
@@ -104,6 +115,7 @@ export const PartieExtension = Node.create({
     return {
       numero: { default: '?' },
       titre:  { default: '' },
+      resetNumbering: { default: false },
     }
   },
 
@@ -129,7 +141,7 @@ function ExerciceView({ node, updateAttributes, deleteNode, getPos, editor }: an
       // Seulement si on veut la sync forte, on ré-aligne
       updateAttributes({ numero: autoIndex })
     }
-  }, [autoIndex])
+  }, [autoIndex, node.attrs.resetNumbering])
 
   const hasPoints = node.attrs.hasPoints !== false
   const togglePoints = () => updateAttributes({ hasPoints: !hasPoints })
@@ -164,6 +176,20 @@ function ExerciceView({ node, updateAttributes, deleteNode, getPos, editor }: an
                 />
               </>
             )}
+            <button
+              type="button"
+              className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
+              }}
+              title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
+              style={{ fontSize: '11px', fontWeight: 'bold' }}
+            >
+              ↺ 1
+            </button>
             <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
           </div>
         </div>
@@ -185,6 +211,7 @@ export const ExerciceExtension = Node.create({
       numero:    { default: '?' },
       points:    { default: 10 },
       hasPoints: { default: true },
+      resetNumbering: { default: false },
     }
   },
 
@@ -193,6 +220,101 @@ export const ExerciceExtension = Node.create({
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'exercice' }), 0]
   },
   addNodeView() { return ReactNodeViewRenderer(ExerciceView) },
+})
+
+// ─── PROBLEME ──────────────────────────────────────────────────────────────
+
+function ProblemeView({ node, updateAttributes, deleteNode, getPos, editor }: any) {
+  const [points, setPoints] = useState(String(node.attrs.points || 10))
+
+  const pos = typeof getPos === 'function' ? getPos() : 0
+  const autoIndex = getNodeIndex(editor, pos, 'probleme')
+
+  useEffect(() => {
+    if (!node.attrs.numero || node.attrs.numero === '?') {
+      updateAttributes({ numero: autoIndex })
+    } else if (typeof node.attrs.numero === 'number' && node.attrs.numero !== autoIndex) {
+      updateAttributes({ numero: autoIndex })
+    }
+  }, [autoIndex, node.attrs.resetNumbering])
+
+  const hasPoints = node.attrs.hasPoints !== false
+  const togglePoints = () => updateAttributes({ hasPoints: !hasPoints })
+
+  return (
+    <NodeViewWrapper>
+      <div className="ed-exercice" data-type="probleme">
+        <div className="ed-exercice-header" style={{ borderColor: 'var(--ruby)' }}>
+          <span className="ed-exercice-label" style={{ color: 'var(--ruby)' }}>
+            <span className="ed-bloc-icon">P</span>
+            Problème {node.attrs.numero || autoIndex}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              className={`ed-ctrl-btn ed-points-toggle${hasPoints ? ' active' : ''}`}
+              onClick={togglePoints}
+              title={hasPoints ? 'Retirer le barème' : 'Ajouter un barème'}
+            >
+              {hasPoints ? '⚖ Barème' : '⚖ Sans barème'}
+            </button>
+            {hasPoints && (
+              <>
+                <span className="ed-points-label">Points :</span>
+                <input
+                  className="ed-points-input"
+                  type="number"
+                  min={0}
+                  value={points}
+                  onChange={e => setPoints(e.target.value)}
+                  onBlur={() => updateAttributes({ points: Number(points) })}
+                  style={{ width: '48px' }}
+                />
+              </>
+            )}
+            <button
+              type="button"
+              className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
+              }}
+              title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
+              style={{ fontSize: '11px', fontWeight: 'bold' }}
+            >
+              ↺ 1
+            </button>
+            <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
+          </div>
+        </div>
+        <NodeViewContent className="ed-exercice-content" />
+      </div>
+    </NodeViewWrapper>
+  )
+}
+
+export const ProblemeExtension = Node.create({
+  name: 'probleme',
+  group: 'block',
+  content: 'block+',
+  defining: true,
+  isolating: true,
+
+  addAttributes() {
+    return {
+      numero:    { default: '?' },
+      points:    { default: 10 },
+      hasPoints: { default: true },
+      resetNumbering: { default: false },
+    }
+  },
+
+  parseHTML() { return [{ tag: 'div[data-type="probleme"]' }] },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'probleme' }), 0]
+  },
+  addNodeView() { return ReactNodeViewRenderer(ProblemeView) },
 })
 
 // ─── ENONCE ────────────────────────────────────────────────────────────────
@@ -234,7 +356,7 @@ function QuestionView({ node, updateAttributes, deleteNode, getPos, editor }: an
     if (node.attrs.numero !== autoIndex) {
       updateAttributes({ numero: autoIndex })
     }
-  }, [autoIndex])
+  }, [autoIndex, node.attrs.resetNumbering])
 
   const hasPoints = node.attrs.hasPoints !== false
   const togglePoints = () => updateAttributes({ hasPoints: !hasPoints })
@@ -266,6 +388,20 @@ function QuestionView({ node, updateAttributes, deleteNode, getPos, editor }: an
           >
             {hasPoints ? '×' : '+'}
           </button>
+          <button
+            type="button"
+            className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
+            }}
+            title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
+            style={{ fontSize: '11px', fontWeight: 'bold' }}
+          >
+            ↺ 1
+          </button>
           <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode}>✕</button>
         </div>
       </div>
@@ -284,6 +420,7 @@ export const QuestionExtension = Node.create({
       numero:    { default: 1 },
       points:    { default: 2 },
       hasPoints: { default: false },
+      resetNumbering: { default: false },
     }
   },
 

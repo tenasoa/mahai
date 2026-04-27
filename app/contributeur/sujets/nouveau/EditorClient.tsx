@@ -438,7 +438,6 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
         onKaTeX={() => { setKatexMode('block'); setEditingInlineMath(null); setShowKaTeX(true) }}
         onKaTeXInline={() => { setKatexMode('inline'); setEditingInlineMath(null); setShowKaTeX(true) }}
         onLink={handleLink}
-        onMore={handleMore}
       />
 
       {insertMenuPos && (

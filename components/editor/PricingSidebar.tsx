@@ -46,7 +46,7 @@ export default function PricingSidebar({
   onPrixModeChange,
   onVisibiliteChange,
 }: Props) {
-  const [currencyRate, setCurrencyRate] = useState(50);
+  const [currencyRate, setCurrencyRate] = useState<number | null>(null);
   const [platformFeePercent, setPlatformFeePercent] = useState(30);
   const [loading, setLoading] = useState(true);
 
@@ -73,7 +73,9 @@ export default function PricingSidebar({
   }, []);
 
   // Calculer les valeurs avec conversions
-  const priceInCredits = CurrencyConverter.arToCredits(prix, currencyRate);
+  const priceInCredits = currencyRate
+    ? CurrencyConverter.arToCredits(prix, currencyRate)
+    : 0;
   const commission = CurrencyConverter.calculatePlatformFee(
     prix,
     platformFeePercent,

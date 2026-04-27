@@ -11,8 +11,7 @@ interface Props {
   onKaTeXInline?: () => void
   /** Ouvre le popover « lien » ancré sur le bouton cliqué. */
   onLink?: (e: React.MouseEvent) => void
-  /** Ouvre le menu « ⋯ Plus » ancré sur le bouton cliqué. */
-  onMore?: (e: React.MouseEvent) => void
+  // onMore n'est plus utilisé car on affiche tout inline
 }
 
 export default function EditorToolbar({
@@ -22,7 +21,6 @@ export default function EditorToolbar({
   onKaTeX,
   onKaTeXInline,
   onLink,
-  onMore,
 }: Props) {
   if (!editor) return <div className="editor-toolbar" />
 
@@ -45,12 +43,25 @@ export default function EditorToolbar({
 
   const sep = (key: string) => <div key={key} className="editor-toolbar-sep" />
 
-  // Indent / outdent — uniquement dans une liste pour l'instant
-  const canIndent = editor.can().sinkListItem('listItem')
-  const canOutdent = editor.can().liftListItem('listItem')
+  const canIndentList = editor.can().sinkListItem('listItem')
+  const canOutdentList = editor.can().liftListItem('listItem')
+
+  const handleIndent = () => {
+    if (canIndentList) {
+      editor.chain().focus().sinkListItem('listItem').run()
+    } else {
+      editor.chain().focus().insertContent('    ').run()
+    }
+  }
+
+  const handleOutdent = () => {
+    if (canOutdentList) {
+      editor.chain().focus().liftListItem('listItem').run()
+    }
+  }
 
   return (
-    <div className="editor-toolbar">
+    <div className="editor-toolbar" style={{ flexWrap: 'wrap', gap: '4px' }}>
       {btn('B',  () => editor.chain().focus().toggleBold().run(),     editor.isActive('bold'),      'Gras (⌘B)')}
       {btn('I',  () => editor.chain().focus().toggleItalic().run(),   editor.isActive('italic'),    'Italique (⌘I)')}
       {btn('U',  () => editor.chain().focus().toggleUnderline().run(),editor.isActive('underline'), 'Souligné (⌘U)')}
@@ -86,18 +97,16 @@ export default function EditorToolbar({
 
       {/* Indent / Outdent */}
       <button
-        className={`editor-tb-btn${!canOutdent ? ' disabled' : ''}`}
-        onClick={() => editor.chain().focus().liftListItem('listItem').run()}
-        disabled={!canOutdent}
+        className={`editor-tb-btn${!canOutdentList && !editor.isActive('paragraph') ? ' disabled' : ''}`}
+        onClick={handleOutdent}
         title="Retrait à gauche (Shift+Tab)"
       >
         ⇤
       </button>
       <button
-        className={`editor-tb-btn${!canIndent ? ' disabled' : ''}`}
-        onClick={() => editor.chain().focus().sinkListItem('listItem').run()}
-        disabled={!canIndent}
-        title="Retrait à droite (Tab)"
+        className="editor-tb-btn"
+        onClick={handleIndent}
+        title="Retrait à droite (Tab) ou Espaces"
       >
         ⇥
       </button>
@@ -145,17 +154,18 @@ export default function EditorToolbar({
         ⊕ Insérer
       </button>
 
-      {onMore && (
-        <button
-          className="editor-tb-btn"
-          onClick={onMore}
-          title="Plus d'options : titres, tableau, séparateur, citation, code"
-          aria-label="Plus d'options"
-          aria-haspopup="menu"
-        >
-          ⋯
-        </button>
-      )}
+      {sep('s5')}
+
+      {btn('H₂', () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive('heading', { level: 2 }), 'Titre 2 (⌘⇧2)')}
+      {btn('H₃', () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive('heading', { level: 3 }), 'Titre 3 (⌘⇧3)')}
+      {btn('H₄', () => editor.chain().focus().toggleHeading({ level: 4 }).run(), editor.isActive('heading', { level: 4 }), 'Titre 4 (⌘⇧4)')}
+
+      {sep('s6')}
+
+      {btn('▭', () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), false, 'Insérer un tableau 3×3')}
+      {btn('―', () => editor.chain().focus().setHorizontalRule().run(), false, 'Séparateur horizontal')}
+      {btn('«»', () => editor.chain().focus().toggleBlockquote().run(), editor.isActive('blockquote'), 'Citation')}
+      {btn('</>', () => editor.chain().focus().toggleCodeBlock().run(), editor.isActive('codeBlock'), 'Bloc de code')}
     </div>
   )
 }

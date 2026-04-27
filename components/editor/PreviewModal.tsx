@@ -13,6 +13,7 @@ import { common, createLowlight } from 'lowlight'
 import {
   PartieExtension,
   ExerciceExtension,
+  ProblemeExtension,
   EnonceExtension,
   QuestionExtension,
   AnnotationExtension,
@@ -42,6 +43,7 @@ export default function PreviewModal({ content, meta, prix, onClose }: Props) {
       CodeBlockLowlight.configure({ lowlight }),
       PartieExtension,
       ExerciceExtension,
+      ProblemeExtension,
       EnonceExtension,
       QuestionExtension,
       AnnotationExtension,

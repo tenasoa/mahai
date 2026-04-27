@@ -24,6 +24,7 @@ import type { Editor } from '@tiptap/react'
 import {
   PartieExtension,
   ExerciceExtension,
+  ProblemeExtension,
   EnonceExtension,
   QuestionExtension,
   AnnotationExtension,
@@ -127,6 +128,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(function EditorCanvas
       TableCell,
       PartieExtension,
       ExerciceExtension,
+      ProblemeExtension,
       EnonceExtension,
       QuestionExtension,
       AnnotationExtension,

@@ -451,6 +451,11 @@ export default function AdminConfigurationPage() {
       })
 
       if (res.ok) {
+        const data = await res.json()
+        // Mettre à jour le cache immédiatement pour tous les composants
+        if (data.config?.arPerCredit) {
+          CurrencyConverter.cacheRate(data.config.arPerCredit)
+        }
         showToast('Configuration de change mise à jour')
         setCurrencyForm({ ...currencyForm, note: '' })
         loadData()

@@ -26,29 +26,62 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mah.AI — Réussis tes examens avec l'IA",
+  title: {
+    default: "Mah.AI — Réussis tes examens avec l'IA",
+    template: "%s | Mah.AI",
+  },
   description:
-    "La plateforme EdTech made in Madagascar. Accède aux sujets BAC, BEPC, CEPE avec des corrections IA et des professeurs certifiés.",
+    "La plateforme EdTech made in Madagascar. Accède aux sujets BAC, BEPC, CEPE avec des corrections IA instantanées. Paiement Mobile Money (MVola, Orange Money, Airtel Money). 10 crédits offerts à l'inscription.",
   keywords: [
     "BAC Madagascar",
-    "BEPC",
-    "CEPE",
-    "examens",
-    "révisions",
-    "IA",
-    "EdTech",
+    "BEPC Madagascar",
+    "CEPE Madagascar",
+    "examens Madagascar",
+    "révisions BAC",
+    "correction IA",
+    "sujets d'examen",
+    "annales BAC",
+    "EdTech Madagascar",
+    "Mah.AI",
+    "Mobile Money",
+    "MVola",
+    "Orange Money",
+    "Airtel Money",
+    "éducation Madagascar",
   ],
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://mahai.mg"
+  ),
   openGraph: {
     title: "Mah.AI — Réussis tes examens avec l'IA",
     description:
-      "La plateforme EdTech made in Madagascar. Corrections IA, professeurs certifiés, examens blancs.",
+      "Accède à des milliers de sujets BAC, BEPC, CEPE avec correction IA instantanée. Paiement Mobile Money, 10 crédits offerts à l'inscription.",
     type: "website",
     locale: "fr_MG",
+    siteName: "Mah.AI",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Mah.AI — Plateforme éducative IA pour Madagascar",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Mah.AI — Réussis tes examens avec l'IA",
-    description: "La plateforme EdTech made in Madagascar.",
+    description:
+      "Sujets BAC, BEPC, CEPE + correction IA instantanée. 10 crédits offerts.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "/",
   },
 };
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   SubjectMetadata,
   ExamType,
@@ -24,6 +24,64 @@ interface Props {
 }
 
 const PRIX_SUGGESTIONS = [500, 1000, 2000, 3000, 5000]
+
+/**
+ * Génère un titre automatique à partir des métadonnées saisies.
+ * Garde uniquement les infos les plus discriminantes : type d'examen +
+ * variante (série / option / concours / établissement) + année + matière.
+ * Renvoie '' tant qu'aucun examType n'est choisi pour éviter d'écraser un
+ * titre vide par un titre vide.
+ */
+function buildAutoTitle(m: SubjectMetadata): string {
+  if (!m.examType) return ''
+
+  let head = ''
+
+  switch (m.examType) {
+    case 'BACC': {
+      if (m.serie) {
+        const tech = m.baccType === 'Technique' ? ' Tech.' : ''
+        head = `BACC${tech} série ${m.serie}`
+      } else if (m.baccType) {
+        head = `BACC ${m.baccType === 'Technique' ? 'Technique' : 'Général'}`
+      } else {
+        head = 'BACC'
+      }
+      break
+    }
+    case 'BEPC': {
+      head = m.bepcOption ? `BEPC option ${m.bepcOption}` : 'BEPC'
+      break
+    }
+    case 'CEPE': {
+      head = 'CEPE'
+      break
+    }
+    case 'Concours': {
+      head = m.concoursType?.trim()
+        ? `Concours ${m.concoursType.trim()}`
+        : 'Concours'
+      break
+    }
+    case 'Etablissement': {
+      const base = m.etablissement?.trim() || 'Établissement'
+      const sem = m.semestre === 'S1' ? 'S1' : m.semestre === 'Final' ? 'Final' : ''
+      head = sem ? `${base} ${sem}` : base
+      break
+    }
+    case 'Autre':
+    default: {
+      head = 'Sujet'
+    }
+  }
+
+  const annee = m.anneeScolaire?.trim() || ''
+  const matiere = m.matiere?.trim() || ''
+
+  const left = annee ? `${head} ${annee}` : head
+  if (left && matiere) return `${left} — ${matiere}`
+  return left || matiere
+}
 
 function emptyMeta(): SubjectMetadata {
   return {
@@ -53,8 +111,50 @@ export default function OnboardingModal({ onComplete }: Props) {
   const [prix, setPrix] = useState(2000)
   const [prixMode, setPrixMode] = useState('forfait')
 
+  // Suivi du titre auto-généré : tant que l'utilisateur n'a pas tapé quelque
+  // chose de différent, on continue de mettre à jour le titre lorsqu'une
+  // métadonnée change. Dès qu'il customise, on respecte sa saisie.
+  const lastAutoTitleRef = useRef<string>('')
+  const titleOverriddenRef = useRef<boolean>(false)
+
   const set = <K extends keyof SubjectMetadata>(field: K, value: SubjectMetadata[K]) => {
     setMeta(prev => ({ ...prev, [field]: value }))
+  }
+
+  const computedAutoTitle = useMemo(
+    () => buildAutoTitle(meta),
+    [
+      meta.examType,
+      meta.baccType,
+      meta.serie,
+      meta.bepcOption,
+      meta.concoursType,
+      meta.etablissement,
+      meta.semestre,
+      meta.anneeScolaire,
+      meta.matiere,
+    ]
+  )
+
+  // Synchronise le titre avec l'auto-génération tant qu'il n'a pas été
+  // explicitement modifié par l'utilisateur.
+  useEffect(() => {
+    if (titleOverriddenRef.current) return
+    if (!computedAutoTitle) return
+    if (meta.title && meta.title !== lastAutoTitleRef.current) {
+      // Cas où le titre actuel a été saisi avant le 1er passage : on respecte.
+      titleOverriddenRef.current = true
+      return
+    }
+    lastAutoTitleRef.current = computedAutoTitle
+    setMeta(prev =>
+      prev.title === computedAutoTitle ? prev : { ...prev, title: computedAutoTitle }
+    )
+  }, [computedAutoTitle, meta.title])
+
+  const handleTitleChange = (value: string) => {
+    titleOverriddenRef.current = value.trim().length > 0
+    set('title', value)
   }
 
   const setExamType = (value: ExamType) => {
@@ -129,14 +229,34 @@ export default function OnboardingModal({ onComplete }: Props) {
 
             <div className="ed-onboarding-body ed-onboarding-body--scroll">
               <div className="ed-field">
-                <label className="ed-label">Titre du sujet *</label>
+                <label className="ed-label">
+                  Titre du sujet *
+                  <span className="ed-label-hint">
+                    {titleOverriddenRef.current
+                      ? '(personnalisé)'
+                      : '(généré automatiquement)'}
+                  </span>
+                </label>
                 <input
                   className="ed-input"
-                  placeholder="Ex : Bac C 2023 — Mathématiques"
+                  placeholder="Ex : BACC série C 2010-2011 — Mathématiques"
                   value={meta.title}
-                  onChange={e => set('title', e.target.value)}
-                  autoFocus
+                  onChange={e => handleTitleChange(e.target.value)}
                 />
+                {titleOverriddenRef.current && computedAutoTitle && computedAutoTitle !== meta.title && (
+                  <button
+                    type="button"
+                    className="ed-btn-mini"
+                    style={{ marginTop: '0.35rem' }}
+                    onClick={() => {
+                      titleOverriddenRef.current = false
+                      lastAutoTitleRef.current = computedAutoTitle
+                      set('title', computedAutoTitle)
+                    }}
+                  >
+                    → Régénérer : {computedAutoTitle}
+                  </button>
+                )}
               </div>
 
               <div className="ed-field">

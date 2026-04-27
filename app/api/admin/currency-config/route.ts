@@ -92,10 +92,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validation.errors.join(', ') }, { status: 400 })
     }
 
-    // Créer la nouvelle config
+    // Créer la nouvelle config avec activeAt = NOW() pour qu'elle soit immédiatement active
     const result = await query(
-      `INSERT INTO "CurrencyConfig" (id, "arPerCredit", "platformFeePercent", "updatedBy", note)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4)
+      `INSERT INTO "CurrencyConfig" (id, "arPerCredit", "platformFeePercent", "updatedBy", note, "activeAt")
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW())
        RETURNING id, "arPerCredit", "platformFeePercent", "createdAt", "updatedAt", note`,
       [arPerCredit, platformFeePercent, auth.userId, note]
     )

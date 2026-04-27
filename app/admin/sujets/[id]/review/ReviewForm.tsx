@@ -131,7 +131,7 @@ export function ReviewForm({ submission }: { submission: Submission }) {
   const [rejectReason, setRejectReason] = useState('')
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
   const [editInfoMode, setEditInfoMode] = useState(false)
-  const [currencyRate, setCurrencyRate] = useState(50)
+  const [currencyRate, setCurrencyRate] = useState<number | null>(null)
 
   const [formData, setFormData] = useState({
     titre: submission.title || '',
@@ -143,7 +143,7 @@ export function ReviewForm({ submission }: { submission: Submission }) {
     pages: submission.pages || 1,
     duree: submission.duree || '3h',
     coefficient: submission.coefficient || 1,
-    credits: CurrencyConverter.arToCredits(Number(submission.prix || 0), 50),
+    credits: 0, // Sera calculé après récupération du taux API
     difficulte: submission.difficulte || 'MOYEN' as 'FACILE' | 'MOYEN' | 'DIFFICILE',
     badge: 'AI' as 'GOLD' | 'AI' | 'FREE',
     description: submission.description || '',
@@ -673,12 +673,13 @@ export function ReviewForm({ submission }: { submission: Submission }) {
                           color: 'var(--text-3)',
                           marginBottom: '0.35rem'
                         }}>
-                          Prix soumis: {Number(submission.prix || 0).toLocaleString()} Ar • 1 cr = {currencyRate} Ar
+                          Prix soumis: {Number(submission.prix || 0).toLocaleString()} Ar • 1 cr = {currencyRate ?? '...'} Ar
                         </div>
                         <input
                           type="number"
                           min="0"
                           value={formData.credits}
+                          disabled={currencyRate === null}
                           onChange={e => setFormData({ ...formData, credits: parseInt(e.target.value) })}
                           style={{
                             width: '100%',
@@ -686,10 +687,11 @@ export function ReviewForm({ submission }: { submission: Submission }) {
                             fontSize: '0.85rem',
                             borderRadius: 'var(--r)',
                             border: '1px solid var(--b2)',
-                            background: 'var(--void)',
+                            background: currencyRate === null ? 'var(--b1)' : 'var(--void)',
                             color: 'var(--text)',
                             fontFamily: 'var(--mono)',
-                            fontWeight: 600
+                            fontWeight: 600,
+                            opacity: currencyRate === null ? 0.6 : 1
                           }}
                         />
                       </div>

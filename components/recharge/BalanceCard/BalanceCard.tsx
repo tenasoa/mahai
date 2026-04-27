@@ -29,6 +29,10 @@ export function BalanceCard({
       
       {/* Background gradient */}
       <div className={styles.bgGradient} />
+      
+      {/* Noise and Reflection */}
+      <div className={styles.noise} />
+      <div className={styles.reflection} />
 
       <div className={styles.content}>
         <div className={styles.header}>

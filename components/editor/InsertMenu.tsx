@@ -53,6 +53,12 @@ export default function InsertMenu({ editor, position, onClose, onOpenKaTeX }: P
         type: 'enonce',
         content: [{ type: 'paragraph' }],
       }).run()
+    } else if (type === 'probleme') {
+      editor.chain().focus().insertContent({
+        type: 'probleme',
+        attrs: { numero: 1, points: 10 },
+        content: [{ type: 'paragraph' }],
+      }).run()
     } else if (type === 'question') {
       editor.chain().focus().insertContent({
         type: 'question',
