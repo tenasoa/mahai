@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Pencil, Check, X, GraduationCap, School } from 'lucide-react';
+import { Pencil, Check, X, GraduationCap, School, BookOpen } from 'lucide-react';
 import { 
   EDUCATION_LEVELS, 
   GRADE_LEVELS_MAP, 
