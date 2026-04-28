@@ -135,7 +135,7 @@ export function useAuth() {
       window.removeEventListener('focus', handleFocus)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [fetchAppUser, pathname])
+   }, [fetchAppUser])
 
   return { user, appUser, setAppUser, userId, loading, isAuthenticated: !!user }
 }

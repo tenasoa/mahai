@@ -119,7 +119,7 @@ export default function NotFound() {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      window.location.href = `/catalogue?q=${encodeURIComponent(searchQuery)}`
+       router.push(`/catalogue?q=${encodeURIComponent(searchQuery)}`)
     }
   }
 
