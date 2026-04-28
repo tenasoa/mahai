@@ -885,98 +885,29 @@ export default function ProfilePage() {
                     <Zap size={14} className="sc-info-icon" />
                   </div>
 
-                  <TagsEditor
+                   <TagsEditor
                     label="Matières préférées"
                     items={appUser?.matieresPreferees || []}
                     availableOptions={COMMON_SUBJECTS}
                     onSave={(tags) => handleSaveTags('matieresPreferees', tags)}
                   />
 
-                  <TagsEditor
-                    label="Objectifs d'étude"
-                    items={appUser?.objectifsEtude || []}
-                    availableOptions={STUDY_OBJECTIVES}
-                    onSave={(tags) => handleSaveTags('objectifsEtude', tags)}
-                  />
+                  <div className="mt-6">
+                    <TagsEditor
+                      label="Objectifs d'étude"
+                      items={appUser?.objectifsEtude || []}
+                      availableOptions={STUDY_OBJECTIVES}
+                      onSave={(tags) => handleSaveTags('objectifsEtude', tags)}
+                    />
+                  </div>
                 </div>
-
-
               </div>
             </div>
           </div>
-
-          <div
-            className={`ptab-panel ${activeTab === "mes-sujets" ? "active" : ""}`}
-          >
-            <PurchasedSubjectsTab
-              subjects={purchasedSubjects}
-              loading={purchasedSubjectsLoading}
-            />
-          </div>
-
-          <div
-            className={`ptab-panel ${activeTab === "coffre-fort" ? "active" : ""}`}
-          >
-            <TransactionsTab
-              credits={appUser?.credits ?? 0}
-              transactions={transactions}
-              transactionsLoading={transactionsLoading}
-              mobileMoneySettings={mobileMoneySettings}
-              setMobileMoneySettings={setMobileMoneySettings}
-              mobileMoneySaving={mobileMoneySaving}
-              onMobileMoneySave={handleMobileMoneySave}
-            />
-          </div>
-
-          <div
-            className={`ptab-panel ${activeTab === "securite" ? "active" : ""}`}
-          >
-            <SecurityTab
-              securitySettings={securitySettings}
-              setSecuritySettings={setSecuritySettings}
-              securitySettingsUpdatedAt={appUser?.securitySettingsUpdatedAt}
-              userEmail={user?.email}
-              onNotification={setNotification}
-            />
-          </div>
         </div>
-      </main>
-
-      {/* NOTIFICATION TOAST */}
-      {notification && (
-        <div className="toast-container">
-          <div className={`toast ${notification.type}`}>
-            <div className="toast-icon">
-              {notification.type === "success" ? <Check size={18} /> : <X size={18} />}
-            </div>
-            <div className="toast-content">
-              <div className="toast-title">
-                {notification.type === "success" ? "Succès" : "Erreur"}
-              </div>
-              <div className="toast-msg">{notification.message}</div>
-            </div>
-            <button
-              className="toast-close"
-              onClick={() => setNotification(null)}
-              aria-label="Fermer la notification"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ÉDITION INLINE ACTIVÉE - Modale supprimée */}
-
-      {/* MODALE UPLOAD AVATAR */}
-      <AvatarUploadModal
-        isOpen={avatarModalOpen}
-        onClose={() => setAvatarModalOpen(false)}
-        userId={userId!}
-        currentAvatarUrl={appUser?.profilePicture}
-        onAvatarChange={() => window.location.reload()}
-        onError={(message) => setNotification({ type: "error", message })}
-      />
+      </div>
     </div>
   );
 }
+
+

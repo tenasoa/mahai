@@ -109,40 +109,28 @@ export function TagsEditor({ label, items, availableOptions, onSave, maxDisplay 
 
   return (
     <div className="tags-view">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-        <span className="ir-label">{label}</span>
-        <button
-          type="button"
-          onClick={() => setIsEditing(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.25rem',
-            padding: '0.3rem 0.8rem',
-            borderRadius: '999px',
-            border: '2px solid var(--gold)',
-            background: 'var(--gold)',
-            color: 'var(--void)',
-            fontSize: '0.78rem',
-            cursor: 'pointer',
-            fontFamily: 'var(--body)',
-            fontWeight: 500,
-            whiteSpace: 'nowrap'
-          }}
-        >
-          <Pencil size={12} /> Modifier
-        </button>
-      </div>
-      <div className="luxury-tags">
-        {(tempItems?.length ?? 0) > 0 ? (
-          tempItems?.slice(0, maxDisplay).map((item) => (
-            <span key={item} className="luxury-tag">
-              {item}
-            </span>
-          ))
-        ) : (
-          <span className="luxury-tag-empty">Aucun élément renseigné</span>
-        )}
+      <div className="info-row">
+        <div className="ir-label">{label}</div>
+        <div className="ir-content">
+          <div className="luxury-tags">
+            {(tempItems?.length ?? 0) > 0 ? (
+              tempItems?.slice(0, maxDisplay).map((item) => (
+                <span key={item} className="luxury-tag">
+                  {item}
+                </span>
+              ))
+            ) : (
+              <span className="luxury-tag-empty">Aucun élément renseigné</span>
+            )}
+          </div>
+          <button
+            className="ir-edit-trigger"
+            onClick={() => setIsEditing(true)}
+            title="Modifier"
+          >
+            <Pencil size={12} /> Modifier
+          </button>
+        </div>
       </div>
     </div>
   );
