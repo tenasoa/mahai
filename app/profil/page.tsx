@@ -39,6 +39,7 @@ import {
   Eye,
 } from "lucide-react";
 import { ProfileInfoRow } from "@/components/profile/ProfileInfoRow";
+import { RegionDistrictRow } from "@/components/profile/RegionDistrictRow";
 import { SecurityTab, type SecuritySettings } from "@/components/profile/SecurityTab";
 import { TransactionsTab } from "@/components/profile/TransactionsTab";
 import { PurchasedSubjectsTab } from "@/components/profile/PurchasedSubjectsTab";
@@ -78,6 +79,12 @@ export default function ProfilePage() {
       console.error('Erreur chargement numéros', err);
     }
   };
+
+  useEffect(() => {
+    if (userId) {
+      loadUserPhones();
+    }
+  }, [userId]);
 
   const handleInlineSave = async (field: string, newValue: any) => {
     try {
@@ -800,18 +807,9 @@ export default function ProfilePage() {
                     <MapPin size={14} className="sc-info-icon" />
                   </div>
                   <div className="info-rows">
-                    <ProfileInfoRow
-                      label="Région"
-                      field="region"
-                      value={appUser?.region}
-                      showVisibilityIcon={false}
-                      onSave={handleInlineSave}
-                    />
-                    <ProfileInfoRow
-                      label="District"
-                      field="district"
-                      value={appUser?.district}
-                      showVisibilityIcon={false}
+                    <RegionDistrictRow
+                      regionValue={appUser?.region}
+                      districtValue={appUser?.district}
                       onSave={handleInlineSave}
                     />
                   </div>

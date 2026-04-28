@@ -2108,3 +2108,37 @@ select.form-input {
 .text-rose {
   color: #ff4d4f;
 }
+
+/* ==========================================================
+   REGION-DISTRICT ROW
+   ========================================================== */
+.region-district-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rd-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.rd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rd-field label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rd-field .ir-input {
+  width: 100%;
+}

@@ -3,6 +3,11 @@
 import { useState } from 'react'
 import { Check, X, Pencil, Eye, EyeOff } from 'lucide-react'
 
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
 export interface InfoRowProps {
   label: string;
   field: string;
@@ -13,6 +18,7 @@ export interface InfoRowProps {
   onToggleVisibility?: () => void;
   onSave?: (field: string, newValue: any) => Promise<void>;
   type?: string;
+  options?: SelectOption[];
 }
 
 export function ProfileInfoRow({
@@ -25,6 +31,7 @@ export function ProfileInfoRow({
   onToggleVisibility,
   onSave,
   type = 'text',
+  options,
 }: InfoRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState(value || '');
@@ -53,21 +60,39 @@ export function ProfileInfoRow({
       <div className='ir-content'>
         {isEditing ? (
           <div className='ir-edit-wrap'>
-            <input
-              type={type}
-              className='ir-input'
-              value={String(tempValue)}
-              onChange={(e) => setTempValue(e.target.value)}
-              autoFocus
-              onBlur={(e) => {
-                if (e.relatedTarget?.closest('.ir-edit-actions')) return;
-                handleCancel();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSave();
-                if (e.key === 'Escape') handleCancel();
-              }}
-            />
+            {options && options.length > 0 ? (
+              <select
+                className='ir-input'
+                value={String(tempValue)}
+                onChange={(e) => setTempValue(e.target.value)}
+                autoFocus
+                onBlur={(e) => {
+                  if (e.relatedTarget?.closest('.ir-edit-actions')) return;
+                  handleCancel();
+                }}
+              >
+                <option value=''>Sélectionner...</option>
+                {options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={type}
+                className='ir-input'
+                value={String(tempValue)}
+                onChange={(e) => setTempValue(e.target.value)}
+                autoFocus
+                onBlur={(e) => {
+                  if (e.relatedTarget?.closest('.ir-edit-actions')) return;
+                  handleCancel();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSave();
+                  if (e.key === 'Escape') handleCancel();
+                }}
+              />
+            )}
             <div className='ir-edit-actions'>
               <button className='ir-btn ir-btn-save' onClick={handleSave} disabled={loading} title='Valider'>
                 {loading ? <div className='loading-dots'>...</div> : <Check size={14} />}
