@@ -1,13 +1,17 @@
-'use client';
-
 import { useState, useEffect } from 'react';
-import { Pencil, Check, X, GraduationCap } from 'lucide-react';
-import { EDUCATION_LEVELS, GRADE_LEVELS_MAP } from '@/lib/constants/profile-data';
+import { Pencil, Check, X, GraduationCap, School } from 'lucide-react';
+import { 
+  EDUCATION_LEVELS, 
+  GRADE_LEVELS_MAP, 
+  LYCEE_TYPES, 
+  LYCEE_SERIES_GENERAL 
+} from '@/lib/constants/profile-data';
 
 interface EducationGradeRowProps {
   educationLevelValue?: string;
   gradeLevelValue?: string;
   filiereValue?: string;
+  lyceeTypeValue?: string;
   onSave: (field: string, newValue: any) => Promise<void>;
 }
 
@@ -15,23 +19,38 @@ export function EducationGradeRow({
   educationLevelValue,
   gradeLevelValue,
   filiereValue,
+  lyceeTypeValue,
   onSave,
 }: EducationGradeRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [tempEducationLevel, setTempEducationLevel] = useState(educationLevelValue || '');
   const [tempGradeLevel, setTempGradeLevel] = useState(gradeLevelValue || '');
   const [tempFiliere, setTempFiliere] = useState(filiereValue || '');
+  const [tempLyceeType, setTempLyceeType] = useState(lyceeTypeValue || '');
   const [loading, setLoading] = useState(false);
   const [availableGrades, setAvailableGrades] = useState<{ value: string; label: string }[]>([]);
 
-  // Mettre à jour les classes quand le niveau change
+  // Mettre à jour les classes quand le niveau ou le type de lycée change
   useEffect(() => {
-    if (tempEducationLevel && GRADE_LEVELS_MAP[tempEducationLevel as keyof typeof GRADE_LEVELS_MAP]) {
+    if (!tempEducationLevel) {
+      setAvailableGrades([]);
+      return;
+    }
+
+    if (tempEducationLevel === 'LYCEE') {
+      if (tempLyceeType === 'GENERALE') {
+        setAvailableGrades(GRADE_LEVELS_MAP.LYCEE_GENERALE);
+      } else if (tempLyceeType === 'TECHNIQUE') {
+        setAvailableGrades(GRADE_LEVELS_MAP.LYCEE_TECHNIQUE);
+      } else {
+        setAvailableGrades([]);
+      }
+    } else if (GRADE_LEVELS_MAP[tempEducationLevel as keyof typeof GRADE_LEVELS_MAP]) {
       setAvailableGrades(GRADE_LEVELS_MAP[tempEducationLevel as keyof typeof GRADE_LEVELS_MAP]);
     } else {
       setAvailableGrades([]);
     }
-  }, [tempEducationLevel]);
+  }, [tempEducationLevel, tempLyceeType]);
 
   // Synchroniser avec les valeurs externes
   useEffect(() => {
@@ -39,36 +58,46 @@ export function EducationGradeRow({
       setTempEducationLevel(educationLevelValue || '');
       setTempGradeLevel(gradeLevelValue || '');
       setTempFiliere(filiereValue || '');
+      setTempLyceeType(lyceeTypeValue || '');
     }
-  }, [educationLevelValue, gradeLevelValue, filiereValue, isEditing]);
+  }, [educationLevelValue, gradeLevelValue, filiereValue, lyceeTypeValue, isEditing]);
 
   const handleEducationLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLevel = e.target.value;
     setTempEducationLevel(newLevel);
-    setTempGradeLevel(''); // Reset grade quand le niveau change
+    setTempGradeLevel('');
+    setTempLyceeType('');
+    setTempFiliere('');
+  };
+
+  const handleLyceeTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTempLyceeType(e.target.value);
+    setTempGradeLevel('');
+    setTempFiliere('');
   };
 
   const handleSave = async () => {
     setLoading(true);
     try {
+      // Sauvegarde séquentielle pour garantir la cohérence
       await onSave('educationLevel', tempEducationLevel);
+      await onSave('lyceeType', tempLyceeType);
       await onSave('gradeLevel', tempGradeLevel);
-      if (tempEducationLevel === 'LYCEE') {
-        await onSave('filiere', tempFiliere);
-      } else {
-        await onSave('filiere', '');
-      }
+      await onSave('filiere', tempFiliere);
+      
+      setIsEditing(false);
     } catch (error) {
       console.error('Erreur sauvegarde parcours académique:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    setIsEditing(false);
   };
 
   const handleCancel = () => {
     setTempEducationLevel(educationLevelValue || '');
     setTempGradeLevel(gradeLevelValue || '');
     setTempFiliere(filiereValue || '');
+    setTempLyceeType(lyceeTypeValue || '');
     setIsEditing(false);
   };
 
@@ -78,18 +107,24 @@ export function EducationGradeRow({
   };
 
   const getGradeLabel = (value: string) => {
-    const found = availableGrades.find((g) => g.value === value);
+    // Chercher dans toutes les catégories si nécessaire
+    const allGrades = Object.values(GRADE_LEVELS_MAP).flat();
+    const found = allGrades.find((g) => g.value === value);
     return found ? found.label : value;
   };
+
+  const isLycée = tempEducationLevel === 'LYCEE';
+  const isLycéeGeneral = isLycée && tempLyceeType === 'GENERALE';
+  const isLycéeTechnique = isLycée && tempLyceeType === 'TECHNIQUE';
+  const isSuperior = ['UNIVERSITE', 'FACULTE', 'INSTITUT', 'FORMATION'].includes(tempEducationLevel);
 
   return (
     <div className="education-grade-container">
       {isEditing ? (
-        <div className="ed-edit">
+        <div className="ed-edit luxury-card-inner">
           <div className="ed-field">
-            <label htmlFor="edit-education-level">Niveau d'étude</label>
+            <label className="ed-label">Niveau d'étude</label>
             <select
-              id="edit-education-level"
               value={tempEducationLevel}
               onChange={handleEducationLevelChange}
               className="ir-input"
@@ -101,34 +136,68 @@ export function EducationGradeRow({
               ))}
             </select>
           </div>
-          <div className="ed-field">
-            <label htmlFor="edit-grade-level">Classe / Série</label>
-            <select
-              id="edit-grade-level"
-              value={tempGradeLevel}
-              onChange={(e) => setTempGradeLevel(e.target.value)}
-              className="ir-input"
-              disabled={!tempEducationLevel}
-            >
-              <option value="">Sélectionner une classe...</option>
-              {availableGrades.map((g) => (
-                <option key={g.value} value={g.value}>{g.label}</option>
-              ))}
-            </select>
-          </div>
-          {tempEducationLevel === 'LYCEE' && (
+
+          {isLycée && (
             <div className="ed-field">
-              <label htmlFor="edit-filiere">Filière</label>
+              <label className="ed-label">Type de Lycée</label>
+              <select
+                value={tempLyceeType}
+                onChange={handleLyceeTypeChange}
+                className="ir-input"
+              >
+                <option value="">Sélectionner le type...</option>
+                {LYCEE_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {tempEducationLevel && (isLycée ? tempLyceeType : true) && (
+            <div className="ed-field">
+              <label className="ed-label">Classe</label>
+              <select
+                value={tempGradeLevel}
+                onChange={(e) => setTempGradeLevel(e.target.value)}
+                className="ir-input"
+              >
+                <option value="">Sélectionner une classe...</option>
+                {availableGrades.map((g) => (
+                  <option key={g.value} value={g.value}>{g.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {isLycéeGeneral && (
+            <div className="ed-field">
+              <label className="ed-label">Série</label>
+              <select
+                value={tempFiliere}
+                onChange={(e) => setTempFiliere(e.target.value)}
+                className="ir-input"
+              >
+                <option value="">Sélectionner la série...</option>
+                {LYCEE_SERIES_GENERAL.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {(isLycéeTechnique || isSuperior) && (
+            <div className="ed-field">
+              <label className="ed-label">{isSuperior ? 'Filière / Mention' : 'Série / Spécialité'}</label>
               <input
-                id="edit-filiere"
                 type="text"
                 className="ir-input"
                 value={tempFiliere}
                 onChange={(e) => setTempFiliere(e.target.value)}
-                placeholder="Générale, Technique, Professionnelle..."
+                placeholder={isSuperior ? "Ex: Gestion, Informatique..." : "Ex: OSE, Technique..."}
               />
             </div>
           )}
+
           <div className="ir-edit-actions">
             <button
               className="ir-btn ir-btn-save"
@@ -149,34 +218,29 @@ export function EducationGradeRow({
           </div>
         </div>
       ) : (
-        <>
+        <div className="info-rows-group">
           <div className="info-row">
-            <div className="ir-label">Niveau d'étude</div>
+            <div className="ir-label">Parcours Académique</div>
             <div className="ir-content">
-              <span className="ir-icon"><GraduationCap size={14} /></span>
-              <span className="ir-value">{educationLevelValue ? getEducationLabel(educationLevelValue) : 'Non renseigné'}</span>
-              <button className="ir-edit-trigger" onClick={() => setIsEditing(true)} title="Modifier">
+              <span className="ir-icon"><School size={14} /></span>
+              <div className="ir-stack">
+                <span className="ir-value highlight">
+                  {educationLevelValue ? getEducationLabel(educationLevelValue) : 'Non renseigné'}
+                  {lyceeTypeValue && ` — Lycée ${lyceeTypeValue === 'GENERALE' ? 'Général' : 'Technique'}`}
+                </span>
+                {(gradeLevelValue || filiereValue) && (
+                  <span className="ir-sub-value">
+                    {gradeLevelValue && getGradeLabel(gradeLevelValue)}
+                    {filiereValue && ` | ${filiereValue}`}
+                  </span>
+                )}
+              </div>
+              <button className="ir-edit-trigger" onClick={() => setIsEditing(true)} title="Modifier le parcours">
                 <Pencil size={12} />
               </button>
             </div>
           </div>
-          <div className="info-row">
-            <div className="ir-label">Classe / Série</div>
-            <div className="ir-content">
-              <span className="ir-icon"><GraduationCap size={14} /></span>
-              <span className="ir-value">{gradeLevelValue ? getGradeLabel(gradeLevelValue) : 'Non renseigné'}</span>
-            </div>
-          </div>
-          {filiereValue && (
-            <div className="info-row">
-              <div className="ir-label">Filière</div>
-              <div className="ir-content">
-                <span className="ir-icon"><GraduationCap size={14} /></span>
-                <span className="ir-value">{filiereValue}</span>
-              </div>
-            </div>
-          )}
-        </>
+        </div>
       )}
     </div>
   );

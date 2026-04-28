@@ -7,6 +7,8 @@ import {
   USER_TYPES,
   EDUCATION_LEVELS,
   GRADE_LEVELS_MAP,
+  LYCEE_TYPES,
+  LYCEE_SERIES_GENERAL,
   COMMON_SUBJECTS,
   STUDY_OBJECTIVES
 } from '@/lib/constants/profile-data'
@@ -61,6 +63,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
     // Informations académiques
     etablissement: userData?.etablissement || '',
     educationLevel: userData?.educationLevel || '',
+    lyceeType: userData?.lyceeType || '',
     gradeLevel: userData?.gradeLevel || '',
     filiere: userData?.filiere || '',
 
@@ -105,6 +108,7 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
         // Informations académiques
         etablissement: userData?.etablissement || '',
         educationLevel: userData?.educationLevel || '',
+        lyceeType: userData?.lyceeType || '',
         gradeLevel: userData?.gradeLevel || '',
         filiere: userData?.filiere || '',
 
@@ -141,14 +145,25 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
     }
   }, [formData.region])
 
-  // Mettre à jour les classes quand le niveau d'étude change
+  // Mettre à jour les classes quand le niveau d'étude ou le type de lycée change
   useEffect(() => {
-    if (formData.educationLevel) {
-      setAvailableGrades(GRADE_LEVELS_MAP[formData.educationLevel as keyof typeof GRADE_LEVELS_MAP] || [])
-    } else {
+    if (!formData.educationLevel) {
       setAvailableGrades([])
+      return
     }
-  }, [formData.educationLevel])
+
+    if (formData.educationLevel === 'LYCEE') {
+      if (formData.lyceeType === 'GENERALE') {
+        setAvailableGrades(GRADE_LEVELS_MAP.LYCEE_GENERALE || [])
+      } else if (formData.lyceeType === 'TECHNIQUE') {
+        setAvailableGrades(GRADE_LEVELS_MAP.LYCEE_TECHNIQUE || [])
+      } else {
+        setAvailableGrades([])
+      }
+    } else {
+      setAvailableGrades(GRADE_LEVELS_MAP[formData.educationLevel as keyof typeof GRADE_LEVELS_MAP] || [])
+    }
+  }, [formData.educationLevel, formData.lyceeType])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
@@ -306,7 +321,15 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                   <select 
                     name="educationLevel" 
                     value={formData.educationLevel}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        educationLevel: e.target.value,
+                        lyceeType: '',
+                        gradeLevel: '',
+                        filiere: ''
+                      }));
+                    }}
                     className="form-select"
                   >
                     <option value="">Sélectionner</option>
@@ -318,35 +341,85 @@ export function ProfileEditModal({ isOpen, onClose, userData, onSave, loading = 
                   </select>
                 </div>
                 
-                <div className="form-group">
-                  <label className="form-label">Classe</label>
-                  <select 
-                    name="gradeLevel" 
-                    value={formData.gradeLevel}
-                    onChange={handleChange}
-                    className="form-select"
-                    disabled={!formData.educationLevel}
-                  >
-                    <option value="">Sélectionner</option>
-                    {availableGrades.map(grade => (
-                      <option key={grade.value} value={grade.value}>
-                        {grade.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {formData.educationLevel === 'LYCEE' && (
+                  <div className="form-group">
+                    <label className="form-label">Type de Lycée</label>
+                    <select 
+                      name="lyceeType" 
+                      value={formData.lyceeType}
+                      onChange={(e) => {
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          lyceeType: e.target.value,
+                          gradeLevel: '',
+                          filiere: ''
+                        }));
+                      }}
+                      className="form-select"
+                    >
+                      <option value="">Sélectionner</option>
+                      {LYCEE_TYPES.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
-              {isHigherEd && (
+              {(formData.educationLevel && (formData.educationLevel === 'LYCEE' ? formData.lyceeType : true)) && (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Classe</label>
+                    <select 
+                      name="gradeLevel" 
+                      value={formData.gradeLevel}
+                      onChange={handleChange}
+                      className="form-select"
+                    >
+                      <option value="">Sélectionner</option>
+                      {availableGrades.map(grade => (
+                        <option key={grade.value} value={grade.value}>
+                          {grade.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {formData.educationLevel === 'LYCEE' && formData.lyceeType === 'GENERALE' && (
+                    <div className="form-group">
+                      <label className="form-label">Série</label>
+                      <select 
+                        name="filiere" 
+                        value={formData.filiere}
+                        onChange={handleChange}
+                        className="form-select"
+                      >
+                        <option value="">Sélectionner</option>
+                        {LYCEE_SERIES_GENERAL.map(serie => (
+                          <option key={serie.value} value={serie.value}>
+                            {serie.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(isHigherEd || (formData.educationLevel === 'LYCEE' && formData.lyceeType === 'TECHNIQUE')) && (
                 <div className="form-group">
-                  <label className="form-label">Filière / Mention</label>
+                  <label className="form-label">
+                    {isHigherEd ? 'Filière / Mention' : 'Série / Spécialité'}
+                  </label>
                   <input
                     type="text"
                     name="filiere"
                     value={formData.filiere}
                     onChange={handleChange}
                     className="form-input"
-                    placeholder="Ex: Gestion, Informatique, Médecine..."
+                    placeholder={isHigherEd ? "Ex: Gestion, Informatique, Médecine..." : "Ex: OSE, Technique..."}
                   />
                 </div>
               )}

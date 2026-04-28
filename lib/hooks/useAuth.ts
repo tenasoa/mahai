@@ -19,6 +19,7 @@ export interface AppUser {
   phoneVerified: boolean
   schoolLevel?: string
   educationLevel?: string
+  lyceeType?: string
   gradeLevel?: string
   region?: string
   district?: string

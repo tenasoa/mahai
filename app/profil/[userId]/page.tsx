@@ -40,6 +40,7 @@ async function getPublicProfile(userId: string) {
         district,
         createdAt,
         educationLevel,
+        lyceeType,
         gradeLevel,
         etablissement,
         showEtablissement,
@@ -206,7 +207,9 @@ export default async function PublicProfilePage({
                       <GraduationCap size={14} /> Niveau & Classe
                     </span>
                     <span className="ir-value">
-                      {profile.educationLevel || "Non renseigné"} — {profile.gradeLevel || "—"}
+                      {profile.educationLevel || "Non renseigné"} 
+                      {profile.lyceeType && ` — Lycée ${profile.lyceeType === 'GENERALE' ? 'Général' : 'Technique'}`}
+                      {profile.gradeLevel && ` — ${profile.gradeLevel}`}
                     </span>
                   </div>
                   {profile.showEtablissement && profile.etablissement && (

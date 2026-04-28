@@ -17,13 +17,30 @@ export const EDUCATION_LEVELS = [
   { value: 'FORMATION', label: 'Formation' }
 ];
 
+export const LYCEE_TYPES = [
+  { value: 'GENERALE', label: 'Générale' },
+  { value: 'TECHNIQUE', label: 'Technique' }
+];
+
+export const LYCEE_SERIES_GENERAL = [
+  { value: 'A1', label: 'Série A1' },
+  { value: 'A2', label: 'Série A2' },
+  { value: 'D', label: 'Série D' },
+  { value: 'C', label: 'Série C' },
+  { value: 'L', label: 'Série L' },
+  { value: 'S', label: 'Série S' },
+  { value: 'OSE', label: 'Série OSE' }
+];
+
 export const GRADE_LEVELS = [
   // Primaire
   '11EME', '10EME', '9EME', '8EME', '7EME',
   // Collège
   '6EME', '5EME', '4EME', '3EME',
-  // Lycée
+  // Lycée Général
   'SECONDE', 'PREMIERE', 'TERMINALE',
+  // Lycée Technique
+  'TECH_1', 'TECH_2', 'TECH_3',
   // Supérieur
   'L1', 'L2', 'L3', 'M1', 'M2',
   // Autre
@@ -44,10 +61,15 @@ export const GRADE_LEVELS_MAP = {
     { value: '4EME', label: '4ème' },
     { value: '3EME', label: '3ème' }
   ],
-  LYCEE: [
+  LYCEE_GENERALE: [
     { value: 'SECONDE', label: 'Seconde' },
     { value: 'PREMIERE', label: 'Première' },
     { value: 'TERMINALE', label: 'Terminale' }
+  ],
+  LYCEE_TECHNIQUE: [
+    { value: 'TECH_1', label: '1ère Année' },
+    { value: 'TECH_2', label: '2ème Année' },
+    { value: 'TECH_3', label: '3ème Année' }
   ],
   UNIVERSITE: [
     { value: 'L1', label: 'Licence 1 (L1)' },

@@ -42,8 +42,14 @@ import { ProfileInfoRow } from "@/components/profile/ProfileInfoRow";
 import { RegionDistrictRow } from "@/components/profile/RegionDistrictRow";
 import { EducationGradeRow } from "@/components/profile/EducationGradeRow";
 import { TagsEditor } from "@/components/profile/TagsEditor";
-import { COMMON_SUBJECTS, STUDY_OBJECTIVES } from "@/lib/constants/profile-data";
-import { SecurityTab, type SecuritySettings } from "@/components/profile/SecurityTab";
+import {
+  COMMON_SUBJECTS,
+  STUDY_OBJECTIVES,
+} from "@/lib/constants/profile-data";
+import {
+  SecurityTab,
+  type SecuritySettings,
+} from "@/components/profile/SecurityTab";
 import { TransactionsTab } from "@/components/profile/TransactionsTab";
 import { PurchasedSubjectsTab } from "@/components/profile/PurchasedSubjectsTab";
 
@@ -68,18 +74,20 @@ export default function ProfilePage() {
   const [notificationTimeout, setNotificationTimeout] =
     useState<NodeJS.Timeout | null>(null);
 
-  const [userPhones, setUserPhones] = useState<{id?: string, phone: string, provider: string}[]>([]);
+  const [userPhones, setUserPhones] = useState<
+    { id?: string; phone: string; provider: string }[]
+  >([]);
 
   // Charger les numéros
   const loadUserPhones = async () => {
     try {
-      const response = await fetch('/api/user/phones');
+      const response = await fetch("/api/user/phones");
       if (response.ok) {
         const data = await response.json();
         setUserPhones(data);
       }
     } catch (err) {
-      console.error('Erreur chargement numéros', err);
+      console.error("Erreur chargement numéros", err);
     }
   };
 
@@ -91,12 +99,17 @@ export default function ProfilePage() {
 
   const handleInlineSave = async (field: string, newValue: any) => {
     try {
-      const result = await updateCurrentUserProfileAction({ [field]: newValue });
+      const result = await updateCurrentUserProfileAction({
+        [field]: newValue,
+      });
       if (result.success) {
         setNotification({ type: "success", message: `${field} mis à jour.` });
         if (appUser) setAppUser({ ...appUser, [field]: newValue });
       } else {
-        setNotification({ type: "error", message: result.error || "Erreur de mise à jour" });
+        setNotification({
+          type: "error",
+          message: result.error || "Erreur de mise à jour",
+        });
       }
     } catch (error) {
       setNotification({ type: "error", message: "Erreur serveur" });
@@ -107,10 +120,16 @@ export default function ProfilePage() {
     try {
       const result = await updateCurrentUserProfileAction({ [field]: tags });
       if (result.success) {
-        setNotification({ type: "success", message: `Préférences mises à jour.` });
+        setNotification({
+          type: "success",
+          message: `Préférences mises à jour.`,
+        });
         if (appUser) setAppUser({ ...appUser, [field]: tags });
       } else {
-        setNotification({ type: "error", message: result.error || "Erreur de mise à jour" });
+        setNotification({
+          type: "error",
+          message: result.error || "Erreur de mise à jour",
+        });
       }
     } catch (error) {
       setNotification({ type: "error", message: "Erreur serveur" });
@@ -121,17 +140,20 @@ export default function ProfilePage() {
     if (!phone || !provider) return;
 
     try {
-      const response = await fetch('/api/user/phones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, provider })
+      const response = await fetch("/api/user/phones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, provider }),
       });
       if (response.ok) {
         setNotification({ type: "success", message: "Numéro ajouté." });
         loadUserPhones();
       } else {
         const errorData = await response.json();
-        setNotification({ type: "error", message: errorData.error || "Erreur lors de l'ajout." });
+        setNotification({
+          type: "error",
+          message: errorData.error || "Erreur lors de l'ajout.",
+        });
       }
     } catch (err) {
       setNotification({ type: "error", message: "Erreur serveur." });
@@ -141,7 +163,9 @@ export default function ProfilePage() {
   const handleDeletePhone = async (phoneId: string) => {
     if (!confirm("Supprimer ce numéro ?")) return;
     try {
-      const response = await fetch(`/api/user/phones?id=${phoneId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/user/phones?id=${phoneId}`, {
+        method: "DELETE",
+      });
       if (response.ok) {
         setNotification({ type: "success", message: "Numéro supprimé." });
         loadUserPhones();
@@ -771,10 +795,14 @@ export default function ProfilePage() {
                         <div key={up.id} className="info-row phone-row">
                           <div className="ir-label">{up.provider}</div>
                           <div className="ir-content">
-                            <span className="ir-icon"><Smartphone size={14} /></span>
-                            <span className="ir-value font-mono">{up.phone}</span>
-                            <button 
-                              className="ir-btn-delete" 
+                            <span className="ir-icon">
+                              <Smartphone size={14} />
+                            </span>
+                            <span className="ir-value font-mono">
+                              {up.phone}
+                            </span>
+                            <button
+                              className="ir-btn-delete"
                               onClick={() => up.id && handleDeletePhone(up.id)}
                               title="Supprimer ce numéro"
                             >
@@ -792,20 +820,32 @@ export default function ProfilePage() {
                           <option value="ORANGE">Orange</option>
                           <option value="AIRTEL">Airtel</option>
                         </select>
-                        <input 
-                          id="new-phone" 
-                          type="text" 
-                          placeholder="03X XX XXX XX" 
+                        <input
+                          id="new-phone"
+                          type="text"
+                          placeholder="03X XX XXX XX"
                           className="ap-input"
                         />
-                        <button 
+                        <button
                           className="ap-btn"
                           onClick={() => {
-                            const p = (document.getElementById('new-phone') as HTMLInputElement).value;
-                            const pr = (document.getElementById('new-provider') as HTMLSelectElement).value;
+                            const p = (
+                              document.getElementById(
+                                "new-phone",
+                              ) as HTMLInputElement
+                            ).value;
+                            const pr = (
+                              document.getElementById(
+                                "new-provider",
+                              ) as HTMLSelectElement
+                            ).value;
                             if (p && pr) {
                               handleAddPhone(p, pr);
-                              (document.getElementById('new-phone') as HTMLInputElement).value = '';
+                              (
+                                document.getElementById(
+                                  "new-phone",
+                                ) as HTMLInputElement
+                              ).value = "";
                             }
                           }}
                         >
@@ -845,7 +885,10 @@ export default function ProfilePage() {
                     <ProfileInfoRow
                       label="Biographie"
                       field="bio"
-                      value={appUser?.bio || "Aucune biographie... Cliquez pour en ajouter une."}
+                      value={
+                        appUser?.bio ||
+                        "Aucune biographie... Cliquez pour en ajouter une."
+                      }
                       onSave={handleInlineSave}
                       type="textarea"
                     />
@@ -872,6 +915,7 @@ export default function ProfilePage() {
                       educationLevelValue={appUser?.educationLevel}
                       gradeLevelValue={appUser?.gradeLevel}
                       filiereValue={appUser?.filiere}
+                      lyceeTypeValue={appUser?.lyceeType}
                       onSave={handleInlineSave}
                     />
                   </div>
@@ -884,30 +928,33 @@ export default function ProfilePage() {
                     </h3>
                     <Zap size={14} className="sc-info-icon" />
                   </div>
-
-                   <TagsEditor
-                    label="Matières préférées"
-                    items={appUser?.matieresPreferees || []}
-                    availableOptions={COMMON_SUBJECTS}
-                    onSave={(tags) => handleSaveTags('matieresPreferees', tags)}
-                  />
-
-                  <div className="mt-6">
+                  <div className="info-rows">
                     <TagsEditor
-                      label="Objectifs d'étude"
-                      items={appUser?.objectifsEtude || []}
-                      availableOptions={STUDY_OBJECTIVES}
-                      onSave={(tags) => handleSaveTags('objectifsEtude', tags)}
+                      label="Matières préférées"
+                      items={appUser?.matieresPreferees || []}
+                      availableOptions={COMMON_SUBJECTS}
+                      onSave={(tags) =>
+                        handleSaveTags("matieresPreferees", tags)
+                      }
                     />
+
+                    <div className="mt-6">
+                      <TagsEditor
+                        label="Objectifs d'étude"
+                        items={appUser?.objectifsEtude || []}
+                        availableOptions={STUDY_OBJECTIVES}
+                        onSave={(tags) =>
+                          handleSaveTags("objectifsEtude", tags)
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
-
-

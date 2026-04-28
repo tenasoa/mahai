@@ -26,7 +26,15 @@ export const updateProfileSchema = z.object({
   // Informations académiques
   etablissement: z.string().optional(),
   educationLevel: z.union([z.literal('PRIMAIRE'), z.literal('COLLEGE'), z.literal('LYCEE'), z.literal('UNIVERSITE'), z.literal('FACULTE'), z.literal('INSTITUT'), z.literal('FORMATION')]).optional(),
-  gradeLevel: z.union([z.literal('11EME'), z.literal('10EME'), z.literal('9EME'), z.literal('8EME'), z.literal('7EME'), z.literal('6EME'), z.literal('5EME'), z.literal('4EME'), z.literal('3EME'), z.literal('SECONDE'), z.literal('PREMIERE'), z.literal('TERMINALE'), z.literal('L1'), z.literal('L2'), z.literal('L3'), z.literal('M1'), z.literal('M2'), z.literal('AUTRE')]).optional(),
+  lyceeType: z.union([z.literal('GENERALE'), z.literal('TECHNIQUE')]).optional(),
+  gradeLevel: z.union([
+    z.literal('11EME'), z.literal('10EME'), z.literal('9EME'), z.literal('8EME'), z.literal('7EME'),
+    z.literal('6EME'), z.literal('5EME'), z.literal('4EME'), z.literal('3EME'),
+    z.literal('SECONDE'), z.literal('PREMIERE'), z.literal('TERMINALE'),
+    z.literal('TECH_1'), z.literal('TECH_2'), z.literal('TECH_3'),
+    z.literal('L1'), z.literal('L2'), z.literal('L3'), z.literal('M1'), z.literal('M2'),
+    z.literal('AUTRE')
+  ]).optional(),
   filiere: z.string().optional(),
 
   // Localisation
@@ -62,7 +70,15 @@ export const createProfileSchema = z.object({
   email: z.string().email('Email invalide'),
   phone: z.string().optional(),
   educationLevel: z.union([z.literal('PRIMAIRE'), z.literal('COLLEGE'), z.literal('LYCEE'), z.literal('UNIVERSITE'), z.literal('FACULTE'), z.literal('INSTITUT'), z.literal('FORMATION')]).optional(),
-  gradeLevel: z.union([z.literal('11EME'), z.literal('10EME'), z.literal('9EME'), z.literal('8EME'), z.literal('7EME'), z.literal('6EME'), z.literal('5EME'), z.literal('4EME'), z.literal('3EME'), z.literal('SECONDE'), z.literal('PREMIERE'), z.literal('TERMINALE'), z.literal('L1'), z.literal('L2'), z.literal('L3'), z.literal('M1'), z.literal('M2'), z.literal('AUTRE')]).optional(),
+  lyceeType: z.union([z.literal('GENERALE'), z.literal('TECHNIQUE')]).optional(),
+  gradeLevel: z.union([
+    z.literal('11EME'), z.literal('10EME'), z.literal('9EME'), z.literal('8EME'), z.literal('7EME'),
+    z.literal('6EME'), z.literal('5EME'), z.literal('4EME'), z.literal('3EME'),
+    z.literal('SECONDE'), z.literal('PREMIERE'), z.literal('TERMINALE'),
+    z.literal('TECH_1'), z.literal('TECH_2'), z.literal('TECH_3'),
+    z.literal('L1'), z.literal('L2'), z.literal('L3'), z.literal('M1'), z.literal('M2'),
+    z.literal('AUTRE')
+  ]).optional(),
   region: z.string().optional(),
   district: z.string().optional()
 })
