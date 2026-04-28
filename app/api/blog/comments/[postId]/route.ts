@@ -12,7 +12,15 @@ export async function GET(
     
     const { data: comments, error } = await supabase
       .from('BlogComment')
-      .select('*')
+      .select(`
+        *,
+        User (
+          id,
+          prenom,
+          nom,
+          profilePicture
+        )
+      `)
       .eq('post_id', postId)
       .eq('is_approved', true)
       .order('createdAt', { ascending: true })

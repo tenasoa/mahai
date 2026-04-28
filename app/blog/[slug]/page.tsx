@@ -227,11 +227,19 @@ export default function BlogPostPage() {
                 <div key={comment.id} className="bg-card border border-border-1 rounded-2xl p-6 hover:border-gold-line transition-colors">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-lift border border-border-1 flex items-center justify-center font-display text-text">
-                        {comment.userName?.charAt(0).toUpperCase() || '?'}
-                      </div>
+                      {comment.User?.profilePicture ? (
+                        <img
+                          src={comment.User.profilePicture}
+                          alt={comment.userName}
+                          className="w-10 h-10 rounded-full object-cover border border-border-1"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-lift border border-border-1 flex items-center justify-center font-display text-text">
+                          {comment.userName?.charAt(0).toUpperCase() || '?'}
+                        </div>
+                      )}
                       <div>
-                        <div className="font-display text-text">{comment.userName}</div>
+                        <div className="font-display text-text">{comment.User?.prenom && comment.User?.nom ? `${comment.User.prenom} ${comment.User.nom}` : comment.userName}</div>
                         <div className="font-mono text-xs text-text-3">{formatDate(comment.createdAt)}</div>
                       </div>
                     </div>
