@@ -24,9 +24,11 @@ export async function GET(
       .eq('post_id', postId)
       .eq('is_approved', true)
       .order('createdAt', { ascending: true })
+
+    let finalComments = comments || []
     
     if (error) {
-      console.error('Database error fetching comments:', error)
+      console.error('Database error fetching comments with join:', error)
       // Try fetching without User join if it fails
       const { data: simpleComments, error: simpleError } = await supabase
         .from('BlogComment')
@@ -36,10 +38,30 @@ export async function GET(
         .order('createdAt', { ascending: true })
       
       if (simpleError) throw simpleError
-      return NextResponse.json({ comments: simpleComments || [] })
+      
+      // Manually fetch user profiles for these comments
+      const userIds = [...new Set((simpleComments || []).map(c => c.user_id))]
+      if (userIds.length > 0) {
+        const { data: users } = await supabase
+          .from('User')
+          .select('id, prenom, nom, profilePicture')
+          .in('id', userIds)
+        
+        if (users) {
+          const userMap = new Map(users.map(u => [u.id, u]))
+          finalComments = (simpleComments || []).map(c => ({
+            ...c,
+            User: userMap.get(c.user_id)
+          }))
+        } else {
+          finalComments = simpleComments || []
+        }
+      } else {
+        finalComments = simpleComments || []
+      }
     }
     
-    const mappedComments = (comments || []).map(c => ({
+    const mappedComments = finalComments.map(c => ({
       ...c,
       userName: c.user_name,
       postId: c.post_id,
