@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(
   request: NextRequest,
@@ -62,19 +63,22 @@ export async function POST(
       .single()
     
     const userName = userData ? [userData.prenom, userData.nom].filter(Boolean).join(' ') : session.user.email
-    
-    const { data: comment, error } = await supabase
+
+    // Use admin client to bypass RLS for comment insertion
+    const adminClient = await createSupabaseAdminClient()
+
+    const { data: comment, error } = await adminClient
       .from('BlogComment')
       .insert({
-        post_id: postId,
-        user_id: session.user.id,
+        post_id: postId as string,
+        user_id: session.user.id as string,
         user_name: userName,
         content: content.trim(),
         parent_id: parentId || null
       })
       .select()
       .single()
-    
+
     if (error) throw error
     
     return NextResponse.json({ success: true, comment })
