@@ -40,6 +40,9 @@ import {
 } from "lucide-react";
 import { ProfileInfoRow } from "@/components/profile/ProfileInfoRow";
 import { RegionDistrictRow } from "@/components/profile/RegionDistrictRow";
+import { EducationGradeRow } from "@/components/profile/EducationGradeRow";
+import { TagsEditor } from "@/components/profile/TagsEditor";
+import { COMMON_SUBJECTS, STUDY_OBJECTIVES } from "@/lib/constants/profile-data";
 import { SecurityTab, type SecuritySettings } from "@/components/profile/SecurityTab";
 import { TransactionsTab } from "@/components/profile/TransactionsTab";
 import { PurchasedSubjectsTab } from "@/components/profile/PurchasedSubjectsTab";
@@ -92,6 +95,20 @@ export default function ProfilePage() {
       if (result.success) {
         setNotification({ type: "success", message: `${field} mis à jour.` });
         if (appUser) setAppUser({ ...appUser, [field]: newValue });
+      } else {
+        setNotification({ type: "error", message: result.error || "Erreur de mise à jour" });
+      }
+    } catch (error) {
+      setNotification({ type: "error", message: "Erreur serveur" });
+    }
+  };
+
+  const handleSaveTags = async (field: string, tags: string[]) => {
+    try {
+      const result = await updateCurrentUserProfileAction({ [field]: tags });
+      if (result.success) {
+        setNotification({ type: "success", message: `Préférences mises à jour.` });
+        if (appUser) setAppUser({ ...appUser, [field]: tags });
       } else {
         setNotification({ type: "error", message: result.error || "Erreur de mise à jour" });
       }
@@ -851,30 +868,12 @@ export default function ProfilePage() {
                       isPublic={appUser?.showEtablissement}
                       onSave={handleInlineSave}
                     />
-                    <ProfileInfoRow
-                      label="Niveau"
-                      field="educationLevel"
-                      value={appUser?.educationLevel}
-                      showVisibilityIcon={false}
+                    <EducationGradeRow
+                      educationLevelValue={appUser?.educationLevel}
+                      gradeLevelValue={appUser?.gradeLevel}
+                      filiereValue={appUser?.filiere}
                       onSave={handleInlineSave}
                     />
-                    <ProfileInfoRow
-                      label="Classe / Série"
-                      field="gradeLevel"
-                      value={appUser?.gradeLevel}
-                      showVisibilityIcon={false}
-                      onSave={handleInlineSave}
-                    />
-                    {appUser?.filiere && (
-                      <ProfileInfoRow
-                        label="Filière"
-                        field="filiere"
-                        value={appUser.filiere}
-                        icon={<BookOpen size={14} />}
-                        showVisibilityIcon={false}
-                        onSave={handleInlineSave}
-                      />
-                    )}
                   </div>
                 </div>
 
@@ -886,39 +885,19 @@ export default function ProfilePage() {
                     <Zap size={14} className="sc-info-icon" />
                   </div>
 
-                  <div className="pref-group">
-                    <span className="ir-label">Matières préférées</span>
-                    <div className="luxury-tags">
-                      {(appUser?.matieresPreferees?.length ?? 0) > 0 ? (
-                        appUser?.matieresPreferees?.map((m: string) => (
-                          <span key={m} className="luxury-tag">
-                            {m}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="luxury-tag-empty">
-                          Aucune matière renseignée
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <TagsEditor
+                    label="Matières préférées"
+                    items={appUser?.matieresPreferees || []}
+                    availableOptions={COMMON_SUBJECTS}
+                    onSave={(tags) => handleSaveTags('matieresPreferees', tags)}
+                  />
 
-                  <div className="pref-group mt-6">
-                    <span className="ir-label">Objectifs d'étude</span>
-                    <div className="luxury-tags">
-                      {(appUser?.objectifsEtude?.length ?? 0) > 0 ? (
-                        appUser?.objectifsEtude?.map((o: string) => (
-                          <span key={o} className="luxury-tag gold">
-                            {o}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="luxury-tag-empty">
-                          Aucun objectif renseigné
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <TagsEditor
+                    label="Objectifs d'étude"
+                    items={appUser?.objectifsEtude || []}
+                    availableOptions={STUDY_OBJECTIVES}
+                    onSave={(tags) => handleSaveTags('objectifsEtude', tags)}
+                  />
                 </div>
 
 

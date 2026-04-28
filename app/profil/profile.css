@@ -2142,3 +2142,156 @@ select.form-input {
 .rd-field .ir-input {
   width: 100%;
 }
+
+/* ==========================================================
+   EDUCATION GRADE ROW
+   ========================================================== */
+.education-grade-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ed-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.ed-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ed-field label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ed-field .ir-input {
+  width: 100%;
+}
+
+/* ==========================================================
+   TAGS EDITOR
+   ========================================================== */
+.tags-editor-container {
+  width: 100%;
+}
+
+.tags-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.tags-common {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.tags-common-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tags-common-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tags-suggestion-btn {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--b2);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tags-suggestion-btn:hover {
+  border-color: var(--gold-line);
+  color: var(--gold);
+}
+
+.tags-suggestion-btn.selected {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.tags-custom {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tags-custom-input {
+  flex: 1;
+}
+
+.tags-custom-add {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--b2);
+  background: var(--surface);
+  color: var(--gold);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tags-custom-add:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+}
+
+.tags-custom-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tags-selected {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.tags-selected-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tags-selected-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  padding: 0 0 0 0.2rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tag-remove:hover {
+  color: var(--ruby);
+}
