@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { postId } = await params
-    const supabase = await createSupabaseServerClient()
+    const supabase = await createSupabaseAdminClient()
     
     const { data: comments, error } = await supabase
       .from('BlogComment')
@@ -25,9 +25,28 @@ export async function GET(
       .eq('is_approved', true)
       .order('createdAt', { ascending: true })
     
-    if (error) throw error
+    if (error) {
+      console.error('Database error fetching comments:', error)
+      // Try fetching without User join if it fails
+      const { data: simpleComments, error: simpleError } = await supabase
+        .from('BlogComment')
+        .select('*')
+        .eq('post_id', postId)
+        .eq('is_approved', true)
+        .order('createdAt', { ascending: true })
+      
+      if (simpleError) throw simpleError
+      return NextResponse.json({ comments: simpleComments || [] })
+    }
     
-    return NextResponse.json({ comments: comments || [] })
+    const mappedComments = (comments || []).map(c => ({
+      ...c,
+      userName: c.user_name,
+      postId: c.post_id,
+      userId: c.user_id
+    }))
+    
+    return NextResponse.json({ comments: mappedComments })
   } catch (error) {
     console.error('Error fetching comments:', error)
     return NextResponse.json(
@@ -70,7 +89,8 @@ export async function POST(
       .eq('id', session.user.id)
       .single()
     
-    const userName = userData ? [userData.prenom, userData.nom].filter(Boolean).join(' ') : session.user.email
+    const fullName = userData ? [userData.prenom, userData.nom].filter(Boolean).join(' ') : session.user.email
+    const userName = fullName || 'Utilisateur'
 
     // Use admin client to bypass RLS for comment insertion
     const adminClient = await createSupabaseAdminClient()
@@ -82,14 +102,23 @@ export async function POST(
         user_id: session.user.id as string,
         user_name: userName,
         content: content.trim(),
-        parent_id: parentId || null
+        parent_id: parentId || null,
+        is_approved: true
       })
       .select()
       .single()
 
     if (error) throw error
     
-    return NextResponse.json({ success: true, comment })
+    // Map to camelCase for frontend
+    const mappedComment = {
+      ...comment,
+      userName: comment.user_name,
+      postId: comment.post_id,
+      userId: comment.user_id
+    }
+    
+    return NextResponse.json({ success: true, comment: mappedComment })
   } catch (error) {
     console.error('Error creating comment:', error)
     return NextResponse.json(

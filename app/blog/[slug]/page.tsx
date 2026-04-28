@@ -138,7 +138,7 @@ export default function BlogPostPage() {
             </span>
             <span className="font-mono text-xs text-text-3 flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {post.readTime} min de lecture
+              {post.read_time} min de lecture
             </span>
             <span className="font-mono text-xs text-text-3 flex items-center gap-1">
               <Eye className="w-3 h-3" />

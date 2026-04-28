@@ -123,46 +123,52 @@ export default function BlogPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-            {posts.map((post) => (
-              <Link key={post.id} href={`/blog/${post.slug}`} className="group">
-                <article className="bg-card border border-border-1 rounded-2xl overflow-hidden hover:border-gold-line transition-all h-full flex flex-col hover:-translate-y-1">
-                  {post.coverImage ? (
-                    <div className="aspect-video bg-depth overflow-hidden flex-shrink-0">
-                      <img 
-                        src={post.coverImage} 
-                        alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
+            {posts.length === 0 ? (
+              <div className="col-span-full text-center py-20 bg-card border border-border-1 border-dashed rounded-2xl">
+                <p className="text-text-3 italic">Aucun article disponible pour le moment.</p>
+              </div>
+            ) : (
+              posts.map((post) => (
+                <Link key={post.id} href={`/blog/${post.slug}`} className="group">
+                  <article className="bg-card border border-border-1 rounded-2xl overflow-hidden hover:border-gold-line transition-all h-full flex flex-col hover:-translate-y-1">
+                    {post.cover_image ? (
+                      <div className="aspect-video bg-depth overflow-hidden flex-shrink-0">
+                        <img 
+                          src={post.cover_image} 
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-depth flex items-center justify-center p-8 text-6xl group-hover:scale-105 transition-transform flex-shrink-0">
+                        📝
+                      </div>
+                    )}
+                    <div className="p-6 flex flex-col flex-grow">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="font-mono text-[0.6rem] text-gold uppercase tracking-[0.12em] bg-gold-dim px-2 py-1 rounded">
+                          {post.category}
+                        </span>
+                        <span className="font-mono text-[0.6rem] text-text-3 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(post.createdAt)}
+                        </span>
+                      </div>
+                      <h3 className="font-display text-xl text-text mb-2 leading-tight group-hover:text-gold transition-colors">
+                        {post.title}
+                      </h3>
+                      <p className="text-sm text-text-2 leading-relaxed mb-4 flex-grow line-clamp-3">
+                        {post.excerpt || 'Lisez cet article pour en savoir plus...'}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-text-3 mt-auto">
+                        <Clock className="w-3 h-3" />
+                        {post.read_time} min
+                      </div>
                     </div>
-                  ) : (
-                    <div className="bg-depth flex items-center justify-center p-8 text-6xl group-hover:scale-105 transition-transform flex-shrink-0">
-                      📝
-                    </div>
-                  )}
-                  <div className="p-6 flex flex-col flex-grow">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="font-mono text-[0.6rem] text-gold uppercase tracking-[0.12em] bg-gold-dim px-2 py-1 rounded">
-                        {post.category}
-                      </span>
-                      <span className="font-mono text-[0.6rem] text-text-3 flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(post.createdAt)}
-                      </span>
-                    </div>
-                    <h3 className="font-display text-xl text-text mb-2 leading-tight group-hover:text-gold transition-colors">
-                      {post.title}
-                    </h3>
-                    <p className="text-sm text-text-2 leading-relaxed mb-4 flex-grow">
-                      {post.excerpt || 'Lisez cet article pour en savoir plus...'}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-text-3 mt-auto">
-                      <Clock className="w-3 h-3" />
-                      {post.read_time} min
-                    </div>
-                  </div>
-                </article>
-              </Link>
-            ))}
+                  </article>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </section>
