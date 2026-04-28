@@ -219,27 +219,60 @@ export function EducationGradeRow({
         </div>
       ) : (
         <div className="info-rows-group">
+          {/* Niveau d'étude */}
           <div className="info-row">
-            <div className="ir-label">Parcours Académique</div>
+            <div className="ir-label">Niveau d'étude</div>
             <div className="ir-content">
               <span className="ir-icon"><School size={14} /></span>
-              <div className="ir-stack">
-                <span className="ir-value highlight">
-                  {educationLevelValue ? getEducationLabel(educationLevelValue) : 'Non renseigné'}
-                  {lyceeTypeValue && ` — Lycée ${lyceeTypeValue === 'GENERALE' ? 'Général' : 'Technique'}`}
-                </span>
-                {(gradeLevelValue || filiereValue) && (
-                  <span className="ir-sub-value">
-                    {gradeLevelValue && getGradeLabel(gradeLevelValue)}
-                    {filiereValue && ` | ${filiereValue}`}
-                  </span>
-                )}
-              </div>
+              <span className="ir-value highlight">
+                {educationLevelValue ? getEducationLabel(educationLevelValue) : 'Non renseigné'}
+              </span>
               <button className="ir-edit-trigger" onClick={() => setIsEditing(true)} title="Modifier le parcours">
                 <Pencil size={12} />
               </button>
             </div>
           </div>
+
+          {/* Type de Lycée (Conditionnel) */}
+          {lyceeTypeValue && (
+            <div className="info-row">
+              <div className="ir-label">Type de Lycée</div>
+              <div className="ir-content">
+                <span className="ir-icon"><School size={14} /></span>
+                <span className="ir-value">
+                  {lyceeTypeValue === 'GENERALE' ? 'Général' : 'Technique'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Classe */}
+          {gradeLevelValue && (
+            <div className="info-row">
+              <div className="ir-label">Classe / Année</div>
+              <div className="ir-content">
+                <span className="ir-icon"><GraduationCap size={14} /></span>
+                <span className="ir-value">
+                  {getGradeLabel(gradeLevelValue)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Filière / Série */}
+          {filiereValue && (
+            <div className="info-row">
+              <div className="ir-label">
+                {isSuperior ? 'Filière / Mention' : 'Série / Spécialité'}
+              </div>
+              <div className="ir-content">
+                <span className="ir-icon"><BookOpen size={14} /></span>
+                <span className="ir-value">
+                  {filiereValue}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
