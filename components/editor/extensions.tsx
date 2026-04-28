@@ -48,11 +48,11 @@ function PartieView({ node, updateAttributes, deleteNode, getPos, editor }: any)
   const displayNum = node.attrs.numero && node.attrs.numero !== '?' ? node.attrs.numero : autoNum
 
   useEffect(() => {
-    // Sync numéro auto si l'utilisateur n'a pas forcé
-    if (node.attrs.numero === '?' || node.attrs.numero === '') {
+    // Sync automatique du numéro
+    if (node.attrs.numero !== autoNum) {
       updateAttributes({ numero: autoNum })
     }
-  }, [autoIndex, node.attrs.resetNumbering])
+  }, [autoNum, node.attrs.resetNumbering])
 
   const handleTitreBlur = () => {
     setEditingTitle(false)
@@ -135,10 +135,8 @@ function ExerciceView({ node, updateAttributes, deleteNode, getPos, editor }: an
   const autoIndex = getNodeIndex(editor, pos, 'exercice')
 
   useEffect(() => {
-    if (!node.attrs.numero || node.attrs.numero === '?') {
-      updateAttributes({ numero: autoIndex })
-    } else if (typeof node.attrs.numero === 'number' && node.attrs.numero !== autoIndex) {
-      // Seulement si on veut la sync forte, on ré-aligne
+    // Sync automatique du numéro
+    if (node.attrs.numero !== autoIndex) {
       updateAttributes({ numero: autoIndex })
     }
   }, [autoIndex, node.attrs.resetNumbering])
@@ -231,9 +229,8 @@ function ProblemeView({ node, updateAttributes, deleteNode, getPos, editor }: an
   const autoIndex = getNodeIndex(editor, pos, 'probleme')
 
   useEffect(() => {
-    if (!node.attrs.numero || node.attrs.numero === '?') {
-      updateAttributes({ numero: autoIndex })
-    } else if (typeof node.attrs.numero === 'number' && node.attrs.numero !== autoIndex) {
+    // Sync automatique du numéro
+    if (node.attrs.numero !== autoIndex) {
       updateAttributes({ numero: autoIndex })
     }
   }, [autoIndex, node.attrs.resetNumbering])
@@ -417,7 +414,7 @@ export const QuestionExtension = Node.create({
 
   addAttributes() {
     return {
-      numero:    { default: 1 },
+      numero:    { default: '?' },
       points:    { default: 2 },
       hasPoints: { default: false },
       resetNumbering: { default: false },

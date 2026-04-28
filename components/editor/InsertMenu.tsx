@@ -39,13 +39,13 @@ export default function InsertMenu({ editor, position, onClose, onOpenKaTeX }: P
     if (type === 'partie') {
       editor.chain().focus().insertContent({
         type: 'partie',
-        attrs: { numero: 'I', titre: 'Partie' },
+        attrs: { numero: '?', titre: 'Partie' },
         content: [{ type: 'paragraph' }],
       }).run()
     } else if (type === 'exercice') {
       editor.chain().focus().insertContent({
         type: 'exercice',
-        attrs: { numero: 1, points: 10 },
+        attrs: { numero: '?', points: 10 },
         content: [{ type: 'paragraph' }],
       }).run()
     } else if (type === 'enonce') {
@@ -56,13 +56,13 @@ export default function InsertMenu({ editor, position, onClose, onOpenKaTeX }: P
     } else if (type === 'probleme') {
       editor.chain().focus().insertContent({
         type: 'probleme',
-        attrs: { numero: 1, points: 10 },
+        attrs: { numero: '?', points: 10 },
         content: [{ type: 'paragraph' }],
       }).run()
     } else if (type === 'question') {
       editor.chain().focus().insertContent({
         type: 'question',
-        attrs: { numero: 1, points: 2 },
+        attrs: { numero: '?', points: 2 },
         content: [{ type: 'text', text: 'Énoncé de la question' }],
       }).run()
     } else if (type === 'bareme') {
