@@ -457,7 +457,7 @@ export async function requestPasswordChangeCodeAction(data: unknown) {
     // Use Supabase's native password reset email
     const { error: resetError } =
       await context.supabase.auth.resetPasswordForEmail(user.email!, {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/reset-password`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset-password`,
       });
 
     if (resetError) {

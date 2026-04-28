@@ -31,7 +31,7 @@ export type ReferralDashboardData = {
 const DEFAULT_SITE_URL = "http://localhost:3000";
 
 function getSiteUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
+  return process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || DEFAULT_SITE_URL;
 }
 
 async function getAuthenticatedUserId() {

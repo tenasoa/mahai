@@ -45,7 +45,7 @@ function getFlowCookieOptions(maxAge = FLOW_COOKIE_MAX_AGE) {
 }
 
 function getSiteUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
+  return process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || DEFAULT_SITE_URL;
 }
 
 function getSignupRedirectUrl(nextPath = "/auth/onboarding") {
