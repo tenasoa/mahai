@@ -6,9 +6,9 @@ import {
   updateUserCredits,
   type User as AppUser,
 } from "@/lib/sql-queries";
+import { getReferralSettings } from "./settings";
 import type { User as SupabaseAuthUser } from "@supabase/supabase-js";
 
-const WELCOME_CREDITS = 10;
 
 export type SyncAuthUserResult = {
   appUser: AppUser | null;
@@ -25,6 +25,98 @@ function toOptionalString(value: unknown): string | undefined {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function normalizeReferralCode(value: unknown): string | undefined {
+  const normalized = toOptionalString(value)?.toUpperCase();
+  return normalized && normalized.length > 0 ? normalized : undefined;
+}
+
+function generateReferralCode(authUser: SupabaseAuthUser): string {
+  const baseRaw =
+    toOptionalString(authUser.user_metadata?.prenom) ||
+    authUser.email?.split("@")[0] ||
+    "MAHAI";
+
+  const base = baseRaw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]/g, "")
+    .toUpperCase()
+    .slice(0, 8);
+
+  const suffix = authUser.id.replace(/-/g, "").slice(0, 6).toUpperCase();
+  return `${base || "MAHAI"}-${suffix}`;
+}
+
+async function resolveReferrerUserId(
+  referralCode: string | undefined,
+  currentUserId: string,
+): Promise<string | undefined> {
+  if (!referralCode) {
+    return undefined;
+  }
+
+  const referrerResult = await query(
+    `SELECT id
+     FROM "User"
+     WHERE UPPER("referralCode") = $1
+       AND id <> $2
+     LIMIT 1`,
+    [referralCode.toUpperCase(), currentUserId],
+  );
+
+  return referrerResult.rows[0]?.id;
+}
+
+async function grantReferredBonusIfEligible(userId: string): Promise<boolean> {
+  const referralResult = await query(
+    `SELECT id, "referredBonusCredits"
+     FROM "UserReferral"
+     WHERE "referredUserId" = $1
+       AND status = 'PENDING'
+       AND "referredBonusGrantedAt" IS NULL
+     LIMIT 1`,
+    [userId],
+  );
+
+  const referral = referralResult.rows[0];
+  if (!referral) {
+    return false;
+  }
+
+  const bonusAmount = Number(referral.referredBonusCredits) || REFERRED_BONUS_CREDITS;
+
+  await query(
+    `UPDATE "User"
+     SET "credits" = "credits" + $1,
+         "updatedAt" = NOW()
+     WHERE id = $2`,
+    [bonusAmount, userId],
+  );
+
+  await query(
+    `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      crypto.randomUUID(),
+      userId,
+      bonusAmount,
+      "EARN",
+      "Bonus parrainage filleul",
+      "COMPLETED",
+    ],
+  );
+
+  await query(
+    `UPDATE "UserReferral"
+     SET "referredBonusGrantedAt" = NOW(),
+         "updatedAt" = NOW()
+     WHERE id = $1`,
+    [referral.id],
+  );
+
+  return true;
 }
 
 function getRoleFromMetadata(value: unknown): RegisterRole {
@@ -57,7 +149,8 @@ async function addWelcomeCreditsIfNeeded(
     return false;
   }
 
-  await updateUserCredits(userId, WELCOME_CREDITS);
+  const { welcomeBonus } = await getReferralSettings();
+  await updateUserCredits(userId, welcomeBonus);
 
   await query(
     `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
@@ -65,7 +158,7 @@ async function addWelcomeCreditsIfNeeded(
     [
       crypto.randomUUID(),
       userId,
-      WELCOME_CREDITS,
+      welcomeBonus,
       "EARN",
       "Crédits de bienvenue",
       "COMPLETED",
@@ -91,13 +184,23 @@ export async function syncAppUserWithAuthUser(
       };
     }
 
+    const { welcomeBonus, referrerBonus, referredBonus } = await getReferralSettings();
     const emailVerified = Boolean(authUser.email_confirmed_at);
+    const referralCode = generateReferralCode(authUser);
+    const requestedReferralCode = normalizeReferralCode(
+      authUser.user_metadata?.referralCode,
+    );
     let appUser = await getUserById(authUser.id);
     let created = false;
     let welcomeCreditsGranted = false;
 
     if (!appUser) {
-      const startingCredits = emailVerified ? WELCOME_CREDITS : 0;
+      const startingCredits = emailVerified ? welcomeBonus : 0;
+
+      const referredByUserId = await resolveReferrerUserId(
+        requestedReferralCode,
+        authUser.id,
+      );
 
       appUser = await createUser({
         id: authUser.id,
@@ -106,26 +209,55 @@ export async function syncAppUserWithAuthUser(
         nom: toOptionalString(authUser.user_metadata?.nom),
         role: getRoleFromMetadata(authUser.user_metadata?.role),
         credits: startingCredits,
+        referralCode,
+        referredByUserId,
         emailVerified,
         updatedAt: new Date(),
       });
 
       created = true;
 
-      if (emailVerified && startingCredits === WELCOME_CREDITS) {
+      if (referredByUserId) {
+        await query(
+          `INSERT INTO "UserReferral" (
+             "id",
+             "referrerUserId",
+             "referredUserId",
+             status,
+             "referrerBonusCredits",
+             "referredBonusCredits"
+           )
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT ("referredUserId") DO NOTHING`,
+          [
+            crypto.randomUUID(),
+            referredByUserId,
+            authUser.id,
+            "PENDING",
+            referrerBonus,
+            referredBonus,
+          ],
+        );
+      }
+
+      if (emailVerified && startingCredits === welcomeBonus) {
         await query(
           `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [
             crypto.randomUUID(),
             authUser.id,
-            WELCOME_CREDITS,
+            welcomeBonus,
             "EARN",
             "Crédits de bienvenue",
             "COMPLETED",
           ],
         );
         welcomeCreditsGranted = true;
+      }
+
+      if (emailVerified && referredByUserId) {
+        await grantReferredBonusIfEligible(authUser.id);
       }
     } else {
       if (appUser.email !== normalizedEmail || appUser.emailVerified !== emailVerified) {
@@ -135,11 +267,20 @@ export async function syncAppUserWithAuthUser(
         );
       }
 
+      if (!appUser.referralCode) {
+        await query(
+          'UPDATE "User" SET "referralCode" = $1, "updatedAt" = NOW() WHERE id = $2 AND "referralCode" IS NULL',
+          [referralCode, authUser.id],
+        );
+      }
+
       if (emailVerified) {
         welcomeCreditsGranted = await addWelcomeCreditsIfNeeded(
           authUser.id,
           appUser.credits,
         );
+
+        await grantReferredBonusIfEligible(authUser.id);
       }
 
       appUser = await getUserById(authUser.id);

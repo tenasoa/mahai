@@ -5,6 +5,7 @@ import { registerSchema, type RegisterFormData } from '@/lib/validations/auth'
 import { registerUser } from '@/actions/auth'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { ToastContainer, useToast } from '@/components/ui/Toast'
 import { Eye, EyeOff, GraduationCap, Sparkles } from 'lucide-react'
 import './auth-forms.css'
@@ -12,6 +13,7 @@ import './auth-forms.css'
 type Step = 1 | 2 | 3
 
 export function RegisterForm() {
+  const searchParams = useSearchParams()
   const [step, setStep] = useState<Step>(1)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -41,6 +43,7 @@ export function RegisterForm() {
       confirmPassword: '',
       role: 'ETUDIANT',
       etablissement: '',
+      referralCode: '',
       newsletterOptIn: true,
     }
   })
@@ -60,6 +63,13 @@ export function RegisterForm() {
   useEffect(() => {
     setValue('role', selectedRole)
   }, [selectedRole, setValue])
+
+  useEffect(() => {
+    const referralFromUrl = searchParams.get('ref')
+    if (referralFromUrl) {
+      setValue('referralCode', referralFromUrl.toUpperCase())
+    }
+  }, [searchParams, setValue])
 
   // Password hints status
   const hasLength = password.length >= 8
@@ -175,6 +185,18 @@ export function RegisterForm() {
                 className="auth-input"
                 placeholder="Université d'Antananarivo…"
               />
+            </div>
+
+            <div className="auth-form-group-sm">
+              <label className="auth-label">Code de parrainage</label>
+              <input
+                {...register('referralCode')}
+                className="auth-input"
+                placeholder="Ex: HERIZO-2024"
+              />
+              {errors.referralCode && (
+                <p className="auth-error">{errors.referralCode.message}</p>
+              )}
             </div>
 
             <p className="auth-hint-text">

@@ -390,6 +390,13 @@ export default function DashboardPage() {
                     <div className="ai-sub">Ajoutez des crédits à votre compte pour débloquer vos prochains sujets en toute simplicité.</div>
                   </div>
                 </div>
+                <div className="activity-item" onClick={() => router.push('/parrainage')}>
+                  <div className="ai-dot free"></div>
+                  <div className="ai-content">
+                    <div className="ai-title">Inviter mes amis</div>
+                    <div className="ai-sub">Partagez votre code de parrainage et gagnez des crédits bonus quand vos filleuls deviennent actifs.</div>
+                  </div>
+                </div>
                 <div className="activity-item" onClick={() => router.push('/examens')}>
                   <div className="ai-dot free"></div>
                   <div className="ai-content">

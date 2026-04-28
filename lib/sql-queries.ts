@@ -42,6 +42,8 @@ export interface User {
   notifSujets?: boolean
   notifPromos?: boolean
   notifRappels?: boolean
+  referralCode?: string
+  referredByUserId?: string
   createdAt: Date
   updatedAt: Date
 }

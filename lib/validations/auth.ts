@@ -26,6 +26,18 @@ export const registerSchema = z.object({
       .max(120, "L'établissement ne peut pas dépasser 120 caractères")
       .optional()
   ),
+  referralCode: z.preprocess(
+    (value) => {
+      if (typeof value !== 'string') return undefined
+      const normalized = value.trim().toUpperCase()
+      return normalized.length > 0 ? normalized : undefined
+    },
+    z
+      .string()
+      .max(40, 'Le code de parrainage est invalide')
+      .regex(/^[A-Z0-9-]+$/, 'Le code de parrainage est invalide')
+      .optional()
+  ),
   newsletterOptIn: z.boolean().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',

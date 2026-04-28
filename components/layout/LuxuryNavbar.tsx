@@ -7,6 +7,7 @@ import {
   Sun,
   Moon,
   User,
+  Gift,
   LogOut,
   RefreshCw,
   Settings,
@@ -37,6 +38,7 @@ export function LuxuryNavbar() {
         { label: "Tableau de bord", href: "/dashboard" },
         { label: "Catalogue", href: "/catalogue" },
         { label: "Crédits", href: "/recharge" },
+        { label: "Parrainage", href: "/parrainage" },
       ]
     : [
         { label: "Accueil", href: "/" },
@@ -47,6 +49,7 @@ export function LuxuryNavbar() {
   const dropdownNavItems: NavItem[] = userId
     ? [
         { label: "Profil", href: "/profil", icon: User },
+        { label: "Parrainage", href: "/parrainage", icon: Gift },
         ...(appUser?.role === "ADMIN"
           ? [{ label: "Administration", href: "/admin", icon: Settings }]
           : []),

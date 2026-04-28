@@ -83,7 +83,16 @@ export async function registerUser(formData: RegisterFormData) {
     };
   }
 
-  const { email, password, prenom, nom, role, etablissement, newsletterOptIn } =
+  const {
+    email,
+    password,
+    prenom,
+    nom,
+    role,
+    etablissement,
+    referralCode,
+    newsletterOptIn,
+  } =
     validation.data;
 
   const supabase = await createSupabaseServerClient();
@@ -98,6 +107,7 @@ export async function registerUser(formData: RegisterFormData) {
         nom: nom || "",
         role,
         etablissement: etablissement || "",
+        referralCode: referralCode || "",
         notifPromos: newsletterOptIn ?? false,
       },
       emailRedirectTo: getSignupRedirectUrl("/auth/onboarding"),

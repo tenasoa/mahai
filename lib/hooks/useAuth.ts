@@ -38,6 +38,12 @@ export interface AppUser {
   showEmail?: boolean
   showPhone?: boolean
   showEtablissement?: boolean
+  notifCorrections?: boolean
+  notifSujets?: boolean
+  notifPromos?: boolean
+  notifRappels?: boolean
+  referralCode?: string
+  referredByUserId?: string
   // Préférences de paiement
   defaultOperator?: string
   // Paramètres sécurité

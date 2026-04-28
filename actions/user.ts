@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { query, transaction } from '@/lib/db'
 import { findExistingPurchase } from '@/lib/sql-queries'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getSystemSetting } from '@/lib/settings'
 
 export interface UpcomingExam {
   id: string
@@ -26,6 +27,7 @@ export interface DashboardData {
   examCount: number
 }
 
+
 async function getAuthenticatedUserId() {
   const supabase = await createSupabaseServerClient()
   const {
@@ -38,6 +40,57 @@ async function getAuthenticatedUserId() {
   }
 
   return user.id
+}
+
+async function grantReferrerBonusOnFirstPurchase(client: any, referredUserId: string) {
+  const referralResult = await client.query(
+    `SELECT id, "referrerUserId", "referrerBonusCredits"
+     FROM "UserReferral"
+     WHERE "referredUserId" = $1
+       AND status = 'PENDING'
+       AND "referrerBonusGrantedAt" IS NULL
+     LIMIT 1`,
+    [referredUserId]
+  )
+
+  const referral = referralResult.rows[0]
+  if (!referral) {
+    return
+  }
+
+  const defaultBonus = await getSystemSetting('REFERRAL_BONUS_CREDITS', 20)
+  const bonusAmount = Number(referral.referrerBonusCredits) || defaultBonus
+
+  await client.query(
+    `UPDATE "User"
+     SET credits = credits + $1,
+         "updatedAt" = NOW()
+     WHERE id = $2`,
+    [bonusAmount, referral.referrerUserId]
+  )
+
+  await client.query(
+    `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      crypto.randomUUID(),
+      referral.referrerUserId,
+      bonusAmount,
+      'EARN',
+      'Bonus parrainage parrain',
+      'COMPLETED',
+    ]
+  )
+
+  await client.query(
+    `UPDATE "UserReferral"
+     SET status = 'COMPLETED',
+         "activatedAt" = NOW(),
+         "referrerBonusGrantedAt" = NOW(),
+         "updatedAt" = NOW()
+     WHERE id = $1`,
+    [referral.id]
+  )
 }
 
 export async function getCurrentUserCredits() {
@@ -108,6 +161,8 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
          VALUES ($1, $2, $3, $4, $5, $6)`,
         [crypto.randomUUID(), userId, -subject.credits, 'SPEND', `Achat du sujet: ${subject.titre}`, 'COMPLETED']
       )
+
+      await grantReferrerBonusOnFirstPurchase(client, userId)
     })
 
     revalidatePath('/catalogue')
