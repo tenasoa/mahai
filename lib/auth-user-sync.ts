@@ -85,7 +85,9 @@ async function grantReferredBonusIfEligible(userId: string): Promise<boolean> {
     return false;
   }
 
-  const bonusAmount = Number(referral.referredBonusCredits) || REFERRED_BONUS_CREDITS;
+  const settings = await getReferralSettings();
+  const defaultBonus = settings.referredBonus;
+  const bonusAmount = Number(referral.referredBonusCredits) || defaultBonus;
 
   await query(
     `UPDATE "User"

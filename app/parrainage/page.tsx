@@ -249,6 +249,33 @@ export default function ParrainagePage() {
               </div>
             )}
           </section>
+
+          <section className="referral-steps-section">
+            <h2 className="referral-steps-title">Comment ça marche</h2>
+            <div className="referral-steps-grid">
+              <article className="referral-step-card">
+                <div className="referral-step-num">01</div>
+                <h3>Partagez votre code</h3>
+                <p>Envoyez votre code ou lien personnel à vos amis via le canal de votre choix.</p>
+              </article>
+              <article className="referral-step-card">
+                <div className="referral-step-num">02</div>
+                <h3>Votre ami s'inscrit</h3>
+                <p>
+                  Il crée un compte avec votre code et reçoit automatiquement{" "}
+                  <strong>{viewData.settings?.referredBonus || 10} crédits</strong> de bienvenue.
+                </p>
+              </article>
+              <article className="referral-step-card">
+                <div className="referral-step-num">03</div>
+                <h3>Il débloque un sujet</h3>
+                <p>
+                  Dès son premier déblocage, vous recevez{" "}
+                  <strong>{viewData.settings?.referrerBonus || 20} crédits</strong> sur votre compte. Automatiquement.
+                </p>
+              </article>
+            </div>
+          </section>
         </div>
       </main>
 

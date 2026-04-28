@@ -42,7 +42,7 @@ async function getAuthenticatedUserId() {
   return user.id
 }
 
-async function grantReferrerBonusOnFirstPurchase(client: any, referredUserId: string) {
+async function grantReferrerBonusOnFirstPurchase(client: any, referredUserId: string, defaultBonus: number = 20) {
   const referralResult = await client.query(
     `SELECT id, "referrerUserId", "referrerBonusCredits"
      FROM "UserReferral"
@@ -58,7 +58,6 @@ async function grantReferrerBonusOnFirstPurchase(client: any, referredUserId: st
     return
   }
 
-  const defaultBonus = await getSystemSetting('REFERRAL_BONUS_CREDITS', 20)
   const bonusAmount = Number(referral.referrerBonusCredits) || defaultBonus
 
   await client.query(
@@ -143,6 +142,7 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
     }
 
     const remainingCredits = user.credits - subject.credits
+    const referrerBonusDefault = await getSystemSetting('REFERRAL_BONUS_CREDITS', 20)
 
     await transaction(async (client) => {
       await client.query(
@@ -162,7 +162,7 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
         [crypto.randomUUID(), userId, -subject.credits, 'SPEND', `Achat du sujet: ${subject.titre}`, 'COMPLETED']
       )
 
-      await grantReferrerBonusOnFirstPurchase(client, userId)
+      await grantReferrerBonusOnFirstPurchase(client, userId, referrerBonusDefault)
     })
 
     revalidatePath('/catalogue')

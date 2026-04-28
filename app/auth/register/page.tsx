@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from 'react'
 import { RegisterForm } from '@/components/auth/RegisterForm'
 import { Logo } from '@/components/common/Logo'
 
@@ -22,7 +23,9 @@ export default function RegisterPage() {
           padding: '2.5rem', 
           boxShadow: '0 20px 60px rgba(0,0,0,0.4)'
         }}>
-          <RegisterForm />
+          <Suspense fallback={<div className="auth-skeleton-tall" />}>
+            <RegisterForm />
+          </Suspense>
         </div>
       </div>
     </div>
