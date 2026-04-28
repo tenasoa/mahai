@@ -935,7 +935,7 @@ export default function AdminConfigurationPage() {
                                   setPackModalOpen(true);
                                 }}
                               >
-                                <Edit2 size={14} aria-hidden="true" />
+                              <Edit2 size={14} aria-hidden="true" />
                             </button>
                             <button
                               className="admin-btn admin-btn-sm admin-btn-danger"
@@ -947,8 +947,9 @@ export default function AdminConfigurationPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
+                    );
+                  })}
+                </tbody>
                 </table>
               </div>
             )}
