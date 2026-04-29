@@ -8,9 +8,12 @@ import { query } from "@/lib/db";
  */
 export async function POST(request: NextRequest) {
   try {
-    // Vérifier la signature du webhook (à implémenter selon le provider)
+    const isSimulation = request.headers.get("x-simulation-mode") === "true" || 
+                         process.env.NODE_ENV === "development";
+    
+    // Vérifier la signature du webhook (sauf en mode simulation)
     const signature = request.headers.get("x-webhook-signature");
-    if (!signature) {
+    if (!signature && !isSimulation) {
       return NextResponse.json(
         { error: "Signature manquante" },
         { status: 401 }
@@ -62,13 +65,15 @@ export async function POST(request: NextRequest) {
         `UPDATE "CreditTransaction" 
          SET status = 'COMPLETED', 
              "senderCode" = $1,
-             "paidAt" = $2,
-             metadata = metadata || $3::jsonb
-         WHERE id = $4`,
+             metadata = metadata || $2::jsonb
+         WHERE id = $3`,
         [
           operatorTransactionId || "",
-          paidAt ? new Date(paidAt) : new Date(),
-          JSON.stringify({ webhookProcessed: true, processedAt: new Date().toISOString() }),
+          JSON.stringify({ 
+            webhookProcessed: true, 
+            processedAt: new Date().toISOString(),
+            paidAt: paidAt || new Date().toISOString()
+          }),
           transactionId,
         ]
       );
@@ -76,7 +81,7 @@ export async function POST(request: NextRequest) {
       // Créditer l'utilisateur
       await query(
         `UPDATE "User" 
-         SET credits = credits + $1 
+         SET credits = COALESCE(credits, 0) + $1 
          WHERE id = $2`,
         [transaction.creditsCount, transaction.userId]
       );

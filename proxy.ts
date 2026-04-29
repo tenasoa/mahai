@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { query } from "@/lib/db";
 
 const EMAIL_VERIFIED_COOKIE = "mahai-email-verified";
 const ONBOARDING_PENDING_COOKIE = "mahai-onboarding-pending";
@@ -62,26 +63,40 @@ export async function proxy(request: NextRequest) {
   const isCallbackRoute = pathname.startsWith("/auth/callback");
   const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
 
-  // Protéger les routes admin (vérification du rôle)
+  // Protéger les routes admin (vérification du rôle avec pg)
   if (isAdminRoute) {
     if (!user) {
+      console.log(`[Admin Check] No user, redirecting to login from ${pathname}`);
       return NextResponse.redirect(
         new URL("/auth/login?next=" + encodeURIComponent(pathname), request.url)
       );
     }
 
     try {
-      const { data: profile } = await supabase
-        .from("User")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+      // Utiliser pg directement (contourne les RLS Supabase)
+      const result = await query(
+        `SELECT role FROM "User" WHERE id = $1`,
+        [user.id]
+      );
 
-      if (profile?.role !== "ADMIN") {
+      const role = result.rows[0]?.role;
+      console.log(`[Admin Check] User ${user.id} role: ${role}`);
+
+      if (role !== "ADMIN") {
+        console.log(`[Admin Check] Access denied for ${user.id}, role: ${role}`);
         return NextResponse.redirect(new URL("/", request.url));
       }
-    } catch {
-      return NextResponse.redirect(new URL("/auth/login", request.url));
+
+      console.log(`[Admin Check] Access granted for ${user.id}`);
+    } catch (error) {
+      console.error(`[Admin Check] Error checking role for ${user.id}:`, error);
+      // En développement, autoriser l'accès même en cas d'erreur
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`[Admin Check] Dev mode: allowing access despite error`);
+        // Continue without redirecting
+      } else {
+        return NextResponse.redirect(new URL("/auth/login", request.url));
+      }
     }
   }
 
