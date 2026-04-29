@@ -114,8 +114,8 @@ export default function OnboardingModal({ onComplete }: Props) {
   // Suivi du titre auto-généré : tant que l'utilisateur n'a pas tapé quelque
   // chose de différent, on continue de mettre à jour le titre lorsqu'une
   // métadonnée change. Dès qu'il customise, on respecte sa saisie.
-  const lastAutoTitleRef = useRef<string>('')
-  const titleOverriddenRef = useRef<boolean>(false)
+  const [titleOverridden, setTitleOverridden] = useState(false)
+  const [lastAutoTitle, setLastAutoTitle] = useState('')
 
   const set = <K extends keyof SubjectMetadata>(field: K, value: SubjectMetadata[K]) => {
     setMeta(prev => ({ ...prev, [field]: value }))
@@ -139,21 +139,21 @@ export default function OnboardingModal({ onComplete }: Props) {
   // Synchronise le titre avec l'auto-génération tant qu'il n'a pas été
   // explicitement modifié par l'utilisateur.
   useEffect(() => {
-    if (titleOverriddenRef.current) return
+    if (titleOverridden) return
     if (!computedAutoTitle) return
-    if (meta.title && meta.title !== lastAutoTitleRef.current) {
+    if (meta.title && meta.title !== lastAutoTitle) {
       // Cas où le titre actuel a été saisi avant le 1er passage : on respecte.
-      titleOverriddenRef.current = true
+      setTitleOverridden(true)
       return
     }
-    lastAutoTitleRef.current = computedAutoTitle
+    setLastAutoTitle(computedAutoTitle)
     setMeta(prev =>
       prev.title === computedAutoTitle ? prev : { ...prev, title: computedAutoTitle }
     )
-  }, [computedAutoTitle, meta.title])
+  }, [computedAutoTitle, meta.title, titleOverridden, lastAutoTitle])
 
   const handleTitleChange = (value: string) => {
-    titleOverriddenRef.current = value.trim().length > 0
+    setTitleOverridden(value.trim().length > 0)
     set('title', value)
   }
 
@@ -232,7 +232,7 @@ export default function OnboardingModal({ onComplete }: Props) {
                 <label className="ed-label">
                   Titre du sujet *
                   <span className="ed-label-hint">
-                    {titleOverriddenRef.current
+                    {titleOverridden
                       ? '(personnalisé)'
                       : '(généré automatiquement)'}
                   </span>
@@ -243,14 +243,14 @@ export default function OnboardingModal({ onComplete }: Props) {
                   value={meta.title}
                   onChange={e => handleTitleChange(e.target.value)}
                 />
-                {titleOverriddenRef.current && computedAutoTitle && computedAutoTitle !== meta.title && (
+                {titleOverridden && computedAutoTitle && computedAutoTitle !== meta.title && (
                   <button
                     type="button"
                     className="ed-btn-mini"
                     style={{ marginTop: '0.35rem' }}
                     onClick={() => {
-                      titleOverriddenRef.current = false
-                      lastAutoTitleRef.current = computedAutoTitle
+                      setTitleOverridden(false)
+                      setLastAutoTitle(computedAutoTitle)
                       set('title', computedAutoTitle)
                     }}
                   >

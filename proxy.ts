@@ -10,7 +10,13 @@ const protectedRoutes = [
   "/recharge",
   "/examens",
   "/auth/onboarding",
+  "/catalogue/buy",
+  "/contributeur",
+  "/parrainage",
+  "/notifications",
 ];
+
+const ADMIN_ROUTES = ["/admin"];
 
 const authRoutes = ["/auth/login", "/auth/register"];
 
@@ -54,6 +60,30 @@ export async function proxy(request: NextRequest) {
   const isVerifyRoute = pathname.startsWith("/auth/verify-email");
   const isOnboardingRoute = pathname.startsWith("/auth/onboarding");
   const isCallbackRoute = pathname.startsWith("/auth/callback");
+  const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
+
+  // Protéger les routes admin (vérification du rôle)
+  if (isAdminRoute) {
+    if (!user) {
+      return NextResponse.redirect(
+        new URL("/auth/login?next=" + encodeURIComponent(pathname), request.url)
+      );
+    }
+
+    try {
+      const { data: profile } = await supabase
+        .from("User")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role !== "ADMIN") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+  }
 
   if (!user && isProtectedRoute) {
     const loginUrl = new URL("/auth/login", request.url);
@@ -111,6 +141,12 @@ export async function proxy(request: NextRequest) {
 
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
+
+  // Ajouter les headers de sécurité
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
 
   return response;
 }

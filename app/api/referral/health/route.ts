@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { testReferralSystem } from "@/__tests__/referral-system.test";
+import { query } from "@/lib/db";
 import {
   initializeReferralSettings,
   getReferralSettingsForAdmin,
@@ -7,7 +7,7 @@ import {
 
 /**
  * GET /api/referral/health
- * Test le système de parrainage et initialise les settings
+ * Vérifie la santé du système de parrainage (localhost uniquement)
  */
 export async function GET(request: Request) {
   try {
@@ -26,14 +26,24 @@ export async function GET(request: Request) {
     // 2. Récupérer les settings
     const settingsResult = await getReferralSettingsForAdmin();
 
-    // 3. Exécuter les tests
-    const testResult = await testReferralSystem();
+    // 3. Vérifier la structure de la DB
+    const dbChecks = await Promise.all([
+      query(`SELECT COUNT(*) as count FROM "SystemSetting" WHERE key IN ('WELCOME_BONUS_CREDITS', 'REFERRAL_BONUS_CREDITS', 'REFERRED_BONUS_CREDITS')`),
+      query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'UserReferral' LIMIT 1`),
+      query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'User' AND column_name IN ('referralCode', 'referredByUserId') LIMIT 1`),
+    ]);
+
+    const healthStatus = {
+      settingsExist: parseInt(dbChecks[0].rows[0]?.count || '0') === 3,
+      userReferralTableExists: dbChecks[1].rows.length > 0,
+      userReferralColumnsExist: dbChecks[2].rows.length > 0,
+    };
 
     return NextResponse.json({
       status: "ok",
       initialization: initResult,
       settings: settingsResult,
-      tests: testResult,
+      database: healthStatus,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

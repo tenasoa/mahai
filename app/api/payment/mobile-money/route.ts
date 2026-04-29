@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { checkPaymentRateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   const supabase = await createSupabaseServerClient()
@@ -8,6 +9,23 @@ export async function POST(req: Request) {
 
   if (!session?.user) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  }
+
+  // Rate limiting par utilisateur
+  const rateLimit = checkPaymentRateLimit(session.user.id)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { 
+        error: 'Trop de tentatives de paiement', 
+        retryAfter: rateLimit.retryAfter 
+      }, 
+      { 
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.retryAfter)
+        }
+      }
+    )
   }
 
   try {

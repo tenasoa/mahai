@@ -36,6 +36,21 @@ type StatusTab = "all" | "pending" | "completed" | "failed";
 type SortKey = "createdAt" | "amount" | "status";
 type SortDir = "asc" | "desc";
 
+const SortIndicator = ({ 
+  keyName, 
+  activeSortKey, 
+  sortDir 
+}: { 
+  keyName: SortKey; 
+  activeSortKey: SortKey; 
+  sortDir: SortDir; 
+}) => {
+  if (activeSortKey !== keyName) return <ChevronsUpDown size={12} className="sort-indicator" />;
+  return sortDir === "asc"
+    ? <ChevronUp size={12} className="sort-indicator" />
+    : <ChevronDown size={12} className="sort-indicator" />;
+};
+
 export default function WithdrawalsClient({ user, withdrawals, stats, balance }: WithdrawalsClientProps) {
   const router = useRouter();
   const toast = useToast();
@@ -122,13 +137,6 @@ export default function WithdrawalsClient({ user, withdrawals, stats, balance }:
       setSortKey(key);
       setSortDir("desc");
     }
-  };
-
-  const SortIndicator = ({ keyName }: { keyName: SortKey }) => {
-    if (sortKey !== keyName) return <ChevronsUpDown size={12} className="sort-indicator" />;
-    return sortDir === "asc"
-      ? <ChevronUp size={12} className="sort-indicator" />
-      : <ChevronDown size={12} className="sort-indicator" />;
   };
 
   const handleWithdraw = async () => {
@@ -356,14 +364,14 @@ export default function WithdrawalsClient({ user, withdrawals, stats, balance }:
                   onClick={() => handleSort('createdAt')}
                 >
                   Date &amp; Heure
-                  <SortIndicator keyName="createdAt" />
+                  <SortIndicator keyName="createdAt" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th
                   className={`is-sortable ${sortKey === 'amount' ? 'is-sorted' : ''}`}
                   onClick={() => handleSort('amount')}
                 >
                   Montant Brut
-                  <SortIndicator keyName="amount" />
+                  <SortIndicator keyName="amount" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th>Frais (1%)</th>
                 <th>Montant Net</th>
@@ -373,7 +381,7 @@ export default function WithdrawalsClient({ user, withdrawals, stats, balance }:
                   style={{ textAlign: "right" }}
                 >
                   Statut
-                  <SortIndicator keyName="status" />
+                  <SortIndicator keyName="status" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
               </tr>
             </thead>

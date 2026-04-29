@@ -223,7 +223,7 @@ export const db = {
       return result.rows[0] || null
     },
     
-    async findMany({ where }: { where?: {} } = {}) {
+    async findMany({ where }: { where?: Record<string, unknown> } = {}) {
       const result = await query('SELECT * FROM "ExamenBlanc" ORDER BY "createdAt" DESC')
       return result.rows
     },

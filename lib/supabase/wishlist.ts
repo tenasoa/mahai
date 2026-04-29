@@ -1,8 +1,9 @@
 'use server'
 
+import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
-async function getAuthenticatedWishlistContext() {
+async function getAuthenticatedUserId() {
   const supabase = await createSupabaseServerClient()
   const {
     data: { user },
@@ -13,125 +14,128 @@ async function getAuthenticatedWishlistContext() {
     return null
   }
 
-  return { supabase, userId: user.id }
+  return user.id
 }
 
 export async function getWishlist() {
-  const context = await getAuthenticatedWishlistContext()
+  const userId = await getAuthenticatedUserId()
 
-  if (!context) {
+  if (!userId) {
     return []
   }
 
-  const { data, error } = await context.supabase
-    .from('Wishlist')
-    .select(`
-      id,
-      subjectId,
-      subject:Subject(*)
-    `)
-    .eq('userId', context.userId)
-    .order('createdAt', { ascending: false })
+  try {
+    const result = await query(
+      `SELECT w.id, w."subjectId", s.* as subject
+       FROM "Wishlist" w
+       LEFT JOIN "Subject" s ON s.id = w."subjectId"
+       WHERE w."userId" = $1
+       ORDER BY w."createdAt" DESC`,
+      [userId]
+    )
 
-  if (error) {
+    return result.rows.map(row => ({
+      id: row.id,
+      subjectId: row.subjectId,
+      subject: row.subject
+    }))
+  } catch (error) {
     console.error('Erreur fetch wishlist:', error)
     return []
   }
-
-  return data || []
 }
 
 async function addToWishlist(subjectId: string) {
-  const context = await getAuthenticatedWishlistContext()
+  const userId = await getAuthenticatedUserId()
 
-  if (!context || !subjectId) {
+  if (!userId || !subjectId) {
     return { success: false, error: 'Utilisateur ou sujet invalide' }
   }
 
-  const { data: existing } = await context.supabase
-    .from('Wishlist')
-    .select('id')
-    .eq('userId', context.userId)
-    .eq('subjectId', subjectId)
-    .single()
+  try {
+    // Vérifier si déjà dans la wishlist
+    const existing = await query(
+      `SELECT id FROM "Wishlist" WHERE "userId" = $1 AND "subjectId" = $2`,
+      [userId, subjectId]
+    )
 
-  if (existing) {
-    return { success: false, error: 'Déjà dans la wishlist' }
-  }
+    if (existing.rows.length > 0) {
+      return { success: false, error: 'Déjà dans la wishlist' }
+    }
 
-  const { data, error } = await context.supabase
-    .from('Wishlist')
-    .insert({
-      id: crypto.randomUUID(),
-      userId: context.userId,
-      subjectId,
-    })
-    .select()
-    .single()
+    const result = await query(
+      `INSERT INTO "Wishlist" (id, "userId", "subjectId")
+       VALUES (gen_random_uuid()::TEXT, $1, $2)
+       RETURNING *`,
+      [userId, subjectId]
+    )
 
-  if (error) {
+    return { success: true, data: result.rows[0] }
+  } catch (error) {
     console.error('Erreur add wishlist:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' }
   }
-
-  return { success: true, data }
 }
 
 async function removeFromWishlist(subjectId: string) {
-  const context = await getAuthenticatedWishlistContext()
+  const userId = await getAuthenticatedUserId()
 
-  if (!context || !subjectId) {
+  if (!userId || !subjectId) {
     return { success: false, error: 'Utilisateur ou sujet invalide' }
   }
 
-  const { error } = await context.supabase
-    .from('Wishlist')
-    .delete()
-    .eq('userId', context.userId)
-    .eq('subjectId', subjectId)
+  try {
+    await query(
+      `DELETE FROM "Wishlist" WHERE "userId" = $1 AND "subjectId" = $2`,
+      [userId, subjectId]
+    )
 
-  if (error) {
+    return { success: true }
+  } catch (error) {
     console.error('Erreur remove wishlist:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' }
   }
-
-  return { success: true }
 }
 
 export async function toggleWishlist(subjectId: string) {
-  const context = await getAuthenticatedWishlistContext()
+  const userId = await getAuthenticatedUserId()
 
-  if (!context || !subjectId) {
+  if (!userId || !subjectId) {
     return { success: false, error: 'Utilisateur ou sujet invalide' }
   }
 
-  const { data: existing } = await context.supabase
-    .from('Wishlist')
-    .select('id')
-    .eq('userId', context.userId)
-    .eq('subjectId', subjectId)
-    .single()
+  try {
+    const existing = await query(
+      `SELECT id FROM "Wishlist" WHERE "userId" = $1 AND "subjectId" = $2`,
+      [userId, subjectId]
+    )
 
-  if (existing) {
-    return removeFromWishlist(subjectId)
+    if (existing.rows.length > 0) {
+      return removeFromWishlist(subjectId)
+    }
+
+    return addToWishlist(subjectId)
+  } catch (error) {
+    console.error('Erreur toggle wishlist:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' }
   }
-
-  return addToWishlist(subjectId)
 }
 
 export async function isInWishlist(subjectId: string) {
-  const context = await getAuthenticatedWishlistContext()
+  const userId = await getAuthenticatedUserId()
 
-  if (!context || !subjectId) {
+  if (!userId || !subjectId) {
     return false
   }
 
-  const { data } = await context.supabase
-    .from('Wishlist')
-    .select('id')
-    .eq('userId', context.userId)
-    .eq('subjectId', subjectId)
-    .single()
+  try {
+    const result = await query(
+      `SELECT id FROM "Wishlist" WHERE "userId" = $1 AND "subjectId" = $2`,
+      [userId, subjectId]
+    )
 
-  return !!data
+    return result.rows.length > 0
+  } catch {
+    return false
+  }
 }

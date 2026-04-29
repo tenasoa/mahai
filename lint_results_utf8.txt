@@ -1,0 +1,4 @@
+﻿
+> mahai@0.1.0 lint C:\Users\Tenasoa\Desktop\Mah.AI\mahai
+> eslint .
+

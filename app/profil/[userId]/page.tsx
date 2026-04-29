@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Suspense } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
@@ -112,8 +113,14 @@ export default async function PublicProfilePage({
             <div className="ph-left">
               <div className="ph-avatar-wrap">
                 {profile.profilePicture ? (
-                  <div className="ph-avatar-image large">
-                    <img src={profile.profilePicture} alt={profile.prenom} />
+                  <div className="ph-avatar-image large" style={{ position: 'relative', overflow: 'hidden' }}>
+                    <Image 
+                      src={profile.profilePicture} 
+                      alt={profile.prenom || "Profil"} 
+                      fill
+                      sizes="120px"
+                      style={{ objectFit: 'cover' }}
+                    />
                   </div>
                 ) : (
                   <div className="ph-avatar large">{userInitial}</div>

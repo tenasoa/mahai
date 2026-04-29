@@ -37,6 +37,21 @@ const PERIOD_LABELS: Record<AnalyticsPeriod, string> = {
 type SortKey = 'titre' | 'sales' | 'revenue' | 'rating'
 type SortDir = 'asc' | 'desc'
 
+const SortIndicator = ({ 
+  keyName, 
+  activeSortKey, 
+  sortDir 
+}: { 
+  keyName: SortKey; 
+  activeSortKey: SortKey | null; 
+  sortDir: SortDir; 
+}) => {
+  if (activeSortKey !== keyName) return <ChevronsUpDown size={12} className="sort-indicator" />
+  return sortDir === 'asc'
+    ? <ChevronUp size={12} className="sort-indicator" />
+    : <ChevronDown size={12} className="sort-indicator" />
+}
+
 function formatChartLabel(raw: string, format: string) {
   if (!raw) return ''
   if (format === 'day') {
@@ -135,13 +150,6 @@ export default function AnalyticsClient({
       setSortKey(key)
       setSortDir('desc')
     }
-  }
-
-  const SortIndicator = ({ keyName }: { keyName: SortKey }) => {
-    if (sortKey !== keyName) return <ChevronsUpDown size={12} className="sort-indicator" />
-    return sortDir === 'asc'
-      ? <ChevronUp size={12} className="sort-indicator" />
-      : <ChevronDown size={12} className="sort-indicator" />
   }
 
   const periods: AnalyticsPeriod[] = ['7d', '30d', '12m']
@@ -338,28 +346,28 @@ export default function AnalyticsClient({
                   onClick={() => handleSort('titre')}
                 >
                   Sujet &amp; Matière
-                  <SortIndicator keyName="titre" />
+                  <SortIndicator keyName="titre" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th
                   className={`is-sortable ${sortKey === 'sales' ? 'is-sorted' : ''}`}
                   onClick={() => handleSort('sales')}
                 >
                   Ventes
-                  <SortIndicator keyName="sales" />
+                  <SortIndicator keyName="sales" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th
                   className={`is-sortable ${sortKey === 'revenue' ? 'is-sorted' : ''}`}
                   onClick={() => handleSort('revenue')}
                 >
                   Revenus
-                  <SortIndicator keyName="revenue" />
+                  <SortIndicator keyName="revenue" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th
                   className={`is-sortable ${sortKey === 'rating' ? 'is-sorted' : ''}`}
                   onClick={() => handleSort('rating')}
                 >
                   Satisfaction
-                  <SortIndicator keyName="rating" />
+                  <SortIndicator keyName="rating" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>

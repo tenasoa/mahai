@@ -27,7 +27,9 @@ import {
 const EMAIL_VERIFIED_COOKIE = "mahai-email-verified";
 const ONBOARDING_PENDING_COOKIE = "mahai-onboarding-pending";
 const FLOW_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const DEFAULT_SITE_URL = "http://localhost:3000";
+const DEFAULT_SITE_URL = process.env.NODE_ENV === "production" 
+  ? "https://mahai.mg" 
+  : "http://localhost:3000";
 
 // Helper function to generate consistent 6-digit code
 function generate6DigitCode(): string {

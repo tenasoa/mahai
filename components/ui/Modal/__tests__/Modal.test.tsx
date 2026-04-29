@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@/__tests__/__utils__/test-utils'
+import { render, screen, userEvent, waitFor } from '@/__tests__/__utils__/test-utils'
 import { Modal } from '../Modal'
 
 describe('Modal Component', () => {
@@ -87,7 +87,8 @@ describe('Modal Component', () => {
   })
 
   describe('Focus Management', () => {
-    it('focuses first focusable element on open', () => {
+    it('focuses first focusable element on open', async () => {
+      jest.useFakeTimers()
       render(
         <Modal {...defaultProps}>
           <button>First Button</button>
@@ -96,22 +97,28 @@ describe('Modal Component', () => {
       )
       
       const firstButton = screen.getByText('First Button')
+      jest.advanceTimersByTime(0)
+      
       expect(firstButton).toHaveFocus()
+      jest.useRealTimers()
     })
 
-    it('restores focus on close', () => {
+    it('restores focus on close', async () => {
       const triggerButton = document.createElement('button')
       triggerButton.textContent = 'Open Modal'
       document.body.appendChild(triggerButton)
       triggerButton.focus()
       
+      jest.useFakeTimers()
       const { rerender } = render(
         <Modal {...defaultProps} isOpen={true} onClose={() => {}} />
       )
       
       rerender(<Modal {...defaultProps} isOpen={false} onClose={() => {}} />)
       
+      jest.advanceTimersByTime(0)
       expect(triggerButton).toHaveFocus()
+      jest.useRealTimers()
       
       document.body.removeChild(triggerButton)
     })
@@ -143,11 +150,14 @@ describe('Modal Component', () => {
         </Modal>
       )
       
+      jest.useFakeTimers()
       const button = screen.getByText('Only Button')
       await userEvent.tab()
       
       // Focus should cycle back to button
+      jest.advanceTimersByTime(0)
       expect(button).toHaveFocus()
+      jest.useRealTimers()
     })
   })
 

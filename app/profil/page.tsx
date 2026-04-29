@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { LuxuryNavbar } from "@/components/layout/LuxuryNavbar";
@@ -571,8 +572,14 @@ export default function ProfilePage() {
           <div className="ph-left">
             <div className="ph-avatar-wrap">
               {appUser?.profilePicture ? (
-                <div className="ph-avatar-image">
-                  <img src={appUser.profilePicture} alt="Avatar" />
+                <div className="ph-avatar-image" style={{ position: 'relative', overflow: 'hidden' }}>
+                  <Image 
+                    src={appUser.profilePicture} 
+                    alt="Avatar" 
+                    fill
+                    sizes="120px"
+                    style={{ objectFit: 'cover' }}
+                  />
                 </div>
               ) : (
                 <div className="ph-avatar">

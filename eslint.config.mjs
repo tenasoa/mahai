@@ -6,13 +6,18 @@ export default [
   ...nextTypescript,
   {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      // TypeScript - strict
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      // React
       'react/no-unescaped-entities': 'off',
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/immutability': 'off',
       'react-hooks/error-boundaries': 'off',
       'react-hooks/incompatible-library': 'off',
+      // General
       'prefer-const': 'warn',
+      'no-console': ['warn', { allow: ['error', 'warn'] }],
     },
   },
   {

@@ -42,6 +42,21 @@ type StatusFilter =
 type SortKey = 'titre' | 'ventes' | 'revenus'
 type SortDir = 'asc' | 'desc'
 
+const SortIndicator = ({ 
+  keyName, 
+  activeSortKey, 
+  sortDir 
+}: { 
+  keyName: SortKey, 
+  activeSortKey: SortKey | null, 
+  sortDir: SortDir 
+}) => {
+  if (activeSortKey !== keyName) return <ChevronsUpDown size={12} className="sort-indicator" />
+  return sortDir === 'asc'
+    ? <ChevronUp size={12} className="sort-indicator" />
+    : <ChevronDown size={12} className="sort-indicator" />
+}
+
 const PAGE_SIZE = 10
 
 function formatStatus(status: string, source?: string) {
@@ -199,13 +214,6 @@ export default function ContributorSubjectsClient({ user, subjects, submissions,
       setSortKey(key)
       setSortDir('desc')
     }
-  }
-
-  const SortIndicator = ({ keyName }: { keyName: SortKey }) => {
-    if (sortKey !== keyName) return <ChevronsUpDown size={12} className="sort-indicator" />
-    return sortDir === 'asc'
-      ? <ChevronUp size={12} className="sort-indicator" />
-      : <ChevronDown size={12} className="sort-indicator" />
   }
 
   const totalSubjects = allItems.length
@@ -372,7 +380,7 @@ export default function ContributorSubjectsClient({ user, subjects, submissions,
                   onClick={() => handleSort('titre')}
                 >
                   Sujet
-                  <SortIndicator keyName="titre" />
+                  <SortIndicator keyName="titre" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th>Statut</th>
                 <th>Niveau &amp; Année</th>
@@ -381,14 +389,14 @@ export default function ContributorSubjectsClient({ user, subjects, submissions,
                   onClick={() => handleSort('ventes')}
                 >
                   Ventes
-                  <SortIndicator keyName="ventes" />
+                  <SortIndicator keyName="ventes" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th
                   className={`is-sortable ${sortKey === 'revenus' ? 'is-sorted' : ''}`}
                   onClick={() => handleSort('revenus')}
                 >
                   Gains cumulés
-                  <SortIndicator keyName="revenus" />
+                  <SortIndicator keyName="revenus" activeSortKey={sortKey} sortDir={sortDir} />
                 </th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>

@@ -1,4 +1,5 @@
 import { Pool } from 'pg'
+import { logger } from './logger'
 
 // Prevent multiple instances of Pool in development (hot reload)
 const globalForDb = global as unknown as { pool: Pool }
@@ -20,22 +21,17 @@ function getSqlKind(text: string) {
   return text.trim().split(/\s+/)[0]?.toUpperCase() || 'UNKNOWN'
 }
 
-export async function query(text: string, params?: any[]) {
+export async function query(text: string, params?: unknown[]) {
   const start = Date.now()
   try {
     const res = await pool.query(text, params)
     const duration = Date.now() - start
     if (LOG_DB_QUERIES) {
-      console.log('Executed query', { kind: getSqlKind(text), duration, rows: res.rowCount })
+      logger.debug('Executed query', { kind: getSqlKind(text), duration, rows: res.rowCount })
     }
     return res
   } catch (error) {
-    const dbError = error as { message?: string; code?: string; detail?: string }
-    console.error('Database query error:', {
-      code: dbError.code,
-      message: dbError.message,
-      detail: dbError.detail
-    })
+    logger.dbError('query', error, text)
     throw error
   }
 }
