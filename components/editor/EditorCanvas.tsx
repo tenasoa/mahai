@@ -106,10 +106,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(function EditorCanvas
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Highlight.configure({ multicolor: false }),
       Typography,
-      Placeholder.configure({
-        placeholder: 'Commencez par insérer une Partie avec ⊕ ou tapez directement…',
-      }),
-      CodeBlockLowlight.configure({ lowlight }),
       Subscript,
       Superscript,
       Link.configure({
@@ -122,10 +118,14 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(function EditorCanvas
           target: '_blank',
         },
       }),
-      Table.configure({ resizable: true }),
+      Table.configure({ resizable: true, HTMLAttributes: { class: 'ed-table' } }),
       TableRow,
       TableHeader,
       TableCell,
+      Placeholder.configure({
+        placeholder: 'Commencez par insérer une Partie avec ⊕ ou tapez directement…',
+      }),
+      CodeBlockLowlight.configure({ lowlight }),
       PartieExtension,
       ExerciceExtension,
       ProblemeExtension,

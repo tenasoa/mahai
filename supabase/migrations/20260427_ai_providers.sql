@@ -1,5 +1,5 @@
 -- ============================================================================
--- Multi-provider IA — Claude / Perplexity (extensible OpenAI plus tard)
+-- Multi-provider IA — Claude / Perplexity / OpenAI
 -- ----------------------------------------------------------------------------
 -- Le provider actif est piloté par la SystemSetting `ai.provider`.
 -- Chaque provider a sa propre clé `ai.<provider>.model` pour découpler les
@@ -7,7 +7,8 @@
 -- via `output_config.effort`, Perplexity via le choix sonar-pro vs
 -- sonar-reasoning-pro.
 --
--- Les clés API restent dans .env.local (ANTHROPIC_API_KEY, PERPLEXITY_API_KEY)
+-- Les clés API restent dans .env.local (ANTHROPIC_API_KEY, PERPLEXITY_API_KEY,
+-- OPENAI_API_KEY)
 -- — JAMAIS dans la DB.
 -- ============================================================================
 
@@ -24,10 +25,13 @@ INSERT INTO "SystemSetting" (key, value, category, type, label, description)
 VALUES
   ('ai.provider',          'claude', 'ai', 'string',
    'Provider IA actif',
-   'claude | perplexity — détermine quel fournisseur est appelé pour les corrections IA.'),
+   'claude | perplexity | openai — détermine quel fournisseur est appelé pour les corrections IA.'),
   ('ai.perplexity.model',  'sonar-pro', 'ai', 'string',
    'Modèle Perplexity',
-   'Identifiant Sonar (sonar, sonar-pro, sonar-reasoning, sonar-reasoning-pro).')
+   'Identifiant Sonar (sonar, sonar-pro, sonar-reasoning, sonar-reasoning-pro).'),
+  ('ai.openai.model',      'gpt-5.4-mini', 'ai', 'string',
+   'Modèle OpenAI',
+   'Identifiant exact du modèle OpenAI utilisé via Responses API (ex: gpt-5.4-mini, gpt-5.4, gpt-5.5).')
 ON CONFLICT (key) DO NOTHING;
 
 -- 3. Au cas où la migration AI précédente n'a pas été appliquée, on s'assure

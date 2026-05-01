@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 import { query } from "@/lib/db";
+
+function verifyWebhookSignature(payload: string, signature: string, secret: string) {
+  const expected = createHmac("sha256", secret).update(payload).digest("hex");
+  const normalizedSignature = signature.startsWith("sha256=")
+    ? signature.slice("sha256=".length)
+    : signature;
+
+  const actualBuffer = Buffer.from(normalizedSignature, "hex");
+  const expectedBuffer = Buffer.from(expected, "hex");
+
+  return (
+    actualBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(actualBuffer, expectedBuffer)
+  );
+}
 
 /**
  * POST /api/payment/webhook
@@ -8,26 +24,41 @@ import { query } from "@/lib/db";
  */
 export async function POST(request: NextRequest) {
   try {
+    if (process.env.ENABLE_MOBILE_MONEY_WEBHOOK !== "true") {
+      return NextResponse.json(
+        { error: "Webhook Mobile Money désactivé" },
+        { status: 404 }
+      );
+    }
+
     const isSimulation = request.headers.get("x-simulation-mode") === "true" || 
                          process.env.NODE_ENV === "development";
-    
-    // Vérifier la signature du webhook (sauf en mode simulation)
+
+    const payload = await request.text();
+
+    // Vérifier la signature du webhook hors simulation/dev.
     const signature = request.headers.get("x-webhook-signature");
-    if (!signature && !isSimulation) {
+    const webhookSecret = process.env.MOBILE_MONEY_WEBHOOK_SECRET;
+    if (!isSimulation && (!signature || !webhookSecret)) {
       return NextResponse.json(
-        { error: "Signature manquante" },
+        { error: "Signature webhook non configurée" },
         { status: 401 }
       );
     }
 
-    // Parser le body
-    const body = await request.json();
+    if (!isSimulation && !verifyWebhookSignature(payload, signature!, webhookSecret!)) {
+      return NextResponse.json(
+        { error: "Signature invalide" },
+        { status: 401 }
+      );
+    }
+
+    const body = JSON.parse(payload);
     const {
       transactionId,
       status,
       operatorTransactionId,
       paidAt,
-      phoneNumber,
     } = body;
 
     if (!transactionId || !status) {
@@ -124,6 +155,13 @@ export async function POST(request: NextRequest) {
  * Health check pour le webhook
  */
 export async function GET() {
+  if (process.env.ENABLE_MOBILE_MONEY_WEBHOOK !== "true") {
+    return NextResponse.json({
+      status: "disabled",
+      endpoint: "/api/payment/webhook",
+    });
+  }
+
   return NextResponse.json({
     status: "active",
     endpoint: "/api/payment/webhook",

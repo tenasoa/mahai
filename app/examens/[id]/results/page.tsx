@@ -3,7 +3,7 @@ import { db } from '@/lib/db-client'
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Trophy, TrendingUp, BookOpen, ArrowRight, Users, BarChart3, Star, Clock, CheckCircle2, Zap } from 'lucide-react'
+import { Trophy, TrendingUp, BookOpen, ArrowRight, Clock, CheckCircle2, Circle, Zap } from 'lucide-react'
 import { ExamenResultsSkeleton } from '@/components/ui/PageSkeletons'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
@@ -36,14 +36,11 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
   const scoreNum = parseFloat(score || '0')
   const percentage = exam.scoreMax ? (scoreNum / exam.scoreMax) * 100 : 0
 
-  const nationalAverage = 62.5
-  const userPercentile = 78
-
-  const questionDetails = [
-    { id: 'q1', title: 'Question 1 - Dérivée', points: 5, maxPoints: 5, correct: true },
-    { id: 'q2', title: 'Question 2 - Primitive', points: 3, maxPoints: 3, correct: true },
-    { id: 'q3', title: 'Question 3 - Équation', points: 0, maxPoints: 2, correct: false },
-  ]
+  const questions = await db.questionExamen.findMany({
+    where: { examenId: id },
+    orderBy: { numero: 'asc' },
+  })
+  const totalQuestionPoints = questions.reduce((sum: number, question: { points?: number }) => sum + (question.points || 0), 0)
 
   return (
     <div className="results-page">
@@ -62,7 +59,7 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
                 <p className="rh-kicker">Examen Blanc Terminé</p>
                 <h1 className="rh-title">{exam.titre}</h1>
                 <div className="rh-meta">
-                  <span className="rh-meta-item"><Clock size={12} /> 2h 45min</span>
+                  <span className="rh-meta-item"><Clock size={12} /> Durée enregistrée</span>
                   <span className="rh-meta-item"><CheckCircle2 size={12} /> {exam.scoreMax} points max</span>
                 </div>
               </div>
@@ -94,18 +91,16 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
                     </div>
                   </div>
                   <div className="stat-row">
-                    <div className="sr-label">Classement</div>
-                    <div className="sr-val text-gold">Top {100 - userPercentile}% national</div>
+                    <div className="sr-label">Questions</div>
+                    <div className="sr-val text-gold">{questions.length}</div>
                   </div>
                   <div className="stat-row">
-                    <div className="sr-label">Moyenne nationale</div>
-                    <div className="sr-val">{nationalAverage}%</div>
+                    <div className="sr-label">Points des questions</div>
+                    <div className="sr-val">{totalQuestionPoints || exam.scoreMax}</div>
                   </div>
                   <div className="stat-row">
-                    <div className="sr-label">Écart</div>
-                    <div className={`sr-val ${percentage >= nationalAverage ? 'text-sage' : 'text-ruby'}`}>
-                      {percentage >= nationalAverage ? '+' : ''}{(percentage - nationalAverage).toFixed(1)}%
-                    </div>
+                    <div className="sr-label">Correction détaillée</div>
+                    <div className="sr-val">Disponible via IA</div>
                   </div>
                 </div>
               </div>
@@ -139,11 +134,11 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
               <div className="luxury-card actions-card">
                 <div className="actions-list">
                   <Link href="/examens" className="action-item">
-                    <div className="ai-icon"><Clock size={18} /></div>
-                    <div className="ai-content">
-                      <div className="ai-title">Refaire un autre examen</div>
-                      <div className="ai-desc">Pratiquez davantage pour viser le top 1%.</div>
-                    </div>
+                      <div className="ai-icon"><Clock size={18} /></div>
+                      <div className="ai-content">
+                        <div className="ai-title">Refaire un autre examen</div>
+                      <div className="ai-desc">Continuez l'entraînement avec un nouveau sujet.</div>
+                      </div>
                     <ArrowRight size={16} className="ai-arrow" />
                   </Link>
                   <Link href="/catalogue" className="action-item">
@@ -164,17 +159,28 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
                   <h3 className="card-title">Détail par <em>Exercice</em></h3>
                 </div>
                 <div className="questions-list">
-                  {questionDetails.map((q) => (
+                  {questions.map((q: { id: string; numero?: number; texte?: string; points?: number }) => (
                     <div key={q.id} className="q-item">
-                      <div className={`q-status ${q.correct ? 'ok' : 'error'}`}>
-                        {q.correct ? <CheckCircle2 size={14} /> : <Star size={14} />}
+                      <div className="q-status ok">
+                        <Circle size={14} />
                       </div>
                       <div className="q-info">
-                        <div className="q-title">{q.title}</div>
-                        <div className="q-points">{q.points} / {q.maxPoints} pts</div>
+                        <div className="q-title">Question {q.numero || ''}</div>
+                        <div className="q-points">{q.points || 0} pts · {q.texte || 'Énoncé enregistré'}</div>
                       </div>
                     </div>
                   ))}
+                  {questions.length === 0 && (
+                    <div className="q-item">
+                      <div className="q-status ok">
+                        <Circle size={14} />
+                      </div>
+                      <div className="q-info">
+                        <div className="q-title">Détail indisponible</div>
+                        <div className="q-points">Aucune question détaillée n'est enregistrée pour cet examen.</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="card-footer">
                   <Link href="/dashboard" className="btn-luxury-full">

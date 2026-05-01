@@ -21,6 +21,12 @@ const ADMIN_ROUTES = ["/admin"];
 
 const authRoutes = ["/auth/login", "/auth/register"];
 
+function debugLog(message: string) {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(message);
+  }
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -66,7 +72,7 @@ export async function proxy(request: NextRequest) {
   // Protéger les routes admin (vérification du rôle avec pg)
   if (isAdminRoute) {
     if (!user) {
-      console.log(`[Admin Check] No user, redirecting to login from ${pathname}`);
+      debugLog(`[Admin Check] No user, redirecting to login from ${pathname}`);
       return NextResponse.redirect(
         new URL("/auth/login?next=" + encodeURIComponent(pathname), request.url)
       );
@@ -80,19 +86,19 @@ export async function proxy(request: NextRequest) {
       );
 
       const role = result.rows[0]?.role;
-      console.log(`[Admin Check] User ${user.id} role: ${role}`);
+      debugLog(`[Admin Check] Role checked for ${user.id}: ${role}`);
 
       if (role !== "ADMIN") {
-        console.log(`[Admin Check] Access denied for ${user.id}, role: ${role}`);
+        debugLog(`[Admin Check] Access denied for ${user.id}, role: ${role}`);
         return NextResponse.redirect(new URL("/", request.url));
       }
 
-      console.log(`[Admin Check] Access granted for ${user.id}`);
+      debugLog(`[Admin Check] Access granted for ${user.id}`);
     } catch (error) {
       console.error(`[Admin Check] Error checking role for ${user.id}:`, error);
       // En développement, autoriser l'accès même en cas d'erreur
       if (process.env.NODE_ENV !== "production") {
-        console.log(`[Admin Check] Dev mode: allowing access despite error`);
+        debugLog(`[Admin Check] Dev mode: allowing access despite error`);
         // Continue without redirecting
       } else {
         return NextResponse.redirect(new URL("/auth/login", request.url));
@@ -159,7 +165,7 @@ export async function proxy(request: NextRequest) {
 
   // Ajouter les headers de sécurité
   response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("X-XSS-Protection", "1; mode=block");
 

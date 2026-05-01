@@ -54,6 +54,10 @@ function getSignupRedirectUrl(nextPath = "/auth/onboarding") {
   return `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 }
 
+function isAuthEmailDeliveryEnabled() {
+  return process.env.ENABLE_AUTH_EMAIL_DELIVERY === "true";
+}
+
 async function setVerificationCookie(isVerified: boolean) {
   const cookieStore = await cookies();
   cookieStore.set(
@@ -280,6 +284,12 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
 
   const { email } = validation.data;
 
+  if (!isAuthEmailDeliveryEnabled()) {
+    return {
+      error: "La récupération par email est temporairement désactivée.",
+    };
+  }
+
   // Check if user exists
   const user = await getUserByEmail(email);
 
@@ -428,6 +438,10 @@ export async function refreshEmailVerificationStatus() {
 
 export async function resendVerificationEmail(email: string) {
   try {
+    if (!isAuthEmailDeliveryEnabled()) {
+      return { error: "Le renvoi d'email est temporairement désactivé." };
+    }
+
     if (!email) {
       return { error: "Adresse email invalide" };
     }

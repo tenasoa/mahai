@@ -1,29 +1,9 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Outfit, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { ConditionalNavbar } from "@/components/layout/ConditionalNavbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--display",
-});
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--body",
-});
-
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--mono",
-});
 
 export const metadata: Metadata = {
   title: {
@@ -96,9 +76,14 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body
-        className={`${cormorant.variable} ${outfit.variable} ${dmMono.variable} min-h-screen bg-void text-text antialiased font-[family-name:var(--body)]`}
+        className="min-h-screen bg-void text-text antialiased font-[family-name:var(--body)]"
         suppressHydrationWarning
       >
         <a href="#main-content" className="skip-link">

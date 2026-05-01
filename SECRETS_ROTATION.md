@@ -1,6 +1,8 @@
 # 🔐 Guide de Régénération des Secrets
 
-> ⚠️ **URGENT** : Ces secrets sont actuellement exposés dans `.env` et potentiellement dans l'historique git.
+> Ce document décrit la procédure de rotation des secrets. Les fichiers `.env*`
+> ne doivent jamais être commités ; stocker les vraies valeurs uniquement dans
+> le gestionnaire d'environnements de production (Vercel, Supabase, etc.).
 
 ## 📋 Inventaire des Secrets à Régénérer
 
@@ -22,7 +24,7 @@
 ---
 
 ### 2. Perplexity API
-**Compte:** associé à la clé `pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+**Compte:** associé à la clé Perplexity configurée en environnement.
 
 #### À régénérer:
 - [ ] **PERPLEXITY_API_KEY**
@@ -36,7 +38,7 @@
 ---
 
 ### 3. Anthropic/Claude API
-**Compte:** associé à la clé `sk-ant-api03-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+**Compte:** associé à la clé Anthropic configurée en environnement.
 
 #### À régénérer:
 - [ ] **ANTHROPIC_API_KEY**
@@ -66,7 +68,7 @@
 ---
 
 ### 5. Vercel Blob Storage
-**Token:** `vercel_blob_rw_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+**Token:** configuré dans l'environnement de production.
 
 #### À régénérer:
 - [ ] **BLOB_READ_WRITE_TOKEN**
@@ -95,38 +97,20 @@
 
 ## 📝 Template de Mise à Jour
 
-Crée un nouveau fichier `.env.production` avec les nouvelles valeurs:
+Mettre à jour les variables dans le dashboard de production. Ne pas commiter
+un fichier `.env.production`.
 
 ```bash
-# ==========================================
-# NOUVEAUX SECRETS - Mise à jour du $(date)
-# ==========================================
-
-# Supabase (NOUVEAUX)
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=NOUVELLE_CLE_ICI
-SUPABASE_SERVICE_ROLE_KEY=NOUVELLE_CLE_ICI
-
-# Database (NOUVEAU password)
-DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true
-DIRECT_URL=postgresql://postgres.PROJECT_REF:PASSWORD@aws-1-eu-west-1.pooler.supabase.com:5432/postgres
-
-# Perplexity (NOUVEAU)
-PERPLEXITY_API_KEY=NOUVELLE_CLE_ICI
-
-# Claude (NOUVEAU)
-ANTHROPIC_API_KEY=NOUVELLE_CLE_ICI
-
-# Resend (NOUVEAU)
-RESEND_API_KEY=NOUVELLE_CLE_ICI
-EMAIL_FROM=noreply@your-domain.vercel.app
-
-# Blob (NOUVEAU)
-BLOB_READ_WRITE_TOKEN=NOUVELLE_CLE_ICI
-
-# Production URL
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-NODE_ENV=production
+# Variables à mettre à jour côté hébergeur :
+# - NEXT_PUBLIC_SUPABASE_URL
+# - NEXT_PUBLIC_SUPABASE_ANON_KEY
+# - SUPABASE_SERVICE_ROLE_KEY
+# - DATABASE_URL
+# - DIRECT_URL
+# - OPENAI_API_KEY / ANTHROPIC_API_KEY / PERPLEXITY_API_KEY selon le provider actif
+# - BLOB_READ_WRITE_TOKEN
+# - NEXT_PUBLIC_APP_URL
+# - NODE_ENV=production
 ```
 
 ---

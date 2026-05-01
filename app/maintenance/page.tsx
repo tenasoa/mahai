@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { MaintenancePageSkeleton } from '@/components/ui/PageSkeletons'
 
 type VariantKey = 'maintenance' | 'overload' | 'scheduled'
 
@@ -12,19 +11,12 @@ export default function MaintenancePage() {
   const [currentVariant, setCurrentVariant] = useState<VariantKey>('maintenance')
   const [notifyEmail, setNotifyEmail] = useState('')
   const [isSubscribed, setIsSubscribed] = useState(false)
-  const [loading, setLoading] = useState(true)
 
   const variants = {
     maintenance: { code: '503', label: 'MAINTENANCE', title: 'Mise à jour <em>en cours</em>', sub: 'Mah.AI procède à une maintenance planifiée pour améliorer votre expérience. Le service sera rétabli très bientôt.', progress: 'Mise à jour de la base de données…' },
     overload: { code: '503', label: 'SURCHARGE', title: 'Serveur <em>surchargé</em>', sub: 'Mah.AI connaît un trafic inhabituel en ce moment. Nos équipes travaillent à augmenter la capacité. Veuillez réessayer dans quelques minutes.', progress: 'Redimensionnement des serveurs…' },
     scheduled: { code: '🛠', label: 'PLANIFIÉE', title: 'Maintenance <em>planifiée</em>', sub: 'Une maintenance planifiée est en cours ce soir de 22h à 02h. Vos données et crédits sont intacts. Le service reprend automatiquement.', progress: 'Optimisation des performances…' },
   }
-
-  // Simulate initial loading for demo purposes
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => setTotalSeconds(prev => (prev > 0 ? prev - 1 : 0)), 1000)
@@ -96,10 +88,6 @@ export default function MaintenancePage() {
 
   const time = formatTime(totalSeconds)
   const variant = variants[currentVariant]
-
-  if (loading) {
-    return <MaintenancePageSkeleton />
-  }
 
   return (
     <>

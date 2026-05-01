@@ -1,27 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { HelpCircle, Book, MessageSquare, Phone, Mail, Search, AlertCircle, CheckCircle, Clock, ArrowRight } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
-import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 
 export default function SupportPage() {
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
-
-  useEffect(() => {
-    document.title = "Mah.AI — Support"
-    const timer = setTimeout(() => setLoading(false), 800)
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (loading) {
-    return <LegalPageSkeleton />
-  }
 
   const categories = [
     { id: 'all', name: 'Tous' },

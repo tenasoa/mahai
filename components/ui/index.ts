@@ -29,3 +29,15 @@ export { Skeleton } from "./Skeleton";
 export { Toast } from "./Toast";
 export { ToastContainer } from "./ToastContainer";
 export { AIFeedbackNarrative } from "./AIFeedbackNarrative";
+
+// Loading Components - Luxury Design
+export {
+  DataLoading,
+  DataLoadingInline,
+  TableRowSkeleton,
+} from "./DataLoading";
+export {
+  AIProcessingLoading,
+  AIProcessingLoadingCompact,
+  AIProcessingOverlay,
+} from "./AIProcessingLoading";

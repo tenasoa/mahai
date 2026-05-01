@@ -327,6 +327,37 @@ const styles = StyleSheet.create({
     lineHeight: 1.4,
   },
 
+  /* ─── Marks inline : subscript, superscript, link ─── */
+  // @react-pdf/renderer ne sait pas gérer la propriété verticalAlign
+  // nativement ; on l'approxime par fontSize réduit. Acceptable en lecture.
+  markSubscript: {
+    fontSize: 8,
+  },
+  markSuperscript: {
+    fontSize: 8,
+  },
+  markLink: {
+    color: '#3a6594',
+    textDecoration: 'underline',
+  },
+  markBold: {
+    fontWeight: 700,
+  },
+  markItalic: {
+    fontStyle: 'italic',
+  },
+  markUnderline: {
+    textDecoration: 'underline',
+  },
+  markStrike: {
+    textDecoration: 'line-through',
+  },
+  markCode: {
+    fontFamily: 'Courier',
+    fontSize: 10,
+    backgroundColor: '#f3efe3',
+  },
+
   /* ─── Partie / Exercice / Question / Énoncé / Annotation / Formula ─── */
   partie: {
     marginTop: 14,
@@ -631,6 +662,65 @@ function renderInline(content: any[]): string {
     .join('')
 }
 
+/**
+ * Variante riche : retourne un tableau de Text @react-pdf qui préserve
+ * les marks TipTap (subscript, superscript, link, bold/italic/underline/strike/code).
+ * À utiliser quand on veut afficher le contenu inline avec son styling
+ * réel (paragraphes, questions, headings).
+ *
+ * Les `inlineMath` deviennent des Text Courier comme dans le bloc IA.
+ */
+function applyMarks(node: React.ReactNode, marks: any[] | undefined, key: string): React.ReactNode {
+  if (!marks || marks.length === 0) return node
+  const styles_to_apply: any[] = []
+  let isLink = false
+  for (const mark of marks) {
+    switch (mark?.type) {
+      case 'bold':        styles_to_apply.push(styles.markBold); break
+      case 'italic':      styles_to_apply.push(styles.markItalic); break
+      case 'underline':   styles_to_apply.push(styles.markUnderline); break
+      case 'strike':      styles_to_apply.push(styles.markStrike); break
+      case 'subscript':   styles_to_apply.push(styles.markSubscript); break
+      case 'superscript': styles_to_apply.push(styles.markSuperscript); break
+      case 'code':        styles_to_apply.push(styles.markCode); break
+      case 'link':        styles_to_apply.push(styles.markLink); isLink = true; break
+      default: break
+    }
+  }
+  if (styles_to_apply.length === 0 && !isLink) return node
+  return (
+    <Text key={key} style={styles_to_apply}>
+      {node}
+    </Text>
+  )
+}
+
+function renderInlineWithMarks(content: any[]): React.ReactNode[] {
+  if (!Array.isArray(content)) return []
+  const out: React.ReactNode[] = []
+  content.forEach((c, i) => {
+    const key = `i-${i}`
+    if (typeof c?.text === 'string') {
+      out.push(applyMarks(c.text, c.marks, key))
+      return
+    }
+    if (c?.type === 'inlineMath') {
+      const latex = c?.attrs?.latex || ''
+      out.push(
+        <Text key={key} style={styles.aiLatexInline}>
+          ${latex}$
+        </Text>,
+      )
+      return
+    }
+    if (c?.type === 'hardBreak') {
+      out.push(<Text key={key}>{'\n'}</Text>)
+      return
+    }
+  })
+  return out
+}
+
 /* ─── AI corrections inline ──────────────────────────────────────── */
 interface RenderState {
   itemsByOrder?: AICorrectionItem[]
@@ -759,17 +849,17 @@ function NodeRenderer({ node, depth = 0, state }: NodeProps): React.ReactElement
       return <>{(content || []).map((child: any, i: number) => <NodeRenderer key={i} node={child} state={state} />)}</>
 
     case 'paragraph': {
-      const t = renderInline(content)
-      if (!t) return <Text style={styles.paragraph}> </Text>
-      // Si le paragraphe contient des `$...$` (formules inline KaTeX),
-      // on les rend en monospace Courier via renderInlineLatex.
-      return <Text style={styles.paragraph}>{renderInlineLatex(t)}</Text>
+      const nodes = renderInlineWithMarks(content || [])
+      if (nodes.length === 0) return <Text style={styles.paragraph}> </Text>
+      // renderInlineWithMarks préserve sub/sup/link/bold/italic et rend les
+      // inlineMath en Courier. C'est le rendu inline complet.
+      return <Text style={styles.paragraph}>{nodes}</Text>
     }
 
     case 'heading': {
       const level = attrs?.level || 1
       const style = level === 1 ? styles.h1 : level === 2 ? styles.h2 : styles.h3
-      return <Text style={style}>{renderInlineLatex(renderInline(content))}</Text>
+      return <Text style={style}>{renderInlineWithMarks(content || [])}</Text>
     }
 
     case 'bulletList':
@@ -904,7 +994,7 @@ function NodeRenderer({ node, depth = 0, state }: NodeProps): React.ReactElement
         <View>
           <View style={styles.question} wrap={false}>
             <Text style={styles.questionNum}>{questionNumero}.</Text>
-            <Text style={styles.questionContent}>{renderInlineLatex(renderInline(content))}</Text>
+            <Text style={styles.questionContent}>{renderInlineWithMarks(content || [])}</Text>
             {attrs?.hasPoints !== false && attrs?.points ? (
               <Text style={styles.questionPoints}>({attrs.points} pts)</Text>
             ) : null}

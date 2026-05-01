@@ -8,12 +8,14 @@ import 'server-only'
 
 import { query } from '@/lib/db'
 import { ClaudeProvider } from './claude'
+import { OpenAIProvider } from './openai'
 import { PerplexityProvider } from './perplexity'
 import type { AIProvider, AIProviderId, Effort } from './types'
 
 const PROVIDERS: Record<AIProviderId, AIProvider> = {
   claude: new ClaudeProvider(),
   perplexity: new PerplexityProvider(),
+  openai: new OpenAIProvider(),
 }
 
 export const ALL_PROVIDERS: AIProvider[] = Object.values(PROVIDERS)
@@ -37,6 +39,13 @@ export interface AIRuntimeConfig {
 const DEFAULT_MODEL_BY_PROVIDER: Record<AIProviderId, string> = {
   claude: 'claude-sonnet-4-6',
   perplexity: 'sonar-pro',
+  openai: 'gpt-5.4-mini',
+}
+
+function getProviderEnvVarName(id: AIProviderId): string {
+  if (id === 'claude') return 'ANTHROPIC_API_KEY'
+  if (id === 'perplexity') return 'PERPLEXITY_API_KEY'
+  return 'OPENAI_API_KEY'
 }
 
 /**
@@ -51,13 +60,13 @@ export async function loadAIRuntimeConfig(): Promise<AIRuntimeConfig> {
   const requestedId = (map['ai.provider'] || 'claude') as string
   const provider = getProviderById(requestedId)
   if (!provider) {
-    throw new Error(`Provider IA inconnu : "${requestedId}". Valeurs supportées : claude | perplexity.`)
+    throw new Error(`Provider IA inconnu : "${requestedId}". Valeurs supportées : claude | perplexity | openai.`)
   }
   if (!provider.isConfigured()) {
     throw new Error(
-      `Le provider "${provider.label}" n'a pas de clé API configurée. Ajoutez ${
-        provider.id === 'claude' ? 'ANTHROPIC_API_KEY' : 'PERPLEXITY_API_KEY'
-      } dans .env.local ou changez le provider depuis /admin/configuration.`,
+      `Le provider "${provider.label}" n'a pas de clé API configurée. Ajoutez ${getProviderEnvVarName(
+        provider.id,
+      )} dans .env.local ou changez le provider depuis /admin/configuration.`,
     )
   }
 
@@ -108,6 +117,6 @@ export async function listProviderStatus(): Promise<ProviderStatus[]> {
     isConfigured: p.isConfigured(),
     isActive: p.id === activeId,
     model: map[`ai.${p.id}.model`] || DEFAULT_MODEL_BY_PROVIDER[p.id],
-    envVarName: p.id === 'claude' ? 'ANTHROPIC_API_KEY' : 'PERPLEXITY_API_KEY',
+    envVarName: getProviderEnvVarName(p.id),
   }))
 }

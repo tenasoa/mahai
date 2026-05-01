@@ -9,7 +9,7 @@
 
 import type { AICorrectionResult } from '../schemas'
 
-export type AIProviderId = 'claude' | 'perplexity'
+export type AIProviderId = 'claude' | 'perplexity' | 'openai'
 export type AIMode = 'SUBMISSION' | 'DIRECT'
 export type Effort = 'low' | 'medium' | 'high' | 'max'
 

@@ -67,7 +67,7 @@ function VerifyEmailContent() {
         color: 'var(--text-3)' 
       }}>
         Déjà vérifié ? <Link href="/auth/login" style={{ color: 'var(--gold)', textDecoration: 'none', transition: 'color 0.2s' }}>Se connecter</Link>
-        &nbsp;·&nbsp; <Link href="#" onClick={() => alert('Support : support@mah.ai')} style={{ color: 'var(--text-3)', textDecoration: 'none', transition: 'color 0.2s' }}>Contacter le support</Link>
+        &nbsp;·&nbsp; <Link href="/support" style={{ color: 'var(--text-3)', textDecoration: 'none', transition: 'color 0.2s' }}>Contacter le support</Link>
       </div>
     </div>
   )

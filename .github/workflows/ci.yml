@@ -6,9 +6,17 @@ on:
   pull_request:
     branches: [main, develop]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -20,15 +28,15 @@ jobs:
           node-version: "20"
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 10
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Run linter
-        run: pnpm lint || true
+        run: pnpm lint
 
       - name: Run tests
         run: pnpm test -- --passWithNoTests --coverage=false
@@ -48,10 +56,13 @@ jobs:
 
   security-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check for secrets in code
         uses: trufflesecurity/trufflehog@main
@@ -61,4 +72,4 @@ jobs:
           head: HEAD
 
       - name: Dependency audit
-        run: pnpm audit --audit-level high || true
+        run: pnpm audit --prod --audit-level high

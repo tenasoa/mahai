@@ -363,48 +363,6 @@
     padding: 0 var(--page-gutter) var(--space-page-y);
   }
 
-  /* Loading badge inspired by Design Luxury splash-screen */
-  .page-skeleton-root {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .page-skeleton-root::before {
-    content: "";
-    position: fixed;
-    top: calc(78px + env(safe-area-inset-top));
-    right: max(1rem, env(safe-area-inset-right));
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    border: 1px solid var(--gold-line);
-    border-top-color: var(--gold);
-    border-right-color: var(--gold-lo);
-    box-shadow: 0 0 16px var(--gold-glow);
-    animation: pageLoaderSpin 1.15s linear infinite;
-    pointer-events: none;
-    z-index: 120;
-  }
-
-  .page-skeleton-root::after {
-    content: "Chargement...";
-    position: fixed;
-    top: calc(84px + env(safe-area-inset-top));
-    right: calc(max(1rem, env(safe-area-inset-right)) + 42px);
-    padding: 0.28rem 0.55rem;
-    border-radius: 999px;
-    border: 1px solid var(--gold-line);
-    background: color-mix(in srgb, var(--card) 84%, transparent);
-    color: var(--text-3);
-    font-family: var(--mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    animation: pageLoaderPulse 1.6s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 120;
-  }
-
   .section {
     padding: 7rem 0;
     position: relative;
@@ -1035,25 +993,6 @@ html.modal-open .modal-content {
   }
 }
 
-@keyframes pageLoaderSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pageLoaderPulse {
-  0%,
-  100% {
-    opacity: 0.58;
-    transform: translateX(0);
-  }
-
-  50% {
-    opacity: 1;
-    transform: translateX(-2px);
-  }
-}
-
 @keyframes envFloat {
   0%,
   100% {
@@ -1219,16 +1158,6 @@ html.modal-open .modal-content {
     --space-hero-y: 3rem;
   }
 
-  .page-skeleton-root::before {
-    top: calc(70px + env(safe-area-inset-top));
-    width: 30px;
-    height: 30px;
-  }
-
-  .page-skeleton-root::after {
-    display: none;
-  }
-
   .mobile-bottom-nav {
     display: block;
   }
@@ -1324,11 +1253,6 @@ html.modal-open .modal-content {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-
-  .page-skeleton-root::before,
-  .page-skeleton-root::after {
-    animation: none !important;
-  }
 }
 
 /* Contraste élevé — accessibilité */
@@ -1368,4 +1292,64 @@ html.modal-open .modal-content {
 .skip-link:focus-visible {
   transform: translate(-50%, 0);
   box-shadow: var(--shadow-lg);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS DE LOADING - Luxury Design System
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Pulse gemme pour le loader */
+@keyframes gemPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px var(--gold-glow);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(201, 168, 76, 0.32);
+  }
+}
+
+/* Animation des barres pour DataLoading */
+@keyframes barAnim {
+  0%, 100% {
+    transform: scaleY(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scaleY(1.35);
+    opacity: 1;
+  }
+}
+
+/* Cercles pulsants pour AIProcessingLoading */
+@keyframes ripple {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(1.04);
+  }
+}
+
+/* Ligne de scan pour AIProcessingLoading */
+@keyframes scan {
+  0% {
+    top: 10%;
+  }
+  100% {
+    top: 90%;
+  }
+}
+
+/* Battement d'icone pour AIProcessingLoading */
+@keyframes iconBeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { DataLoading } from '@/components/ui/DataLoading'
 import styles from './TransactionHistory.module.css'
 
 export type TransactionType = 'in' | 'out' | 'bonus'
@@ -32,18 +33,11 @@ export function TransactionHistory({
   if (isLoading) {
     return (
       <div className={styles.loading}>
-        <div className={styles.luxLoader} aria-hidden="true">
-          <span className={styles.loaderRing} />
-          <span className={`${styles.loaderRing} ${styles.loaderRingInner}`} />
-          <span className={styles.loaderDot} />
-        </div>
-        <div className={styles.loadingBars} aria-hidden="true">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-        <p>Chargement des transactions...</p>
+        <DataLoading
+          message="Chargement des transactions..."
+          size="md"
+          centered={false}
+        />
       </div>
     )
   }

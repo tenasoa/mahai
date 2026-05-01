@@ -49,6 +49,22 @@ out.txt
 *.swo
 *.tmp
 .claude/
+.agents/
+.augment/
+.junie/
+.pi/
+.qwen/
+.trae/
+.windsurf/
+skills-lock.json
+
+# Binaires/outils locaux
+stripe.exe
+
+# Rapports générés localement
+lint-results.json
+lint_results.txt
+lint_results_utf8.txt
 
 # ==========================================
 # OS

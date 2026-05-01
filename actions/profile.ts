@@ -422,6 +422,13 @@ export async function requestPasswordChangeCodeAction(data: unknown) {
   if ("error" in context) return { success: false, error: context.error };
 
   try {
+    if (process.env.ENABLE_AUTH_EMAIL_DELIVERY !== "true") {
+      return {
+        success: false,
+        error: "La vérification par email est temporairement désactivée.",
+      };
+    }
+
     const validatedData = requestPasswordCodeSchema.parse(data);
     const {
       data: { user },

@@ -121,20 +121,7 @@ export default function OnboardingModal({ onComplete }: Props) {
     setMeta(prev => ({ ...prev, [field]: value }))
   }
 
-  const computedAutoTitle = useMemo(
-    () => buildAutoTitle(meta),
-    [
-      meta.examType,
-      meta.baccType,
-      meta.serie,
-      meta.bepcOption,
-      meta.concoursType,
-      meta.etablissement,
-      meta.semestre,
-      meta.anneeScolaire,
-      meta.matiere,
-    ]
-  )
+  const computedAutoTitle = useMemo(() => buildAutoTitle(meta), [meta])
 
   // Synchronise le titre avec l'auto-génération tant qu'il n'a pas été
   // explicitement modifié par l'utilisateur.

@@ -2,7 +2,7 @@
 
 /**
  * Panneau d'administration pour basculer entre les providers IA
- * (Claude / Perplexity / …). Affiche pour chacun :
+ * (Claude / Perplexity / OpenAI / …). Affiche pour chacun :
  *  - le statut de la clé API (présente dans .env.local ou non)
  *  - le modèle actuellement configuré
  *  - un bouton radio pour le sélectionner
@@ -16,7 +16,7 @@ import { CheckCircle2, AlertCircle, Loader2, Bot, Sparkles, Key } from 'lucide-r
 import { getAIProviderStatus, setAIProvider } from '@/actions/ai-correction'
 
 interface ProviderStatusUI {
-  id: 'claude' | 'perplexity'
+  id: 'claude' | 'perplexity' | 'openai'
   label: string
   isConfigured: boolean
   isActive: boolean
@@ -39,6 +39,12 @@ const PROVIDER_META: Record<
       'Perplexity Sonar — fonctionne dès le tier gratuit / Pro, recherche web désactivée pour les sujets d\'examen.',
     icon: Sparkles,
     helpUrl: 'https://www.perplexity.ai/settings/api',
+  },
+  openai: {
+    description:
+      'OpenAI GPT — bon équilibre qualité/coût avec Structured Outputs via Responses API.',
+    icon: Bot,
+    helpUrl: 'https://platform.openai.com/api-keys',
   },
 }
 
@@ -187,6 +193,7 @@ export function AIProviderPanel({ onChange }: Props) {
       <p className="ai-provider-hint">
         💡 Les modèles ainsi que les tarifs (<code>ai.price.submission</code>,{' '}
         <code>ai.price.direct</code>, <code>ai.claude.model</code>, <code>ai.perplexity.model</code>,{' '}
+        <code>ai.openai.model</code>,{' '}
         <code>ai.effort</code>) restent éditables dans l'onglet <strong>Paramètres</strong>{' '}
         (catégorie <em>IA</em>).
       </p>

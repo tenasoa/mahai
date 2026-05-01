@@ -399,7 +399,11 @@ export async function setAIProvider(
     return {
       success: false,
       error: `Le provider ${provider.label} n'a pas de clé API configurée. Ajoutez ${
-        provider.id === 'claude' ? 'ANTHROPIC_API_KEY' : 'PERPLEXITY_API_KEY'
+        provider.id === 'claude'
+          ? 'ANTHROPIC_API_KEY'
+          : provider.id === 'perplexity'
+            ? 'PERPLEXITY_API_KEY'
+            : 'OPENAI_API_KEY'
       } dans .env.local avant de l'activer.`,
     }
   }

@@ -1439,7 +1439,11 @@
 
 .ed-onboarding-body { padding: 1.25rem 1.5rem; }
 
-.ed-onboarding-body .ed-field + .ed-field { margin-top: 0.75rem; }
+/* Espace vertical entre champs **frères directs** uniquement.
+   Le `>` empêche cette règle de s'appliquer aux .ed-field imbriqués dans
+   une grille 2-colonnes (Durée + Coefficient à l'étape 2), qui sinon
+   se retrouvent décalés verticalement. */
+.ed-onboarding-body > .ed-field + .ed-field { margin-top: 0.75rem; }
 
 .ed-content-type-grid {
   display: grid;
