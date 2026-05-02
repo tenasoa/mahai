@@ -57,7 +57,7 @@ async function getContributorSubjects() {
   // Récupérer les soumissions (SubjectSubmission) — tous statuts
   const submissionsResult = await query(
     `SELECT id, title, matiere, "examType", "anneeScolaire", serie,
-            prix, status, notes, "reviewedAt", "createdAt",
+            prix, status, "createdAt",
             'SUBMISSION' as source
      FROM "SubjectSubmission"
      WHERE "authorId" = $1

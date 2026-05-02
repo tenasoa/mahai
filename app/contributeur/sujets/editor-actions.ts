@@ -57,6 +57,18 @@ async function ensureTable() {
     `ADD COLUMN IF NOT EXISTS "customMeta" JSONB NOT NULL DEFAULT '[]'::jsonb`,
   ]
   await query(`ALTER TABLE "SubjectSubmission" ${addCols.join(', ')}`)
+
+  // Ajout idempotent des colonnes admin (workflow validation)
+  const adminCols = [
+    `ADD COLUMN IF NOT EXISTS pages INTEGER`,
+    `ADD COLUMN IF NOT EXISTS difficulte TEXT`,
+    `ADD COLUMN IF NOT EXISTS description TEXT`,
+    `ADD COLUMN IF NOT EXISTS notes TEXT`,
+    `ADD COLUMN IF NOT EXISTS "reviewerId" TEXT`,
+    `ADD COLUMN IF NOT EXISTS "validatedAt" TIMESTAMPTZ`,
+    `ADD COLUMN IF NOT EXISTS "reviewedAt" TIMESTAMPTZ`,
+  ]
+  await query(`ALTER TABLE "SubjectSubmission" ${adminCols.join(', ')}`)
 }
 
 // ─── Types d'entrée ──────────────────────────────────────────────
