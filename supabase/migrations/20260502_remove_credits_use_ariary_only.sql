@@ -28,7 +28,7 @@ DROP VIEW IF EXISTS "TopWithdrawalsContributors";
 CREATE VIEW "TopWithdrawalsContributors" AS
 SELECT 
     u.id,
-    u.name,
+    u.nom,
     u.email,
     u.phone,
     u."balanceAr",
@@ -41,7 +41,7 @@ FROM "User" u
 LEFT JOIN "Subject" s ON s."authorId" = u.id
 LEFT JOIN "Purchase" p ON p."subjectId" = s.id
 WHERE u.role = 'CONTRIBUTEUR'
-GROUP BY u.id, u.name, u.email, u.phone, u."balanceAr", u."totalEarningsAr", u."pendingEarningsAr", u."withdrawnEarningsAr"
+GROUP BY u.id, u.nom, u.email, u.phone, u."balanceAr", u."totalEarningsAr", u."pendingEarningsAr", u."withdrawnEarningsAr"
 ORDER BY u."withdrawnEarningsAr" DESC NULLS LAST;
 
 -- Supprimer l'ancienne colonne credits
