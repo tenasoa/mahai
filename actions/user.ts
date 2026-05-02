@@ -187,12 +187,16 @@ export async function getDashboardData(): Promise<DashboardData> {
       return { upcomingExams: [], weeklyProgress: [], totalSolved: 0, examCount: 0 }
     }
 
-    // Récupérer les examens blancs de l'utilisateur (limit 3)
+    // Récupérer les examens blancs de l'utilisateur (limit 3).
+    // L'enum "ExamenStatus" en DB est : NOT_STARTED | IN_PROGRESS | SUBMITTED |
+    // GRADED. Les états terminaux (SUBMITTED + GRADED) correspondent à ce
+    // qu'on appelait par erreur "COMPLETED" — corrigé pour éviter
+    // « invalid input value for enum ExamenStatus: COMPLETED ».
     const examsResult = await query(
-      `SELECT id, titre, "typeExamen", matiere, annee, "dureeSecondes", 
+      `SELECT id, titre, "typeExamen", matiere, annee, "dureeSecondes",
               status, "startedAt", "submittedAt", score, "scoreMax"
        FROM "ExamenBlanc"
-       WHERE "userId" = $1 AND status IN ('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED')
+       WHERE "userId" = $1 AND status IN ('NOT_STARTED', 'IN_PROGRESS', 'SUBMITTED', 'GRADED')
        ORDER BY "createdAt" DESC
        LIMIT 3`,
       [userId]
