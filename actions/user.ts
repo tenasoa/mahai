@@ -60,21 +60,24 @@ async function grantReferrerBonusOnFirstPurchase(client: any, referredUserId: st
 
   const bonusAmount = Number(referral.referrerBonusCredits) || defaultBonus
 
+  // Convertir le bonus crédits historique en Ariary (50 Ar par crédit)
+  const bonusAr = Number(bonusAmount) * 50
+
   await client.query(
     `UPDATE "User"
-     SET credits = credits + $1,
+     SET "balanceAr" = "balanceAr" + $1,
          "updatedAt" = NOW()
      WHERE id = $2`,
-    [bonusAmount, referral.referrerUserId]
+    [bonusAr, referral.referrerUserId]
   )
 
   await client.query(
-    `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
+    `INSERT INTO "Transaction" ("id", "userId", "amountAr", type, description, status)
      VALUES ($1, $2, $3, $4, $5, $6)`,
     [
       crypto.randomUUID(),
       referral.referrerUserId,
-      bonusAmount,
+      bonusAr,
       'EARN',
       'Bonus parrainage parrain',
       'COMPLETED',
@@ -92,7 +95,7 @@ async function grantReferrerBonusOnFirstPurchase(client: any, referredUserId: st
   )
 }
 
-export async function getCurrentUserCredits() {
+export async function getCurrentUserBalanceAr() {
   try {
     const userId = await getAuthenticatedUserId()
 
@@ -100,10 +103,10 @@ export async function getCurrentUserCredits() {
       return 0
     }
 
-    const result = await query('SELECT credits FROM "User" WHERE id = $1', [userId])
-    return result.rows[0]?.credits || 0
+    const result = await query('SELECT "balanceAr" FROM "User" WHERE id = $1', [userId])
+    return result.rows[0]?.balanceAr || 0
   } catch (error) {
-    console.error('Error fetching current user credits:', error)
+    console.error('Error fetching current user balance:', error)
     return 0
   }
 }
@@ -117,8 +120,8 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
     }
 
     const [subjectResult, userResult] = await Promise.all([
-      query('SELECT id, titre, credits FROM "Subject" WHERE id = $1', [subjectId]),
-      query('SELECT id, credits FROM "User" WHERE id = $1', [userId]),
+      query('SELECT id, titre, prix FROM "Subject" WHERE id = $1', [subjectId]),
+      query('SELECT id, "balanceAr" FROM "User" WHERE id = $1', [userId]),
     ])
 
     const subject = subjectResult.rows[0]
@@ -133,33 +136,33 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
       return {
         success: true,
         alreadyOwned: true,
-        remainingCredits: user.credits,
+        remainingBalance: user.balanceAr,
       }
     }
 
-    if (user.credits < subject.credits) {
-      return { success: false, error: 'Crédits insuffisants' }
+    if (user.balanceAr < subject.prix) {
+      return { success: false, error: 'Solde insuffisant' }
     }
 
-    const remainingCredits = user.credits - subject.credits
+    const remainingBalance = user.balanceAr - subject.prix
     const referrerBonusDefault = await getSystemSetting('REFERRAL_BONUS_CREDITS', 20)
 
     await transaction(async (client) => {
       await client.query(
-        'UPDATE "User" SET credits = credits - $1, "updatedAt" = NOW() WHERE id = $2',
-        [subject.credits, userId]
+        'UPDATE "User" SET "balanceAr" = "balanceAr" - $1, "updatedAt" = NOW() WHERE id = $2',
+        [subject.prix, userId]
       )
 
       await client.query(
-        `INSERT INTO "Purchase" ("id", "userId", "subjectId", "creditsAmount", amount, status)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [crypto.randomUUID(), userId, subjectId, subject.credits, 0, 'COMPLETED']
+        `INSERT INTO "Purchase" ("id", "userId", "subjectId", "amountAr", status)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [crypto.randomUUID(), userId, subjectId, subject.prix, 'COMPLETED']
       )
 
       await client.query(
-        `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
+        `INSERT INTO "Transaction" ("id", "userId", "amountAr", type, description, status)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [crypto.randomUUID(), userId, -subject.credits, 'SPEND', `Achat du sujet: ${subject.titre}`, 'COMPLETED']
+        [crypto.randomUUID(), userId, -subject.prix, 'SPEND', `Achat du sujet: ${subject.titre}`, 'COMPLETED']
       )
 
       await grantReferrerBonusOnFirstPurchase(client, userId, referrerBonusDefault)
@@ -172,7 +175,7 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
 
     return {
       success: true,
-      remainingCredits,
+      remainingBalance,
     }
   } catch (error) {
     console.error('Error purchasing subject:', error)
