@@ -18,6 +18,32 @@ UPDATE "User"
   SET "balanceAr" = COALESCE(credits, 0) * 50
   WHERE "balanceAr" = 0 AND credits > 0;
 
+-- ============================================================
+-- 1b. RECREER LES VUES DEPENDANTES (avec balanceAr)
+-- ============================================================
+
+-- Supprimer et recréer la vue TopWithdrawalsContributors avec balanceAr
+DROP VIEW IF EXISTS "TopWithdrawalsContributors";
+
+CREATE VIEW "TopWithdrawalsContributors" AS
+SELECT 
+    u.id,
+    u.name,
+    u.email,
+    u.phone,
+    u."balanceAr",
+    u."totalEarningsAr",
+    u."pendingEarningsAr",
+    u."withdrawnEarningsAr",
+    COUNT(DISTINCT s.id) as "subjectsCount",
+    COUNT(DISTINCT p.id) as "purchasesCount"
+FROM "User" u
+LEFT JOIN "Subject" s ON s."authorId" = u.id
+LEFT JOIN "Purchase" p ON p."subjectId" = s.id
+WHERE u.role = 'CONTRIBUTEUR'
+GROUP BY u.id, u.name, u.email, u.phone, u."balanceAr", u."totalEarningsAr", u."pendingEarningsAr", u."withdrawnEarningsAr"
+ORDER BY u."withdrawnEarningsAr" DESC NULLS LAST;
+
 -- Supprimer l'ancienne colonne credits
 ALTER TABLE "User" DROP COLUMN IF EXISTS credits;
 
