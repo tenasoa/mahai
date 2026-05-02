@@ -55,8 +55,7 @@ COMMENT ON COLUMN "User"."balanceAr" IS 'Solde en Ariary (ancien système de cr�
 ALTER TABLE "Subject" DROP COLUMN IF EXISTS credits;
 
 -- Vérifier que prix est bien en Ariary (normalement déjà le cas)
-COMMENT ON COLUMN "Subject".credits IS NULL; -- Supprimer ancien commentaire si existant
-COMMENT ON COLUMN "Subject".credits IS 'Prix en Ariary (unique devise)';
+COMMENT ON COLUMN "Subject".prix IS 'Prix en Ariary (unique devise)';
 
 -- ============================================================
 -- 3. TABLE Purchase - Remplacer credits par amountAr
