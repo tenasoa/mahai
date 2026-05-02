@@ -18,7 +18,7 @@ export interface User {
   prenom: string
   nom?: string
   role: string
-  credits: number
+  balanceAr: number  // Solde en Ariary (remplace credits)
   phone?: string
   phoneVerified: boolean
   schoolLevel?: string
@@ -57,7 +57,7 @@ export interface Subject {
   serie?: string
   description?: string
   pages: number
-  credits: number
+  prix: number  // Prix en Ariary (remplace credits)
   difficulte: string
   langue: string
   format: string
@@ -76,24 +76,26 @@ export interface Purchase {
   id: string
   userId: string
   subjectId?: string
-  creditsAmount: number
-  amount: number
+  amountAr: number  // Montant en Ariary (remplace creditsAmount)
   paymentMethod?: string
   status: string
   createdAt: Date
 }
 
-export interface CreditTransaction {
+export interface Transaction {
   id: string
   userId: string
-  amount: number
-  type: string
+  amountAr: number  // Montant en Ariary
+  type: 'EARN' | 'SPEND' | 'RECHARGE' | 'WITHDRAWAL' | 'REFUND'
   description?: string
   paymentMethod?: string
-  transactionId?: string
-  status: string
+  stripeSessionId?: string
+  status: 'PENDING' | 'COMPLETED' | 'FAILED'
   createdAt: Date
 }
+
+// @deprecated Utiliser Transaction (renommé de CreditTransaction)
+export type CreditTransaction = Transaction
 
 // User queries
 export async function getUserById(id: string): Promise<User | null> {
@@ -106,8 +108,13 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   return result.rows[0] || null
 }
 
+export async function updateUserBalanceAr(userId: string, balanceAr: number): Promise<void> {
+  await query('UPDATE "User" SET "balanceAr" = $1, "updatedAt" = NOW() WHERE id = $2', [balanceAr, userId])
+}
+
+// @deprecated Utiliser updateUserBalanceAr
 export async function updateUserCredits(userId: string, credits: number): Promise<void> {
-  await query('UPDATE "User" SET credits = $1, "updatedAt" = NOW() WHERE id = $2', [credits, userId])
+  await updateUserBalanceAr(userId, credits * 50) // Conversion: 1 crédit = 50 Ar
 }
 
 export async function createUser(userData: Partial<User>): Promise<User> {
@@ -152,7 +159,7 @@ export async function getSubjects(filters: any = {}, userId?: string) {
   }
 
   if (filters.maxPrice !== undefined) {
-    whereClause += ` AND credits <= $${paramIndex}`
+    whereClause += ` AND prix <= $${paramIndex}`
     params.push(filters.maxPrice)
     paramIndex++
   }
@@ -160,8 +167,8 @@ export async function getSubjects(filters: any = {}, userId?: string) {
   // Ordering
   let orderBy = 'ORDER BY featured DESC, "createdAt" DESC'
   if (filters.sortBy === 'rating') orderBy = 'ORDER BY rating DESC'
-  if (filters.sortBy === 'price_asc') orderBy = 'ORDER BY credits ASC'
-  if (filters.sortBy === 'price_desc') orderBy = 'ORDER BY credits DESC'
+  if (filters.sortBy === 'price_asc') orderBy = 'ORDER BY prix ASC'
+  if (filters.sortBy === 'price_desc') orderBy = 'ORDER BY prix DESC'
 
   // Pagination
   const limit = filters.limit || 9

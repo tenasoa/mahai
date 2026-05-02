@@ -36,15 +36,26 @@ export async function getSystemSetting<T = string>(key: string, defaultValue: T)
 }
 
 export async function getReferralSettings() {
-  const [welcomeBonus, referrerBonus, referredBonus] = await Promise.all([
-    getSystemSetting('WELCOME_BONUS_CREDITS', 10),
-    getSystemSetting('REFERRAL_BONUS_CREDITS', 20),
-    getSystemSetting('REFERRED_BONUS_CREDITS', 10),
+  const [
+    welcomeBonus, referrerBonus, referredBonus,
+    welcomeBonusAr, referrerBonusAr, referredBonusAr
+  ] = await Promise.all([
+    getSystemSetting('WELCOME_BONUS_CREDITS', 10),        // @deprecated
+    getSystemSetting('REFERRAL_BONUS_CREDITS', 20),       // @deprecated
+    getSystemSetting('REFERRED_BONUS_CREDITS', 10),       // @deprecated
+    getSystemSetting('WELCOME_BONUS_AR', 500),            // 10 crédits * 50 Ar
+    getSystemSetting('REFERRER_BONUS_AR', 1000),          // 20 crédits * 50 Ar
+    getSystemSetting('REFERRED_BONUS_AR', 500),           // 10 crédits * 50 Ar
   ])
 
   return {
+    // Anciennes valeurs en crédits (deprecated)
     welcomeBonus,
     referrerBonus,
     referredBonus,
+    // Nouvelles valeurs en Ariary
+    welcomeBonusAr,
+    referrerBonusAr,
+    referredBonusAr,
   }
 }

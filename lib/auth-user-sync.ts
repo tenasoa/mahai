@@ -3,7 +3,7 @@ import { query } from "@/lib/db";
 import {
   createUser,
   getUserById,
-  updateUserCredits,
+  updateUserBalanceAr,
   type User as AppUser,
 } from "@/lib/sql-queries";
 import { getReferralSettings } from "./settings";
@@ -14,7 +14,7 @@ export type SyncAuthUserResult = {
   appUser: AppUser | null;
   created: boolean;
   emailVerified: boolean;
-  welcomeCreditsGranted: boolean;
+  welcomeBonusGranted: boolean;  // Renommé de welcomeCreditsGranted
   error?: string;
 };
 
@@ -71,7 +71,7 @@ async function resolveReferrerUserId(
 
 async function grantReferredBonusIfEligible(userId: string): Promise<boolean> {
   const referralResult = await query(
-    `SELECT id, "referredBonusCredits"
+    `SELECT id, "referredBonusAr"
      FROM "UserReferral"
      WHERE "referredUserId" = $1
        AND status = 'PENDING'
@@ -86,24 +86,24 @@ async function grantReferredBonusIfEligible(userId: string): Promise<boolean> {
   }
 
   const settings = await getReferralSettings();
-  const defaultBonus = settings.referredBonus;
-  const bonusAmount = Number(referral.referredBonusCredits) || defaultBonus;
+  const defaultBonusAr = settings.referredBonusAr ?? settings.referredBonus * 50; // Conversion si ancienne valeur
+  const bonusAr = Number(referral.referredBonusAr) || defaultBonusAr;
 
   await query(
     `UPDATE "User"
-     SET "credits" = "credits" + $1,
+     SET "balanceAr" = "balanceAr" + $1,
          "updatedAt" = NOW()
      WHERE id = $2`,
-    [bonusAmount, userId],
+    [bonusAr, userId],
   );
 
   await query(
-    `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
+    `INSERT INTO "Transaction" ("id", "userId", "amountAr", type, description, status)
      VALUES ($1, $2, $3, $4, $5, $6)`,
     [
       crypto.randomUUID(),
       userId,
-      bonusAmount,
+      bonusAr,
       "EARN",
       "Bonus parrainage filleul",
       "COMPLETED",
@@ -143,26 +143,27 @@ function resolvePrenom(authUser: SupabaseAuthUser): string {
   return emailPrefix || "Utilisateur";
 }
 
-async function addWelcomeCreditsIfNeeded(
+async function addWelcomeBonusIfNeeded(
   userId: string,
-  currentCredits: number,
+  currentBalanceAr: number,
 ): Promise<boolean> {
-  if (currentCredits !== 0) {
+  if (currentBalanceAr !== 0) {
     return false;
   }
 
-  const { welcomeBonus } = await getReferralSettings();
-  await updateUserCredits(userId, welcomeBonus);
+  const { welcomeBonusAr } = await getReferralSettings();
+  const bonusAr = welcomeBonusAr ?? 1000; // Valeur par défaut: 1000 Ar (anciennement 20 crédits * 50)
+  await updateUserBalanceAr(userId, bonusAr);
 
   await query(
-    `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
+    `INSERT INTO "Transaction" ("id", "userId", "amountAr", type, description, status)
      VALUES ($1, $2, $3, $4, $5, $6)`,
     [
       crypto.randomUUID(),
       userId,
-      welcomeBonus,
+      bonusAr,
       "EARN",
-      "Crédits de bienvenue",
+      "Bonus de bienvenue",
       "COMPLETED",
     ],
   );
@@ -181,12 +182,12 @@ export async function syncAppUserWithAuthUser(
         appUser: null,
         created: false,
         emailVerified: false,
-        welcomeCreditsGranted: false,
+        welcomeBonusGranted: false,
         error: "Adresse email manquante sur le compte Supabase",
       };
     }
 
-    const { welcomeBonus, referrerBonus, referredBonus } = await getReferralSettings();
+    const { welcomeBonus, referrerBonus, referredBonus, welcomeBonusAr, referrerBonusAr, referredBonusAr } = await getReferralSettings();
     const emailVerified = Boolean(authUser.email_confirmed_at);
     const referralCode = generateReferralCode(authUser);
     const requestedReferralCode = normalizeReferralCode(
@@ -194,10 +195,10 @@ export async function syncAppUserWithAuthUser(
     );
     let appUser = await getUserById(authUser.id);
     let created = false;
-    let welcomeCreditsGranted = false;
+    let welcomeBonusGranted = false;
 
     if (!appUser) {
-      const startingCredits = emailVerified ? welcomeBonus : 0;
+      const startingBalanceAr = emailVerified ? (welcomeBonusAr ?? welcomeBonus * 50) : 0;
 
       const referredByUserId = await resolveReferrerUserId(
         requestedReferralCode,
@@ -210,7 +211,7 @@ export async function syncAppUserWithAuthUser(
         prenom: resolvePrenom(authUser),
         nom: toOptionalString(authUser.user_metadata?.nom),
         role: getRoleFromMetadata(authUser.user_metadata?.role),
-        credits: startingCredits,
+        balanceAr: startingBalanceAr,
         referralCode,
         referredByUserId,
         emailVerified,
@@ -226,8 +227,8 @@ export async function syncAppUserWithAuthUser(
              "referrerUserId",
              "referredUserId",
              status,
-             "referrerBonusCredits",
-             "referredBonusCredits"
+             "referrerBonusAr",
+             "referredBonusAr"
            )
            VALUES ($1, $2, $3, $4, $5, $6)
            ON CONFLICT ("referredUserId") DO NOTHING`,
@@ -236,26 +237,26 @@ export async function syncAppUserWithAuthUser(
             referredByUserId,
             authUser.id,
             "PENDING",
-            referrerBonus,
-            referredBonus,
+            referrerBonusAr ?? referrerBonus * 50,
+            referredBonusAr ?? referredBonus * 50,
           ],
         );
       }
 
-      if (emailVerified && startingCredits === welcomeBonus) {
+      if (emailVerified && startingBalanceAr > 0) {
         await query(
-          `INSERT INTO "CreditTransaction" ("id", "userId", amount, type, description, status)
+          `INSERT INTO "Transaction" ("id", "userId", "amountAr", type, description, status)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [
             crypto.randomUUID(),
             authUser.id,
-            welcomeBonus,
+            welcomeBonusAr ?? welcomeBonus * 50,
             "EARN",
-            "Crédits de bienvenue",
+            "Bonus de bienvenue",
             "COMPLETED",
           ],
         );
-        welcomeCreditsGranted = true;
+        welcomeBonusGranted = true;
       }
 
       if (emailVerified && referredByUserId) {
@@ -277,9 +278,9 @@ export async function syncAppUserWithAuthUser(
       }
 
       if (emailVerified) {
-        welcomeCreditsGranted = await addWelcomeCreditsIfNeeded(
+        welcomeBonusGranted = await addWelcomeBonusIfNeeded(
           authUser.id,
-          appUser.credits,
+          appUser.balanceAr,
         );
 
         await grantReferredBonusIfEligible(authUser.id);
@@ -292,7 +293,7 @@ export async function syncAppUserWithAuthUser(
       appUser,
       created,
       emailVerified,
-      welcomeCreditsGranted,
+      welcomeBonusGranted,
     };
   } catch (error) {
     console.error("Erreur synchronisation utilisateur auth:", error);
@@ -301,7 +302,7 @@ export async function syncAppUserWithAuthUser(
       appUser: null,
       created: false,
       emailVerified: false,
-      welcomeCreditsGranted: false,
+      welcomeBonusGranted: false,
       error: error instanceof Error ? error.message : String(error),
     };
   }
