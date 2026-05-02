@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
 
     // Vérifier que la transaction existe
     const checkResult = await query(
-      `SELECT id, status, "creditsCount", "userId" 
-       FROM "CreditTransaction" 
+      `SELECT id, status, "amountAr", "userId" 
+       FROM "Transaction" 
        WHERE id = $1`,
       [transactionId]
     );
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     // Mettre à jour le statut de la transaction
     if (status === "SUCCESS") {
       await query(
-        `UPDATE "CreditTransaction" 
+        `UPDATE "Transaction" 
          SET status = 'COMPLETED', 
              "senderCode" = $1,
              metadata = metadata || $2::jsonb
@@ -119,21 +119,21 @@ export async function POST(request: NextRequest) {
         ]
       );
 
-      // Créditer l'utilisateur
+      // Créditer l'utilisateur (montant en Ariary)
       await query(
         `UPDATE "User" 
-         SET credits = COALESCE(credits, 0) + $1 
+         SET "balanceAr" = COALESCE("balanceAr", 0) + $1 
          WHERE id = $2`,
-        [transaction.creditsCount, transaction.userId]
+        [transaction.amountAr, transaction.userId]
       );
 
       return NextResponse.json({
         status: "completed",
-        creditsAdded: transaction.creditsCount,
+        amountArAdded: transaction.amountAr,
       });
     } else if (status === "FAILED") {
       await query(
-        `UPDATE "CreditTransaction" 
+        `UPDATE "Transaction" 
          SET status = 'FAILED',
              metadata = metadata || $1::jsonb
          WHERE id = $2`,
