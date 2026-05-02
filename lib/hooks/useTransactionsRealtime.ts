@@ -13,8 +13,10 @@ export function useTransactionsRealtime({ userId, enabled }: UseTransactionsReal
   const [lastTransaction, setLastTransaction] = useState<any>(null)
 
   const handleNewTransaction = useCallback((payload: any) => {
-    console.log('🔔 Nouvelle transaction en temps réel:', payload)
-    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔔 Nouvelle transaction en temps réel:', payload)
+    }
+
     // Vérifier que la transaction appartient à l'utilisateur actuel
     if (payload.new?.userId === userId) {
       setNewTransactionCount(prev => prev + 1)

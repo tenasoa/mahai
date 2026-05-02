@@ -19,7 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
-  Newspaper
+  Newspaper,
+  ClipboardCheck
 } from "lucide-react";
 import { useAdminTransactionsRealtime } from "@/lib/hooks/useAdminTransactionsRealtime";
 import "@/app/dashboard-theme.css";
@@ -46,6 +47,13 @@ const navItems = [
         icon: "subjects",
         badge: "sujets",
         badgeType: "ruby",
+      },
+      {
+        href: "/admin/soumissions",
+        label: "Soumissions",
+        icon: "submissions",
+        badge: "submissions",
+        badgeType: "amber",
       },
       {
         href: "/admin/blog",
@@ -114,6 +122,8 @@ function SidebarIcon({ type, size = 18 }: { type: string; size?: number }) {
       return <LayoutDashboard size={size} />;
     case "subjects":
       return <FileText size={size} />;
+    case "submissions":
+      return <ClipboardCheck size={size} />;
     case "credits":
       return <CreditCard size={size} />;
     case "blog":

@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { query } from "@/lib/db";
+import { checkAuthRateLimit } from "@/lib/rate-limit";
 import {
   getUserByEmail,
   createPasswordReset,
@@ -30,6 +31,17 @@ const FLOW_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const DEFAULT_SITE_URL = process.env.NODE_ENV === "production" 
   ? "https://mahai.mg" 
   : "http://localhost:3000";
+
+/**
+ * Extrait l'IP du client depuis les headers Vercel/Next.js.
+ * Utilisée comme identifiant secondaire pour le rate-limit auth.
+ */
+async function getClientIp(): Promise<string> {
+  const h = await headers();
+  const fwd = h.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return h.get("x-real-ip") || "unknown";
+}
 
 // Helper function to generate consistent 6-digit code
 function generate6DigitCode(): string {
@@ -100,6 +112,19 @@ export async function registerUser(formData: RegisterFormData) {
     newsletterOptIn,
   } =
     validation.data;
+
+  // ⚠ Rate-limit anti-spam : 5 inscriptions / 15 min par IP. Empêche un
+  // bot de créer 1000 comptes en boucle (et donc d'épuiser le bonus de
+  // bienvenue, polluer la base, ou contourner ENABLE_REFERRAL_BONUS).
+  const ip = await getClientIp();
+  const limit = checkAuthRateLimit(`register:${ip}`);
+  if (!limit.allowed) {
+    return {
+      error: `Trop de tentatives d'inscription. Réessayez dans ${Math.ceil(
+        (limit.retryAfter || 60) / 60,
+      )} minutes.`,
+    };
+  }
 
   const supabase = await createSupabaseServerClient();
 
@@ -206,6 +231,20 @@ export async function loginUser(formData: LoginFormData) {
 
   const { email, password } = validation.data;
 
+  // ⚠ Rate-limit anti-bruteforce : 5 essais / 15 min par couple email + IP.
+  // Si l'attaquant change d'IP : limité par email. Si plusieurs comptes
+  // attaqués depuis la même IP : limité par IP. Les deux compteurs
+  // coexistent et c'est volontaire (défense en profondeur).
+  const ip = await getClientIp();
+  const limitByEmail = checkAuthRateLimit(`login:email:${email.toLowerCase()}`);
+  const limitByIp = checkAuthRateLimit(`login:ip:${ip}`);
+  if (!limitByEmail.allowed || !limitByIp.allowed) {
+    const retry = Math.max(limitByEmail.retryAfter || 0, limitByIp.retryAfter || 0);
+    return {
+      error: `Trop de tentatives de connexion. Réessayez dans ${Math.ceil(retry / 60)} minutes.`,
+    };
+  }
+
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword(
     {
       email,
@@ -225,8 +264,10 @@ export async function loginUser(formData: LoginFormData) {
   }
 
   if (!authData.user) {
+    // Cas anormal (auth réussit mais pas de user) — message générique pour
+    // ne pas confirmer/infirmer l'existence d'un compte.
     return {
-      error: "Compte introuvable dans le système d'authentification",
+      error: "Email ou mot de passe incorrect",
     };
   }
 
@@ -240,10 +281,14 @@ export async function loginUser(formData: LoginFormData) {
   const syncResult = await syncAppUserWithAuthUser(authData.user);
 
   if (syncResult.error || !syncResult.appUser) {
+    // Désynchro auth ↔ app : on logue côté serveur et on rend une erreur
+    // générique côté client (pas de leak du fait que l'auth a marché mais
+    // que la sync app a échoué).
+    console.error("[loginUser] sync auth ↔ app failed:", syncResult.error);
     await supabase.auth.signOut();
     await setVerificationCookie(false);
     return {
-      error: "Compte introuvable dans la base applicative",
+      error: "Email ou mot de passe incorrect",
     };
   }
 
@@ -279,6 +324,22 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
   if (!validation.success) {
     return {
       error: validation.error.errors[0].message,
+    };
+  }
+
+  // ⚠ Rate-limit anti-spam : empêche un attaquant d'envoyer 100 emails de
+  // reset à la même adresse (DoS d'inbox + signal de phishing chez le
+  // destinataire). Limité à 5 demandes / 15 min par email + IP.
+  // On répond avec un message générique (pas d'erreur) pour ne pas
+  // confirmer/infirmer l'existence du compte.
+  const ip = await getClientIp();
+  const emailLower = validation.data.email.toLowerCase();
+  const limitByEmail = checkAuthRateLimit(`reset:email:${emailLower}`);
+  const limitByIp = checkAuthRateLimit(`reset:ip:${ip}`);
+  if (!limitByEmail.allowed || !limitByIp.allowed) {
+    return {
+      success:
+        "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation dans quelques minutes.",
     };
   }
 

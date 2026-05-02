@@ -12,8 +12,10 @@ export function useAdminTransactionsRealtime({ enabled }: UseAdminTransactionsRe
   const [lastTransaction, setLastTransaction] = useState<any>(null)
 
   const handleTransactionChange = useCallback((payload: any) => {
-    console.log('🔔 Admin - Changement transaction:', payload)
-    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔔 Admin - Changement transaction:', payload)
+    }
+
     if (payload.eventType === 'INSERT') {
       setLastTransaction(payload.new)
       // Incrémenter le compteur

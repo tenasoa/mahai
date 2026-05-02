@@ -159,7 +159,7 @@ export function RoleSelectionForm() {
               className="w-4 h-4 bg-bg3 border-white/10 rounded text-teal focus:ring-teal/50"
             />
             <span className="text-sm text-text-muted">
-              J'accepte les <a href="/cgu" className="text-teal hover:underline">Conditions Générales d'Utilisation</a>
+              J'accepte les <a href="/legal/cgu" className="text-teal hover:underline" target="_blank" rel="noopener noreferrer">Conditions Générales d'Utilisation</a>
             </span>
           </label>
           {errors.acceptCGU && (

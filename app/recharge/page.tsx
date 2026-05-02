@@ -359,7 +359,7 @@ export default function RechargePage() {
             <TransactionHistory
               transactions={transactions}
               isLoading={transactionsLoading}
-              onTransactionClick={(tx) => console.log(tx)}
+              onTransactionClick={() => {}}
             />
           )}
 

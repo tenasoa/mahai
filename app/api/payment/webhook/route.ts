@@ -31,8 +31,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isSimulation = request.headers.get("x-simulation-mode") === "true" || 
-                         process.env.NODE_ENV === "development";
+    // ⚠ Sécurité : ne JAMAIS bypasser la signature en se fiant à NODE_ENV.
+    // Vercel/Next.js peuvent en théorie booter avec NODE_ENV=development en
+    // prod (mauvaise config CI), ce qui ouvrirait le webhook à des
+    // signatures contrefaites. On utilise un flag explicite qui doit être
+    // posé manuellement et n'est JAMAIS positionné en production.
+    //
+    // Pour tester en dev/staging : poser WEBHOOK_SKIP_VERIFICATION=true
+    // dans .env.local. La présence de l'en-tête `x-simulation-mode: true`
+    // reste possible côté tests E2E mais nécessite aussi le flag ci-dessous.
+    const skipVerification = process.env.WEBHOOK_SKIP_VERIFICATION === "true";
+    const isSimulation =
+      skipVerification && request.headers.get("x-simulation-mode") === "true";
 
     const payload = await request.text();
 

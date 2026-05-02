@@ -611,7 +611,7 @@ export async function rechargeCreditsAction(data: {
   if ("error" in context) return { success: false, error: context.error };
 
   try {
-    // Validation
+    // Validation des champs requis
     if (
       !data.packCredits ||
       !data.packPrice ||
@@ -637,9 +637,52 @@ export async function rechargeCreditsAction(data: {
       };
     }
 
+    // ⚠ Sécurité : on N'utilise PAS `packPrice` du client. On recalcule depuis
+    // la DB :
+    //   1. Vérifier qu'un CreditPack actif a bien `credits = packCredits`
+    //   2. Lire `arPerCredit` actif depuis CurrencyConfig
+    //   3. Le `amount` enregistré = pack.credits × arPerCredit (calcul serveur)
+    // Empêche un attaquant d'envoyer `packCredits=300, packPrice=1` et de
+    // créditer 300 crédits pour 1 Ar.
+    const packCheck = await query(
+      `SELECT id, credits, bonus FROM "CreditPack"
+       WHERE credits = $1 AND "isActive" = true
+       LIMIT 1`,
+      [data.packCredits],
+    );
+    if (packCheck.rows.length === 0) {
+      return {
+        success: false,
+        error: "Pack de crédits invalide ou désactivé.",
+      };
+    }
+    const pack = packCheck.rows[0];
+
+    const configRes = await query(
+      `SELECT "arPerCredit" FROM "CurrencyConfig"
+       WHERE "activeAt" <= NOW()
+       ORDER BY "activeAt" DESC
+       LIMIT 1`,
+      [],
+    );
+    const arPerCredit = Number(configRes.rows[0]?.arPerCredit) || 50;
+    const expectedAmount = pack.credits * arPerCredit;
+
+    // Tolérance de 1 Ar pour absorber les arrondis client. Au-delà → reject.
+    if (Math.abs(data.packPrice - expectedAmount) > 1) {
+      return {
+        success: false,
+        error: `Prix invalide : attendu ${expectedAmount} Ar pour ${pack.credits} crédits, reçu ${data.packPrice} Ar.`,
+      };
+    }
+
+    // Crédits totaux à attribuer = pack.credits + pack.bonus (le bonus
+    // n'augmente PAS le prix).
+    const creditsToAward = pack.credits + (pack.bonus || 0);
+
     const isPending = data.status === "PENDING";
 
-    // 1. Créer la transaction
+    // 1. Créer la transaction (avec montant et crédits SERVEUR, pas client)
     await query(
       `INSERT INTO "CreditTransaction" ("id", "userId", "type", "amount", "creditsCount", "description", "paymentMethod", "phoneNumber", "senderCode", "status")
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
@@ -647,12 +690,12 @@ export async function rechargeCreditsAction(data: {
         crypto.randomUUID(),
         context.userId,
         "RECHARGE",
-        data.packPrice, // Montant en Ariary (ex: 15000 Ar)
-        data.packCredits, // Nombre de crédits (ex: 300 cr)
-        `Recharge ${data.operator} — Pack ${data.packCredits} crédits — ${data.phoneNumber}`,
+        expectedAmount, // Montant en Ariary (calculé serveur)
+        creditsToAward, // Crédits = pack.credits + bonus (calculé serveur)
+        `Recharge ${data.operator} — Pack ${pack.credits} crédits — ${data.phoneNumber}`,
         data.operator,
         data.phoneNumber,
-        data.transferCode || null, // Code de transfert dans senderCode
+        data.transferCode || null,
         isPending ? "PENDING" : "COMPLETED",
       ],
     );
@@ -662,7 +705,7 @@ export async function rechargeCreditsAction(data: {
     if (!isPending) {
       await query(
         `UPDATE "User" SET "credits" = "credits" + $1 WHERE "id" = $2`,
-        [data.packCredits, context.userId],
+        [creditsToAward, context.userId],
       );
     }
 
@@ -672,13 +715,13 @@ export async function rechargeCreditsAction(data: {
     if (isPending) {
       return {
         success: true,
-        message: `Votre demande de recharge de ${data.packCredits} crédits a été enregistrée. Validation par l'administrateur sous 12h.`,
+        message: `Votre demande de recharge de ${creditsToAward} crédits a été enregistrée. Validation par l'administrateur sous 12h.`,
       };
     }
 
     return {
       success: true,
-      message: `Recharge de ${data.packCredits} crédits effectuée avec succès`,
+      message: `Recharge de ${creditsToAward} crédits effectuée avec succès`,
     };
   } catch (error) {
     console.error("Erreur rechargeCreditsAction:", error);

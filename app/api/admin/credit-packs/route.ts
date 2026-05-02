@@ -64,6 +64,22 @@ export async function POST(request: Request) {
 }
 
 // PATCH /api/admin/credit-packs - Mettre à jour
+//
+// ⚠ Sécurité : on whitelist strictement les colonnes éditables. Sans cette
+// liste, un attaquant pouvant atteindre cette route (admin compromis ou
+// CSRF rare via Server Action wrapper) pourrait injecter une clé arbitraire
+// comme `id="; DROP TABLE`, ou modifier des colonnes sensibles non
+// destinées à l'édition (createdAt, etc.).
+const ALLOWED_PACK_COLUMNS = new Set([
+  'name',
+  'credits',
+  'price',
+  'bonus',
+  'isPopular',
+  'isActive',
+  'sortOrder',
+])
+
 export async function PATCH(request: Request) {
   const auth = await checkAdmin(request)
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -76,13 +92,29 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
     }
 
-    const setClause = Object.keys(updates)
-      .map((key, i) => `"${key}" = $${i + 2}`)
-      .join(', ')
+    // Filtre + reject : ignore les clés inconnues, refuse si toutes sont rejetées.
+    const safeKeys = Object.keys(updates).filter((k) => ALLOWED_PACK_COLUMNS.has(k))
+    const rejectedKeys = Object.keys(updates).filter((k) => !ALLOWED_PACK_COLUMNS.has(k))
+
+    if (safeKeys.length === 0) {
+      return NextResponse.json(
+        { error: 'Aucun champ valide à mettre à jour.', rejected: rejectedKeys },
+        { status: 400 },
+      )
+    }
+
+    if (rejectedKeys.length > 0) {
+      console.warn(
+        `[admin/credit-packs PATCH] Champs rejetés (non-whitelist): ${rejectedKeys.join(', ')}`,
+      )
+    }
+
+    const setClause = safeKeys.map((key, i) => `"${key}" = $${i + 2}`).join(', ')
+    const values = safeKeys.map((k) => updates[k])
 
     const result = await query(
       `UPDATE "CreditPack" SET ${setClause}, "updatedAt" = NOW() WHERE id = $1 RETURNING *`,
-      [id, ...Object.values(updates)]
+      [id, ...values],
     )
 
     if (result.rows.length === 0) {
