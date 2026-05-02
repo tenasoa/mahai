@@ -13,10 +13,17 @@ ALTER TABLE "User"
   ADD COLUMN IF NOT EXISTS "balanceAr" INTEGER NOT NULL DEFAULT 0;
 
 -- Migrer les données : credits * taux (utiliser 50 Ar/crédit comme valeur par défaut)
--- Note: Si vous avez un taux différent, modifiez le multiplicateur
-UPDATE "User" 
-  SET "balanceAr" = COALESCE(credits, 0) * 50
-  WHERE "balanceAr" = 0 AND credits > 0;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'User' AND column_name = 'credits'
+  ) THEN
+    UPDATE "User" 
+      SET "balanceAr" = COALESCE(credits, 0) * 50
+      WHERE "balanceAr" = 0 AND credits > 0;
+  END IF;
+END $$;
 
 -- ============================================================
 -- 1b. RECREER LES VUES DEPENDANTES (avec balanceAr)
@@ -71,10 +78,21 @@ COMMENT ON COLUMN "Subject".prix IS 'Prix en Ariary (unique devise)';
 ALTER TABLE "Purchase" 
   ADD COLUMN IF NOT EXISTS "amountAr" INTEGER;
 
--- Migrer les données
-UPDATE "Purchase" 
-  SET "amountAr" = COALESCE(credits, 1) * 50
-  WHERE "amountAr" IS NULL;
+-- Migrer les données (si la colonne credits existe encore)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'Purchase' AND column_name = 'credits'
+  ) THEN
+    UPDATE "Purchase" 
+      SET "amountAr" = COALESCE(credits, 1) * 50
+      WHERE "amountAr" IS NULL;
+  ELSE
+    -- Si credits n'existe pas, mettre une valeur par défaut
+    UPDATE "Purchase" SET "amountAr" = 0 WHERE "amountAr" IS NULL;
+  END IF;
+END $$;
 
 -- Rendre NOT NULL après migration
 ALTER TABLE "Purchase" 
@@ -92,9 +110,21 @@ COMMENT ON COLUMN "Purchase"."amountAr" IS 'Montant payé en Ariary';
 ALTER TABLE "ReferralCommission" 
   ADD COLUMN IF NOT EXISTS "arAmount" INTEGER;
 
-UPDATE "ReferralCommission" 
-  SET "arAmount" = COALESCE("creditAmount", 0) * 50
-  WHERE "arAmount" IS NULL;
+-- Migrer les données (si la colonne creditAmount existe encore)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'ReferralCommission' AND column_name = 'creditAmount'
+  ) THEN
+    UPDATE "ReferralCommission" 
+      SET "arAmount" = COALESCE("creditAmount", 0) * 50
+      WHERE "arAmount" IS NULL;
+  ELSE
+    -- Si creditAmount n'existe pas, mettre une valeur par défaut
+    UPDATE "ReferralCommission" SET "arAmount" = 0 WHERE "arAmount" IS NULL;
+  END IF;
+END $$;
 
 ALTER TABLE "ReferralCommission" 
   ALTER COLUMN "arAmount" SET NOT NULL;
