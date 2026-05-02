@@ -1,9 +1,36 @@
 import type { Metadata } from "next";
+import { Cormorant_Garamond, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { ConditionalNavbar } from "@/components/layout/ConditionalNavbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+
+// Police d'affichage : Cormorant Garamond (titres, canvas éditeur, hero).
+// Police de corps : DM Sans (paragraphes, UI, body). Remplace l'ancienne
+// référence "Outfit" qui n'était jamais chargée — fallback système.
+// Police mono : DM Mono (labels uppercase, codes, badges techniques).
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -71,7 +98,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html
+      lang="fr"
+      suppressHydrationWarning
+      className={`${cormorant.variable} ${dmSans.variable} ${dmMono.variable}`}
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

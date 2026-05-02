@@ -83,9 +83,19 @@
   --text-4xl: 2.5rem; /* 40px */
 
   /* === FONT FAMILIES === */
-  --display: "Cormorant Garamond", serif;
-  --body: "Outfit", sans-serif;
-  --mono: "DM Mono", monospace;
+  /* Les 3 polices sont chargées par next/font/google (cf. app/layout.tsx)
+     et exposées via --font-display / --font-body / --font-mono. On garde
+     les alias historiques --display / --body / --mono pour la rétro-compat
+     (utilisés partout dans editor.css, components, etc.). */
+  --display: var(--font-display, "Cormorant Garamond"), serif;
+  --body: var(--font-body, "DM Sans"), sans-serif;
+  --mono: var(--font-mono, "DM Mono"), monospace;
+
+  /* === LUXURY PAPER PALETTE (alias pour les mockups widgets/) === */
+  --paper: #ede8e0;
+  --paper-dark: #e4ddd3;
+  --cream: var(--void); /* Alias mockup */
+  --ink: var(--text); /* Alias mockup */
 
   /* === SHADOWS === */
   --shadow-sm: 0 2px 8px rgba(26, 23, 20, 0.05);
