@@ -690,12 +690,13 @@ body.editor-focus-mode .editor-canvas {
   gap: 0;
 }
 
-/* ⚜ Canvas éditeur — esthétique "papier vélin"
-   Inspiré de widgets/mah-ai-rich-editor.html : surface blanche pure,
-   typographie Cormorant Garamond serif, line-height aéré 1.85, caret gold,
-   shadow subtile sur focus pour signaler la zone active. */
+/* ⚜ Canvas éditeur — esthétique "papier vélin" thème-aware
+   Inspiré de widgets/mah-ai-rich-editor.html. En light : surface blanche
+   pure papier. En dark : surface sombre crème inversée. Toutes les
+   couleurs passent par les tokens --canvas-* qui ont des overrides en
+   [data-theme="dark"] dans globals.css. */
 .editor-canvas {
-  background: #ffffff;
+  background: var(--canvas-bg);
   border: 1px solid var(--b1);
   border-radius: var(--r-lg);
   min-height: 680px;
@@ -703,10 +704,10 @@ body.editor-focus-mode .editor-canvas {
   font-family: var(--display);
   font-size: 1.1rem;
   line-height: 1.85;
-  color: var(--ink);
+  color: var(--canvas-fg);
   position: relative;
-  caret-color: var(--gold);
-  transition: box-shadow 0.25s ease;
+  caret-color: var(--canvas-caret);
+  transition: box-shadow 0.25s ease, background 0.25s ease, color 0.25s ease;
   box-shadow: var(--shadow-sm);
 }
 
@@ -718,7 +719,7 @@ body.editor-focus-mode .editor-canvas {
 .editor-canvas .ProseMirror {
   outline: none;
   min-height: 620px;
-  caret-color: var(--gold);
+  caret-color: var(--canvas-caret);
 }
 
 .editor-canvas .ProseMirror p { margin: 0 0 0.85em; }
@@ -729,8 +730,9 @@ body.editor-focus-mode .editor-canvas {
   letter-spacing: -0.015em;
   line-height: 1.15;
   margin: 1em 0 0.55em;
-  border-bottom: 2px solid var(--b1);
+  border-bottom: 2px solid var(--canvas-h1-border);
   padding-bottom: 0.35rem;
+  color: var(--canvas-fg);
 }
 .editor-canvas .ProseMirror h2 {
   font-family: var(--display);
@@ -738,7 +740,7 @@ body.editor-focus-mode .editor-canvas {
   font-weight: 500;
   letter-spacing: -0.01em;
   margin: 1.25em 0 0.5em;
-  color: var(--navy);
+  color: var(--canvas-h2-color);
 }
 .editor-canvas .ProseMirror h3 {
   font-family: var(--display);
@@ -746,44 +748,45 @@ body.editor-focus-mode .editor-canvas {
   font-weight: 500;
   font-style: italic;
   margin: 1em 0 0.4em;
+  color: var(--canvas-fg);
 }
-.editor-canvas .ProseMirror strong { font-weight: 600; color: var(--navy); }
-.editor-canvas .ProseMirror em { font-style: italic; color: var(--text-2); }
+.editor-canvas .ProseMirror strong { font-weight: 600; color: var(--canvas-h2-color); }
+.editor-canvas .ProseMirror em { font-style: italic; color: var(--canvas-muted); }
 .editor-canvas .ProseMirror u {
   text-decoration: underline;
-  text-decoration-color: var(--gold);
+  text-decoration-color: var(--canvas-link-underline);
   text-underline-offset: 3px;
 }
-.editor-canvas .ProseMirror s { text-decoration: line-through; color: var(--text-3); }
-.editor-canvas .ProseMirror ul li::marker { color: var(--gold); }
+.editor-canvas .ProseMirror s { text-decoration: line-through; color: var(--canvas-soft); }
+.editor-canvas .ProseMirror ul li::marker { color: var(--canvas-list-marker); }
 .editor-canvas .ProseMirror ol li::marker {
-  color: var(--gold);
+  color: var(--canvas-list-marker);
   font-family: var(--mono);
   font-size: 0.85em;
 }
 .editor-canvas .ProseMirror blockquote {
-  border-left: 3px solid var(--gold);
-  background: var(--gold-dim);
+  border-left: 3px solid var(--canvas-blockquote-bar);
+  background: var(--canvas-blockquote-bg);
   border-radius: 0 var(--r-xs) var(--r-xs) 0;
   margin: 0.75rem 0;
   padding: 0.5rem 1.25rem;
   font-style: italic;
-  color: var(--text-2);
+  color: var(--canvas-blockquote-fg);
 }
 .editor-canvas .ProseMirror code {
   font-family: var(--mono);
   font-size: 0.85em;
-  background: var(--paper);
-  border: 1px solid var(--b1);
+  background: var(--canvas-code-bg);
+  border: 1px solid var(--canvas-code-border);
   border-radius: var(--r-xs);
   padding: 0.08rem 0.35rem;
-  color: var(--navy);
+  color: var(--canvas-code-fg);
 }
 .editor-canvas .ProseMirror pre {
   font-family: var(--mono);
   font-size: 0.85em;
-  background: var(--ink);
-  color: var(--gold-lo);
+  background: var(--canvas-pre-bg);
+  color: var(--canvas-pre-fg);
   border-radius: var(--r-xs);
   padding: 1rem 1.25rem;
   margin: 0.85rem 0;

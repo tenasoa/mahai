@@ -97,6 +97,28 @@
   --cream: var(--void); /* Alias mockup */
   --ink: var(--text); /* Alias mockup */
 
+  /* === CANVAS ÉDITEUR — tokens sémantiques thème-aware ===
+     Le canvas TipTap (`/contributeur/sujets/nouveau` & /edit) utilise ces
+     tokens au lieu de couleurs hardcodées. Override dans
+     [data-theme="dark"] plus bas pour garder lisibilité en dark mode. */
+  --canvas-bg: #ffffff;            /* Light : papier blanc pur */
+  --canvas-fg: var(--text);        /* Texte principal — suit le thème */
+  --canvas-muted: var(--text-2);   /* Italique, citations adoucies */
+  --canvas-soft: var(--text-3);    /* Texte barré, désactivé */
+  --canvas-h1-border: var(--b1);   /* Border-bottom du H1 */
+  --canvas-h2-color: var(--navy);  /* H2 + strong : navy en light */
+  --canvas-link-underline: var(--gold);
+  --canvas-list-marker: var(--gold);
+  --canvas-blockquote-bar: var(--gold);
+  --canvas-blockquote-bg: var(--gold-dim);
+  --canvas-blockquote-fg: var(--text-2);
+  --canvas-code-bg: var(--paper);
+  --canvas-code-border: var(--b1);
+  --canvas-code-fg: var(--navy);
+  --canvas-pre-bg: #1a1714;        /* Bloc code : fond sombre dans les deux thèmes */
+  --canvas-pre-fg: #d4a855;        /* Gold lisible sur sombre */
+  --canvas-caret: var(--gold);     /* Caret doré dans les deux thèmes */
+
   /* === SHADOWS === */
   --shadow-sm: 0 2px 8px rgba(26, 23, 20, 0.05);
   --shadow-md: 0 8px 40px rgba(26, 23, 20, 0.1);
@@ -180,6 +202,21 @@
 
   --overlay: rgba(0, 0, 0, 0.8);
   --cursor-blend: screen;
+
+  /* === Canvas éditeur — overrides dark mode ===
+     En dark, le canvas devient une carte sombre aux tons profonds, avec
+     du gold-hi pour les accents headings (au lieu du navy qui serait
+     illisible). Le bloc code reste sombre/gold mais avec contraste accru. */
+  --canvas-bg: #1a1714;            /* Carte sombre = couleur card du thème */
+  --canvas-h1-border: rgba(201, 168, 76, 0.18);
+  --canvas-h2-color: #e8c96a;       /* Gold-hi pour les headings — bien lisible */
+  --canvas-code-bg: rgba(201, 168, 76, 0.08);
+  --canvas-code-border: rgba(201, 168, 76, 0.22);
+  --canvas-code-fg: #e8c96a;
+  --canvas-pre-bg: #080705;         /* void en dark = noir profond */
+  --canvas-pre-fg: #e8c96a;
+  --canvas-blockquote-bg: rgba(201, 168, 76, 0.06);
+  --canvas-blockquote-bar: #c9a84c;
 }
 
 @layer base {
