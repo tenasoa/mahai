@@ -209,9 +209,9 @@ export default function OnboardingModal({ onComplete }: Props) {
         {step === 1 && (
           <>
             <div className="ed-onboarding-header">
-              <div className="ed-onboarding-step-label">Étape 1 / 3 — Informations</div>
-              <h2 className="ed-onboarding-title">Nouveau sujet</h2>
-              <p className="ed-onboarding-desc">Renseignez les informations de base pour commencer.</p>
+              <div className="ed-onboarding-step-label">Étape 1 / 4 — Identification</div>
+              <h2 className="ed-onboarding-title">Nouveau <em>sujet</em></h2>
+              <p className="ed-onboarding-desc">Renseignez les informations de base pour bien indexer votre sujet.</p>
             </div>
 
             <div className="ed-onboarding-body ed-onboarding-body--scroll">
@@ -436,7 +436,7 @@ export default function OnboardingModal({ onComplete }: Props) {
 
             <div className="ed-onboarding-footer">
               <div className="ed-step-dots">
-                {[1,2,3].map(i => <span key={i} className={`ed-step-dot${step === i ? ' active' : ''}`} />)}
+                {[1,2,3,4].map(i => <span key={i} className={`ed-step-dot${step === i ? ' active' : ''}${step > i ? ' done' : ''}`} />)}
               </div>
               <button
                 className="editor-btn editor-btn--primary"
@@ -453,7 +453,7 @@ export default function OnboardingModal({ onComplete }: Props) {
         {step === 2 && (
           <>
             <div className="ed-onboarding-header">
-              <div className="ed-onboarding-step-label">Étape 2 / 3 — Configuration</div>
+              <div className="ed-onboarding-step-label">Étape 2 / 4 — Configuration</div>
               <h2 className="ed-onboarding-title">Type &amp; Durée</h2>
               <p className="ed-onboarding-desc">Définissez le type de contenu et les paramètres.</p>
             </div>
@@ -496,7 +496,7 @@ export default function OnboardingModal({ onComplete }: Props) {
             <div className="ed-onboarding-footer">
               <button className="editor-btn" onClick={() => setStep(1)}>← Retour</button>
               <div className="ed-step-dots">
-                {[1,2,3].map(i => <span key={i} className={`ed-step-dot${step === i ? ' active' : ''}`} />)}
+                {[1,2,3,4].map(i => <span key={i} className={`ed-step-dot${step === i ? ' active' : ''}${step > i ? ' done' : ''}`} />)}
               </div>
               <button
                 className="editor-btn editor-btn--primary"
@@ -513,7 +513,7 @@ export default function OnboardingModal({ onComplete }: Props) {
         {step === 3 && (
           <>
             <div className="ed-onboarding-header">
-              <div className="ed-onboarding-step-label">Étape 3 / 3 — Tarification</div>
+              <div className="ed-onboarding-step-label">Étape 3 / 4 — Tarification</div>
               <h2 className="ed-onboarding-title">Prix</h2>
               <p className="ed-onboarding-desc">Définissez le prix de votre sujet.</p>
             </div>
@@ -577,14 +577,154 @@ export default function OnboardingModal({ onComplete }: Props) {
             <div className="ed-onboarding-footer">
               <button className="editor-btn" onClick={() => setStep(2)}>← Retour</button>
               <div className="ed-step-dots">
-                {[1,2,3].map(i => <span key={i} className={`ed-step-dot${step === i ? ' active' : ''}`} />)}
+                {[1,2,3,4].map(i => <span key={i} className={`ed-step-dot${step === i ? ' active' : ''}${step > i ? ' done' : ''}`} />)}
+              </div>
+              <button
+                className="editor-btn editor-btn--primary"
+                onClick={() => setStep(4)}
+                disabled={prix <= 0}
+              >
+                Continuer →
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── Étape 4 : Aperçu & Validation ─────────────────────────────
+           Récapitulatif final avant ouverture de l'éditeur. L'utilisateur
+           peut cliquer sur n'importe quel bloc pour revenir à l'étape
+           correspondante (raccourci UX). */}
+        {step === 4 && (
+          <>
+            <div className="ed-onboarding-header">
+              <div className="ed-onboarding-step-label">Étape 4 / 4 — Aperçu</div>
+              <h2 className="ed-onboarding-title">Vérifiez avant de <em>commencer</em></h2>
+              <p className="ed-onboarding-desc">Cliquez sur un bloc pour modifier ses informations.</p>
+            </div>
+
+            <div className="ed-onboarding-body">
+              <div className="ed-recap">
+                {/* Identification */}
+                <button
+                  className="ed-recap-card"
+                  onClick={() => setStep(1)}
+                  type="button"
+                  aria-label="Modifier l'identification"
+                >
+                  <div className="ed-recap-card-head">
+                    <span className="ed-recap-card-num">01</span>
+                    <span className="ed-recap-card-title">Identification</span>
+                    <span className="ed-recap-card-edit">Modifier</span>
+                  </div>
+                  <div className="ed-recap-grid">
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Titre</span>
+                      <span className="ed-recap-value">{meta.title || '—'}</span>
+                    </div>
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Matière</span>
+                      <span className="ed-recap-value">{meta.matiere || '—'}</span>
+                    </div>
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Type</span>
+                      <span className="ed-recap-value">
+                        {[meta.examType, meta.baccType, meta.bepcOption, meta.serie, meta.concoursType]
+                          .filter(Boolean).join(' · ') || '—'}
+                      </span>
+                    </div>
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Année</span>
+                      <span className="ed-recap-value">{meta.anneeScolaire || '—'}</span>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Configuration */}
+                <button
+                  className="ed-recap-card"
+                  onClick={() => setStep(2)}
+                  type="button"
+                  aria-label="Modifier la configuration"
+                >
+                  <div className="ed-recap-card-head">
+                    <span className="ed-recap-card-num">02</span>
+                    <span className="ed-recap-card-title">Configuration</span>
+                    <span className="ed-recap-card-edit">Modifier</span>
+                  </div>
+                  <div className="ed-recap-grid">
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Type de contenu</span>
+                      <span className="ed-recap-value">{meta.contentType || '—'}</span>
+                    </div>
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Durée</span>
+                      <span className="ed-recap-value">{meta.duree || '—'}</span>
+                    </div>
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Coefficient</span>
+                      <span className="ed-recap-value">{meta.coefficient || '—'}</span>
+                    </div>
+                    {meta.tags && meta.tags.length > 0 && (
+                      <div className="ed-recap-row">
+                        <span className="ed-recap-label">Tags</span>
+                        <span className="ed-recap-value">{meta.tags.join(', ')}</span>
+                      </div>
+                    )}
+                  </div>
+                </button>
+
+                {/* Tarification */}
+                <button
+                  className="ed-recap-card ed-recap-card--gold"
+                  onClick={() => setStep(3)}
+                  type="button"
+                  aria-label="Modifier la tarification"
+                >
+                  <div className="ed-recap-card-head">
+                    <span className="ed-recap-card-num">03</span>
+                    <span className="ed-recap-card-title">Tarification</span>
+                    <span className="ed-recap-card-edit">Modifier</span>
+                  </div>
+                  <div className="ed-recap-grid">
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Prix affiché</span>
+                      <span className="ed-recap-value ed-recap-value--strong">
+                        {prix.toLocaleString()} Ar
+                      </span>
+                    </div>
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Mode</span>
+                      <span className="ed-recap-value">{prixMode === 'forfait' ? 'Forfait' : 'Par page'}</span>
+                    </div>
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Commission (30%)</span>
+                      <span className="ed-recap-value ed-recap-value--mute">− {commission.toLocaleString()} Ar</span>
+                    </div>
+                    <div className="ed-recap-row">
+                      <span className="ed-recap-label">Vos revenus (70%)</span>
+                      <span className="ed-recap-value ed-recap-value--gold-strong">
+                        {revenu.toLocaleString()} Ar
+                      </span>
+                    </div>
+                  </div>
+                </button>
+
+                <p className="ed-recap-note">
+                  Vous pourrez modifier ces informations à tout moment depuis l'éditeur via le panneau Métadonnées.
+                </p>
+              </div>
+            </div>
+
+            <div className="ed-onboarding-footer">
+              <button className="editor-btn" onClick={() => setStep(3)}>← Retour</button>
+              <div className="ed-step-dots">
+                {[1,2,3,4].map(i => <span key={i} className={`ed-step-dot${step === i ? ' active' : ''}${step > i ? ' done' : ''}`} />)}
               </div>
               <button
                 className="editor-btn editor-btn--primary"
                 onClick={handleFinish}
-                disabled={prix <= 0}
               >
-                Ouvrir l'éditeur
+                Ouvrir l'éditeur ✦
               </button>
             </div>
           </>
