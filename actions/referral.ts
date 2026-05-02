@@ -11,7 +11,9 @@ export type ReferralItem = {
   referredEmail: string;
   createdAt: string;
   status: "PENDING" | "COMPLETED" | "CANCELED";
-  bonusCredits: number;
+  bonusAr: number;  // Bonus en Ariary
+  // @deprecated Utiliser bonusAr
+  bonusCredits?: number;
 };
 
 export type ReferralDashboardData = {
@@ -19,12 +21,16 @@ export type ReferralDashboardData = {
   referralLink: string;
   invitedCount: number;
   activeCount: number;
-  creditsGained: number;
+  totalGainedAr: number;  // Total gagné en Ariary
   referrals: ReferralItem[];
   settings: {
-    welcomeBonus: number;
-    referrerBonus: number;
-    referredBonus: number;
+    welcomeBonusAr: number;
+    referrerBonusAr: number;
+    referredBonusAr: number;
+    // @deprecated Valeurs en crédits
+    welcomeBonus?: number;
+    referrerBonus?: number;
+    referredBonus?: number;
   };
 };
 
@@ -83,7 +89,7 @@ export async function getReferralDashboardAction(): Promise<{
       `SELECT
          COUNT(*)::int AS "invitedCount",
          COUNT(*) FILTER (WHERE ur.status = 'COMPLETED')::int AS "activeCount",
-         COALESCE(SUM(ur."referrerBonusCredits") FILTER (WHERE ur."referrerBonusGrantedAt" IS NOT NULL), 0)::int AS "creditsGained"
+         COALESCE(SUM(ur."referrerBonusAr") FILTER (WHERE ur."referrerBonusGrantedAt" IS NOT NULL), 0)::int AS "totalGainedAr"
        FROM "UserReferral" ur
        WHERE ur."referrerUserId" = $1`,
       [userId],
@@ -94,7 +100,7 @@ export async function getReferralDashboardAction(): Promise<{
          ur.id,
          ur."referredUserId",
          ur.status,
-         ur."referrerBonusCredits",
+         ur."referrerBonusAr",
          ur."createdAt",
          u.prenom,
          u.nom,
@@ -120,7 +126,7 @@ export async function getReferralDashboardAction(): Promise<{
       referredEmail: row.email || "",
       createdAt: row.createdAt,
       status: row.status,
-      bonusCredits: Number(row.referrerBonusCredits) || 20,
+      bonusAr: Number(row.referrerBonusAr) || 1000,  // 1000 Ar = anciens 20 crédits * 50
     }));
 
     const referralLink = `${getSiteUrl()}/auth/register?ref=${encodeURIComponent(referralCode || "")}`;
@@ -132,7 +138,7 @@ export async function getReferralDashboardAction(): Promise<{
         referralLink,
         invitedCount: Number(stats.invitedCount) || 0,
         activeCount: Number(stats.activeCount) || 0,
-        creditsGained: Number(stats.creditsGained) || 0,
+        totalGainedAr: Number(stats.totalGainedAr) || 0,
         referrals,
         settings: await getReferralSettings(),
       },

@@ -8,15 +8,15 @@ import { query } from "@/lib/db";
  */
 export async function initializeReferralSettings() {
   try {
-    // Vérifier si les settings existent déjà
+    // Vérifier si les settings existent déjà (anciens + nouveaux)
     const result = await query(
       `SELECT COUNT(*) as count FROM "SystemSetting" 
-       WHERE key IN ('WELCOME_BONUS_CREDITS', 'REFERRAL_BONUS_CREDITS', 'REFERRED_BONUS_CREDITS')`
+       WHERE key IN ('WELCOME_BONUS_AR', 'REFERRER_BONUS_AR', 'REFERRED_BONUS_AR')`
     );
 
     const existingCount = Number(result.rows[0]?.count || 0);
 
-    // Si tous les settings existent, retourner
+    // Si tous les settings Ariary existent, retourner
     if (existingCount === 3) {
       return {
         success: true,
@@ -25,21 +25,21 @@ export async function initializeReferralSettings() {
       };
     }
 
-    // Initialiser les paramètres
+    // Initialiser les paramètres en Ariary (nouveau système)
     await Promise.all([
       query(
         `INSERT INTO "SystemSetting" ("key", "value", "type", "description")
-         VALUES ('WELCOME_BONUS_CREDITS', '10', 'number', 'Crédits bonus à l''inscription')
+         VALUES ('WELCOME_BONUS_AR', '500', 'number', 'Bonus de bienvenue en Ariary (anciennement 10 crédits)')
          ON CONFLICT("key") DO NOTHING`
       ),
       query(
         `INSERT INTO "SystemSetting" ("key", "value", "type", "description")
-         VALUES ('REFERRAL_BONUS_CREDITS', '20', 'number', 'Crédits bonus pour le parrain au 1er achat du filleul')
+         VALUES ('REFERRER_BONUS_AR', '1000', 'number', 'Bonus parrain en Ariary au 1er achat du filleul (anciennement 20 crédits)')
          ON CONFLICT("key") DO NOTHING`
       ),
       query(
         `INSERT INTO "SystemSetting" ("key", "value", "type", "description")
-         VALUES ('REFERRED_BONUS_CREDITS', '10', 'number', 'Crédits bonus pour le filleul à l''inscription')
+         VALUES ('REFERRED_BONUS_AR', '500', 'number', 'Bonus filleul en Ariary à l''inscription (anciennement 10 crédits)')
          ON CONFLICT("key") DO NOTHING`
       ),
     ]);
@@ -66,7 +66,7 @@ export async function getReferralSettingsForAdmin() {
   try {
     const result = await query(
       `SELECT key, value, type FROM "SystemSetting" 
-       WHERE key IN ('WELCOME_BONUS_CREDITS', 'REFERRAL_BONUS_CREDITS', 'REFERRED_BONUS_CREDITS')
+       WHERE key IN ('WELCOME_BONUS_AR', 'REFERRER_BONUS_AR', 'REFERRED_BONUS_AR')
        ORDER BY key ASC`
     );
 
@@ -99,7 +99,7 @@ export async function getReferralSettingsForAdmin() {
  * Met à jour un paramètre de parrainage
  */
 export async function updateReferralSetting(
-  key: "WELCOME_BONUS_CREDITS" | "REFERRAL_BONUS_CREDITS" | "REFERRED_BONUS_CREDITS",
+  key: "WELCOME_BONUS_AR" | "REFERRER_BONUS_AR" | "REFERRED_BONUS_AR",
   value: number
 ) {
   try {
