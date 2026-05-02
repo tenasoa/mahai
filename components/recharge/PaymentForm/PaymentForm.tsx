@@ -30,10 +30,10 @@ const OPERATOR_LOGOS: Record<string, string> = {
 };
 
 export interface PaymentAmount {
-  credits: number;
-  price: number;
+  amountAr: number;  // Montant en Ariary à recharger
+  price: number;     // Prix à payer
   popular?: boolean;
-  bonus?: number;
+  bonus?: number;    // Bonus en Ariary
 }
 
 export interface PaymentFormProps {
@@ -54,10 +54,10 @@ export interface PaymentFormProps {
 }
 
 const AMOUNT_PRESETS: PaymentAmount[] = [
-  { credits: 50, price: 5000, bonus: 10, popular: true },
-  { credits: 100, price: 10000 },
-  { credits: 200, price: 20000, bonus: 25 },
-  { credits: 500, price: 50000, bonus: 75 },
+  { amountAr: 5000, price: 5000, popular: true },
+  { amountAr: 10000, price: 10000, bonus: 500 },
+  { amountAr: 20000, price: 20000, bonus: 1500 },
+  { amountAr: 50000, price: 50000, bonus: 5000 },
 ];
 
 export function PaymentForm({
@@ -148,26 +148,26 @@ export function PaymentForm({
     <form className={styles.paymentForm} onSubmit={handleSubmit}>
       {/* Amount Selection */}
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Montant des crédits</h3>
+        <h3 className={styles.sectionTitle}>Montant à recharger</h3>
         <div className={styles.amountsGrid}>
           {amounts.map((amount) => (
             <button
-              key={amount.credits}
+              key={amount.amountAr}
               type="button"
-              className={`${styles.amountCard} ${localAmount?.credits === amount.credits ? styles.selected : ""} ${amount.popular ? styles.popular : ""}`}
+              className={`${styles.amountCard} ${localAmount?.amountAr === amount.amountAr ? styles.selected : ""} ${amount.popular ? styles.popular : ""}`}
               onClick={() => handleAmountSelect(amount)}
-              aria-pressed={localAmount?.credits === amount.credits}
+              aria-pressed={localAmount?.amountAr === amount.amountAr}
             >
               {amount.popular && (
                 <span className={styles.popularBadge}>Meilleure Offre</span>
               )}
-              <div className={styles.amountCredits}>{amount.credits} cr</div>
+              <div className={styles.amountCredits}>{amount.amountAr.toLocaleString()} Ar</div>
               <div className={styles.amountPrice}>
                 {amount.price.toLocaleString()} Ar
               </div>
               {amount.bonus && amount.bonus > 0 ? (
                 <div className={styles.amountBonus}>
-                  +{amount.bonus} cr offerts
+                  +{amount.bonus.toLocaleString()} Ar bonus
                 </div>
               ) : null}
             </button>
@@ -181,26 +181,26 @@ export function PaymentForm({
               <span className={styles.bonusGaugeLabel}>Taux de bonus</span>
               {localAmount && localAmount.bonus && (
                 <span className={styles.bonusGaugeValue}>
-                  {Math.round((localAmount.bonus / localAmount.credits) * 100)}%
+                  {Math.round((localAmount.bonus / localAmount.amountAr) * 100)}%
                 </span>
               )}
             </div>
             <div className={styles.bonusGaugeContainer}>
               {amounts.map((amount, idx) => {
                 const bonusRate = amount.bonus
-                  ? Math.round((amount.bonus / amount.credits) * 100)
+                  ? Math.round((amount.bonus / amount.amountAr) * 100)
                   : 0;
-                const isActive = localAmount?.credits === amount.credits;
+                const isActive = localAmount?.amountAr === amount.amountAr;
                 const maxRate = Math.max(
                   ...amounts.map((a) =>
-                    a.bonus ? Math.round((a.bonus / a.credits) * 100) : 0,
+                    a.bonus ? Math.round((a.bonus / a.amountAr) * 100) : 0,
                   ),
                 );
                 const fillWidth = (bonusRate / maxRate) * 100;
 
                 return (
                   <div
-                    key={amount.credits}
+                    key={amount.amountAr}
                     className={`${styles.bonusBar} ${isActive ? styles.active : ""}`}
                     style={
                       { "--fill-width": `${fillWidth}%` } as React.CSSProperties
@@ -271,16 +271,16 @@ export function PaymentForm({
       {localAmount && (
         <div className={styles.summary}>
           <div className={styles.summaryRow}>
-            <span className={styles.summaryLabel}>Crédits</span>
+            <span className={styles.summaryLabel}>Montant rechargé</span>
             <span className={styles.summaryValue}>
-              {localAmount.credits} cr
+              {localAmount.amountAr.toLocaleString()} Ar
             </span>
           </div>
           {localAmount.bonus && localAmount.bonus > 0 ? (
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Bonus</span>
               <span className={styles.summaryValueBonus}>
-                +{localAmount.bonus} cr
+                +{localAmount.bonus.toLocaleString()} Ar
               </span>
             </div>
           ) : null}

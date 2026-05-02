@@ -7,7 +7,7 @@ export interface BalanceCardProps {
   balance: number
   label?: string
   unit?: string
-  ariaryEquivalent?: string
+  showConversion?: boolean  // @deprecated Plus nécessaire, gardé pour compatibilité
   onRecharge?: () => void
   isLoading?: boolean
   children?: ReactNode
@@ -15,9 +15,8 @@ export interface BalanceCardProps {
 
 export function BalanceCard({
   balance,
-  label = 'Solde disponible',
-  unit = 'crédits',
-  ariaryEquivalent,
+  label = 'Solde Ariary',
+  unit = 'Ar',
   onRecharge,
   isLoading = false,
   children,
@@ -53,9 +52,7 @@ export function BalanceCard({
           <span className={styles.unit}>{unit}</span>
         </div>
 
-        {ariaryEquivalent && (
-          <div className={styles.ariary}>{ariaryEquivalent}</div>
-        )}
+        {/* Conversion Ar vers crédits supprimée - système unifié en Ar */}
 
         {children && <div className={styles.children}>{children}</div>}
       </div>

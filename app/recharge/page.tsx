@@ -29,12 +29,12 @@ import {
 
 import "./recharge.css";
 
-// Packs par défaut (fallback si l'API échoue)
+// Packs par défaut (fallback si l'API échoue) - Montants en Ariary
 const DEFAULT_PACKS: PaymentAmount[] = [
-  { credits: 50, price: 2500, bonus: 0 },
-  { credits: 150, price: 7500, bonus: 10, popular: true },
-  { credits: 300, price: 15000, bonus: 25 },
-  { credits: 500, price: 25000, bonus: 75 },
+  { amountAr: 2500, price: 2500 },
+  { amountAr: 7500, price: 7500, bonus: 500, popular: true },
+  { amountAr: 15000, price: 15000, bonus: 1500 },
+  { amountAr: 25000, price: 25000, bonus: 3750 },
 ];
 
 export default function RechargePage() {
@@ -49,7 +49,8 @@ export default function RechargePage() {
   // États pour le paiement
   const [creditPacks, setCreditPacks] = useState<PaymentAmount[]>(DEFAULT_PACKS);
   const [selectedAmount, setSelectedAmount] = useState<PaymentAmount | undefined>(undefined);
-  const [globalArPerCredit, setGlobalArPerCredit] = useState<number>(50);
+  // @deprecated Plus de taux de conversion - système unifié en Ariary
+  const [globalArPerCredit, setGlobalArPerCredit] = useState<number>(1);
   const [selectedProvider, setSelectedProvider] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -103,10 +104,10 @@ export default function RechargePage() {
                 : tx.type === "RECHARGE"
                   ? "Recharge Mobile Money"
                   : "Bonus",
-            amount:
+            amountAr:
               tx.type === "RECHARGE"
-                ? tx.creditsCount || tx.amount
-                : Math.abs(tx.amount),
+                ? tx.amountAr || 0
+                : Math.abs(tx.amountAr || 0),
             date: tx.createdAt,
             meta: `${new Date(tx.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} · Réf. ${tx.id?.slice(0, 8).toUpperCase() || "N/A"}`,
             icon:
@@ -125,7 +126,7 @@ export default function RechargePage() {
   };
 
   useEffect(() => {
-    document.title = "Mah.AI — Recharge de crédits";
+    document.title = "Mah.AI — Recharge de solde";
     if (!authLoading) {
       if (!userId) {
         router.push("/auth/login");

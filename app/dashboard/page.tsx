@@ -163,9 +163,9 @@ export default function DashboardPage() {
   const cards: DashboardCardProps[] = [
     {
       icon: Wallet,
-      label: 'Crédits disponibles',
-      value: appUser?.credits ?? 0,
-      subtitle: 'Utilisables pour débloquer des sujets',
+      label: 'Solde Ariary',
+      value: `${(appUser?.balanceAr ?? 0).toLocaleString()} Ar`,
+      subtitle: 'Utilisable pour débloquer des sujets',
       route: '/recharge',
       color: 'gold',
     },
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                 <div className="hero-meta">
                   <span className="hero-meta-item"><Calendar size={14} /> {currentDate}</span>
                   <span className="hero-meta-item"><GraduationCap size={14} /> {appUser?.role || 'Compte étudiant'}</span>
-                  <span className="hero-meta-item"><Gem size={14} /> {appUser?.credits ?? 0} crédits</span>
+                  <span className="hero-meta-item"><Gem size={14} /> {(appUser?.balanceAr ?? 0).toLocaleString()} Ar</span>
                 </div>
               </div>
 
