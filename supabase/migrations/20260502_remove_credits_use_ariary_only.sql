@@ -51,10 +51,16 @@ COMMENT ON COLUMN "User"."balanceAr" IS 'Solde en Ariary (ancien système de cr�
 -- 2. TABLE Subject - Supprimer credits, garder prix (Ariary)
 -- ============================================================
 
--- La colonne prix existe déjà en Ariary, supprimer credits si existe
+-- Supprimer credits si existe
 ALTER TABLE "Subject" DROP COLUMN IF EXISTS credits;
 
--- Vérifier que prix est bien en Ariary (normalement déjà le cas)
+-- Ajouter la colonne prix si elle n'existe pas (pour stocker le prix en Ariary)
+ALTER TABLE "Subject" 
+  ADD COLUMN IF NOT EXISTS prix INTEGER NOT NULL DEFAULT 0;
+
+-- Migrer les données si nécessaire (si une ancienne colonne price existe)
+-- UPDATE "Subject" SET prix = COALESCE(price, 0) WHERE prix = 0;
+
 COMMENT ON COLUMN "Subject".prix IS 'Prix en Ariary (unique devise)';
 
 -- ============================================================
