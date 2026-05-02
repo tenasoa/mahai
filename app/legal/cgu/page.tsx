@@ -55,7 +55,7 @@ export default function CGUPage() {
     { id: 'art2', label: '2. Définitions', sub: false },
     { id: 'art3', label: '3. Accès à la plateforme', sub: false },
     { id: 'art3a', label: '3.1 Inscription', sub: true },
-    { id: 'art3b', label: '3.2 Crédits', sub: true },
+    { id: 'art3b', label: '3.2 Solde Ariary', sub: true },
     { id: 'art4', label: '4. Contenu & droits', sub: false },
     { id: 'art4a', label: '4.1 Responsabilité', sub: true },
     { id: 'art4b', label: '4.2 Commission', sub: true },
@@ -66,10 +66,10 @@ export default function CGUPage() {
     { id: 'art9', label: '9. Droit applicable', sub: false }
   ]
 
-  const creditPacks = [
-    { pack: 'Starter', credits: '50 crédits', price: '2 500 Ar', validity: 'Sans expiration' },
-    { pack: 'Standard', credits: '150 crédits', price: '7 500 Ar', validity: 'Sans expiration' },
-    { pack: 'Premium', credits: '300 crédits', price: '15 000 Ar', validity: 'Sans expiration' }
+  const rechargePacks = [
+    { pack: 'Starter', amount: '2 500 Ar', price: '2 500 Ar', validity: 'Sans expiration' },
+    { pack: 'Standard', amount: '7 500 Ar', price: '7 500 Ar', validity: 'Sans expiration' },
+    { pack: 'Premium', amount: '15 000 Ar', price: '15 000 Ar', validity: 'Sans expiration' }
   ]
 
   const commissionTiers = [
@@ -188,7 +188,7 @@ export default function CGUPage() {
             <li className="text-text-2 leading-relaxed mb-1"><strong>Utilisateur</strong> : toute personne physique accédant à la plateforme ;</li>
             <li className="text-text-2 leading-relaxed mb-1"><strong>Étudiant</strong> : utilisateur qui consulte et achète des sujets d'examen ;</li>
             <li className="text-text-2 leading-relaxed mb-1"><strong>Contributeur</strong> : utilisateur qui publie des sujets d'examen ;</li>
-            <li className="text-text-2 leading-relaxed mb-1"><strong>Crédits</strong> : unité monétaire interne à la plateforme, acquise via paiement Mobile Money (MVola, Orange Money, Airtel Money) ;</li>
+            <li className="text-text-2 leading-relaxed mb-1"><strong>Solde Ariary</strong> : unité monétaire interne à la plateforme, acquise via paiement Mobile Money (MVola, Orange Money, Airtel Money) ;</li>
             <li className="text-text-2 leading-relaxed mb-1"><strong>Correction IA</strong> : service automatisé d'analyse et d'évaluation des réponses d'un étudiant ;</li>
             <li className="text-text-2 leading-relaxed mb-1"><strong>Sujet</strong> : fichier ou contenu numérique représentant un sujet d'examen.</li>
           </ul>
@@ -214,26 +214,26 @@ export default function CGUPage() {
           <span className="section-anchor" id="art3b"></span>
           <h3 className="font-mono text-[0.72rem] uppercase tracking-[0.14em] text-gold mt-8 mb-3 flex items-center gap-2">
             <span className="text-[0.5rem]">✦</span>
-            3.2 Système de crédits
+            3.2 Solde Ariary
           </h3>
           <p className="text-text-2 leading-relaxed mb-4">
-            La plateforme fonctionne sur la base d'un système de crédits internes. Les crédits sont acquis via les services de paiement mobile <strong>MVola</strong>, <strong>Orange Money</strong> et <strong>Airtel Money</strong>. Les crédits ne sont ni remboursables ni échangeables contre de l'argent réel, sauf mention contraire.
+            La plateforme fonctionne avec un solde en Ariary (Ar), la devise de Madagascar. Le solde est rechargé via les services de paiement mobile <strong>MVola</strong>, <strong>Orange Money</strong> et <strong>Airtel Money</strong>. Le solde non utilisé n'est pas remboursable ni échangeable contre de l'argent réel, sauf mention contraire.
           </p>
           <div className="overflow-x-auto bg-card border border-border-1 rounded-2xl">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
                   <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text-3 py-4 px-4 text-left border-b border-border-1">Pack</th>
-                  <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text-3 py-4 px-4 text-left border-b border-border-1">Crédits</th>
+                  <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text-3 py-4 px-4 text-left border-b border-border-1">Montant rechargé</th>
                   <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text-3 py-4 px-4 text-left border-b border-border-1">Prix Mobile Money</th>
                   <th className="bg-lift font-mono text-[0.6rem] uppercase tracking-[0.1em] text-text-3 py-4 px-4 text-left border-b border-border-1">Validité</th>
                 </tr>
               </thead>
               <tbody>
-                {creditPacks.map((pack, index) => (
+                {rechargePacks.map((pack, index) => (
                   <tr key={index} className="hover:bg-lift transition-colors">
                     <td className="py-4 px-4 text-[0.84rem] text-text-2 border-b border-border-1">{pack.pack}</td>
-                    <td className="py-4 px-4 text-[0.84rem] text-text-2 border-b border-border-1">{pack.credits}</td>
+                    <td className="py-4 px-4 text-[0.84rem] text-text-2 border-b border-border-1">{pack.amount}</td>
                     <td className="py-4 px-4 text-[0.84rem] text-text-2 border-b border-border-1">{pack.price}</td>
                     <td className="py-4 px-4 text-[0.84rem] text-text-2 border-b border-border-1">{pack.validity}</td>
                   </tr>
@@ -271,7 +271,7 @@ export default function CGUPage() {
             4.2 Commission Mah.AI
           </h3>
           <p className="text-text-2 leading-relaxed mb-4">
-            Pour chaque sujet vendu, Mah.AI prélève une commission sur le montant en crédits reçu par le contributeur. Les modalités de commission sont les suivantes :
+            Pour chaque sujet vendu, Mah.AI prélève une commission sur le montant en Ariary reçu par le contributeur. Les modalités de commission sont les suivantes :
           </p>
           <div className="overflow-x-auto bg-card border border-border-1 rounded-2xl mb-4">
             <table className="w-full border-collapse">
@@ -313,7 +313,7 @@ export default function CGUPage() {
           </div>
 
           <p className="text-text-2 leading-relaxed mb-4">
-            L'utilisation du service de Correction IA est soumise à la consommation de crédits. Le coût par correction varie selon la complexité du sujet et est indiqué avant toute soumission.
+            L'utilisation du service de Correction IA est soumise à un paiement en Ariary. Le coût par correction varie selon la complexité du sujet et est indiqué avant toute soumission.
           </p>
 
           {/* Article 6 */}
@@ -334,10 +334,10 @@ export default function CGUPage() {
             7. <em className="text-gold">Responsabilité</em>
           </h2>
           <p className="text-text-2 leading-relaxed mb-4">
-            La plateforme est fournie « en l'état ». Mah.AI s'engage à maintenir un niveau de service optimal mais ne garantit pas une disponibilité ininterrompue. En cas d'indisponibilité prolongée (supérieure à 24h), les crédits consommés durant la période concernée pourront faire l'objet d'un remboursement sur demande.
+            La plateforme est fournie « en l'état ». Mah.AI s'engage à maintenir un niveau de service optimal mais ne garantit pas une disponibilité ininterrompue. En cas d'indisponibilité prolongée (supérieure à 24h), les montants payés durant la période concernée pourront faire l'objet d'un remboursement sur demande.
           </p>
           <p className="text-text-2 leading-relaxed mb-4">
-            La responsabilité totale de Mah.AI envers un utilisateur ne pourra excéder le montant des crédits détenus par cet utilisateur au moment du litige.
+            La responsabilité totale de Mah.AI envers un utilisateur ne pourra excéder le montant du solde Ariary détenu par cet utilisateur au moment du litige.
           </p>
 
           {/* Article 8 */}
@@ -346,7 +346,7 @@ export default function CGUPage() {
             8. <em className="text-gold">Résiliation</em>
           </h2>
           <p className="text-text-2 leading-relaxed mb-4">
-            L'utilisateur peut supprimer son compte à tout moment depuis les paramètres de son profil. La suppression entraîne la perte définitive des crédits non utilisés et de l'accès aux sujets achetés. Les contributions publiées peuvent être maintenues sur la plateforme à la discrétion de Mah.AI.
+            L'utilisateur peut supprimer son compte à tout moment depuis les paramètres de son profil. La suppression entraîne la perte définitive du solde Ariary non utilisé et de l'accès aux sujets achetés. Les contributions publiées peuvent être maintenues sur la plateforme à la discrétion de Mah.AI.
           </p>
           <p className="text-text-2 leading-relaxed mb-4">
             Mah.AI se réserve le droit de suspendre ou résilier tout compte en cas de violation des présentes CGU, sans préavis ni indemnisation.

@@ -32,7 +32,7 @@ type LandingStats = {
 type LandingPack = {
   id: string;
   name: string;
-  credits: number;
+  amountAr: number;
   price: number;
   bonus: number;
   popular: boolean;
@@ -44,7 +44,7 @@ type PopularSubject = {
   type: string;
   matiere: string;
   annee: string | null;
-  credits: number;
+  prix: number;
   badge: string | null;
   glyph: string;
   rating: number;
@@ -203,12 +203,12 @@ export default function LandingPage() {
       : "Examens officiels soigneusement numérisés, vérifiés et indexés pour une recherche précise.";
 
   // Tri : Gratuit (credits=0) → Standard (popular) → Premium (autres)
-  const sortedPacks = [...packs].sort((a, b) => a.credits - b.credits);
-  const freePack = sortedPacks.find((p) => p.credits === 0) ?? null;
-  const paidPacks = sortedPacks.filter((p) => p.credits > 0);
+  const sortedPacks = [...packs].sort((a, b) => a.amountAr - b.amountAr);
+  const freePack = sortedPacks.find((p) => p.amountAr === 0) ?? null;
+  const paidPacks = sortedPacks.filter((p) => p.amountAr > 0);
   const standardPack = paidPacks.find((p) => p.popular) ?? paidPacks[0] ?? null;
   const premiumPack =
-    paidPacks.find((p) => p !== standardPack && p.credits > (standardPack?.credits ?? 0)) ??
+    paidPacks.find((p) => p !== standardPack && p.amountAr > (standardPack?.amountAr ?? 0)) ??
     paidPacks[paidPacks.length - 1] ??
     null;
 
@@ -308,7 +308,7 @@ export default function LandingPage() {
                 </svg>
               </Link>
               <Link href="/auth/register" className="btn-secondary">
-                Créer un compte · 10 crédits offerts
+                Créer un compte · 500 Ar offerts
               </Link>
             </div>
             <div className="hero-stats">
@@ -354,7 +354,7 @@ export default function LandingPage() {
               <div className="paper-float paper-float-3">
                 <div className="pf-header">
                   <div className="pf-exam">BAC</div>
-                  <div className="pf-price">20 cr</div>
+                  <div className="pf-price">1 000 Ar</div>
                 </div>
                 <div className="pf-title">Physique-Chimie</div>
                 <div className="pf-lines">
@@ -365,7 +365,7 @@ export default function LandingPage() {
               <div className="paper-float paper-float-2">
                 <div className="pf-header">
                   <div className="pf-exam">BEPC</div>
-                  <div className="pf-price">10 cr</div>
+                  <div className="pf-price">500 Ar</div>
                 </div>
                 <div className="pf-title">Mathématiques</div>
                 <div className="pf-lines">
@@ -378,7 +378,7 @@ export default function LandingPage() {
               <div className="paper-float paper-float-1">
                 <div className="pf-header">
                   <div className="pf-exam">BAC 2024</div>
-                  <div className="pf-price">15 cr</div>
+                  <div className="pf-price">750 Ar</div>
                 </div>
                 <div className="pf-title">
                   Mathématiques — Algèbre & Fonctions
@@ -589,7 +589,7 @@ export default function LandingPage() {
               </h3>
               <p className="audience-desc">
                 Accès aux annales officielles, correction IA instantanée,
-                progression suivie. 10 crédits offerts à l'inscription.
+                progression suivie. 500 Ar offerts à l'inscription.
               </p>
               <span className="audience-cta">
                 Créer mon compte étudiant
@@ -692,7 +692,7 @@ export default function LandingPage() {
               </div>
               <div className="how-title">Payez via Mobile Money</div>
               <p className="how-desc">
-                Rechargez votre wallet en crédits depuis votre téléphone via
+                Rechargez votre solde en Ariary depuis votre téléphone via
                 MVola, Orange Money ou Airtel Money. Sécurisé et instantané.
               </p>
             </div>
@@ -793,7 +793,7 @@ export default function LandingPage() {
               <div className="feat-small-icon">📱</div>
               <div className="feat-small-title">Paiement Mobile Money</div>
               <p className="feat-small-desc">
-                Rechargez votre wallet MahAI en crédits directement depuis votre
+                Rechargez votre solde MahAI en Ariary directement depuis votre
                 numéro MVola, Orange Money ou Airtel Money. Simple et sécurisé.
               </p>
             </div>
@@ -895,7 +895,7 @@ export default function LandingPage() {
           {popular.length > 0 ? (
             <div className="showcase-track">
               {popular.slice(0, 3).map((subject, idx) => {
-                const isFree = subject.credits === 0 || subject.badge === "FREE";
+                const isFree = subject.prix === 0 || subject.badge === "FREE";
                 const badgeKey = subject.badge && BADGE_LABEL[subject.badge] ? subject.badge : null;
                 const featured = idx === 0;
                 const delayClass = idx === 1 ? " reveal-delay-1" : idx === 2 ? " reveal-delay-2" : "";
@@ -940,7 +940,7 @@ export default function LandingPage() {
                         </div>
                       ) : (
                         <div className="pc-price">
-                          {subject.credits} <span className="unit">crédits</span>
+                          {subject.prix?.toLocaleString()} <span className="unit">Ar</span>
                         </div>
                       )}
                       <div className="pc-actions">
@@ -1058,7 +1058,7 @@ export default function LandingPage() {
                 lineHeight: 1.1,
               }}
             >
-              Rechargez en <em>crédits</em>
+              Rechargez votre <em>solde</em>
             </h2>
             <p
               className="reveal"
@@ -1070,7 +1070,7 @@ export default function LandingPage() {
                 lineHeight: 1.75,
               }}
             >
-              Achetez des crédits une fois, utilisez-les quand vous voulez. Sans
+              Rechargez votre solde en Ariary et utilisez-le quand vous voulez. Sans
               abonnement.
             </p>
           </div>
@@ -1079,7 +1079,7 @@ export default function LandingPage() {
             <div className="price-card reveal">
               <div className="price-plan">Gratuit</div>
               <div className="price-amount">
-                0 <span className="unit">cr</span>
+                Gratuit
               </div>
               <p className="price-desc">
                 Pour tester la plateforme avec les sujets offerts gratuitement.
@@ -1094,7 +1094,7 @@ export default function LandingPage() {
                   <span className="price-check">✦</span>Aperçu illimité
                 </li>
                 <li>
-                  <span className="price-check">✦</span>10 crédits offerts à
+                  <span className="price-check">✦</span>500 Ar offerts à
                   l'inscription
                 </li>
                 <li className="muted">
@@ -1119,8 +1119,8 @@ export default function LandingPage() {
               <div className="popular-badge">Le plus populaire</div>
               <div className="price-plan">{standardPack?.name || "Standard"}</div>
               <div className="price-amount">
-                {standardPack ? standardPack.credits : 150}{" "}
-                <span className="unit">cr</span>
+                {standardPack ? standardPack.amountAr.toLocaleString() : "7 500"}{" "}
+                <span className="unit">Ar</span>
               </div>
               <p className="price-desc">
                 Idéal pour une préparation sérieuse à l'examen sur plusieurs
@@ -1131,8 +1131,8 @@ export default function LandingPage() {
                 <li>
                   <span className="price-check">✦</span>
                   {standardPack
-                    ? `${standardPack.credits} crédits${standardPack.bonus > 0 ? ` (+${standardPack.bonus} bonus)` : ""}`
-                    : "150 crédits (+10 bonus)"}
+                    ? `${standardPack.amountAr.toLocaleString()} Ar${standardPack.bonus > 0 ? ` (+${standardPack.bonus.toLocaleString()} Ar bonus)` : ""}`
+                    : "7 500 Ar (+500 Ar bonus)"}
                 </li>
                 <li>
                   <span className="price-check">✦</span>Accès illimité au
@@ -1162,8 +1162,8 @@ export default function LandingPage() {
             <div className="price-card reveal reveal-delay-2">
               <div className="price-plan">{premiumPack?.name || "Premium"}</div>
               <div className="price-amount">
-                {premiumPack ? premiumPack.credits : 300}{" "}
-                <span className="unit">cr</span>
+                {premiumPack ? premiumPack.amountAr.toLocaleString() : "15 000"}{" "}
+                <span className="unit">Ar</span>
               </div>
               <p className="price-desc">
                 Pour les élèves déterminés à maîtriser toutes les matières avant
@@ -1174,8 +1174,8 @@ export default function LandingPage() {
                 <li>
                   <span className="price-check">✦</span>
                   {premiumPack
-                    ? `${premiumPack.credits} crédits${premiumPack.bonus > 0 ? ` (+${premiumPack.bonus} bonus)` : ""}`
-                    : "300 crédits (+40 bonus)"}
+                    ? `${premiumPack.amountAr.toLocaleString()} Ar${premiumPack.bonus > 0 ? ` (+${premiumPack.bonus.toLocaleString()} Ar bonus)` : ""}`
+                    : "15 000 Ar (+1 500 Ar bonus)"}
                 </li>
                 <li>
                   <span className="price-check">✦</span>Corrections IA
