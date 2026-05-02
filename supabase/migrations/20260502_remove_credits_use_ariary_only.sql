@@ -187,7 +187,7 @@ ALTER TABLE "User"
 -- Empêcher les prix négatifs sur Subject
 ALTER TABLE "Subject" 
   ADD CONSTRAINT check_prix_positive 
-  CHECK (credits >= 0);
+  CHECK (prix >= 0);
 
 -- Empêcher les montants négatifs sur Purchase
 ALTER TABLE "Purchase" 
