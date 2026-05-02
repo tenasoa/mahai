@@ -37,7 +37,6 @@ import {
 import {
   createSubjectDraft,
   saveSubjectDraft,
-  submitSubject,
 } from '../editor-actions'
 
 import { useToast } from '@/lib/hooks/useToast'
@@ -318,41 +317,26 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
   }
 
   // ── Submit handler ─────────────────────────────────────────────────
+  // Le bouton « Publier » du EditorNavbar n'envoie plus directement à
+  // submitSubject() : il redirige vers le wizard /sujet/[id]/submit qui
+  // exécute la pré-validation, le récap tarification et la confirmation
+  // CGU avant l'envoi final. Ça donne un workflow post-édition luxueux
+  // aligné sur widgets/mah-ai-editor.html.
   const handleSubmit = async () => {
     if (!draftId) {
       toast.error('Erreur', 'Aucun brouillon actif. Créez d\'abord un brouillon via l\'onboarding.')
       return
     }
-    const errors: string[] = []
-    if (!meta.title.trim())    errors.push('Titre requis')
-    if (!meta.matiere.trim())  errors.push('Matière requise')
-    if (!meta.examType)        errors.push('Type d\'examen requis')
-    if (!meta.anneeScolaire)   errors.push('Année requise')
-    if (prix <= 0)             errors.push('Prix requis (> 0 Ar)')
-    if (wordCount === 0)       errors.push('Le contenu ne peut pas être vide')
 
-    if (errors.length > 0) {
-      toast.warning('Validation', errors.join(' · '))
-      return
-    }
-
-    // Force-save avant soumission
+    // Force-save avant de partir vers le wizard pour que le draft soit à jour.
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null }
     const saveResult = await doSave(editorRef.current?.getJSON())
     if (!saveResult || !saveResult.success) {
-      toast.error('Erreur', 'Impossible de sauvegarder avant soumission.')
+      toast.error('Erreur', 'Impossible de sauvegarder avant publication.')
       return
     }
 
-    const result = await submitSubject(draftId)
-    if (result.success) {
-      localStorage.removeItem(STORAGE_KEY)
-      toast.success('Soumis !', 'Votre sujet a été soumis pour vérification.')
-      setTimeout(() => router.push('/contributeur/sujets'), 1500)
-    } else {
-      const msg = 'errors' in result ? result.errors?.join(' · ') : (result as any).error
-      toast.error('Soumission refusée', msg || 'Vérifiez les champs obligatoires.')
-    }
+    router.push(`/contributeur/sujets/${draftId}/submit`)
   }
 
   // ── Validation badge navbar ─────────────────────────────────────────
