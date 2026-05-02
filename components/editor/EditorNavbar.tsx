@@ -9,7 +9,6 @@ interface Props {
   wordCount: number
   canSubmit: boolean
   lastSavedAt?: number | null
-  onPreview: () => void
   onSubmit: () => void
   onRetrySave?: () => void
   isNewSubject: boolean
@@ -20,7 +19,6 @@ export default function EditorNavbar({
   wordCount,
   canSubmit,
   lastSavedAt,
-  onPreview,
   onSubmit,
   onRetrySave,
   isNewSubject,
@@ -44,17 +42,16 @@ export default function EditorNavbar({
 
         <span className="editor-word-count">{wordCount} mots</span>
 
-        <button className="editor-btn" onClick={onPreview}>
-          Prévisualiser
-        </button>
+        {/* Bouton « Prévisualiser » retiré : la prévisualisation vit
+            désormais dans la page wizard /sujet/[id]/submit (étape 1). */}
 
         <button
           className="editor-btn editor-btn--primary"
           onClick={onSubmit}
           disabled={!canSubmit}
-          title={canSubmit ? 'Soumettre pour vérification' : 'Complétez les champs obligatoires pour soumettre'}
+          title={canSubmit ? 'Continuer vers la publication' : 'Complétez les champs obligatoires'}
         >
-          Soumettre
+          Publier →
         </button>
       </div>
     </nav>

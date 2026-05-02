@@ -18,7 +18,7 @@ import InsertMenu from '@/components/editor/InsertMenu'
 import SymbolsDropdown from '@/components/editor/SymbolsDropdown'
 import KaTeXModal from '@/components/editor/KaTeXModal'
 import MathChipsBar from '@/components/editor/MathChipsBar'
-import PreviewModal from '@/components/editor/PreviewModal'
+// PreviewModal retiré : la prévisualisation vit dans /sujet/[id]/submit
 import MoreMenu from '@/components/editor/MoreMenu'
 import LinkPopover from '@/components/editor/LinkPopover'
 import TableContextMenu from '@/components/editor/TableContextMenu'
@@ -97,7 +97,6 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
   const [showKaTeX, setShowKaTeX] = useState(false)
   const [katexMode, setKatexMode] = useState<'block' | 'inline'>('block')
   const [editingInlineMath, setEditingInlineMath] = useState<{ latex: string; pos: number | null } | null>(null)
-  const [showPreview, setShowPreview] = useState(false)
   const [moreMenuPos, setMoreMenuPos] = useState<{ top: number; left: number } | null>(null)
   const [linkPos, setLinkPos] = useState<{ top: number; left: number } | null>(null)
   const [showShortcuts, setShowShortcuts] = useState(false)
@@ -391,14 +390,6 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
     setMoreMenuPos(null)
   }
 
-  const handlePreview = () => {
-    if (!editorInstance.current) {
-      toast.info('Aperçu', 'Éditeur en cours de chargement, patientez un instant…')
-      return
-    }
-    setShowPreview(true)
-  }
-
   return (
     <div className="editor-page">
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
@@ -408,7 +399,6 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
         wordCount={wordCount}
         canSubmit={canSubmit}
         lastSavedAt={lastSavedAt}
-        onPreview={handlePreview}
         onSubmit={handleSubmit}
         onRetrySave={forceSave}
         isNewSubject={isNewSubject}
@@ -473,15 +463,6 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
       )}
 
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
-
-      {showPreview && (
-        <PreviewModal
-          content={editorRef.current?.getJSON() || {}}
-          meta={meta}
-          prix={prix}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
 
       <div className="editor-body">
         <aside className="editor-sidebar-left">

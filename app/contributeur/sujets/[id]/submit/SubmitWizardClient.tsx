@@ -528,7 +528,7 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
         }
         .sw-stat {
           padding: 0.85rem 1rem;
-          background: var(--paper);
+          background: var(--surface);
           border: 1px solid var(--b1);
           border-radius: var(--r-xs);
           text-align: center;
@@ -553,7 +553,7 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
 
         .sw-preview {
           padding: 1rem;
-          background: var(--paper);
+          background: var(--surface);
           border: 1px solid var(--b1);
           border-radius: var(--r-xs);
         }
@@ -627,7 +627,7 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
         }
         .sw-pricing-card {
           padding: 1.25rem 1rem;
-          background: var(--paper);
+          background: var(--surface);
           border: 1px solid var(--b1);
           border-radius: var(--r-xs);
           text-align: center;
@@ -682,7 +682,7 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
         .sw-summary {
           margin-bottom: 1.25rem;
           padding: 1rem 1.25rem;
-          background: var(--paper);
+          background: var(--surface);
           border: 1px solid var(--b1);
           border-radius: var(--r-xs);
         }
@@ -743,16 +743,17 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           align-items: center;
           gap: 0.5rem;
           padding: 0.75rem 1.5rem;
-          background: var(--ink);
-          color: var(--cream);
-          border: 1px solid var(--ink);
+          background: var(--gold);
+          color: #1a1714;
+          border: 1px solid var(--gold);
           border-radius: var(--r-xs);
           font-family: var(--body);
           font-size: 0.9rem;
-          font-weight: 500;
+          font-weight: 600;
           letter-spacing: 0.02em;
           cursor: pointer;
-          transition: opacity 0.15s, transform 0.15s;
+          transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+          box-shadow: var(--shadow-gold);
         }
         .sw-submit-btn:not(:disabled):hover {
           opacity: 0.88;
