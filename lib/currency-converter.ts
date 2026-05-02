@@ -1,40 +1,15 @@
 /**
- * Service centralisé pour la gestion des conversions Ar ↔ Crédits
- * Taux configurable : 1 crédit = X Ariary (défaut 50 Ar)
+ * Service centralisé pour la gestion des frais plateforme
+ * Système unifié en Ariary uniquement (crédits supprimés)
  */
 
-export interface CurrencyConfig {
-  id: string
-  arPerCredit: number // 1 crédit = X Ariary
-  platformFeePercent: number // % de frais plateforme
-  createdAt: string
-  updatedAt: string
-  updatedBy?: string
-  note?: string
+export interface PlatformFeeConfig {
+  platformFeePercent: number // % de frais plateforme (ex: 30)
 }
 
 export class CurrencyConverter {
-  /**
-   * Convertir Ariary → Crédits
-   * @param arAmount Montant en Ariary
-   * @param exchangeRate Taux de change (1 cr = X Ar)
-   * @returns Nombre de crédits
-   */
-  static arToCredits(arAmount: number, exchangeRate: number): number {
-    if (exchangeRate <= 0) throw new Error('Taux de change invalide')
-    return Math.round(arAmount / exchangeRate)
-  }
-
-  /**
-   * Convertir Crédits → Ariary
-   * @param creditsAmount Nombre de crédits
-   * @param exchangeRate Taux de change (1 cr = X Ar)
-   * @returns Montant en Ariary
-   */
-  static creditsToAr(creditsAmount: number, exchangeRate: number): number {
-    if (exchangeRate <= 0) throw new Error('Taux de change invalide')
-    return Math.round(creditsAmount * exchangeRate)
-  }
+  // NOTE: Les méthodes de conversion crédits ↔ Ariary ont été supprimées
+  // Le système utilise uniquement l'Ariary comme devise
 
   /**
    * Calculer le revenu du contributeur après frais plateforme
@@ -59,36 +34,12 @@ export class CurrencyConverter {
   }
 
   /**
-   * Obtenir le taux de change actuel depuis le cache
-   * À utiliser côté client après récupération via API
-   */
-  static getCachedRate(): number {
-    if (typeof window === 'undefined') return 50 // Serveur
-    const cached = sessionStorage.getItem('currencyRate')
-    return cached ? parseInt(cached, 10) : 50
-  }
-
-  /**
-   * Cacher le taux de change côté client
-   */
-  static cacheRate(rate: number): void {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('currencyRate', String(rate))
-    }
-  }
-
-  /**
-   * Valider les paramètres de conversion
+   * Valider les paramètres de frais plateforme
    */
   static validate(
-    arPerCredit: number,
     platformFeePercent: number
   ): { valid: boolean; errors: string[] } {
     const errors: string[] = []
-
-    if (!Number.isFinite(arPerCredit) || arPerCredit <= 0) {
-      errors.push('Taux de change doit être > 0')
-    }
 
     if (!Number.isFinite(platformFeePercent) || platformFeePercent < 0 || platformFeePercent > 100) {
       errors.push('Frais plateforme doit être entre 0 et 100%')

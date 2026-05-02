@@ -19,23 +19,10 @@ async function checkAdmin() {
   return user?.role === 'ADMIN' ? user : null
 }
 
+// NOTE: Le système de crédits a été supprimé. Tout est maintenant en Ariary.
+// Cette fonction est conservée pour compatibilité mais retourne 1 (pas de conversion)
 async function getActiveArPerCredit(): Promise<number> {
-  try {
-    const result = await query(
-      `SELECT "arPerCredit"
-       FROM "CurrencyConfig"
-       WHERE "activeAt" <= NOW()
-       ORDER BY "activeAt" DESC
-       LIMIT 1`
-    )
-
-    const rate = Number(result.rows[0]?.arPerCredit)
-    if (Number.isFinite(rate) && rate > 0) return rate
-  } catch (error) {
-    console.warn('getActiveArPerCredit fallback:', error)
-  }
-
-  return 50
+  return 1 // 1 Ar = 1 Ar (plus de conversion)
 }
 
 /**
@@ -116,7 +103,7 @@ export async function finalizeAndPublish(
     pages: number
     duree?: string
     coefficient?: number
-    credits: number
+    prix: number  // Prix en Ariary directement (plus de conversion)
     difficulte: 'FACILE' | 'MOYEN' | 'DIFFICILE'
     badge: 'GOLD' | 'AI' | 'FREE' | 'INTER'
     description?: string
@@ -137,12 +124,8 @@ export async function finalizeAndPublish(
   if (submission.status !== 'SUBMITTED') throw new Error("Cette soumission n'est pas en attente")
 
   const newSubjectId = crypto.randomUUID()
-  const arPrice = Number(submission.prix ?? 0)
-  const rate = await getActiveArPerCredit()
-  const convertedCredits = arPrice > 0
-    ? CurrencyConverter.arToCredits(arPrice, rate)
-    : Math.max(0, Number(finalData.credits || 0))
-  const finalCredits = finalData.badge === 'FREE' ? 0 : convertedCredits
+  // Prix directement en Ariary (pas de conversion crédits)
+  const finalPriceAr = finalData.badge === 'FREE' ? 0 : Math.max(0, Number(submission.prix ?? 0))
 
   try {
     // Créer le sujet dans la table Subject — recopie l'intégralité des
@@ -151,7 +134,7 @@ export async function finalizeAndPublish(
     await query(`
       INSERT INTO "Subject" (
         id, titre, matiere, type, annee, serie,
-        pages, credits, difficulte, badge, description,
+        pages, prix, difficulte, badge, description,
         "authorId", status, "createdAt",
         rating, "reviewsCount", "hasCorrectionIa", "hasCorrectionProf",
         duree, coefficient, filiere, niveau,
@@ -179,7 +162,7 @@ export async function finalizeAndPublish(
       finalData.annee,
       finalData.serie || submission.serie || null,
       finalData.pages,
-      finalCredits,
+      finalPriceAr,
       finalData.difficulte,
       finalData.badge,
       finalData.description || null,
