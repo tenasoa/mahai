@@ -97,3 +97,20 @@ coverage/
 htmlcov/
 .pytest_cache/
 .mypy_cache/
+
+# ==========================================
+# Notes de session, rapports éphémères
+# ==========================================
+# Les rapports d'avancement (SPRINT, AUDIT, REPORT, PROGRESS, COMPLIANCE,
+# SUMMARY, FINAL_*) sont des notes éphémères de session — non versionnés.
+# Pour conserver une note durablement, la renommer sans ces préfixes.
+docs/SPRINT_*.md
+docs/AUDIT_*.md
+docs/*_REPORT.md
+docs/*_PROGRESS.md
+docs/*_COMPLIANCE_*.md
+docs/*_SUMMARY.md
+docs/FINAL_*.md
+docs/plans/*.md
+**/SPRINT_*.md
+**/AUDIT_*.md
