@@ -35,11 +35,62 @@ export default function EditorToolbar({
       key={label}
       className={`editor-tb-btn${isActive ? ' active' : ''}${wide ? ' editor-tb-btn--wide' : ''}`}
       onClick={action}
+      // data-tip = tooltip animé géré en CSS (cf. editor.css), title = fallback
+      // a11y / mobile (le navigateur affiche un tooltip natif au long-press).
+      data-tip={title || label}
       title={title || label}
+      aria-label={title || label}
     >
       {label}
     </button>
   )
+
+  // Headings : valeur sélectionnée d'après l'état courant du curseur.
+  const currentHeading = editor.isActive('heading', { level: 1 })
+    ? '1'
+    : editor.isActive('heading', { level: 2 })
+      ? '2'
+      : editor.isActive('heading', { level: 3 })
+        ? '3'
+        : editor.isActive('heading', { level: 4 })
+          ? '4'
+          : 'p'
+
+  const handleHeadingChange = (value: string) => {
+    if (value === 'p') {
+      editor.chain().focus().setParagraph().run()
+    } else {
+      const level = parseInt(value, 10) as 1 | 2 | 3 | 4
+      editor.chain().focus().toggleHeading({ level }).run()
+    }
+  }
+
+  // Couleurs rapides : highlight (mark Highlight de TipTap) + couleur texte.
+  // L'extension Color officielle n'est pas installée — on passe par un
+  // `<input type="color">` invisible et on utilise editor.chain().setColor()
+  // si l'extension est disponible, sinon highlight seulement.
+  const applyHighlight = () => {
+    if (editor.isActive('highlight')) {
+      editor.chain().focus().unsetHighlight().run()
+    } else {
+      editor.chain().focus().toggleHighlight().run()
+    }
+  }
+
+  const toggleFocusMode = () => {
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('editor-focus-mode')
+    }
+  }
+
+  const toggleFullscreen = () => {
+    if (typeof document === 'undefined') return
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {})
+    } else {
+      document.exitFullscreen?.().catch(() => {})
+    }
+  }
 
   const sep = (key: string) => <div key={key} className="editor-toolbar-sep" />
 
@@ -62,6 +113,25 @@ export default function EditorToolbar({
 
   return (
     <div className="editor-toolbar" style={{ flexWrap: 'wrap', gap: '4px' }}>
+      {/* Style block — Paragraphe / Titres (remplace les 3 boutons H₂/H₃/H₄
+          ci-dessous par un select compact, plus proche du mockup luxury). */}
+      <select
+        className="editor-tb-select"
+        value={currentHeading}
+        onChange={(e) => handleHeadingChange(e.target.value)}
+        title="Style du bloc"
+        aria-label="Style du bloc"
+        data-tip="Style"
+      >
+        <option value="p">Paragraphe</option>
+        <option value="1">Titre 1</option>
+        <option value="2">Titre 2</option>
+        <option value="3">Titre 3</option>
+        <option value="4">Titre 4</option>
+      </select>
+
+      {sep('s-style')}
+
       {btn('B',  () => editor.chain().focus().toggleBold().run(),     editor.isActive('bold'),      'Gras (⌘B)')}
       {btn('I',  () => editor.chain().focus().toggleItalic().run(),   editor.isActive('italic'),    'Italique (⌘I)')}
       {btn('U',  () => editor.chain().focus().toggleUnderline().run(),editor.isActive('underline'), 'Souligné (⌘U)')}
@@ -156,9 +226,7 @@ export default function EditorToolbar({
 
       {sep('s5')}
 
-      {btn('H₂', () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive('heading', { level: 2 }), 'Titre 2 (⌘⇧2)')}
-      {btn('H₃', () => editor.chain().focus().toggleHeading({ level: 3 }).run(), editor.isActive('heading', { level: 3 }), 'Titre 3 (⌘⇧3)')}
-      {btn('H₄', () => editor.chain().focus().toggleHeading({ level: 4 }).run(), editor.isActive('heading', { level: 4 }), 'Titre 4 (⌘⇧4)')}
+      {btn('🖍', applyHighlight, editor.isActive('highlight'), 'Surligneur (jaune)')}
 
       {sep('s6')}
 
@@ -166,6 +234,13 @@ export default function EditorToolbar({
       {btn('―', () => editor.chain().focus().setHorizontalRule().run(), false, 'Séparateur horizontal')}
       {btn('«»', () => editor.chain().focus().toggleBlockquote().run(), editor.isActive('blockquote'), 'Citation')}
       {btn('</>', () => editor.chain().focus().toggleCodeBlock().run(), editor.isActive('codeBlock'), 'Bloc de code')}
+
+      {sep('s7')}
+
+      {/* Modes de vue : focus (cache distractions) + fullscreen (canvas plein écran).
+          Inspirés du mockup widgets/mah-ai-rich-editor.html (boutons en fin de toolbar). */}
+      {btn('⊙', toggleFocusMode, false, 'Mode focus (Mod+.)')}
+      {btn('⛶', toggleFullscreen, false, 'Plein écran')}
     </div>
   )
 }

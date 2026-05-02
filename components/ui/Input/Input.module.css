@@ -144,9 +144,14 @@
   outline: none;
 }
 
+/* Focus ring "halo" en box-shadow plutôt qu'outline — donne un effet
+   plus doux et élégant, fidèle aux mockups widgets/. La transition
+   adoucit l'apparition. */
 .inputWrapper.focused {
-  outline: 2px solid var(--gold);
-  outline-offset: 2px;
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 /* Mobile - Touch Targets */

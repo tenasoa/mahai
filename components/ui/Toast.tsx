@@ -4,10 +4,28 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
+/**
+ * Action attachée à un toast — affichée comme un bouton inline en bas du toast.
+ *  - `label` : texte du bouton (ex: « Voir correction », « Plus tard »)
+ *  - `onClick` : callback invoqué quand l'utilisateur clique
+ *  - `variant` : 'primary' (gold) ou 'ghost' (transparent), default 'ghost'
+ *  - `closeOnClick` : si true (défaut), ferme le toast après le clic
+ *
+ * Quand au moins une action est fournie, le toast NE se ferme PAS automatiquement
+ * après 5s — l'utilisateur doit le fermer ou cliquer sur une action.
+ */
+export interface ToastAction {
+  label: string
+  onClick: () => void
+  variant?: 'primary' | 'ghost'
+  closeOnClick?: boolean
+}
+
 interface ToastProps {
   message: string
   title?: string
   type: 'success' | 'error' | 'info' | 'warning'
+  actions?: ToastAction[]
   onClose: () => void
 }
 
@@ -50,18 +68,25 @@ const TOAST_CONFIG = {
   }
 }
 
-export function Toast({ message, type, onClose }: ToastProps) {
+export function Toast({ message, type, actions, onClose }: ToastProps) {
   const [isEntering, setIsEntering] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
   const [shouldShake, setShouldShake] = useState(false)
   const config = TOAST_CONFIG[type]
+  const hasActions = !!(actions && actions.length > 0)
 
   useEffect(() => {
     const entryTimer = setTimeout(() => setIsEntering(true), 50)
-    
+
     if (config.shake) {
-      const shakeTimer = setTimeout(() => setShouldShake(true), 500)
-      const clearShakeTimer = setTimeout(() => setShouldShake(false), 1000)
+      setTimeout(() => setShouldShake(true), 500)
+      setTimeout(() => setShouldShake(false), 1000)
+    }
+
+    // Pas d'auto-close quand le toast a des actions : on attend une décision
+    // explicite de l'utilisateur (sinon l'action serait inaccessible).
+    if (hasActions) {
+      return () => clearTimeout(entryTimer)
     }
 
     const duration = 5000
@@ -73,11 +98,17 @@ export function Toast({ message, type, onClose }: ToastProps) {
       clearTimeout(entryTimer)
       clearTimeout(closeTimer)
     }
-  }, [type, config.shake])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, config.shake, hasActions])
 
   const handleClose = () => {
     setIsExiting(true)
     setTimeout(onClose, 400)
+  }
+
+  const handleAction = (action: ToastAction) => {
+    action.onClick()
+    if (action.closeOnClick !== false) handleClose()
   }
 
   return (
@@ -91,11 +122,28 @@ export function Toast({ message, type, onClose }: ToastProps) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="toast-title">{config.title}</div>
         <div className="toast-msg">{message}</div>
+        {hasActions && (
+          <div className="toast-actions">
+            {actions!.map((a, i) => (
+              <button
+                key={i}
+                className={`toast-action toast-action-${a.variant || 'ghost'}`}
+                onClick={() => handleAction(a)}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <button className="toast-x" onClick={handleClose}>
         <X size={14} />
       </button>
-      <div className="toast-prog" style={{ background: config.prog }}></div>
+      {/* Progress bar uniquement quand le toast s'auto-ferme — sinon elle
+          finirait à 100% sans rien faire et serait visuellement trompeuse. */}
+      {!hasActions && (
+        <div className="toast-prog" style={{ background: config.prog }}></div>
+      )}
 
       <style jsx>{`
         .luxury-toast {
@@ -203,13 +251,57 @@ export function Toast({ message, type, onClose }: ToastProps) {
           from { transform: scaleX(0); }
           to { transform: scaleX(1); }
         }
+
+        /* ─── Toast actions row ──────────────────────────────────── */
+        .toast-actions {
+          display: flex;
+          gap: 6px;
+          margin-top: 8px;
+          opacity: 0;
+          transform: translateY(4px);
+          transition: opacity .3s .32s, transform .3s .32s ease;
+        }
+        .luxury-toast.in .toast-actions { opacity: 1; transform: translateY(0); }
+
+        .toast-action {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 500;
+          padding: 5px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+          line-height: 1.3;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+        }
+
+        .toast-action-primary {
+          background: #C9A84C;
+          color: #1A1714;
+          border: 1px solid #C9A84C;
+        }
+        .toast-action-primary:hover {
+          background: #D4B860;
+          border-color: #D4B860;
+        }
+
+        .toast-action-ghost {
+          background: transparent;
+          color: rgba(240, 235, 227, 0.7);
+          border: 1px solid rgba(240, 235, 227, 0.18);
+        }
+        .toast-action-ghost:hover {
+          color: #F0EBE3;
+          border-color: rgba(240, 235, 227, 0.4);
+        }
       `}</style>
     </div>
   )
 }
 
 interface ToastContainerProps {
-  toasts: Array<{ id: string; message: string; type: 'success' | 'error' | 'info' | 'warning' }>
+  toasts: Array<{ id: string; message: string; type: 'success' | 'error' | 'info' | 'warning'; actions?: ToastAction[] }>
   removeToast: (id: string) => void
 }
 
@@ -242,6 +334,7 @@ export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
           key={toast.id}
           message={toast.message}
           type={toast.type}
+          actions={toast.actions}
           onClose={() => removeToast(toast.id)}
         />
       ))}
@@ -250,12 +343,30 @@ export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
   )
 }
 
-export function useToast() {
-  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' | 'warning' }>>([])
+type ToastEntry = {
+  id: string
+  message: string
+  type: 'success' | 'error' | 'info' | 'warning'
+  actions?: ToastAction[]
+}
 
-  const addToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
-    const id = Date.now().toString()
-    setToasts((prev) => [...prev, { id, message, type }])
+export function useToast() {
+  const [toasts, setToasts] = useState<ToastEntry[]>([])
+
+  /**
+   * Ajoute un toast.
+   * Signatures supportées :
+   *   addToast('Message')
+   *   addToast('Message', 'success')
+   *   addToast('Message', 'info', [{ label: 'Voir', onClick: () => ... }])
+   */
+  const addToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'warning' = 'info',
+    actions?: ToastAction[],
+  ) => {
+    const id = Date.now().toString() + Math.random().toString(36).slice(2, 6)
+    setToasts((prev) => [...prev, { id, message, type, actions }])
   }
 
   const removeToast = (id: string) => {

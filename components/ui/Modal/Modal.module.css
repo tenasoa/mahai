@@ -5,7 +5,11 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8, 7, 5, 0.92);
+  /* Overlay luxury : voile sombre + flou de fond pour isoler la modale.
+     Le `backdrop-filter` flou est inspiré de widgets/30-ui-modales-*.html. */
+  background: rgba(8, 7, 5, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -21,12 +25,37 @@
   background: var(--card);
   border: 1px solid var(--b1);
   border-radius: var(--r-xl);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), var(--glow-md);
   max-width: 90vw;
   /* max-height retiré pour permettre au contenu de s'allonger */
   margin: auto 0; /* Centre verticalement si le contenu est petit */
-  animation: slideUp var(--transition-base);
+  /* Animation pop-bounce inspirée du mockup luxury : la modale apparaît
+     avec scale(0.94) → 1 + cubic-bezier élastique (overshoot léger) au
+     lieu d'un translateY plat. Donne la sensation premium / haptique. */
+  animation: popIn 0.36s cubic-bezier(0.22, 0.68, 0, 1.18);
   position: relative;
+  overflow: hidden;
+}
+
+/* Top accent line — gradient gold horizontal en haut de chaque modale.
+   Donne l'identité brand visible dès l'apparition. */
+.content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold) 30%,
+    var(--gold-hi) 50%,
+    var(--gold) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* === SIZES === */
@@ -135,6 +164,19 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Pop-in : scale + translateY combinés, avec courbe cubic-bezier qui
+   permet un léger overshoot (1.18) pour la sensation rebond. */
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 

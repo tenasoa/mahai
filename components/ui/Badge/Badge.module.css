@@ -1,0 +1,92 @@
+/* ═══════════════════════════════════════════════
+   BADGE / CHIP — design system Mah.AI
+═══════════════════════════════════════════════ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  border: 1px solid;
+  border-radius: 2px;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* === Sizes === */
+.s-xs {
+  font-size: 0.55rem;
+  padding: 0.1rem 0.42rem;
+  letter-spacing: 0.08em;
+}
+.s-sm {
+  font-size: 0.62rem;
+  padding: 0.18rem 0.55rem;
+}
+.s-md {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.7rem;
+}
+
+/* === Variants === */
+.v-default {
+  background: var(--surface);
+  border-color: var(--b1);
+  color: var(--text-2);
+}
+.v-gold {
+  background: var(--gold-dim);
+  border-color: var(--gold-line);
+  color: var(--gold);
+}
+.v-sage {
+  background: var(--sage-dim);
+  border-color: var(--sage-line);
+  color: var(--sage);
+}
+.v-ruby {
+  background: var(--ruby-dim);
+  border-color: var(--ruby-line);
+  color: var(--ruby);
+}
+.v-amber {
+  background: var(--amber-dim);
+  border-color: var(--amber-line);
+  color: var(--amber);
+}
+.v-blue {
+  background: var(--blue-dim);
+  border-color: var(--blue-line);
+  color: var(--blue);
+}
+.v-navy {
+  background: rgba(28, 43, 74, 0.1);
+  border-color: rgba(28, 43, 74, 0.25);
+  color: var(--navy);
+}
+
+/* === Dot pulse (pour "Live", "En ligne", "En direct") === */
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: badge-pulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

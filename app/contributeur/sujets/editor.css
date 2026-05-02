@@ -315,6 +315,141 @@
   gap: 0.25rem;
 }
 
+/* ⚜ Tooltip animé `data-tip` (inspiré de widgets/mah-ai-rich-editor.html).
+   Le `title=` HTML reste pour l'a11y et le mobile (long-press), mais le
+   `::after` apparaît instantanément en hover desktop avec une animation. */
+.editor-tb-btn[data-tip] { position: relative; }
+.editor-tb-btn[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(2px);
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  padding: 0.22rem 0.55rem;
+  border-radius: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.editor-tb-btn[data-tip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Select Style/Heading dans la toolbar */
+.editor-tb-select {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--b1);
+  border-radius: 3px;
+  padding: 0 0.5rem;
+  height: 26px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.editor-tb-select:focus { border-color: var(--gold); }
+.editor-tb-select:hover { background: var(--lift); }
+
+/* ─── Math chips bar (juste sous la toolbar) ──────────────────────── */
+.editor-math-bar {
+  background: rgba(28, 43, 74, 0.04);
+  border: 1px solid var(--b1);
+  border-top: none;
+  border-bottom: none;
+  padding: 0.4rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.editor-math-bar-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-right: 0.25rem;
+}
+.editor-math-chip {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--b1);
+  border-radius: 3px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-2);
+  transition: all 0.12s ease;
+  letter-spacing: 0.02em;
+  position: relative;
+}
+.editor-math-chip:hover {
+  background: var(--navy);
+  color: var(--gold-lo);
+  border-color: var(--navy);
+}
+.editor-math-chip[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  white-space: nowrap;
+  padding: 0.18rem 0.45rem;
+  border-radius: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 100;
+}
+.editor-math-chip:hover::after { opacity: 1; }
+.editor-math-chip--block {
+  background: var(--gold-dim);
+  border-color: var(--gold-line);
+  color: var(--gold);
+  font-weight: 500;
+}
+.editor-math-chip--block:hover {
+  background: var(--gold);
+  color: var(--ink);
+  border-color: var(--gold);
+}
+
+/* ─── Focus mode (cache les distractions autour du canvas) ────────── */
+body.editor-focus-mode .editor-sidebar-left,
+body.editor-focus-mode .editor-sidebar-right,
+body.editor-focus-mode .editor-navbar,
+body.editor-focus-mode .disc-bar {
+  opacity: 0.15;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+body.editor-focus-mode .editor-sidebar-left:hover,
+body.editor-focus-mode .editor-sidebar-right:hover,
+body.editor-focus-mode .editor-navbar:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+body.editor-focus-mode .editor-canvas {
+  box-shadow: var(--shadow-lg);
+}
+
 /* ─── SIDEBARS ───────────────────────────────────────────────────── */
 .editor-sidebar-left,
 .editor-sidebar-right {

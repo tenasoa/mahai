@@ -17,6 +17,7 @@ import OnboardingModal from '@/components/editor/OnboardingModal'
 import InsertMenu from '@/components/editor/InsertMenu'
 import SymbolsDropdown from '@/components/editor/SymbolsDropdown'
 import KaTeXModal from '@/components/editor/KaTeXModal'
+import MathChipsBar from '@/components/editor/MathChipsBar'
 import PreviewModal from '@/components/editor/PreviewModal'
 import MoreMenu from '@/components/editor/MoreMenu'
 import LinkPopover from '@/components/editor/LinkPopover'
@@ -438,6 +439,11 @@ export default function EditorClient({ isNewSubject, initialDraftId, initialData
         onKaTeX={() => { setKatexMode('block'); setEditingInlineMath(null); setShowKaTeX(true) }}
         onKaTeXInline={() => { setKatexMode('inline'); setEditingInlineMath(null); setShowKaTeX(true) }}
         onLink={handleLink}
+      />
+
+      <MathChipsBar
+        editor={editorInstance.current}
+        onOpenBlockModal={() => { setKatexMode('block'); setEditingInlineMath(null); setShowKaTeX(true) }}
       />
 
       {insertMenuPos && (
