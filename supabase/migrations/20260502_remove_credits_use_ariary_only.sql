@@ -94,6 +94,9 @@ BEGIN
   END IF;
 END $$;
 
+-- S'assurer qu'il n'y a plus de NULL avant d'ajouter NOT NULL
+UPDATE "Purchase" SET "amountAr" = 0 WHERE "amountAr" IS NULL;
+
 -- Rendre NOT NULL après migration
 ALTER TABLE "Purchase" 
   ALTER COLUMN "amountAr" SET NOT NULL;
@@ -135,13 +138,16 @@ BEGIN
       SET "arAmount" = COALESCE("creditAmount", 0) * 50
       WHERE "arAmount" IS NULL;
     
-    -- Rendre NOT NULL après migration
-    ALTER TABLE "ReferralCommission" ALTER COLUMN "arAmount" SET NOT NULL;
-    
     -- Supprimer l'ancienne colonne
     ALTER TABLE "ReferralCommission" DROP COLUMN IF EXISTS "creditAmount";
   END IF;
 END $$;
+
+-- S'assurer qu'il n'y a plus de NULL
+UPDATE "ReferralCommission" SET "arAmount" = 0 WHERE "arAmount" IS NULL;
+
+-- Rendre NOT NULL après migration
+ALTER TABLE "ReferralCommission" ALTER COLUMN "arAmount" SET NOT NULL;
 
 COMMENT ON COLUMN "ReferralCommission"."arAmount" IS 'Commission en Ariary';
 
@@ -189,10 +195,10 @@ ALTER TABLE "Subject"
   ADD CONSTRAINT check_prix_positive 
   CHECK (prix >= 0);
 
--- Empêcher les montants négatifs sur Purchase
+-- Empêcher les montants négatifs sur Purchase (autorise 0 pour les gratuits)
 ALTER TABLE "Purchase" 
   ADD CONSTRAINT check_amount_ar_positive 
-  CHECK ("amountAr" > 0);
+  CHECK ("amountAr" >= 0);
 
 -- ============================================================
 -- 9. Vue récapitulative pour le dashboard
