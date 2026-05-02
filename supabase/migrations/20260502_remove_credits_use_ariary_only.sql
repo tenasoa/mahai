@@ -107,8 +107,19 @@ COMMENT ON COLUMN "Purchase"."amountAr" IS 'Montant payé en Ariary';
 -- 4. TABLE ReferralCommission - Convertir creditAmount en arAmount
 -- ============================================================
 
-ALTER TABLE "ReferralCommission" 
-  ADD COLUMN IF NOT EXISTS "arAmount" INTEGER;
+-- Créer la table si elle n'existe pas
+CREATE TABLE IF NOT EXISTS "ReferralCommission" (
+    id TEXT PRIMARY KEY,
+    "referrerId" TEXT REFERENCES "User"(id),
+    "referredId" TEXT REFERENCES "User"(id),
+    "arAmount" INTEGER NOT NULL DEFAULT 0,
+    status TEXT DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP DEFAULT NOW(),
+    "updatedAt" TIMESTAMP DEFAULT NOW()
+);
+
+-- Ajouter l'extension UUID si pas déjà présente (pour gen_random_uuid)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Migrer les données (si la colonne creditAmount existe encore)
 DO $$
@@ -117,19 +128,20 @@ BEGIN
     SELECT 1 FROM information_schema.columns 
     WHERE table_name = 'ReferralCommission' AND column_name = 'creditAmount'
   ) THEN
+    -- Ajouter la colonne arAmount si pas encore là
+    ALTER TABLE "ReferralCommission" ADD COLUMN IF NOT EXISTS "arAmount" INTEGER;
+    
     UPDATE "ReferralCommission" 
       SET "arAmount" = COALESCE("creditAmount", 0) * 50
       WHERE "arAmount" IS NULL;
-  ELSE
-    -- Si creditAmount n'existe pas, mettre une valeur par défaut
-    UPDATE "ReferralCommission" SET "arAmount" = 0 WHERE "arAmount" IS NULL;
+    
+    -- Rendre NOT NULL après migration
+    ALTER TABLE "ReferralCommission" ALTER COLUMN "arAmount" SET NOT NULL;
+    
+    -- Supprimer l'ancienne colonne
+    ALTER TABLE "ReferralCommission" DROP COLUMN IF EXISTS "creditAmount";
   END IF;
 END $$;
-
-ALTER TABLE "ReferralCommission" 
-  ALTER COLUMN "arAmount" SET NOT NULL;
-
-ALTER TABLE "ReferralCommission" DROP COLUMN IF EXISTS "creditAmount";
 
 COMMENT ON COLUMN "ReferralCommission"."arAmount" IS 'Commission en Ariary';
 
