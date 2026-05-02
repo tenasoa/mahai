@@ -213,8 +213,8 @@ SELECT
   COUNT(p.id) as purchases_count,
   COALESCE(SUM(rc."arAmount"), 0) as total_commissions_ar
 FROM "User" u
-LEFT JOIN "Purchase" p ON p."buyerId" = u.id
-LEFT JOIN "ReferralCommission" rc ON rc."beneficiaryId" = u.id
+LEFT JOIN "Purchase" p ON p."userId" = u.id
+LEFT JOIN "ReferralCommission" rc ON rc."referrerId" = u.id
 GROUP BY u.id, u.email, u."balanceAr";
 
 -- Commentaire sur la migration
