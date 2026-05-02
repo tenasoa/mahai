@@ -32,17 +32,14 @@ SELECT
     u.email,
     u.phone,
     u."balanceAr",
-    u."totalEarningsAr",
-    u."pendingEarningsAr",
-    u."withdrawnEarningsAr",
     COUNT(DISTINCT s.id) as "subjectsCount",
     COUNT(DISTINCT p.id) as "purchasesCount"
 FROM "User" u
 LEFT JOIN "Subject" s ON s."authorId" = u.id
 LEFT JOIN "Purchase" p ON p."subjectId" = s.id
 WHERE u.role = 'CONTRIBUTEUR'
-GROUP BY u.id, u.nom, u.email, u.phone, u."balanceAr", u."totalEarningsAr", u."pendingEarningsAr", u."withdrawnEarningsAr"
-ORDER BY u."withdrawnEarningsAr" DESC NULLS LAST;
+GROUP BY u.id, u.nom, u.email, u.phone, u."balanceAr"
+ORDER BY u."balanceAr" DESC NULLS LAST;
 
 -- Supprimer l'ancienne colonne credits
 ALTER TABLE "User" DROP COLUMN IF EXISTS credits;
