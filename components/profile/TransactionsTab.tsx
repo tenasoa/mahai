@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 
 interface TransactionsTabProps {
-  credits: number
+  balanceAr: number
   transactions: any[]
   transactionsLoading: boolean
   mobileMoneySettings: { operator: string; phoneNumber: string }
@@ -23,7 +23,7 @@ interface TransactionsTabProps {
 }
 
 export function TransactionsTab({
-  credits,
+  balanceAr,
   transactions,
   transactionsLoading,
   mobileMoneySettings,
@@ -52,7 +52,7 @@ export function TransactionsTab({
               <Zap size={20} className="lbc-icon" />
             </div>
             <div className="lbc-amount">
-              {credits} <span>crédits</span>
+              {balanceAr.toLocaleString()} <span>Ar</span>
             </div>
             <div className="lbc-footer">
               <button

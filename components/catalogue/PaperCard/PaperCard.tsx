@@ -117,7 +117,7 @@ export function PaperCard({
       {/* Footer */}
       <div className={styles.cardFooter}>
         <div className={`${styles.price} ${isFree ? styles.freePrice : ''}`}>
-          {isFree ? 'Gratuit' : `${price} cr`}
+          {isFree ? 'Gratuit' : `${price.toLocaleString()} Ar`}
         </div>
         <div className={styles.actions}>
           {!isUnlocked && (
