@@ -30,7 +30,8 @@ There is **no `prisma` script** — the app moved off Prisma to raw SQL via `pg`
 - `lib/db.ts` exposes `query(text, params)` and `transaction(callback)` over a singleton `pg.Pool` (stored on `globalThis` to survive HMR). Connection string comes from `DIRECT_URL`.
 - `lib/db-client.ts` is a **Prisma-shaped compatibility layer** (`db.user.findUnique`, `db.purchase.create`, `db.$transaction`, `{ decrement: n }` updates). Existing call sites use this shape; new code may call `query()` directly.
 - `lib/sql-queries.ts` holds typed helpers and the `User`/`Subject`/… TS interfaces that mirror the DB rows.
-- Tables are PascalCase and **must be double-quoted** in SQL (`"User"`, `"Subject"`, `"Purchase"`, `"CreditTransaction"`, `"ExamenBlanc"`, `"SubjectSubmission"`). Columns are camelCase and also need quoting.
+- Tables are PascalCase and **must be double-quoted** in SQL (`"User"`, `"Subject"`, `"Purchase"`, `"Transaction"`, `"ExamenBlanc"`, `"SubjectSubmission"`). Columns are camelCase and also need quoting.
+- **Devise unique : Ariary (Ar)** — Le système a migré de "crédits" vers l'Ariary uniquement. Tous les montants sont en Ar (`balanceAr`, `amountAr`, `prix`).
 - Transactions require `DIRECT_URL` (port 5432), not the pooled `DATABASE_URL` (6543).
 
 ### Auth & routing middleware
@@ -61,7 +62,7 @@ app/
 
 - The rich-text editor in `components/editor/` is built on **TipTap v3** with custom extensions in `extensions.tsx`, KaTeX math (`KaTeXModal.tsx`), code blocks via `lowlight`, and metadata/pricing side panels.
 - Used from `app/contributeur/sujets/{nouveau,[id]/edit}` and admin review. `editor.css` holds editor-specific styles.
-- Pricing logic interacts with `lib/currency-converter.ts` (see `docs/STRATEGIE_CONVERSION_PRIX.md`).
+- Pricing is now in Ariary (Ar) only. The old credit system has been fully deprecated.
 
 ### Design system
 
