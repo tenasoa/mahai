@@ -33,20 +33,26 @@ This directory contains the migration files for the **Credits → Ariary** curre
 | `20260504_phase2_settings_to_ariary.sql` | System settings migration | ✅ Applied |
 | `20260504_add_referral_bonus_ar_columns.sql` | Add missing UserReferral columns | ✅ Applied |
 
-### Phase 3: Final Cleanup (Pending - 48h after production stability)
+### Phase 3: Final Cleanup (Ready - Apply 48h after production stability)
 
-**⚠️ DO NOT APPLY YET** - Wait 48h after production deployment without errors.
+**⚠️ PREREQUIS: Attendre 48h après déploiement en production sans erreurs**
 
-```sql
--- Migration: 20260505_credits_drop_columns.sql (to be created)
--- Actions:
--- 1. DROP COLUMN "credits" FROM "User"
--- 2. DROP COLUMN "credits" FROM "Subject"
--- 3. DROP COLUMN "creditsAmount" FROM "Purchase"
--- 4. DROP TABLE "CreditTransaction"
--- 5. DROP TABLE "CurrencyConfig" (if not already dropped)
--- 6. DELETE FROM "SystemSetting" WHERE key LIKE '%_CREDITS%'
-```
+**Fichier:** `20260505_credits_drop_columns.sql`
+
+**Actions:**
+1. ✅ DROP COLUMN "credits" FROM "User"
+2. ✅ DROP COLUMN "credits" FROM "Subject"  
+3. ✅ DROP COLUMN "creditsAmount" FROM "Purchase"
+4. ✅ DROP COLUMN obsolètes (conversionRate, priceInCredits, etc.)
+5. ✅ DROP TABLE "CreditTransaction"
+6. ✅ DROP TABLE "CurrencyConfig"
+7. ✅ DELETE FROM "SystemSetting" WHERE key LIKE '%_CREDITS%'
+
+**Garde-fous intégrés:**
+- Vérification que `balanceAr` est populé avant suppression `credits`
+- Comparaison row count `CreditTransaction` vs `Transaction`
+- Vérifications finales post-migration
+- Transactions idempotentes (IF EXISTS)
 
 ## Post-Migration Checklist
 
