@@ -194,9 +194,7 @@ BEGIN
              WHERE table_name = 'CreditTransaction') THEN
     EXECUTE 'SELECT COUNT(*) FROM "CreditTransaction" WHERE status = ''PENDING''' INTO pending_count;
     IF pending_count > 0 THEN
-      RAISE NOTICE 'Attention : % transaction(s) PENDING dans CreditTransaction. ' ||
-                   'À traiter manuellement avant Phase 3 (DROP destructeur).',
-                   pending_count;
+      RAISE NOTICE 'Attention : % transaction(s) PENDING dans CreditTransaction. A traiter manuellement avant Phase 3 (DROP destructeur).', pending_count;
     END IF;
   END IF;
 END $$;
