@@ -143,10 +143,10 @@ export default function ParrainagePage() {
         <div className="referral-container">
           <section className="referral-hero">
             <p className="referral-kicker">Programme de parrainage</p>
-            <h1>Invitez vos amis et gagnez des crédits</h1>
+            <h1>Invitez vos amis et gagnez des Ariary</h1>
             <p>
-              Votre filleul reçoit <strong>{viewData.settings.referredBonus} crédits</strong> à l&apos;inscription et vous
-              gagnez <strong>{viewData.settings.referrerBonus} crédits</strong> dès son premier déblocage de sujet.
+              Votre filleul reçoit <strong>{viewData.settings.referredBonusAr} Ar</strong> à l&apos;inscription et vous
+              gagnez <strong>{viewData.settings.referrerBonusAr} Ar</strong> dès son premier déblocage de sujet.
             </p>
           </section>
 
@@ -246,7 +246,7 @@ export default function ParrainagePage() {
                         </>
                       )}
                     </span>
-                    <span>{item.status === "COMPLETED" ? `+${item.bonusCredits} cr` : "—"}</span>
+                    <span>{item.status === "COMPLETED" ? `+${item.bonusAr} Ar` : "—"}</span>
                   </div>
                 ))}
               </div>
@@ -266,7 +266,7 @@ export default function ParrainagePage() {
                 <h3>Votre ami s'inscrit</h3>
                 <p>
                   Il crée un compte avec votre code et reçoit automatiquement{" "}
-                  <strong>{viewData.settings?.referredBonus || 10} crédits</strong> de bienvenue.
+                  <strong>{viewData.settings?.referredBonusAr || 500} Ar</strong> de bienvenue.
                 </p>
               </article>
               <article className="referral-step-card">
@@ -274,7 +274,7 @@ export default function ParrainagePage() {
                 <h3>Il débloque un sujet</h3>
                 <p>
                   Dès son premier déblocage, vous recevez{" "}
-                  <strong>{viewData.settings?.referrerBonus || 20} crédits</strong> sur votre compte. Automatiquement.
+                  <strong>{viewData.settings?.referrerBonusAr || 1000} Ar</strong> sur votre compte. Automatiquement.
                 </p>
               </article>
             </div>
