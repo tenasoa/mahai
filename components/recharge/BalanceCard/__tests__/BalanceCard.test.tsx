@@ -5,14 +5,14 @@ describe('BalanceCard Component', () => {
   const defaultProps = {
     balance: 150,
     label: 'Solde disponible',
-    unit: 'crédits',
+    unit: 'Ar',
   }
 
   describe('Rendering', () => {
     it('renders correctly with balance', () => {
       render(<BalanceCard {...defaultProps} />)
       expect(screen.getByText('150')).toBeInTheDocument()
-      expect(screen.getByText('crédits')).toBeInTheDocument()
+      expect(screen.getByText('Ar')).toBeInTheDocument()
     })
 
     it('renders with custom label', () => {

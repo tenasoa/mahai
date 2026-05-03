@@ -52,7 +52,7 @@ export default function NotificationsPage() {
     const txChannel = supabase
       .channel(`notifs-page-tx-${userId}`)
       .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'CreditTransaction', filter: `userId=eq.${userId}` },
+        { event: '*', schema: 'public', table: 'Transaction', filter: `userId=eq.${userId}` },
         refresh
       )
       .subscribe()

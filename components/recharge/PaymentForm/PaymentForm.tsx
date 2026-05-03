@@ -32,6 +32,8 @@ const OPERATOR_LOGOS: Record<string, string> = {
 export interface PaymentAmount {
   amountAr: number;  // Montant en Ariary à recharger
   price: number;     // Prix à payer
+  /** @deprecated Alias d'amountAr, conservé pour compat ascendante. */
+  credits?: number;
   popular?: boolean;
   bonus?: number;    // Bonus en Ariary
 }

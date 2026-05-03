@@ -19,6 +19,7 @@ interface UserInfo {
   region?: string
   district?: string
   bio?: string
+  balanceAr?: number
   credits?: number
 }
 
@@ -98,7 +99,7 @@ export function AdminCreditAdjuster({ user }: Props) {
 
             <div className="admin-modal-body">
               <p className="admin-modal-note">
-                Solde actuel&nbsp;: <strong>{user.credits ?? 0} cr</strong>
+                Solde actuel&nbsp;: <strong>{(user.balanceAr ?? user.credits ?? 0).toLocaleString('fr-FR')} Ar</strong>
               </p>
 
               <div className="admin-toggle-row">

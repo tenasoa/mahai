@@ -108,6 +108,10 @@ export default function RechargePage() {
               tx.type === "RECHARGE"
                 ? tx.amountAr || 0
                 : Math.abs(tx.amountAr || 0),
+            amount:
+              tx.type === "RECHARGE"
+                ? tx.amountAr || 0
+                : Math.abs(tx.amountAr || 0),
             date: tx.createdAt,
             meta: `${new Date(tx.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} · Réf. ${tx.id?.slice(0, 8).toUpperCase() || "N/A"}`,
             icon:
@@ -204,11 +208,12 @@ export default function RechargePage() {
           const data = await res.json()
           if (data.packs && data.packs.length > 0) {
             if (data.arPerCredit) { setGlobalArPerCredit(data.arPerCredit); }
-            const packs = data.packs.map((p: any) => ({
-              credits: p.credits,
-              price: p.price,
-              bonus: p.bonus,
-              popular: p.popular
+            const packs: PaymentAmount[] = data.packs.map((p: any) => ({
+              amountAr: p.amountAr ?? p.credits ?? p.price,
+              price: p.arAmount ?? p.price,
+              credits: p.amountAr ?? p.credits ?? p.price,
+              bonus: p.bonusAr ?? p.bonus ?? 0,
+              popular: p.popular,
             }))
             setCreditPacks(packs)
             // Sélectionner le pack populaire par défaut, ou le premier
@@ -248,7 +253,7 @@ export default function RechargePage() {
       setTransferCode(senderCode);
     }
 
-    if (!selectedAmount || selectedAmount.price <= 0 || selectedAmount.credits <= 0) {
+    if (!selectedAmount || selectedAmount.price <= 0 || (selectedAmount.amountAr ?? 0) <= 0) {
       toast.error("Validation", "Montant invalide");
       return;
     }
@@ -256,7 +261,7 @@ export default function RechargePage() {
     setProcessing(true);
     try {
       const result = await rechargeCreditsAction({
-        packCredits: selectedAmount.credits,
+        packCredits: selectedAmount.amountAr,
         packPrice: selectedAmount.price,
         operator: selectedProvider.toUpperCase(),
         phoneNumber,
@@ -267,7 +272,7 @@ export default function RechargePage() {
       if (result.success) {
         toast.success(
           "Demande enregistrée",
-          `Votre demande de ${selectedAmount?.credits || 0} crédits a été enregistrée. Validation sous 12h.`,
+          `Votre demande de ${(selectedAmount?.amountAr ?? 0).toLocaleString('fr-FR')} Ar a été enregistrée. Validation sous 12h.`,
         );
         setShowConfirmation(false);
         setTransferCode("");
@@ -327,8 +332,7 @@ export default function RechargePage() {
           )}
 
           <BalanceCard
-            balance={appUser?.credits ?? 0}
-            ariaryEquivalent={`≈ ${(appUser?.credits ?? 0) * baseRate} Ariary`}
+            balance={appUser?.balanceAr ?? appUser?.credits ?? 0}
           />
         </div>
       </section>
@@ -434,7 +438,7 @@ export default function RechargePage() {
               <div className="info-row">
                 <span className="info-key">Solde actuel</span>
                 <span className="info-val gold">
-                  {appUser?.credits ?? 0} cr
+                  {(appUser?.balanceAr ?? appUser?.credits ?? 0).toLocaleString('fr-FR')} Ar
                 </span>
               </div>
               <div className="info-row">
@@ -442,8 +446,9 @@ export default function RechargePage() {
                 <span className="info-val">
                   {transactions
                     .filter((tx) => tx.type === "in")
-                    .reduce((sum, tx) => sum + tx.amount, 0)}{" "}
-                  cr
+                    .reduce((sum, tx) => sum + (tx.amountAr ?? tx.amount ?? 0), 0)
+                    .toLocaleString('fr-FR')}{" "}
+                  Ar
                 </span>
               </div>
               <div className="info-row">
@@ -451,8 +456,9 @@ export default function RechargePage() {
                 <span className="info-val">
                   {transactions
                     .filter((tx) => tx.type === "out")
-                    .reduce((sum, tx) => sum + tx.amount, 0)}{" "}
-                  cr
+                    .reduce((sum, tx) => sum + (tx.amountAr ?? tx.amount ?? 0), 0)
+                    .toLocaleString('fr-FR')}{" "}
+                  Ar
                 </span>
               </div>
               <div className="info-row">
@@ -461,8 +467,9 @@ export default function RechargePage() {
                   +
                   {transactions
                     .filter((tx) => tx.type === "bonus")
-                    .reduce((sum, tx) => sum + tx.amount, 0)}{" "}
-                  cr
+                    .reduce((sum, tx) => sum + (tx.amountAr ?? tx.amount ?? 0), 0)
+                    .toLocaleString('fr-FR')}{" "}
+                  Ar
                 </span>
               </div>
             </div>
@@ -504,7 +511,7 @@ export default function RechargePage() {
           setShowConfirmation(false);
           setTransferCode("");
         }}
-        amount={selectedAmount?.credits || 0}
+        amount={selectedAmount?.amountAr || 0}
         price={selectedAmount?.price || 0}
         bonus={selectedAmount?.bonus || 0}
         providerName={operatorName}

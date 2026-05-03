@@ -7,7 +7,10 @@ export interface BalanceCardProps {
   balance: number
   label?: string
   unit?: string
-  showConversion?: boolean  // @deprecated Plus nécessaire, gardé pour compatibilité
+  /** @deprecated Plus nécessaire, gardé pour compatibilité. */
+  showConversion?: boolean
+  /** @deprecated Plus de conversion crédit↔Ar — ignoré, gardé pour compat. */
+  ariaryEquivalent?: string | number
   onRecharge?: () => void
   isLoading?: boolean
   children?: ReactNode

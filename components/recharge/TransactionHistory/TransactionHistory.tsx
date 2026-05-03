@@ -10,7 +10,10 @@ export interface Transaction {
   id: string
   type: TransactionType
   title: string
-  amount: number
+  /** Montant en Ariary (positif). */
+  amountAr: number
+  /** @deprecated Alias de amountAr — conservé pour compat. */
+  amount?: number
   date: string
   status?: TransactionStatus
   meta?: string
@@ -75,7 +78,7 @@ export function TransactionHistory({
               onClick={() => onTransactionClick?.(tx)}
               role="button"
               tabIndex={0}
-              aria-label={`${tx.title}, ${tx.amount} crédits${tx.status === 'pending' ? ', en attente de validation' : ''}`}
+              aria-label={`${tx.title}, ${tx.amountAr ?? tx.amount ?? 0} Ar${tx.status === 'pending' ? ', en attente de validation' : ''}`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
@@ -99,7 +102,7 @@ export function TransactionHistory({
                 <div className={styles.txMeta}>{tx.meta || tx.date}</div>
               </div>
               <div className={`${styles.txAmount} ${tx.status === 'pending' ? styles.amountPending : tx.status === 'refused' ? styles.amountRefused : styles[tx.type === 'in' || tx.type === 'bonus' ? 'positive' : 'negative']}`}>
-                {tx.type === 'in' || tx.type === 'bonus' ? '+' : '-'}{tx.amount} cr
+                {tx.type === 'in' || tx.type === 'bonus' ? '+' : '-'}{(tx.amountAr ?? tx.amount ?? 0).toLocaleString('fr-FR')} Ar
               </div>
             </div>
           ))}

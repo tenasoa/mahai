@@ -2,109 +2,81 @@ import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { CurrencyConverter } from '@/lib/currency-converter'
+import { getPlatformFeePercent, setPlatformFeePercent } from '@/lib/settings'
 
 /**
- * Vérifier si l'utilisateur est admin
+ * @deprecated Cette route ne gère plus que le pourcentage de frais plateforme.
+ *   - La table CurrencyConfig a été supprimée (plus de conversion crédit↔Ar).
+ *   - `arPerCredit` est figé à 1 dans la réponse pour compat des clients legacy.
+ *   - À terme, utiliser /api/admin/platform-fee qui ne renvoie que le frais.
  */
-async function checkAdmin(request: Request) {
+async function checkAdmin() {
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session?.user) {
-    return { error: 'Non authentifié', status: 401 }
+    return { error: 'Non authentifié', status: 401 as const }
   }
 
   const userResult = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
   const role = userResult.rows[0]?.role
   if (!role || String(role).toUpperCase() !== 'ADMIN') {
-    return { error: 'Accès interdit', status: 403 }
+    return { error: 'Accès interdit', status: 403 as const }
   }
 
   return { userId: session.user.id }
 }
 
-/**
- * GET /api/admin/currency-config            → config actuelle
- * GET /api/admin/currency-config?history=1  → historique (20 dernières entrées)
- */
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
     const isHistory = url.searchParams.get('history') === '1' || url.pathname.endsWith('/history')
 
     if (isHistory) {
-      // Retourner l'historique
-      const result = await query(
-        `SELECT id, "arPerCredit", "platformFeePercent", "updatedAt", "updatedBy", note
-         FROM "CurrencyConfig"
-         ORDER BY "updatedAt" DESC
-         LIMIT 20`,
-        []
-      )
-      return NextResponse.json({ history: result.rows })
-    } else {
-      // Retourner la config actuelle
-      const result = await query(
-        `SELECT id, "arPerCredit", "platformFeePercent", "updatedAt", note 
-         FROM "CurrencyConfig" 
-         WHERE "activeAt" <= NOW() 
-         ORDER BY "activeAt" DESC 
-         LIMIT 1`,
-        []
-      )
-
-      if (result.rows.length === 0) {
-        // Config par défaut si pas de données
-        return NextResponse.json({
-          config: {
-            id: 'default',
-            arPerCredit: 50,
-            platformFeePercent: 30,
-            updatedAt: new Date().toISOString(),
-            note: 'Configuration par défaut',
-          },
-        })
-      }
-
-      return NextResponse.json({ config: result.rows[0] })
+      // L'historique a été supprimé avec la table CurrencyConfig.
+      return NextResponse.json({ history: [] })
     }
+
+    const platformFeePercent = await getPlatformFeePercent(30)
+    return NextResponse.json({
+      config: {
+        id: 'system-setting',
+        arPerCredit: 1, // legacy field; système unifié en Ariary
+        platformFeePercent,
+        updatedAt: new Date().toISOString(),
+        note: 'Système unifié en Ariary (plus de conversion).',
+      },
+    })
   } catch (err) {
     console.error('GET currency-config error:', err)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
 
-/**
- * POST /api/admin/currency-config
- * Créer une nouvelle configuration de change (nécessite admin)
- */
 export async function POST(request: Request) {
-  const auth = await checkAdmin(request)
-  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
+  const auth = await checkAdmin()
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
     const body = await request.json()
-    const { arPerCredit, platformFeePercent, note } = body
+    const { platformFeePercent, note } = body
 
-    // Valider les paramètres
-    const validation = CurrencyConverter.validate(arPerCredit, platformFeePercent)
+    const validation = CurrencyConverter.validate(Number(platformFeePercent))
     if (!validation.valid) {
       return NextResponse.json({ error: validation.errors.join(', ') }, { status: 400 })
     }
 
-    // Créer la nouvelle config avec activeAt = NOW() pour qu'elle soit immédiatement active
-    const result = await query(
-      `INSERT INTO "CurrencyConfig" (id, "arPerCredit", "platformFeePercent", "updatedBy", note, "activeAt")
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW())
-       RETURNING id, "arPerCredit", "platformFeePercent", "createdAt", "updatedAt", note`,
-      [arPerCredit, platformFeePercent, auth.userId, note]
-    )
+    await setPlatformFeePercent(Number(platformFeePercent))
 
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: 'Impossible de créer la config' }, { status: 500 })
-    }
-
-    return NextResponse.json({ config: result.rows[0] })
+    return NextResponse.json({
+      config: {
+        id: 'system-setting',
+        arPerCredit: 1,
+        platformFeePercent: Number(platformFeePercent),
+        updatedAt: new Date().toISOString(),
+        note: note || null,
+      },
+    })
   } catch (err) {
     console.error('POST currency-config error:', err)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

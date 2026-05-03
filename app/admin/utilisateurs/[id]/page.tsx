@@ -27,8 +27,8 @@ function formatDateShort(dateString: string) {
   }).format(date)
 }
 
-function formatCredits(credits: number) {
-  return new Intl.NumberFormat('fr-FR').format(credits) + ' cr' + (credits > 1 ? 's' : '')
+function formatBalance(amountAr: number) {
+  return new Intl.NumberFormat('fr-FR').format(amountAr) + ' Ar'
 }
 
 function RoleBadge({ role }: { role: string }) {
@@ -212,7 +212,7 @@ export default async function AdminUserDetailPage({
               }}>
                 <CreditCard size={14} className="text-gold" />
                 <span style={{ color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--mono)', fontSize: '0.9rem' }}>
-                  {formatCredits(userDetail.credits || 0)}
+                  {formatBalance(userDetail.balanceAr ?? userDetail.credits ?? 0)}
                 </span>
               </div>
             </div>
@@ -374,9 +374,9 @@ export default async function AdminUserDetailPage({
                       Portefeuille
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-3)', marginBottom: '0.25rem' }}>Crédits actuels</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-3)', marginBottom: '0.25rem' }}>Solde actuel</div>
                   <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--display)', letterSpacing: '-0.02em' }}>
-                    {userDetail.credits || 0}<span style={{ color: 'var(--gold)', fontSize: '1rem', marginLeft: '0.5rem' }}>cr</span>
+                    {(userDetail.balanceAr ?? userDetail.credits ?? 0).toLocaleString('fr-FR')}<span style={{ color: 'var(--gold)', fontSize: '1rem', marginLeft: '0.5rem' }}>Ar</span>
                   </div>
                   <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
                     <Link
@@ -441,7 +441,7 @@ export default async function AdminUserDetailPage({
                         </td>
                         <td style={{ textAlign: 'right' }}>
                           <span style={{ color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--mono)', fontSize: '1rem' }}>
-                            -{purchase.credits || 0}
+                            -{(purchase.amountAr ?? purchase.credits ?? 0).toLocaleString('fr-FR')} Ar
                           </span>
                         </td>
                       </tr>
@@ -516,15 +516,22 @@ export default async function AdminUserDetailPage({
                         </td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <span style={{ 
-                              fontSize: '1rem', 
-                              color: tx.amount > 0 ? 'var(--sage)' : 'var(--ruby)', 
-                              fontWeight: 700, 
-                              fontFamily: 'var(--mono)' 
-                            }}>
-                              {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
-                            </span>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-4)' }}>crédits</span>
+                            {(() => {
+                              const ar = Number(tx.amountAr ?? tx.amount ?? 0)
+                              return (
+                                <>
+                                  <span style={{
+                                    fontSize: '1rem',
+                                    color: ar > 0 ? 'var(--sage)' : 'var(--ruby)',
+                                    fontWeight: 700,
+                                    fontFamily: 'var(--mono)'
+                                  }}>
+                                    {ar > 0 ? `+${ar.toLocaleString('fr-FR')}` : ar.toLocaleString('fr-FR')}
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-4)' }}>Ar</span>
+                                </>
+                              )
+                            })()}
                           </div>
                         </td>
                         <td style={{ textAlign: 'center' }}>

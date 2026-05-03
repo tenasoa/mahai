@@ -476,7 +476,6 @@ export default function AdminConfigurationPage() {
   const handleSaveCurrencyConfig = async () => {
     // Valider les paramètres
     const validation = CurrencyConverter.validate(
-      currencyForm.arPerCredit,
       currencyForm.platformFeePercent,
     );
 

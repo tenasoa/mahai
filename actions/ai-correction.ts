@@ -53,13 +53,13 @@ export async function getAIPrices(): Promise<{
 async function loadSubjectAndAccess(
   userId: string,
   subjectId: string
-): Promise<{ subject: SubjectRow; userRole: string; credits: number } | { error: string }> {
+): Promise<{ subject: SubjectRow; userRole: string; balanceAr: number } | { error: string }> {
   const res = await query(
     `SELECT
        s.id, s.titre AS title, s.matiere, s.niveau, s."examType", s.serie,
        s."anneeScolaire", s.content, s."authorId",
        u.role AS "viewerRole",
-       u.credits AS "viewerCredits",
+       u."balanceAr" AS "viewerBalanceAr",
        (SELECT 1 FROM "Purchase"
           WHERE "userId" = $1 AND "subjectId" = s.id AND status = 'COMPLETED'
           LIMIT 1) AS "hasPurchase"
@@ -94,7 +94,7 @@ async function loadSubjectAndAccess(
       authorId: row.authorId,
     },
     userRole: row.viewerRole,
-    credits: row.viewerCredits ?? 0,
+    balanceAr: row.viewerBalanceAr ?? 0,
   }
 }
 
@@ -106,8 +106,8 @@ export type AICorrectionResponse =
       data: {
         correctionId: string
         result: AICorrectionResult
-        creditsCost: number
-        creditsRemaining: number
+        costAr: number
+        balanceArRemaining: number
         mode: Mode
       }
     }
@@ -136,7 +136,7 @@ async function processCorrection(
       return { success: false, error: accessRes.error }
     }
 
-    const { subject, credits } = accessRes
+    const { subject, balanceAr } = accessRes
 
     // Résout le provider actif (Claude / Perplexity / …) + tarifs.
     let runtime: Awaited<ReturnType<typeof loadAIRuntimeConfig>>
@@ -153,10 +153,10 @@ async function processCorrection(
 
     const cost = mode === 'SUBMISSION' ? runtime.priceSubmission : runtime.priceDirect
 
-    if (credits < cost) {
+    if (balanceAr < cost) {
       return {
         success: false,
-        error: `Crédits insuffisants. Il vous manque ${cost - credits} crédits.`,
+        error: `Solde insuffisant. Il vous manque ${cost - balanceAr} Ar.`,
       }
     }
 
@@ -213,20 +213,20 @@ async function processCorrection(
 
     const newBalance = await transaction(async (client) => {
       const dec = await client.query(
-        `UPDATE "User" SET credits = credits - $1
-         WHERE id = $2 AND credits >= $1
-         RETURNING credits`,
+        `UPDATE "User" SET "balanceAr" = "balanceAr" - $1
+         WHERE id = $2 AND "balanceAr" >= $1
+         RETURNING "balanceAr"`,
         [cost, userId]
       )
       if (dec.rowCount === 0) {
         throw new Error('Solde insuffisant au moment du débit.')
       }
-      const remaining: number = dec.rows[0].credits
+      const remaining: number = dec.rows[0].balanceAr
 
       await client.query(
         `INSERT INTO "AICorrection"
            (id, "userId", "subjectId", mode, "userAnswers", "aiResult",
-            "creditsCost", model, "tokensIn", "tokensOut")
+            "costAr", model, "tokensIn", "tokensOut")
          VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9, $10)`,
         [
           correctionId,
@@ -243,16 +243,16 @@ async function processCorrection(
       )
 
       await client.query(
-        `INSERT INTO "CreditTransaction"
-           (id, "userId", amount, type, status, description, "createdAt")
+        `INSERT INTO "Transaction"
+           (id, "userId", "amountAr", type, status, description, "createdAt")
          VALUES ($1, $2, $3, 'SPEND', 'COMPLETED', $4, NOW())`,
         [
           crypto.randomUUID(),
           userId,
           -cost,
           mode === 'SUBMISSION'
-            ? `Correction IA — soumission (${cost} crédits)`
-            : `Correction IA directe (${cost} crédits)`,
+            ? `Correction IA — soumission (${cost} Ar)`
+            : `Correction IA directe (${cost} Ar)`,
         ]
       )
 
@@ -264,8 +264,8 @@ async function processCorrection(
       data: {
         correctionId,
         result: aiOutput.result,
-        creditsCost: cost,
-        creditsRemaining: newBalance,
+        costAr: cost,
+        balanceArRemaining: newBalance,
         mode,
       },
     }

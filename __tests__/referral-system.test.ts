@@ -6,10 +6,10 @@ import { query } from "@/lib/db";
 
 describe('Système de Parrainage', () => {
   it('devrait vérifier la configuration et la structure du système de parrainage', async () => {
-    // 1. Vérifier que les settings sont initialisés
+    // 1. Vérifier que les settings sont initialisés (clés Ariary post-refactor cr→Ar)
     const settingsResult = await query(
       `SELECT key, value FROM "SystemSetting"
-       WHERE key IN ('WELCOME_BONUS_CREDITS', 'REFERRAL_BONUS_CREDITS', 'REFERRED_BONUS_CREDITS')
+       WHERE key IN ('WELCOME_BONUS_AR', 'REFERRER_BONUS_AR', 'REFERRED_BONUS_AR')
        ORDER BY key`
     );
 
@@ -28,8 +28,8 @@ describe('Système de Parrainage', () => {
       "referrerUserId",
       "referredUserId",
       "status",
-      "referrerBonusCredits",
-      "referredBonusCredits",
+      "referrerBonusAr",
+      "referredBonusAr",
       "referrerBonusGrantedAt",
       "referredBonusGrantedAt",
     ];
@@ -48,9 +48,9 @@ describe('Système de Parrainage', () => {
 
     expect(userTableResult.rows.length).toBe(2);
 
-    // 4. Vérifier les types de CreditTransaction
+    // 4. Vérifier les types de Transaction (anciennement CreditTransaction)
     const txTypesResult = await query(
-      `SELECT DISTINCT type FROM "CreditTransaction" ORDER BY type`
+      `SELECT DISTINCT type FROM "Transaction" ORDER BY type`
     );
     const existingTypes = txTypesResult.rows.map((r: any) => r.type);
     expect(existingTypes).toContain("EARN");

@@ -42,7 +42,11 @@ async function getAuthenticatedUserId() {
   return user.id
 }
 
-async function grantReferrerBonusOnFirstPurchase(client: any, referredUserId: string, defaultBonus: number = 20) {
+async function grantReferrerBonusOnFirstPurchase(
+  client: any,
+  referredUserId: string,
+  defaultBonusAr: number = 1000,
+) {
   const referralResult = await client.query(
     `SELECT id, "referrerUserId", "referrerBonusCredits"
      FROM "UserReferral"
@@ -58,10 +62,13 @@ async function grantReferrerBonusOnFirstPurchase(client: any, referredUserId: st
     return
   }
 
-  const bonusAmount = Number(referral.referrerBonusCredits) || defaultBonus
-
-  // Convertir le bonus crédits historique en Ariary (50 Ar par crédit)
-  const bonusAr = Number(bonusAmount) * 50
+  // Détermine le bonus en Ariary :
+  //  - colonne legacy referrerBonusCredits (en crédits, ×50) si présente >0
+  //  - sinon defaultBonusAr déjà en Ariary (lu depuis REFERRER_BONUS_AR)
+  // Évite la double conversion qui se produirait si defaultBonus était
+  // ré-multiplié par 50.
+  const legacyCredits = Number(referral.referrerBonusCredits) || 0
+  const bonusAr = legacyCredits > 0 ? legacyCredits * 50 : defaultBonusAr
 
   await client.query(
     `UPDATE "User"
@@ -145,7 +152,8 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
     }
 
     const remainingBalance = user.balanceAr - subject.prix
-    const referrerBonusDefault = await getSystemSetting('REFERRAL_BONUS_CREDITS', 20)
+    // Lit le bonus parrain en Ariary (valeur DB en Ar, default 1000 Ar = 20 cr × 50).
+    const referrerBonusDefault = await getSystemSetting('REFERRER_BONUS_AR', 1000)
 
     await transaction(async (client) => {
       await client.query(

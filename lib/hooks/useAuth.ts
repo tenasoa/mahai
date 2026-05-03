@@ -14,7 +14,10 @@ export interface AppUser {
   nomComplet?: string
   pseudo?: string
   role: string
+  /** @deprecated Utiliser balanceAr (système unifié en Ariary). */
   credits: number
+  /** Solde en Ariary (remplace credits). */
+  balanceAr: number
   phone?: string
   phoneVerified: boolean
   schoolLevel?: string

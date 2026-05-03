@@ -20,8 +20,8 @@ export default async function ContributorRootLayout({ children }: { children: Re
   const dataRes = await query(
     `SELECT 
       u.role, u.prenom, u.nom, u."profilePicture",
-      (SELECT COALESCE(SUM(s.credits), 0) FROM "Purchase" p JOIN "Subject" s ON p."subjectId" = s.id WHERE s."authorId" = u.id) as "totalEarnings",
-      (SELECT COALESCE(SUM(s.credits), 0) FROM "Purchase" p JOIN "Subject" s ON p."subjectId" = s.id WHERE s."authorId" = u.id AND p."createdAt" >= date_trunc('month', CURRENT_DATE)) as "monthEarnings",
+      (SELECT COALESCE(SUM(p."amountAr"), 0) FROM "Purchase" p JOIN "Subject" s ON p."subjectId" = s.id WHERE s."authorId" = u.id) as "totalEarnings",
+      (SELECT COALESCE(SUM(p."amountAr"), 0) FROM "Purchase" p JOIN "Subject" s ON p."subjectId" = s.id WHERE s."authorId" = u.id AND p."createdAt" >= date_trunc('month', CURRENT_DATE)) as "monthEarnings",
       (SELECT COUNT(*) FROM "Subject" WHERE "authorId" = u.id) as "totalSubjects"
      FROM "User" u
      WHERE u.id = $1 LIMIT 1`,

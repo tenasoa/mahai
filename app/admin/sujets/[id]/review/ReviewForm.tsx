@@ -143,7 +143,9 @@ export function ReviewForm({ submission }: { submission: Submission }) {
     pages: submission.pages || 1,
     duree: submission.duree || '3h',
     coefficient: submission.coefficient || 1,
-    credits: 0, // Sera calculé après récupération du taux API
+    prix: submission.prix || 0, // Prix en Ariary (système unifié)
+    /** @deprecated Alias historique de prix. */
+    credits: submission.prix || 0,
     difficulte: submission.difficulte || 'MOYEN' as 'FACILE' | 'MOYEN' | 'DIFFICILE',
     badge: 'AI' as 'GOLD' | 'AI' | 'FREE',
     description: submission.description || '',
@@ -164,9 +166,10 @@ export function ReviewForm({ submission }: { submission: Submission }) {
         if (!isMounted) return
         setCurrencyRate(rate)
 
+        // Plus de conversion Ar→crédits : on garde directement le prix en Ar.
         const arPrice = Number(submission.prix || 0)
-        const converted = arPrice > 0 ? CurrencyConverter.arToCredits(arPrice, rate) : 0
-        setFormData(prev => ({ ...prev, credits: converted }))
+        const _ = CurrencyConverter.arToCredits(arPrice) // alias identité
+        setFormData(prev => ({ ...prev, prix: arPrice, credits: arPrice }))
       } catch {
         // fallback silencieux sur 50 Ar/cr
       }
@@ -673,14 +676,16 @@ export function ReviewForm({ submission }: { submission: Submission }) {
                           color: 'var(--text-3)',
                           marginBottom: '0.35rem'
                         }}>
-                          Prix soumis: {Number(submission.prix || 0).toLocaleString()} Ar • 1 cr = {currencyRate ?? '...'} Ar
+                          Prix soumis: {Number(submission.prix || 0).toLocaleString()} Ar
                         </div>
                         <input
                           type="number"
                           min="0"
-                          value={formData.credits}
-                          disabled={currencyRate === null}
-                          onChange={e => setFormData({ ...formData, credits: parseInt(e.target.value) })}
+                          value={formData.prix}
+                          onChange={e => {
+                            const v = parseInt(e.target.value) || 0
+                            setFormData({ ...formData, prix: v, credits: v })
+                          }}
                           style={{
                             width: '100%',
                             padding: '0.625rem 0.875rem',

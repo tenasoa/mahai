@@ -15,7 +15,7 @@ export interface Subject {
   serie?: string | null
   description?: string | null
   pages: number
-  credits: number
+  prix: number
   difficulte: Difficulte
   langue: Langue
   format: Format
@@ -47,14 +47,14 @@ export interface CatalogueFilters {
   types?: ExamenType[]
   matieres?: string[]
   minRating?: number
-  maxCredits?: number
+  maxPrix?: number
   search?: string
 }
 
 export interface CatalogueQueryParams extends CatalogueFilters {
   page?: number
   limit?: number
-  sortBy?: 'rating' | 'reviewsCount' | 'credits' | 'annee' | 'createdAt'
+  sortBy?: 'rating' | 'reviewsCount' | 'prix' | 'annee' | 'createdAt'
   sortOrder?: 'asc' | 'desc'
 }
 

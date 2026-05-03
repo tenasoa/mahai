@@ -118,9 +118,12 @@ export function TransactionsTab({
                     <div
                       className={`tx-amount ${tx.type === "ACHAT" ? "minus" : "plus"}`}
                     >
-                      {tx.type === "ACHAT"
-                        ? `-${tx.amount} cr`
-                        : `+${tx.creditsCount || tx.amount} cr`}
+                      {(() => {
+                        const ar = Number(tx.amountAr ?? tx.amount ?? 0)
+                        const formatted = Math.abs(ar).toLocaleString('fr-FR')
+                        const sign = tx.type === 'ACHAT' || tx.type === 'SPEND' ? '-' : '+'
+                        return `${sign}${formatted} Ar`
+                      })()}
                     </div>
                   </div>
                 ))}

@@ -36,7 +36,7 @@ export function UserNotifications() {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Écouter les notifications en temps réel — deux sources :
-  //  1. CreditTransaction (recharges, achats)
+  //  1. Transaction (recharges, achats — système Ariary)
   //  2. Notification (révisions, validations, etc.)
   useEffect(() => {
     if (!userId) return
@@ -50,15 +50,16 @@ export function UserNotifications() {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'CreditTransaction',
+          table: 'Transaction',
           filter: `userId=eq.${userId}`
         },
         (payload) => {
+          const amountAr = Math.abs(Number(payload.new.amountAr || 0))
           const newNotif: Notification = {
             id: `tx:${payload.new.id}`,
             type: payload.new.type === 'RECHARGE' ? 'credit' : 'alert',
             title: payload.new.type === 'RECHARGE' ? 'Recharge créditée' : 'Transaction mise à jour',
-            body: `${Math.abs(payload.new.creditsCount || payload.new.amount)} crédits ${payload.new.status === 'COMPLETED' ? 'validés' : 'en attente'}`,
+            body: `${amountAr} Ar ${payload.new.status === 'COMPLETED' ? 'validés' : 'en attente'}`,
             createdAt: payload.new.createdAt,
             read: payload.new.isRead || false,
             link: '/recharge'

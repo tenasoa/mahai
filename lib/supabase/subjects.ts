@@ -35,7 +35,7 @@ export async function getSubjects(
     types,
     matieres,
     minRating,
-    maxCredits,
+    maxPrix,
     search,
   } = params
 
@@ -67,8 +67,8 @@ export async function getSubjects(
       query = query.gte('rating', minRating)
     }
 
-    if (maxCredits !== undefined && maxCredits < 999) {
-      query = query.lte('credits', maxCredits)
+    if (maxPrix !== undefined && maxPrix < Number.MAX_SAFE_INTEGER) {
+      query = query.lte('prix', maxPrix)
     }
 
     // Recherche textuelle multi-critères
@@ -100,7 +100,7 @@ export async function getSubjects(
     const orderMap: Record<string, string> = {
       rating: 'rating',
       reviewsCount: 'reviewsCount',
-      credits: 'credits',
+      prix: 'prix',
       annee: 'annee',
       createdAt: 'createdAt',
     }

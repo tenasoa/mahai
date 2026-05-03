@@ -58,7 +58,7 @@ export async function getContributorAnalytics(period: AnalyticsPeriod = '12m') {
     // Stats globales période - pondérées par filtrage temporel
     const statsResult = await query(`
       SELECT 
-        COALESCE(SUM(p."creditsAmount" * 50), 0) as totalEarnings,
+        COALESCE(SUM(p."amountAr"), 0) as totalEarnings,
         COUNT(DISTINCT p.id) as totalSales,
         COALESCE((SELECT AVG(s2.rating) FROM "Subject" s2 WHERE s2."authorId" = $1 AND s2.rating > 0), 0) as averageRating
       FROM "Subject" s
@@ -71,7 +71,7 @@ export async function getContributorAnalytics(period: AnalyticsPeriod = '12m') {
       SELECT 
         ${grouping} as month,
         COUNT(*) as sales,
-        SUM(p."creditsAmount" * 50) as earnings
+        SUM(p."amountAr") as earnings
       FROM "Purchase" p
       JOIN "Subject" s ON p."subjectId" = s.id
       WHERE s."authorId" = $1
@@ -88,7 +88,7 @@ export async function getContributorAnalytics(period: AnalyticsPeriod = '12m') {
         s.rating,
         s."reviewsCount",
         COUNT(p.id) as sales,
-        SUM(p."creditsAmount") as revenue
+        SUM(p."amountAr") as revenue
       FROM "Subject" s
       LEFT JOIN "Purchase" p ON s.id = p."subjectId"
       WHERE s."authorId" = $1
@@ -109,7 +109,7 @@ export async function getContributorAnalytics(period: AnalyticsPeriod = '12m') {
         s."reviewsCount",
         0 as "downloadCount",
         COUNT(p.id) as sales,
-        COALESCE(SUM(p."creditsAmount"), 0) as revenue
+        COALESCE(SUM(p."amountAr"), 0) as revenue
       FROM "Subject" s
       LEFT JOIN "Purchase" p ON s.id = p."subjectId"
       WHERE s."authorId" = $1

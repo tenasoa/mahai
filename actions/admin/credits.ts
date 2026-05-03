@@ -31,7 +31,7 @@ export async function getCreditTransactionsAdmin(status?: string, page?: number,
 
   // Count total for pagination
   const countSql = `
-    SELECT COUNT(*) FROM "CreditTransaction" c
+    SELECT COUNT(*) FROM "Transaction" c
     ${whereClause}
   `
   const countResult = await query(countSql, params)
@@ -40,7 +40,7 @@ export async function getCreditTransactionsAdmin(status?: string, page?: number,
   // Main query with pagination
   let sql = `
     SELECT c.*, u.prenom, u.nom, u.email, u.phone as "userPhone"
-    FROM "CreditTransaction" c
+    FROM "Transaction" c
     JOIN "User" u ON c."userId" = u.id
     ${whereClause}
   `
@@ -72,7 +72,7 @@ export async function getCreditTransactionDetail(id: string) {
 
   const result = await query(`
     SELECT c.*, u.prenom, u.nom, u.email, u.phone as "userPhone"
-    FROM "CreditTransaction" c
+    FROM "Transaction" c
     JOIN "User" u ON c."userId" = u.id
     WHERE c.id = $1
   `, [id])
@@ -90,12 +90,12 @@ export async function validateCreditTransaction(id: string) {
 
   // ⚠ Race condition fix : on UPDATE atomiquement avec WHERE status='PENDING'
   // et RETURNING. Si rowCount = 0, c'est qu'un autre admin a déjà validé
-  // entre temps — on rejette l'opération sans toucher au crédit user.
-  // L'UPDATE de "User".credits + l'INSERT audit-log sont dans la même
+  // entre temps — on rejette l'opération sans toucher au solde user.
+  // L'UPDATE de "User".balanceAr + l'INSERT audit-log sont dans la même
   // transaction Postgres pour garantir l'atomicité (pas de double-crédit).
   const result = await transaction(async (client) => {
     const upd = await client.query(
-      `UPDATE "CreditTransaction"
+      `UPDATE "Transaction"
        SET status = 'COMPLETED', "validatedAt" = NOW(), "validatedBy" = $1
        WHERE id = $2 AND status = 'PENDING'
        RETURNING *`,
@@ -107,11 +107,11 @@ export async function validateCreditTransaction(id: string) {
     }
 
     const tx = upd.rows[0]
-    const creditsToAdd = tx.creditsCount || tx.amount
+    const arToAdd = Number(tx.amountAr) || 0
 
     await client.query(
-      `UPDATE "User" SET credits = credits + $1 WHERE id = $2`,
-      [creditsToAdd, tx.userId],
+      `UPDATE "User" SET "balanceAr" = "balanceAr" + $1, "updatedAt" = NOW() WHERE id = $2`,
+      [arToAdd, tx.userId],
     )
 
     // Log atomique : si la transaction Postgres rollback, le log aussi.
@@ -121,13 +121,12 @@ export async function validateCreditTransaction(id: string) {
        VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5::jsonb)`,
       [
         adminId,
-        'CREDIT_TX_VALIDATE',
-        'CreditTransaction',
+        'TRANSACTION_VALIDATE',
+        'Transaction',
         id,
         JSON.stringify({
           userId: tx.userId,
-          creditsAdded: creditsToAdd,
-          amount: tx.amount,
+          arAdded: arToAdd,
           paymentMethod: tx.paymentMethod,
           phoneNumber: tx.phoneNumber,
         }),
@@ -157,7 +156,7 @@ export async function rejectCreditTransaction(id: string, reason: string) {
 
   // Atomique + idempotent (pas de double-rejet possible).
   const upd = await query(
-    `UPDATE "CreditTransaction"
+    `UPDATE "Transaction"
      SET status = 'FAILED', "rejectionReason" = $1, "validatedAt" = NOW(), "validatedBy" = $2
      WHERE id = $3 AND status = 'PENDING'
      RETURNING *`,
@@ -172,13 +171,13 @@ export async function rejectCreditTransaction(id: string, reason: string) {
 
   await logAdminAction({
     adminId,
-    action: 'CREDIT_TX_REJECT',
-    targetType: 'CreditTransaction',
+    action: 'TRANSACTION_REJECT',
+    targetType: 'Transaction',
     targetId: id,
     details: {
       userId: tx.userId,
       reason,
-      amount: tx.amount,
+      amountAr: tx.amountAr,
       paymentMethod: tx.paymentMethod,
       phoneNumber: tx.phoneNumber,
     },
@@ -193,6 +192,6 @@ export async function getPendingTransactionsCount() {
   const adminUser = await checkAdmin()
   if (!adminUser) return 0
 
-  const result = await query('SELECT COUNT(*) FROM "CreditTransaction" WHERE status = $1', ['PENDING'])
+  const result = await query('SELECT COUNT(*) FROM "Transaction" WHERE status = $1', ['PENDING'])
   return parseInt(result.rows[0]?.count || '0', 10)
 }

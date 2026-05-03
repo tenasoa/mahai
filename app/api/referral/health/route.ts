@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
     // 3. Vérifier la structure de la DB
     const dbChecks = await Promise.all([
-      query(`SELECT COUNT(*) as count FROM "SystemSetting" WHERE key IN ('WELCOME_BONUS_CREDITS', 'REFERRAL_BONUS_CREDITS', 'REFERRED_BONUS_CREDITS')`),
+      query(`SELECT COUNT(*) as count FROM "SystemSetting" WHERE key IN ('WELCOME_BONUS_AR', 'REFERRER_BONUS_AR', 'REFERRED_BONUS_AR')`),
       query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'UserReferral' LIMIT 1`),
       query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'User' AND column_name IN ('referralCode', 'referredByUserId') LIMIT 1`),
     ]);

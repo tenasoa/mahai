@@ -42,7 +42,7 @@ export async function getContributorWithdrawals() {
 
   // Calcul des revenus (Purchase + Subject existent toujours)
   const earningsResult = await query(`
-    SELECT COALESCE(SUM("creditsAmount" * 50), 0) as totalEarnings
+    SELECT COALESCE(SUM(p."amountAr"), 0) as totalEarnings
     FROM "Purchase" p
     JOIN "Subject" s ON p."subjectId" = s.id
     WHERE s."authorId" = $1
@@ -126,7 +126,7 @@ export async function requestWithdrawal(amount: number, phoneNumber: string, pay
 
     // Vérifier le solde disponible
     const earningsResult = await query(`
-      SELECT COALESCE(SUM("creditsAmount" * 50), 0) as totalEarnings
+      SELECT COALESCE(SUM(p."amountAr"), 0) as totalEarnings
       FROM "Purchase" p
       JOIN "Subject" s ON p."subjectId" = s.id
       WHERE s."authorId" = $1

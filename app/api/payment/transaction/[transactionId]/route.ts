@@ -16,8 +16,8 @@ export async function GET(
 
   try {
     const result = await query(
-      `SELECT id, status, amount, "creditsCount", "phoneNumber", "paymentMethod", "senderCode", "createdAt"
-       FROM "CreditTransaction"
+      `SELECT id, status, "amountAr", "phoneNumber", "paymentMethod", "senderCode", "createdAt"
+       FROM "Transaction"
        WHERE id = $1 AND "userId" = $2`,
       [transactionId, session.user.id]
     )
@@ -30,7 +30,8 @@ export async function GET(
     return NextResponse.json({
       id: tx.id,
       status: tx.status,
-      amount: tx.creditsCount || tx.amount,
+      amount: tx.amountAr,
+      amountAr: tx.amountAr,
       phoneNumber: tx.phoneNumber,
       paymentMethod: tx.paymentMethod,
       senderCode: tx.senderCode,
@@ -63,7 +64,7 @@ export async function PATCH(
 
     // Vérifier que la transaction appartient à cet utilisateur et est encore en attente
     const checkResult = await query(
-      `SELECT id, status FROM "CreditTransaction" WHERE id = $1 AND "userId" = $2`,
+      `SELECT id, status FROM "Transaction" WHERE id = $1 AND "userId" = $2`,
       [transactionId, session.user.id]
     )
 
@@ -77,8 +78,8 @@ export async function PATCH(
 
     // Mettre à jour le code de transaction
     const result = await query(
-      `UPDATE "CreditTransaction" SET "senderCode" = $1 WHERE id = $2 AND "userId" = $3
-       RETURNING id, status, amount, "creditsCount", "phoneNumber", "paymentMethod", "senderCode", "createdAt"`,
+      `UPDATE "Transaction" SET "senderCode" = $1 WHERE id = $2 AND "userId" = $3
+       RETURNING id, status, "amountAr", "phoneNumber", "paymentMethod", "senderCode", "createdAt"`,
       [transactionCode, transactionId, session.user.id]
     )
 
@@ -86,7 +87,8 @@ export async function PATCH(
     return NextResponse.json({
       id: tx.id,
       status: tx.status,
-      amount: tx.creditsCount || tx.amount,
+      amount: tx.amountAr,
+      amountAr: tx.amountAr,
       phoneNumber: tx.phoneNumber,
       paymentMethod: tx.paymentMethod,
       senderCode: tx.senderCode,

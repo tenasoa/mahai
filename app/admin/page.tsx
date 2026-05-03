@@ -10,9 +10,9 @@ async function getDashboardData() {
   const usersCountRes = await query('SELECT COUNT(*) FROM "User"')
   const subjectsCountRes = await query('SELECT COUNT(*) FROM "Subject" WHERE status = $1', ['PUBLISHED'])
   const reviewsCountRes = await query('SELECT COUNT(*) FROM "Subject" WHERE status = $1', ['PENDING'])
-  const mobileMoneyCountRes = await query('SELECT COUNT(*) FROM "CreditTransaction" WHERE status = $1', ['PENDING'])
+  const mobileMoneyCountRes = await query('SELECT COUNT(*) FROM "Transaction" WHERE status = $1', ['PENDING'])
   const salesCountRes = await query('SELECT COUNT(*) FROM "Purchase"')
-  const revenueRes = await query('SELECT COALESCE(SUM(amount), 0) as total FROM "CreditTransaction" WHERE status = $1', ['COMPLETED'])
+  const revenueRes = await query('SELECT COALESCE(SUM("amountAr"), 0) as total FROM "Transaction" WHERE status = $1 AND type = $2', ['COMPLETED', 'RECHARGE'])
   const blogPostsCountRes = await query('SELECT COUNT(*) FROM "BlogPost"')
   const draftsCountRes = await query('SELECT COUNT(*) FROM "BlogPost" WHERE is_published = false')
 
@@ -22,7 +22,7 @@ async function getDashboardData() {
   // 3. Derniers paiements Mobile Money en attente
   const recentMobileMoneyRes = await query(`
     SELECT c.*, u.prenom, u.nom, u.email
-    FROM "CreditTransaction" c
+    FROM "Transaction" c
     JOIN "User" u ON c."userId" = u.id
     WHERE c.status = 'PENDING'
     ORDER BY c."createdAt" DESC LIMIT 4
@@ -294,10 +294,10 @@ export default async function AdminDashboard() {
                   </div>
                   <div className="admin-list-content">
                     <div className="admin-list-title" style={{ color: 'var(--gold)' }}>
-                      {formatMoney(tx.amount)}
+                      {formatMoney(tx.amountAr)}
                     </div>
                     <div className="admin-list-desc">
-                      {tx.creditsCount} crédits • {tx.prenom} {tx.nom}
+                      {tx.prenom} {tx.nom}
                     </div>
                   </div>
                   <div className="admin-list-actions">

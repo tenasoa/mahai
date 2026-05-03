@@ -25,7 +25,7 @@ import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { AuthModal } from '@/components/ui/AuthModal'
 import { getSubjectById } from '@/lib/supabase/subjects'
-import { getCurrentUserCredits, purchaseCurrentUserSubject } from '@/actions/user'
+import { getCurrentUserBalanceAr, purchaseCurrentUserSubject } from '@/actions/user'
 import { convertSubjectToExamAction } from '@/actions/examen'
 import { recordSubjectDownload } from '@/actions/subject-download'
 import { SujetDetailSkeleton } from '@/components/ui/PageSkeletons'
@@ -53,7 +53,9 @@ interface SubjectPayload {
   annee: string
   serie?: string | null
   pages?: number | null
-  credits: number
+  prix: number
+  /** @deprecated Alias historique de prix. */
+  credits?: number
   difficulte?: string | null
   description?: string | null
   rating?: number | null
@@ -137,7 +139,7 @@ export default function SujetDetailPage() {
       try {
         const [subjectData, userCredits, prices, latestCorr] = await Promise.all([
           getSubjectById(params.id),
-          userId ? getCurrentUserCredits() : Promise.resolve(0),
+          userId ? getCurrentUserBalanceAr() : Promise.resolve(0),
           getAIPrices().catch(() => ({ priceSubmission: 3, priceDirect: 8 })),
           userId ? getLatestAICorrection(params.id).catch(() => null) : Promise.resolve(null),
         ])
@@ -189,8 +191,9 @@ export default function SujetDetailPage() {
 
     if (!subject) return
 
-    if (credits < subject.credits) {
-      pushToast('error', `Crédits insuffisants. Il vous manque ${subject.credits - credits} crédits.`)
+    const subjectPrix = subject.prix ?? subject.credits ?? 0
+    if (credits < subjectPrix) {
+      pushToast('error', `Solde insuffisant. Il vous manque ${(subjectPrix - credits).toLocaleString('fr-FR')} Ar.`)
       return
     }
 
@@ -210,7 +213,7 @@ export default function SujetDetailPage() {
 
       setAccessState('unlocked')
       setShowPurchaseModal(false)
-      const remaining = result.remainingCredits ?? (await getCurrentUserCredits())
+      const remaining = (result as any).remainingBalance ?? (result as any).remainingCredits ?? (await getCurrentUserBalanceAr())
       setCredits(remaining)
       pushToast('success', 'Sujet débloqué avec succès. Vous avez maintenant accès complet.')
     } catch (error) {
@@ -269,9 +272,9 @@ export default function SujetDetailPage() {
         mode: 'SUBMISSION',
         createdAt: new Date().toISOString(),
       })
-      setCredits(res.data.creditsRemaining)
+      setCredits(res.data.balanceArRemaining)
       router.push(`/sujet/${subject.id}/consult?view=correction`)
-      pushToast('success', `Correction IA prête. ${res.data.creditsCost} crédits débités.`)
+      pushToast('success', `Correction IA prête. ${res.data.costAr.toLocaleString('fr-FR')} Ar débités.`)
     } catch (err) {
       console.error('submit AI correction error:', err)
       pushToast('error', "L'IA n'a pas pu répondre. Réessayez plus tard.")
@@ -298,10 +301,10 @@ export default function SujetDetailPage() {
         mode: 'DIRECT',
         createdAt: new Date().toISOString(),
       })
-      setCredits(res.data.creditsRemaining)
+      setCredits(res.data.balanceArRemaining)
       setShowDirectConfirm(false)
       router.push(`/sujet/${subject.id}/consult?view=correction`)
-      pushToast('success', `Correction IA modèle prête. ${res.data.creditsCost} crédits débités.`)
+      pushToast('success', `Correction IA modèle prête. ${res.data.costAr.toLocaleString('fr-FR')} Ar débités.`)
     } catch (err) {
       console.error('direct AI correction error:', err)
       pushToast('error', "L'IA n'a pas pu produire la correction.")
@@ -449,7 +452,7 @@ export default function SujetDetailPage() {
               </div>
               <div>
                 <span>Votre solde actuel</span>
-                <strong>{credits} crédits</strong>
+                <strong>{credits.toLocaleString('fr-FR')} Ar</strong>
               </div>
               <div className="total">
                 <span>Solde après débit</span>
@@ -495,15 +498,15 @@ export default function SujetDetailPage() {
             <div className="sd-modal-summary">
               <div>
                 <span>Prix du sujet</span>
-                <strong>{subject.credits} crédits</strong>
+                <strong>{(subject.prix ?? 0).toLocaleString('fr-FR')} Ar</strong>
               </div>
               <div>
                 <span>Votre solde actuel</span>
-                <strong>{credits} crédits</strong>
+                <strong>{credits.toLocaleString('fr-FR')} Ar</strong>
               </div>
               <div className="total">
                 <span>Solde après achat</span>
-                <strong>{credits - subject.credits} crédits</strong>
+                <strong>{(credits - (subject.prix ?? 0)).toLocaleString('fr-FR')} Ar</strong>
               </div>
             </div>
 
@@ -676,7 +679,7 @@ export default function SujetDetailPage() {
                   <div className="lecture-paywall">
                     <p>Débloquez le sujet pour accéder à l’intégralité du contenu.</p>
                     <button className="sd-btn-primary" onClick={requestUnlock}>
-                      Débloquer pour {subject.credits} crédits
+                      Débloquer pour {(subject.prix ?? 0).toLocaleString('fr-FR')} Ar
                     </button>
                   </div>
                 }
@@ -822,8 +825,8 @@ export default function SujetDetailPage() {
         <aside className="subject-sidebar">
           <div className="price-card">
             <p className="price-label">Prix d’accès</p>
-            <div className="price-value">{subject.credits} crédits</div>
-            <p className="price-balance">Votre solde: {credits} crédits</p>
+            <div className="price-value">{(subject.prix ?? 0).toLocaleString('fr-FR')} Ar</div>
+            <p className="price-balance">Votre solde: {credits.toLocaleString('fr-FR')} Ar</p>
             {accessState === 'locked' ? (
               <button className="sd-btn-primary" onClick={requestUnlock}>
                 Débloquer ce sujet

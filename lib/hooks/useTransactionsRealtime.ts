@@ -33,7 +33,7 @@ export function useTransactionsRealtime({ userId, enabled }: UseTransactionsReal
 
     const supabase = createClient()
     
-    // S'abonner aux changements sur la table CreditTransaction
+    // S'abonner aux changements sur la table Transaction (Ariary)
     const channel = supabase
       .channel('transactions-realtime')
       .on(
@@ -41,7 +41,7 @@ export function useTransactionsRealtime({ userId, enabled }: UseTransactionsReal
         {
           event: '*', // INSERT, UPDATE, DELETE
           schema: 'public',
-          table: 'CreditTransaction',
+          table: 'Transaction',
           filter: `userId=eq.${userId}`
         },
         handleNewTransaction

@@ -53,7 +53,7 @@ export function PurchasedSubjectsTab({
                 <div className="subject-card-head">
                   <span className="subject-badge">{subject.type}</span>
                   <span className="subject-credits">
-                    -{subject.creditsAmount} cr
+                    -{Number(subject.amountAr ?? subject.creditsAmount ?? 0).toLocaleString('fr-FR')} Ar
                   </span>
                 </div>
                 <h4 className="subject-title">{subject.titre}</h4>

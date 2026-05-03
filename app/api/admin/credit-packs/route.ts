@@ -44,16 +44,33 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { name, credits, price, bonus = 0, isPopular = false, isActive = true, sortOrder = 0 } = body
+    const {
+      name,
+      // arAmount = prix en Ariary, bonusAr = bonus en Ariary
+      arAmount,
+      bonusAr = 0,
+      // Compat ascendante : on accepte encore les anciennes clés `price`/`bonus`
+      price,
+      bonus,
+      // `credits` correspond désormais au compteur d'unités du pack (= arAmount)
+      credits,
+      isPopular = false,
+      isActive = true,
+      sortOrder = 0,
+    } = body
 
-    if (!name || credits === undefined || price === undefined) {
-      return NextResponse.json({ error: 'Nom, crédits et prix requis' }, { status: 400 })
+    const finalArAmount = arAmount ?? price ?? credits
+    const finalBonusAr = bonusAr ?? bonus ?? 0
+    const finalCredits = credits ?? finalArAmount
+
+    if (!name || finalArAmount === undefined || finalArAmount === null) {
+      return NextResponse.json({ error: 'Nom et montant en Ar requis' }, { status: 400 })
     }
 
     const result = await query(
-      `INSERT INTO "CreditPack" ("name", "credits", "price", "bonus", "isPopular", "isActive", "sortOrder") 
+      `INSERT INTO "CreditPack" ("name", "credits", "arAmount", "bonusAr", "isPopular", "isActive", "sortOrder")
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [name, credits, price, bonus, isPopular, isActive, sortOrder]
+      [name, finalCredits, finalArAmount, finalBonusAr, isPopular, isActive, sortOrder]
     )
 
     return NextResponse.json({ pack: result.rows[0] })
@@ -73,12 +90,18 @@ export async function POST(request: Request) {
 const ALLOWED_PACK_COLUMNS = new Set([
   'name',
   'credits',
-  'price',
-  'bonus',
+  'arAmount',
+  'bonusAr',
   'isPopular',
   'isActive',
   'sortOrder',
 ])
+
+// Mapping legacy → nouvelles colonnes pour les payloads encore au format ancien.
+const LEGACY_COLUMN_MAP: Record<string, string> = {
+  price: 'arAmount',
+  bonus: 'bonusAr',
+}
 
 export async function PATCH(request: Request) {
   const auth = await checkAdmin(request)
@@ -92,9 +115,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
     }
 
+    // Normaliser les clés legacy (price/bonus) vers les nouvelles colonnes.
+    const normalised: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(updates)) {
+      const target = LEGACY_COLUMN_MAP[k] ?? k
+      normalised[target] = v
+    }
+
     // Filtre + reject : ignore les clés inconnues, refuse si toutes sont rejetées.
-    const safeKeys = Object.keys(updates).filter((k) => ALLOWED_PACK_COLUMNS.has(k))
-    const rejectedKeys = Object.keys(updates).filter((k) => !ALLOWED_PACK_COLUMNS.has(k))
+    const safeKeys = Object.keys(normalised).filter((k) => ALLOWED_PACK_COLUMNS.has(k))
+    const rejectedKeys = Object.keys(normalised).filter((k) => !ALLOWED_PACK_COLUMNS.has(k))
 
     if (safeKeys.length === 0) {
       return NextResponse.json(
@@ -110,7 +140,7 @@ export async function PATCH(request: Request) {
     }
 
     const setClause = safeKeys.map((key, i) => `"${key}" = $${i + 2}`).join(', ')
-    const values = safeKeys.map((k) => updates[k])
+    const values = safeKeys.map((k) => normalised[k])
 
     const result = await query(
       `UPDATE "CreditPack" SET ${setClause}, "updatedAt" = NOW() WHERE id = $1 RETURNING *`,

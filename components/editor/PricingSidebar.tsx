@@ -73,9 +73,8 @@ export default function PricingSidebar({
   }, []);
 
   // Calculer les valeurs avec conversions
-  const priceInCredits = currencyRate
-    ? CurrencyConverter.arToCredits(prix, currencyRate)
-    : 0;
+  // Système unifié en Ariary : plus de conversion. priceInCredits == prix.
+  const priceInCredits = CurrencyConverter.arToCredits(prix);
   const commission = CurrencyConverter.calculatePlatformFee(
     prix,
     platformFeePercent,
@@ -128,42 +127,7 @@ export default function PricingSidebar({
             </div>
           </div>
 
-          {/* Conversion Ar → cr */}
-          {!loading && (
-            <div
-              style={{
-                padding: "0.75rem",
-                background: "var(--b2)",
-                borderRadius: "6px",
-                marginBottom: "0.75rem",
-                border: "1px solid var(--b3)",
-                fontSize: "0.8rem",
-              }}
-            >
-              <div style={{ color: "var(--text-3)", marginBottom: "0.25rem" }}>
-                Équivalent en crédits:
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--mono)",
-                  fontSize: "1.1rem",
-                  fontWeight: 600,
-                  color: "var(--sage)",
-                }}
-              >
-                {priceInCredits.toLocaleString()} cr
-              </div>
-              <div
-                style={{
-                  fontSize: "0.7rem",
-                  color: "var(--text-4)",
-                  marginTop: "0.25rem",
-                }}
-              >
-                (1 cr = {currencyRate} Ar)
-              </div>
-            </div>
-          )}
+          {/* Système unifié en Ariary — plus d'équivalence à afficher. */}
 
           <div className="ed-ventilation">
             <div className="ed-vent-row">

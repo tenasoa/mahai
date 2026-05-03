@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db-client'
+import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function POST(
@@ -56,14 +57,24 @@ export async function POST(
       },
     })
 
-    await db.creditTransaction.create({
+    // Bonus en Ariary : ancien score/10 (en crédits) × 50 = score × 5 Ar.
+    const bonusAr = score > 0 ? Math.floor(score / 10) * 50 : 0
+    await db.transaction.create({
       data: {
         userId: session.user.id,
-        amount: score > 0 ? Math.floor(score / 10) : 0,
-        type: 'EARNED',
+        amountAr: bonusAr,
+        type: 'EARN',
+        status: 'COMPLETED',
         description: `Points examen ${exam.titre}`,
       },
     })
+
+    if (bonusAr > 0) {
+      await query(
+        `UPDATE "User" SET "balanceAr" = "balanceAr" + $1, "updatedAt" = NOW() WHERE id = $2`,
+        [bonusAr, session.user.id],
+      )
+    }
 
     return NextResponse.json({ score, maxScore: exam.scoreMax || 10 })
   } catch (error) {

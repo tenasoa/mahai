@@ -59,6 +59,7 @@ export function SubmissionDetailModal({ submission, onClose }: SubmissionDetailM
     annee: submission.anneeScolaire || String(new Date().getFullYear()),
     serie: submission.serie || '',
     pages: 1,
+    prix: submission.prix || 0,
     credits: submission.prix || 0,
     difficulte: 'MOYEN' as 'FACILE' | 'MOYEN' | 'DIFFICILE',
     badge: 'AI' as 'GOLD' | 'AI' | 'FREE' | 'INTER',

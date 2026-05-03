@@ -21,12 +21,12 @@ async function getContributorSubjects() {
   // enrichies copiées depuis SubjectSubmission lors de la publication.
   const subjectsResult = await query(
     `SELECT s.id, s.titre, s.matiere, s.difficulte as grade, s.annee as year,
-            s.serie as series, s.format, s.credits, s.status, s."createdAt",
+            s.serie as series, s.format, s.prix, s.prix as credits, s.status, s."createdAt",
             s.duree, s.coefficient, s.filiere, s.niveau,
             s."examType", s."anneeScolaire", s."dateOfficielle",
             s."customMeta",
             COUNT(p.id) as ventes,
-            s.credits * COUNT(p.id) as revenus
+            s.prix * COUNT(p.id) as revenus
      FROM "Subject" s
      LEFT JOIN "Purchase" p ON s.id = p."subjectId"
      WHERE s."authorId" = $1

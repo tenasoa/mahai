@@ -75,8 +75,8 @@ export async function getUserDetailAdmin(userId: string) {
     ORDER BY p."createdAt" DESC
   `, [userId])
 
-  // Récupérer les transactions de crédits
-  const creditsResult = await query('SELECT * FROM "CreditTransaction" WHERE "userId" = $1 ORDER BY "createdAt" DESC', [userId])
+  // Récupérer l'historique de transactions Ariary
+  const creditsResult = await query('SELECT * FROM "Transaction" WHERE "userId" = $1 ORDER BY "createdAt" DESC', [userId])
 
   // Récupérer les soumissions de sujets (schémas legacy + nouveau schéma).
   let submissions: any[] = []
@@ -145,35 +145,34 @@ export async function adjustUserCreditsAdmin(
     throw new Error("Un motif est requis")
   }
 
-  const userResult = await query('SELECT credits FROM "User" WHERE id = $1', [userId])
+  const userResult = await query('SELECT "balanceAr" FROM "User" WHERE id = $1', [userId])
   const current = userResult.rows[0]
   if (!current) throw new Error("Utilisateur introuvable")
 
-  const currentCredits = Number(current.credits || 0)
-  const newBalance = currentCredits + delta
+  const currentBalanceAr = Number(current.balanceAr || 0)
+  const newBalance = currentBalanceAr + delta
 
   if (newBalance < 0) {
     throw new Error("Le solde ne peut pas être négatif")
   }
 
   await query(
-    'UPDATE "User" SET credits = $1, "updatedAt" = NOW() WHERE id = $2',
+    'UPDATE "User" SET "balanceAr" = $1, "updatedAt" = NOW() WHERE id = $2',
     [newBalance, userId],
   )
 
   try {
     const crypto = await import('crypto')
     await query(
-      `INSERT INTO "CreditTransaction" (
-        id, "userId", type, amount, "creditsCount", status, "paymentMethod",
-        description, "validatedAt", "validatedBy", "createdAt", "updatedAt"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, NOW(), NOW())`,
+      `INSERT INTO "Transaction" (
+        id, "userId", type, "amountAr", status, "paymentMethod",
+        description, "validatedAt", "validatedBy", "createdAt"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, NOW())`,
       [
         crypto.randomUUID(),
         userId,
         delta > 0 ? 'EARN' : 'SPEND',
-        0,
-        Math.abs(delta),
+        delta,
         'COMPLETED',
         'ADMIN_ADJUSTMENT',
         `[Admin] ${reason.trim()}`,
@@ -181,7 +180,7 @@ export async function adjustUserCreditsAdmin(
       ],
     )
   } catch (e) {
-    console.warn('Credit adjustment log failed:', e)
+    console.warn('Admin balance adjustment log failed:', e)
   }
 
   revalidatePath('/admin/utilisateurs')

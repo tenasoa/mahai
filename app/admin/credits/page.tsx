@@ -7,7 +7,7 @@ import { AdminPaginationLinks } from '@/components/admin/AdminPaginationLinks'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
-  title: 'Gestion des Crédits Mobile Banking — Admin Mah.AI'
+  title: 'Gestion des recharges Mobile Banking — Admin Mah.AI'
 }
 
 const PAGE_SIZE = 12
@@ -53,7 +53,7 @@ export default async function AdminCreditsPage({
             <span>Finances</span>
           </div>
           <h1 className="admin-title">Recharges Mobile Banking</h1>
-          <p className="admin-subtitle">Gérez les demandes de rechargement de crédits par Mobile Banking</p>
+          <p className="admin-subtitle">Gérez les demandes de recharge en Ariary par Mobile Banking</p>
         </div>
         {pendingCount > 0 && (
           <div className="admin-header-actions">

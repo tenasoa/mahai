@@ -159,13 +159,12 @@ export const db = {
     }
   },
   
-  creditTransaction: {
+  transaction: {
     async create({ data }: { data: any }) {
       const fields: string[] = []
       const values: any[] = []
       const placeholders: string[] = []
-      
-      // S'assurer qu'un ID est présent si la table le requiert et qu'il n'est pas fourni
+
       if (!data.id) {
         data.id = crypto.randomUUID()
       }
@@ -178,15 +177,25 @@ export const db = {
         values.push(value)
         paramIndex++
       }
-      
-      const sql = `INSERT INTO "CreditTransaction" (${fields.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`
+
+      const sql = `INSERT INTO "Transaction" (${fields.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`
       const result = await query(sql, values)
       return result.rows[0]
     },
-    
+
     async findUnique({ where }: { where: { id: string } }) {
-      const result = await query('SELECT * FROM "CreditTransaction" WHERE id = $1', [where.id])
+      const result = await query('SELECT * FROM "Transaction" WHERE id = $1', [where.id])
       return result.rows[0] || null
+    }
+  },
+
+  /** @deprecated Use transaction instead. Kept for backward compat. */
+  creditTransaction: {
+    async create({ data }: { data: any }) {
+      return db.transaction.create({ data: { ...data, amountAr: data.creditsAmount || data.amount } })
+    },
+    async findUnique({ where }: { where: { id: string } }) {
+      return db.transaction.findUnique({ where })
     }
   },
   

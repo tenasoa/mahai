@@ -71,12 +71,15 @@ export default function ParrainagePage() {
       referralLink: "",
       invitedCount: 0,
       activeCount: 0,
-      creditsGained: 0,
+      totalGainedAr: 0,
       referrals: [],
       settings: {
-        welcomeBonus: 10,
-        referrerBonus: 20,
-        referredBonus: 10,
+        welcomeBonusAr: 500,
+        referrerBonusAr: 1000,
+        referredBonusAr: 500,
+        welcomeBonus: 0,
+        referrerBonus: 0,
+        referredBonus: 0,
       },
     }),
     [],
@@ -199,8 +202,8 @@ export default function ParrainagePage() {
             <article className="referral-stat-card">
               <Gift size={18} />
               <div>
-                <p>Crédits gagnés</p>
-                <strong>{viewData.creditsGained} cr</strong>
+                <p>Ariary gagnés</p>
+                <strong>{(viewData.totalGainedAr || 0).toLocaleString('fr-FR')} Ar</strong>
               </div>
             </article>
           </section>

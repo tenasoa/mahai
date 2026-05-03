@@ -241,7 +241,7 @@ export default function SubjectStatsClient({
                       {purchase.prenom} {purchase.nom?.charAt(0) || ''}.
                     </div>
                     <div className="contrib-purchase-amount">
-                      {purchase.creditsAmount} cr
+                      {Number(purchase.amountAr ?? purchase.creditsAmount ?? 0).toLocaleString('fr-FR')} Ar
                     </div>
                     <div className="contrib-purchase-date">
                       {new Date(purchase.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}

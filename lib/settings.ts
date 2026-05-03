@@ -35,27 +35,59 @@ export async function getSystemSetting<T = string>(key: string, defaultValue: T)
   }
 }
 
+/**
+ * Récupère les bonus de parrainage en Ariary.
+ *
+ * Defaults (utilisés si la SystemSetting n'existe pas en DB) :
+ *   - Welcome   : 500 Ar  (10 cr × 50 historique)
+ *   - Referrer  : 1000 Ar (20 cr × 50)
+ *   - Referred  : 500 Ar  (10 cr × 50)
+ *
+ * Note : on garde temporairement les champs `welcomeBonus` / `referrerBonus`
+ * / `referredBonus` (en crédits, deprecated) avec valeur 0 pour compat
+ * d'API avec d'éventuels appelants legacy. Ils seront supprimés en
+ * Phase 4 du refactoring.
+ */
 export async function getReferralSettings() {
-  const [
-    welcomeBonus, referrerBonus, referredBonus,
-    welcomeBonusAr, referrerBonusAr, referredBonusAr
-  ] = await Promise.all([
-    getSystemSetting('WELCOME_BONUS_CREDITS', 10),        // @deprecated
-    getSystemSetting('REFERRAL_BONUS_CREDITS', 20),       // @deprecated
-    getSystemSetting('REFERRED_BONUS_CREDITS', 10),       // @deprecated
-    getSystemSetting('WELCOME_BONUS_AR', 500),            // 10 crédits * 50 Ar
-    getSystemSetting('REFERRER_BONUS_AR', 1000),          // 20 crédits * 50 Ar
-    getSystemSetting('REFERRED_BONUS_AR', 500),           // 10 crédits * 50 Ar
+  const [welcomeBonusAr, referrerBonusAr, referredBonusAr] = await Promise.all([
+    getSystemSetting('WELCOME_BONUS_AR', 500),
+    getSystemSetting('REFERRER_BONUS_AR', 1000),
+    getSystemSetting('REFERRED_BONUS_AR', 500),
   ])
 
   return {
-    // Anciennes valeurs en crédits (deprecated)
-    welcomeBonus,
-    referrerBonus,
-    referredBonus,
-    // Nouvelles valeurs en Ariary
     welcomeBonusAr,
     referrerBonusAr,
     referredBonusAr,
+    // Champs deprecated — gardés pour compat, à supprimer en Phase 4.
+    welcomeBonus: 0,
+    referrerBonus: 0,
+    referredBonus: 0,
   }
+}
+
+/**
+ * Récupère le pourcentage de frais plateforme (0-100).
+ * Remplace l'ancienne table CurrencyConfig.platformFeePercent.
+ */
+export async function getPlatformFeePercent(defaultValue = 30): Promise<number> {
+  const value = await getSystemSetting<number>('PLATFORM_FEE_PERCENT', defaultValue)
+  return Math.max(0, Math.min(100, Number(value) || defaultValue))
+}
+
+/**
+ * Met à jour le pourcentage de frais plateforme.
+ */
+export async function setPlatformFeePercent(percent: number): Promise<void> {
+  const safePercent = Math.max(0, Math.min(100, Math.round(percent * 100) / 100))
+  await query(
+    `INSERT INTO "SystemSetting" (key, value, type, label, description, category, "isEditable")
+     VALUES ('PLATFORM_FEE_PERCENT', $1, 'number',
+             'Frais plateforme (%)',
+             'Pourcentage prélevé sur chaque vente de sujet par la plateforme (0-100).',
+             'finance', true)
+     ON CONFLICT (key) DO UPDATE
+       SET value = EXCLUDED.value, "updatedAt" = NOW()`,
+    [safePercent.toString()]
+  )
 }

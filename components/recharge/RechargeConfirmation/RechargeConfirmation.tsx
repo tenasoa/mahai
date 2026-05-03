@@ -45,7 +45,8 @@ export function RechargeConfirmation({
   const [localError, setLocalError] = useState('')
   const [copied, setCopied] = useState(false)
   const [merchantPhones, setMerchantPhones] = useState<Record<string, MerchantPhoneInfo>>({})
-  const totalCredits = amount + (bonus || 0)
+  // Montant total crédité en Ariary (= montant pack + bonus).
+  const totalAr = amount + (bonus || 0)
 
   // Charger les numéros marchand depuis l'API
   useEffect(() => {
@@ -96,7 +97,7 @@ export function RechargeConfirmation({
           <div className={styles.successState}>
             <div className={styles.successIcon}><CheckCircle2 size={48} /></div>
             <p className={styles.successMessage}>
-              Vos {totalCredits} crédits ont été ajoutés à votre compte.
+              Vos {totalAr.toLocaleString('fr-FR')} Ar ont été ajoutés à votre solde.
             </p>
             {transactionId && (
               <div className={styles.transactionId}>
@@ -130,8 +131,8 @@ export function RechargeConfirmation({
               <div className={styles.confirmationState}>
                 <div className={styles.summaryCard}>
                   <div className={styles.summaryRow}>
-                    <span className={styles.label}>Crédits à recevoir</span>
-                    <span className={styles.valueTotal}>+{totalCredits} cr</span>
+                    <span className={styles.label}>Solde à créditer</span>
+                    <span className={styles.valueTotal}>+{totalAr.toLocaleString('fr-FR')} Ar</span>
                   </div>
                   <div className={styles.summaryRow}>
                     <span className={styles.label}>Montant à payer</span>

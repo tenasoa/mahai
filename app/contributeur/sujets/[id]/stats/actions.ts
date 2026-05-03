@@ -62,7 +62,7 @@ export async function getSubjectStats(subjectId: string) {
     const statsResult = await query(`
       SELECT 
         COUNT(p.id) as totalSales,
-        COALESCE(SUM(p."creditsAmount" * 50), 0) as totalRevenue,
+        COALESCE(SUM(p."amountAr"), 0) as totalRevenue,
         COALESCE(s.rating, 0) as averageRating,
         0 as totalDownloads
       FROM "Subject" s
@@ -76,7 +76,7 @@ export async function getSubjectStats(subjectId: string) {
       SELECT 
         TO_CHAR("createdAt", 'YYYY-MM') as month,
         COUNT(*) as sales,
-        SUM("creditsAmount" * 50) as revenue
+        SUM("amountAr") as revenue
       FROM "Purchase"
       WHERE "subjectId" = $1
         AND "createdAt" >= NOW() - INTERVAL '6 months'

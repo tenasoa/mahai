@@ -15,6 +15,8 @@ export type SyncAuthUserResult = {
   created: boolean;
   emailVerified: boolean;
   welcomeBonusGranted: boolean;  // Renommé de welcomeCreditsGranted
+  /** @deprecated Alias de welcomeBonusGranted, conservé pour compat. */
+  welcomeCreditsGranted?: boolean;
   error?: string;
 };
 
@@ -294,6 +296,7 @@ export async function syncAppUserWithAuthUser(
       created,
       emailVerified,
       welcomeBonusGranted,
+      welcomeCreditsGranted: welcomeBonusGranted,
     };
   } catch (error) {
     console.error("Erreur synchronisation utilisateur auth:", error);

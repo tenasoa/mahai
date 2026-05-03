@@ -31,7 +31,7 @@ export function useAdminTransactionsRealtime({ enabled }: UseAdminTransactionsRe
 
     const supabase = createClient()
     
-    // S'abonner aux changements sur la table CreditTransaction
+    // S'abonner aux changements sur la table Transaction (Ariary)
     const channel = supabase
       .channel('admin-transactions-realtime')
       .on(
@@ -39,7 +39,7 @@ export function useAdminTransactionsRealtime({ enabled }: UseAdminTransactionsRe
         {
           event: '*',
           schema: 'public',
-          table: 'CreditTransaction',
+          table: 'Transaction',
           filter: 'status=eq.PENDING'
         },
         handleTransactionChange

@@ -60,7 +60,7 @@ export async function getContributorDashboard(period: DashboardPeriod = '30d') {
   const currentRes = await query(
     `SELECT 
         COUNT(p.id) AS sales,
-        COALESCE(SUM(s.credits), 0) AS revenue
+        COALESCE(SUM(p."amountAr"), 0) AS revenue
      FROM "Purchase" p
      JOIN "Subject" s ON p."subjectId" = s.id
      WHERE s."authorId" = $1 ${periodClause}`,
@@ -72,7 +72,7 @@ export async function getContributorDashboard(period: DashboardPeriod = '30d') {
     ? await query(
         `SELECT 
             COUNT(p.id) AS sales,
-            COALESCE(SUM(s.credits), 0) AS revenue
+            COALESCE(SUM(p."amountAr"), 0) AS revenue
          FROM "Purchase" p
          JOIN "Subject" s ON p."subjectId" = s.id
          WHERE s."authorId" = $1 ${prevPeriodClause}`,
@@ -92,9 +92,9 @@ export async function getContributorDashboard(period: DashboardPeriod = '30d') {
 
   // Top sujets (période courante)
   const topSubjectsRes = await query(
-    `SELECT s.id, s.titre, s.matiere, s.serie, s.credits, 
+    `SELECT s.id, s.titre, s.matiere, s.serie, s.prix, s.prix as credits,
             COUNT(p.id) AS ventes,
-            s.credits * COUNT(p.id) AS revenus
+            s.prix * COUNT(p.id) AS revenus
      FROM "Subject" s
      LEFT JOIN "Purchase" p ON s.id = p."subjectId" ${periodClause ? `AND TRUE ${periodClause}` : ''}
      WHERE s."authorId" = $1 AND s.status = 'PUBLISHED'
@@ -106,8 +106,8 @@ export async function getContributorDashboard(period: DashboardPeriod = '30d') {
 
   // Tous les sujets (pour status breakdown)
   const allSubjectsRes = await query(
-    `SELECT s.id, s.titre, s.difficulte AS grade, s.annee AS year, 
-            s.serie AS series, s.format, s.credits, s.status
+    `SELECT s.id, s.titre, s.difficulte AS grade, s.annee AS year,
+            s.serie AS series, s.format, s.prix, s.prix as credits, s.status
      FROM "Subject" s
      WHERE s."authorId" = $1
      ORDER BY s."createdAt" DESC`,

@@ -166,11 +166,14 @@ export interface PurchasedSubjectItem {
   matiere: string;
   annee: string;
   serie: string | null;
-  credits: number;
+  prix: number;
   rating: number;
   reviewsCount: number;
-  creditsAmount: number;
+  amountAr: number;
   purchasedAt: string;
+  // Champs deprecated (alias) gardés pour compat ascendante UI.
+  credits?: number;
+  creditsAmount?: number;
 }
 
 export async function getCurrentUserPurchasedSubjectsAction() {
@@ -193,10 +196,10 @@ export async function getCurrentUserPurchasedSubjectsAction() {
          s.matiere,
          s.annee,
          s.serie,
-         s.credits,
+         s.prix,
          s.rating,
          s."reviewsCount",
-         p."creditsAmount",
+         p."amountAr",
          p."createdAt" AS "purchasedAt"
        FROM "Purchase" p
        JOIN "Subject" s ON s.id = p."subjectId"
@@ -206,7 +209,15 @@ export async function getCurrentUserPurchasedSubjectsAction() {
       [context.userId],
     );
 
-    return { success: true, data: result.rows as PurchasedSubjectItem[] };
+    // Alias legacy (credits / creditsAmount) pour compat des composants UI
+    // qui n'ont pas encore été migrés.
+    const data = result.rows.map((r: any) => ({
+      ...r,
+      credits: r.prix,
+      creditsAmount: r.amountAr,
+    })) as PurchasedSubjectItem[];
+
+    return { success: true, data };
   } catch (error) {
     console.error("Erreur récupération sujets achetés:", error);
     return {
@@ -546,7 +557,7 @@ export async function getUserTransactionsAction() {
 
   try {
     const result = await query(
-      'SELECT * FROM "CreditTransaction" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 20',
+      'SELECT * FROM "Transaction" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 20',
       [context.userId],
     );
 
@@ -639,60 +650,52 @@ export async function rechargeCreditsAction(data: {
 
     // ⚠ Sécurité : on N'utilise PAS `packPrice` du client. On recalcule depuis
     // la DB :
-    //   1. Vérifier qu'un CreditPack actif a bien `credits = packCredits`
-    //   2. Lire `arPerCredit` actif depuis CurrencyConfig
-    //   3. Le `amount` enregistré = pack.credits × arPerCredit (calcul serveur)
-    // Empêche un attaquant d'envoyer `packCredits=300, packPrice=1` et de
-    // créditer 300 crédits pour 1 Ar.
+    //   1. Vérifier qu'un CreditPack actif existe pour ce montant
+    //   2. Le montant enregistré = pack.arAmount (en Ariary, calcul serveur)
+    //   3. Le bonus en Ar (pack.bonusAr) s'ajoute au solde sans augmenter le prix
+    // Empêche un attaquant d'envoyer un prix arbitraire pour un pack quelconque.
+    //
+    // NOTE: `packCredits` est conservé dans la signature pour compat client mais
+    // est interprété comme l'arAmount attendu côté serveur (système unifié Ar).
     const packCheck = await query(
-      `SELECT id, credits, bonus FROM "CreditPack"
-       WHERE credits = $1 AND "isActive" = true
+      `SELECT id, "arAmount", "bonusAr" FROM "CreditPack"
+       WHERE "arAmount" = $1 AND "isActive" = true
        LIMIT 1`,
       [data.packCredits],
     );
     if (packCheck.rows.length === 0) {
       return {
         success: false,
-        error: "Pack de crédits invalide ou désactivé.",
+        error: "Pack de recharge invalide ou désactivé.",
       };
     }
     const pack = packCheck.rows[0];
-
-    const configRes = await query(
-      `SELECT "arPerCredit" FROM "CurrencyConfig"
-       WHERE "activeAt" <= NOW()
-       ORDER BY "activeAt" DESC
-       LIMIT 1`,
-      [],
-    );
-    const arPerCredit = Number(configRes.rows[0]?.arPerCredit) || 50;
-    const expectedAmount = pack.credits * arPerCredit;
+    const expectedAmount = Number(pack.arAmount);
 
     // Tolérance de 1 Ar pour absorber les arrondis client. Au-delà → reject.
     if (Math.abs(data.packPrice - expectedAmount) > 1) {
       return {
         success: false,
-        error: `Prix invalide : attendu ${expectedAmount} Ar pour ${pack.credits} crédits, reçu ${data.packPrice} Ar.`,
+        error: `Prix invalide : attendu ${expectedAmount} Ar pour ce pack, reçu ${data.packPrice} Ar.`,
       };
     }
 
-    // Crédits totaux à attribuer = pack.credits + pack.bonus (le bonus
-    // n'augmente PAS le prix).
-    const creditsToAward = pack.credits + (pack.bonus || 0);
+    // Solde Ar total à créditer = arAmount + bonusAr (le bonus n'augmente PAS le prix).
+    const arToAward = expectedAmount + (Number(pack.bonusAr) || 0);
 
     const isPending = data.status === "PENDING";
 
-    // 1. Créer la transaction (avec montant et crédits SERVEUR, pas client)
+    // 1. Créer la transaction dans la nouvelle table Transaction (système Ariary)
     await query(
-      `INSERT INTO "CreditTransaction" ("id", "userId", "type", "amount", "creditsCount", "description", "paymentMethod", "phoneNumber", "senderCode", "status")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      `INSERT INTO "Transaction"
+         ("id", "userId", "type", "amountAr", "description", "paymentMethod", "phoneNumber", "senderCode", "status")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         crypto.randomUUID(),
         context.userId,
         "RECHARGE",
-        expectedAmount, // Montant en Ariary (calculé serveur)
-        creditsToAward, // Crédits = pack.credits + bonus (calculé serveur)
-        `Recharge ${data.operator} — Pack ${pack.credits} crédits — ${data.phoneNumber}`,
+        arToAward, // Montant total en Ariary (incluant bonus)
+        `Recharge ${data.operator} — ${expectedAmount} Ar — ${data.phoneNumber}`,
         data.operator,
         data.phoneNumber,
         data.transferCode || null,
@@ -700,12 +703,11 @@ export async function rechargeCreditsAction(data: {
       ],
     );
 
-    // 2. Mettre à jour le solde de crédits (seulement si validé immédiatement)
-    // Si status = PENDING, les crédits seront ajoutés après validation admin
+    // 2. Mettre à jour le solde Ar (seulement si validé immédiatement)
     if (!isPending) {
       await query(
-        `UPDATE "User" SET "credits" = "credits" + $1 WHERE "id" = $2`,
-        [creditsToAward, context.userId],
+        `UPDATE "User" SET "balanceAr" = "balanceAr" + $1, "updatedAt" = NOW() WHERE "id" = $2`,
+        [arToAward, context.userId],
       );
     }
 
@@ -715,13 +717,13 @@ export async function rechargeCreditsAction(data: {
     if (isPending) {
       return {
         success: true,
-        message: `Votre demande de recharge de ${creditsToAward} crédits a été enregistrée. Validation par l'administrateur sous 12h.`,
+        message: `Votre demande de recharge de ${arToAward} Ar a été enregistrée. Validation par l'administrateur sous 12h.`,
       };
     }
 
     return {
       success: true,
-      message: `Recharge de ${creditsToAward} crédits effectuée avec succès`,
+      message: `Recharge de ${arToAward} Ar effectuée avec succès`,
     };
   } catch (error) {
     console.error("Erreur rechargeCreditsAction:", error);
@@ -733,11 +735,11 @@ export async function rechargeCreditsAction(data: {
  * Aide à router une notification (id préfixé `notif:` ou `tx:`) vers la
  * bonne table.
  */
-function splitNotificationId(prefixedId: string): { table: 'Notification' | 'CreditTransaction'; id: string } {
+function splitNotificationId(prefixedId: string): { table: 'Notification' | 'Transaction'; id: string } {
   if (prefixedId.startsWith('notif:')) return { table: 'Notification', id: prefixedId.slice(6) }
-  if (prefixedId.startsWith('tx:'))    return { table: 'CreditTransaction', id: prefixedId.slice(3) }
+  if (prefixedId.startsWith('tx:'))    return { table: 'Transaction', id: prefixedId.slice(3) }
   // Backward-compat : ancien id non préfixé = transaction
-  return { table: 'CreditTransaction', id: prefixedId }
+  return { table: 'Transaction', id: prefixedId }
 }
 
 /**
@@ -750,7 +752,7 @@ export async function markAllNotificationsAsReadAction() {
 
   try {
     await query(
-      `UPDATE "CreditTransaction" SET "isRead" = true WHERE "userId" = $1 AND "isRead" = false`,
+      `UPDATE "Transaction" SET "isRead" = true WHERE "userId" = $1 AND "isRead" = false`,
       [context.userId],
     );
 
@@ -797,7 +799,7 @@ export async function markNotificationAsReadAction(notificationId: string) {
       )
     } else {
       await query(
-        `UPDATE "CreditTransaction" SET "isRead" = true WHERE id = $1 AND "userId" = $2`,
+        `UPDATE "Transaction" SET "isRead" = true WHERE id = $1 AND "userId" = $2`,
         [id, context.userId],
       )
     }
@@ -829,7 +831,7 @@ export async function dismissNotificationAction(notificationId: string) {
       )
     } else {
       await query(
-        `UPDATE "CreditTransaction" SET "isDismissed" = true WHERE id = $1 AND "userId" = $2`,
+        `UPDATE "Transaction" SET "isDismissed" = true WHERE id = $1 AND "userId" = $2`,
         [id, context.userId],
       )
     }
@@ -902,31 +904,31 @@ export async function getUserNotificationsAction() {
       console.warn('getUserNotificationsAction (Notification) skipped:', e)
     }
 
-    // 2) CreditTransaction (rétro-compat : crédits/achats)
+    // 2) Transaction (recharges, achats, gains — système Ariary)
     try {
       const txRes = await query(
-        `SELECT id, type, status, amount, "creditsCount", description, "createdAt", "isRead"
-         FROM "CreditTransaction"
+        `SELECT id, type, status, "amountAr", description, "createdAt", "isRead"
+         FROM "Transaction"
          WHERE "userId" = $1 AND "isDismissed" = false
          ORDER BY "createdAt" DESC
          LIMIT 30`,
         [context.userId],
       )
       for (const tx of txRes.rows) {
-        const credits = tx.creditsCount ?? Math.abs(tx.amount ?? 0)
+        const amountAr = Math.abs(Number(tx.amountAr ?? 0))
         const title =
           tx.type === 'RECHARGE'
             ? tx.status === 'PENDING'
               ? 'Recharge en attente'
               : 'Recharge créditée'
-            : tx.type === 'ACHAT'
+            : tx.type === 'SPEND' || tx.type === 'ACHAT'
               ? 'Achat de sujet'
               : 'Transaction'
         items.push({
           id: `tx:${tx.id}`,
-          type: tx.type === 'RECHARGE' ? 'credit' : tx.type === 'ACHAT' ? 'sujet' : 'alert',
+          type: tx.type === 'RECHARGE' ? 'credit' : (tx.type === 'SPEND' || tx.type === 'ACHAT') ? 'sujet' : 'alert',
           title,
-          body: tx.description || `${tx.type === 'RECHARGE' ? '+' : ''}${credits} crédits${tx.status === 'PENDING' ? ' (en attente)' : ''}`,
+          body: tx.description || `${tx.type === 'RECHARGE' ? '+' : '-'}${amountAr} Ar${tx.status === 'PENDING' ? ' (en attente)' : ''}`,
           link: '/recharge',
           createdAt: tx.createdAt instanceof Date
             ? tx.createdAt.toISOString()
@@ -936,7 +938,7 @@ export async function getUserNotificationsAction() {
         })
       }
     } catch (e) {
-      console.warn('getUserNotificationsAction (CreditTransaction) skipped:', e)
+      console.warn('getUserNotificationsAction (Transaction) skipped:', e)
     }
 
     // Tri global décroissant
@@ -958,7 +960,7 @@ export async function getUserActiveTransactionsAction() {
 
   try {
     const result = await query(
-      `SELECT * FROM "CreditTransaction"
+      `SELECT * FROM "Transaction"
        WHERE "userId" = $1 AND "isDismissed" = false
        ORDER BY "createdAt" DESC
        LIMIT 20`,
@@ -1002,7 +1004,7 @@ export async function getUserCreditHistoryAction(
 
     // Count total
     const countResult = await query(
-      `SELECT COUNT(*) FROM "CreditTransaction" WHERE "userId" = $1`,
+      `SELECT COUNT(*) FROM "Transaction" WHERE "userId" = $1`,
       [context.userId],
     );
     const total = parseInt(countResult.rows[0]?.count || "0", 10);
@@ -1010,7 +1012,7 @@ export async function getUserCreditHistoryAction(
     // Get transactions with pagination
     const offset = (safePage - 1) * safePageSize;
     const result = await query(
-      `SELECT * FROM "CreditTransaction"
+      `SELECT * FROM "Transaction"
        WHERE "userId" = $1
        ORDER BY "createdAt" DESC
        LIMIT $2 OFFSET $3`,

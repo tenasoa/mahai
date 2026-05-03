@@ -11,8 +11,8 @@ interface Transaction {
   prenom: string | null
   nom: string | null
   email: string
-  amount: number
-  creditsCount: number
+  /** Montant Ariary du dépôt / crédité sur le solde. */
+  amountAr: number
   phoneNumber: string | null
   userPhone: string | null
   senderCode: string | null
@@ -33,9 +33,6 @@ function formatMoney(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' Ar'
 }
 
-function formatCreditsDisplay(credits: number) {
-  return credits + ' cr' + (credits > 1 ? 's' : '')
-}
 
 export function CreditsTable({
   transactions,
@@ -91,8 +88,8 @@ export function CreditsTable({
               </th>
               <th>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                  <span>Crédits</span>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-4)', fontWeight: 400, textTransform: 'none' }}>(À ajouter)</span>
+                  <span>Solde Ar</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-4)', fontWeight: 400, textTransform: 'none' }}>(À créditer)</span>
                 </div>
               </th>
               <th>Statut</th>
@@ -137,7 +134,7 @@ export function CreditsTable({
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                       <span style={{ fontWeight: 600, color: 'var(--gold)', fontSize: '0.95rem' }}>
-                        {formatMoney(tx.amount)}
+                        {formatMoney(tx.amountAr)}
                       </span>
                       <span style={{ fontSize: '0.65rem', color: 'var(--text-4)', fontFamily: 'var(--mono)' }}>
                         {tx.paymentMethod}
@@ -147,10 +144,10 @@ export function CreditsTable({
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                       <span style={{ fontSize: '0.9rem', color: 'var(--sage)', fontWeight: 600 }}>
-                        +{tx.creditsCount} cr
+                        +{formatMoney(tx.amountAr)}
                       </span>
                       <span style={{ fontSize: '0.65rem', color: 'var(--text-4)' }}>
-                        {tx.creditsCount} crédits
+                        Crédité au solde
                       </span>
                     </div>
                   </td>
@@ -219,7 +216,7 @@ export function CreditsTable({
                       Montant payé
                     </div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--gold)', fontFamily: 'var(--mono)' }}>
-                      {formatMoney(selectedTx.amount)}
+                      {formatMoney(selectedTx.amountAr)}
                     </div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-4)', marginTop: '0.25rem' }}>
                       Montant réel envoyé par l'utilisateur
@@ -227,10 +224,10 @@ export function CreditsTable({
                   </div>
                   <div style={{ borderLeft: '1px solid var(--gold-line)', paddingLeft: '1rem' }}>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
-                      Crédits à ajouter
+                      À créditer
                     </div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--sage)', fontFamily: 'var(--mono)' }}>
-                      +{selectedTx.creditsCount} cr
+                      +{formatMoney(selectedTx.amountAr)}
                     </div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-4)', marginTop: '0.25rem' }}>
                       Solde après validation
