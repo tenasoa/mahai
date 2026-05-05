@@ -86,7 +86,7 @@ export default function PolitiqueConfidentialitePage() {
           </div>
           <ul className="space-y-3 text-text-2 leading-relaxed ml-8 list-disc marker:text-gold">
             <li>Fournir et améliorer le service (catalogue personnalisé, recommandations).</li>
-            <li>Gérer votre compte, votre portefeuille de crédits et vos transactions Mobile Money.</li>
+            <li>Gérer votre compte, votre solde et vos transactions Mobile Money.</li>
             <li>Assurer la sécurité (détection de fraude, authentification).</li>
             <li>Vous envoyer des communications essentielles (confirmation d'email, reset de mot de passe, factures).</li>
             <li>Envoyer des newsletters <em>uniquement</em> si vous avez activé l'opt-in lors de l'inscription.</li>

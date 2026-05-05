@@ -179,9 +179,9 @@ export default function RechargePage() {
             : "refusée";
 
       if (lastTransaction.status === "COMPLETED") {
-        toast.success("Transaction", `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`);
+        toast.success("Transaction", `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} Ar ${status}.`);
       } else {
-        toast.error("Transaction", `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} crédits ${status}.`);
+        toast.error("Transaction", `${txType} de ${lastTransaction.creditsCount || Math.abs(lastTransaction.amount)} Ar ${status}.`);
       }
     }
   }, [newTransactionCount]);
@@ -199,7 +199,7 @@ export default function RechargePage() {
     return `${numbers.slice(0, 3)} ${numbers.slice(3, 5)} ${numbers.slice(5, 8)} ${numbers.slice(8, 10)}`;
   };
 
-  // Charger les packs de crédits dynamiques au montage
+  // Charger les packs de recharge dynamiques au montage
   useEffect(() => {
     async function fetchCreditPacks() {
       try {
@@ -303,7 +303,7 @@ export default function RechargePage() {
   const baseRate = globalArPerCredit;
 
   return (
-    <div className="credits-page">
+    <div className="recharge-page">
       <LuxuryCursor />
       <LuxuryNavbar />
 
@@ -312,7 +312,7 @@ export default function RechargePage() {
         <div className="hero-inner">
           <div className="hero-label">{appUser?.prenom || "Utilisateur"}</div>
           <h1 className="hero-title">
-            Mes <em>crédits</em>
+            Mon <em>solde</em>
           </h1>
           <p className="hero-sub">
             Gérez votre solde, suivez vos mouvements et rechargez votre compte
@@ -332,7 +332,7 @@ export default function RechargePage() {
           )}
 
           <BalanceCard
-            balance={appUser?.balanceAr ?? appUser?.credits ?? 0}
+            balance={appUser?.balanceAr ?? 0}
           />
         </div>
       </section>
@@ -403,7 +403,7 @@ export default function RechargePage() {
                     <li>Effectuez le transfert vers le numéro Mah.AI indiqué</li>
                     <li>Renseignez le code de transaction reçu par SMS</li>
                     <li>
-                      Vos crédits sont ajoutés après vérification (sous 12h)
+                      Votre solde est crédité après vérification (sous 12h)
                     </li>
                   </ol>
                 </div>
@@ -438,7 +438,7 @@ export default function RechargePage() {
               <div className="info-row">
                 <span className="info-key">Solde actuel</span>
                 <span className="info-val gold">
-                  {(appUser?.balanceAr ?? appUser?.credits ?? 0).toLocaleString('fr-FR')} Ar
+                  {(appUser?.balanceAr ?? 0).toLocaleString('fr-FR')} Ar
                 </span>
               </div>
               <div className="info-row">

@@ -363,7 +363,7 @@ export function OnboardingForm({ userName, onComplete, onSkip }: OnboardingFormP
               >
                 <span style={{ fontFamily: 'var(--mono)', fontSize: '0.65rem', color: 'var(--gold)' }}>🎁 Bonus</span>
                 <span style={{ fontSize: '0.78rem', color: 'var(--text-2)' }}>
-                  10 crédits offerts pour votre première connexion
+                  500 Ar offerts pour votre première connexion
                 </span>
               </div>
             </div>

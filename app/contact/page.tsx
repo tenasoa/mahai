@@ -42,8 +42,8 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); setSubmitted(true); setTimeout(() => setSubmitted(false), 3000) }
 
   const faqItems = [
-    { question: 'Comment puis-je recharger mes crédits ?', answer: 'Vous pouvez recharger vos crédits via Mobile Money (MVola, Orange Money, Airtel Money) en vous rendant sur la page Recharge.' },
-    { question: 'Combien coûte un sujet d\'examen ?', answer: 'Les prix varient : CEPE (gratuit à 5 crédits), BEPC (5-10 crédits), BAC (10-20 crédits). Le prix exact est indiqué sur chaque sujet.' },
+    { question: 'Comment puis-je recharger mon solde ?', answer: 'Vous pouvez recharger votre solde via Mobile Money (MVola, Orange Money, Airtel Money) en vous rendant sur la page Recharge.' },
+    { question: 'Combien coûte un sujet d\'examen ?', answer: 'Les prix varient : CEPE (gratuit à 250 Ar), BEPC (250-500 Ar), BAC (500-1000 Ar). Le prix exact est indiqué sur chaque sujet.' },
     { question: 'La correction IA est-elle fiable ?', answer: 'Notre correction IA propulsée par Perplexity offre une précision de 85-90%. Elle complète l\'enseignement humain.' },
     { question: 'Puis-je devenir contributeur ?', answer: 'Oui ! Si vous êtes professeur ou expert, postulez via "Devenir contributeur". Notre équipe examinera votre dossier.' }
   ]

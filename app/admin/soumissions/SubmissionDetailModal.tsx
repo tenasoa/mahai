@@ -340,7 +340,7 @@ export function SubmissionDetailModal({ submission, onClose }: SubmissionDetailM
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-slate-500">Prix suggéré</dt>
-                    <dd className="text-slate-900">{submission.prix} crédits ({submission.prixMode})</dd>
+                    <dd className="text-slate-900">{submission.prix} Ar ({submission.prixMode})</dd>
                   </div>
                   {submission.duree && (
                     <div className="flex justify-between">

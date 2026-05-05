@@ -63,7 +63,7 @@ export function LuxuryFooter() {
                 <Link href="/comment-ca-marche">Comment ça marche</Link>
               </li>
               <li>
-                <Link href="/recharge">Tarifs crédits</Link>
+                <Link href="/recharge">Tarifs recharge</Link>
               </li>
               <li>
                 <Link href="/devenir-contributeur">Devenir contributeur</Link>

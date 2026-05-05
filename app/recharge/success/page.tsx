@@ -6,7 +6,7 @@ export default function SuccessPage() {
       <div className="text-6xl mb-4">✓</div>
       <h1 className="text-2xl font-bold mb-2">Recharge enregistrée</h1>
       <p className="text-gray-600 mb-6">
-        Votre demande est en cours de vérification. Les crédits seront ajoutés après validation.
+        Votre demande est en cours de vérification. Le solde sera crédité après validation.
       </p>
 
       <div className="space-y-3">

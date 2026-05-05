@@ -90,7 +90,7 @@ export default async function AdminUserDetailPage({
   const tabs = [
     { id: 'profil', label: 'Profil & Infos', icon: User, count: null },
     { id: 'purchases', label: 'Achats Sujets', icon: ShoppingBag, count: userDetail.purchases?.length || 0 },
-    { id: 'credits', label: 'Flux Crédits', icon: CreditCard, count: userDetail.creditHistory?.length || 0 },
+    { id: 'credits', label: 'Flux Transactions', icon: CreditCard, count: userDetail.creditHistory?.length || 0 },
     { id: 'history', label: 'Contributions', icon: History, count: userDetail.submissions?.length || 0 },
   ]
 
@@ -212,7 +212,7 @@ export default async function AdminUserDetailPage({
               }}>
                 <CreditCard size={14} className="text-gold" />
                 <span style={{ color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--mono)', fontSize: '0.9rem' }}>
-                  {formatBalance(userDetail.balanceAr ?? userDetail.credits ?? 0)}
+                  {formatBalance(userDetail.balanceAr ?? 0)}
                 </span>
               </div>
             </div>
@@ -376,7 +376,7 @@ export default async function AdminUserDetailPage({
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-3)', marginBottom: '0.25rem' }}>Solde actuel</div>
                   <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--display)', letterSpacing: '-0.02em' }}>
-                    {(userDetail.balanceAr ?? userDetail.credits ?? 0).toLocaleString('fr-FR')}<span style={{ color: 'var(--gold)', fontSize: '1rem', marginLeft: '0.5rem' }}>Ar</span>
+                    {(userDetail.balanceAr ?? 0).toLocaleString('fr-FR')}<span style={{ color: 'var(--gold)', fontSize: '1rem', marginLeft: '0.5rem' }}>Ar</span>
                   </div>
                   <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
                     <Link
@@ -441,7 +441,7 @@ export default async function AdminUserDetailPage({
                         </td>
                         <td style={{ textAlign: 'right' }}>
                           <span style={{ color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--mono)', fontSize: '1rem' }}>
-                            -{(purchase.amountAr ?? purchase.credits ?? 0).toLocaleString('fr-FR')} Ar
+                            -{(purchase.amountAr ?? 0).toLocaleString('fr-FR')} Ar
                           </span>
                         </td>
                       </tr>

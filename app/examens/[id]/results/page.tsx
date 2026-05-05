@@ -121,8 +121,8 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
                     <li><CheckCircle2 size={14} /> Rappels de cours sur les points faibles</li>
                   </ul>
                   <div className="cp-price">
-                    <span className="p-amount">15</span>
-                    <span className="p-unit">crédits</span>
+                    <span className="p-amount">750</span>
+                    <span className="p-unit">Ar</span>
                   </div>
                   <Link href={`/examens/${id}/correction`} className="btn-luxury-buy">
                     <Zap size={18} />

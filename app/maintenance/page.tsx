@@ -15,7 +15,7 @@ export default function MaintenancePage() {
   const variants = {
     maintenance: { code: '503', label: 'MAINTENANCE', title: 'Mise à jour <em>en cours</em>', sub: 'Mah.AI procède à une maintenance planifiée pour améliorer votre expérience. Le service sera rétabli très bientôt.', progress: 'Mise à jour de la base de données…' },
     overload: { code: '503', label: 'SURCHARGE', title: 'Serveur <em>surchargé</em>', sub: 'Mah.AI connaît un trafic inhabituel en ce moment. Nos équipes travaillent à augmenter la capacité. Veuillez réessayer dans quelques minutes.', progress: 'Redimensionnement des serveurs…' },
-    scheduled: { code: '🛠', label: 'PLANIFIÉE', title: 'Maintenance <em>planifiée</em>', sub: 'Une maintenance planifiée est en cours ce soir de 22h à 02h. Vos données et crédits sont intacts. Le service reprend automatiquement.', progress: 'Optimisation des performances…' },
+    scheduled: { code: '🛠', label: 'PLANIFIÉE', title: 'Maintenance <em>planifiée</em>', sub: 'Une maintenance planifiée est en cours ce soir de 22h à 02h. Vos données et solde sont intacts. Le service reprend automatiquement.', progress: 'Optimisation des performances…' },
   }
 
   useEffect(() => {

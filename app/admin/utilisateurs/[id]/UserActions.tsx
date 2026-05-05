@@ -99,7 +99,7 @@ export function AdminCreditAdjuster({ user }: Props) {
 
             <div className="admin-modal-body">
               <p className="admin-modal-note">
-                Solde actuel&nbsp;: <strong>{(user.balanceAr ?? user.credits ?? 0).toLocaleString('fr-FR')} Ar</strong>
+                Solde actuel&nbsp;: <strong>{(user.balanceAr ?? 0).toLocaleString('fr-FR')} Ar</strong>
               </p>
 
               <div className="admin-toggle-row">
@@ -121,7 +121,7 @@ export function AdminCreditAdjuster({ user }: Props) {
                 </button>
               </div>
 
-              <label className="admin-modal-label">Montant (crédits)</label>
+              <label className="admin-modal-label">Montant (Ar)</label>
               <input
                 type="number"
                 min="1"

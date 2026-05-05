@@ -225,7 +225,7 @@ export default function NotificationsPage() {
   if (loading || !userId) return null
 
   return (
-    <div className="credits-page">
+    <div className="notifications-page">
       <LuxuryCursor />
       <LuxuryNavbar />
 
@@ -352,7 +352,7 @@ export default function NotificationsPage() {
       </div>
 
       <style jsx global>{`
-        .credits-page {
+        .notifications-page {
           min-height: 100vh;
           background-color: var(--void);
           color: var(--text);

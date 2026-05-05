@@ -153,7 +153,7 @@ export default async function AdminSubjectsPage({
                           {submission.matiere} • {submission.examType} ({submission.anneeScolaire})
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--amber)', fontFamily: 'var(--mono)', marginTop: '0.25rem' }}>
-                          {submission.prix} crédits • Soumission contributeur
+                          {submission.prix} Ar • Soumission contributeur
                         </div>
                       </td>
                       <td>
@@ -223,7 +223,7 @@ export default async function AdminSubjectsPage({
                         {subject.motiere} • {subject.grade} ({subject.year})
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--gold)', fontFamily: 'var(--mono)', marginTop: '0.25rem' }}>
-                        {subject.credits} crédits • {subject.pagesCount || 1} pages
+                        {subject.credits} Ar • {subject.pagesCount || 1} pages
                       </div>
                     </td>
                     <td>

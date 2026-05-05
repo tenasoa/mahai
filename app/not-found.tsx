@@ -33,7 +33,7 @@ export default function NotFound() {
 
   const variants = {
     '404': { code: '404', errCode: 'PAGE_NOT_FOUND', title: "Cette page n'existe <em>pas encore</em>", sub: "Le sujet que vous cherchez a peut-être été déplacé, supprimé ou n'a jamais existé. L'IA a cherché partout — sans succès." },
-    '403': { code: '403', errCode: 'ACCESS_FORBIDDEN', title: "Accès <em>refusé</em>", sub: "Ce contenu est réservé aux abonnés Premium. Rechargez vos crédits pour y accéder." },
+    '403': { code: '403', errCode: 'ACCESS_FORBIDDEN', title: "Accès <em>refusé</em>", sub: "Ce contenu est réservé aux abonnés Premium. Rechargez votre solde pour y accéder." },
     '500': { code: '500', errCode: 'SERVER_ERROR', title: "Erreur <em>inattendue</em>", sub: "Nos serveurs rencontrent un problème temporaire. L'équipe a été notifiée automatiquement." },
     'session': { code: '⏳', errCode: 'SESSION_EXPIRED', title: "Session <em>expirée</em>", sub: "Votre session a expiré pour des raisons de sécurité. Reconnectez-vous pour continuer." }
   }

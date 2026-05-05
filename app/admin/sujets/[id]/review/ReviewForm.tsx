@@ -838,7 +838,7 @@ export function ReviewForm({ submission }: { submission: Submission }) {
                         <span style={{ fontSize: '0.85rem', color: 'var(--text)', fontFamily: 'var(--mono)' }}>{formData.pages || '—'}</span>
                       </div>
                       <div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-3)', display: 'block', marginBottom: '0.25rem' }}>Crédits (convertis)</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-3)', display: 'block', marginBottom: '0.25rem' }}>Prix (Ar)</span>
                         <span style={{ fontSize: '0.85rem', color: 'var(--text)', fontFamily: 'var(--mono)' }}>{formData.credits || '—'}</span>
                       </div>
                       <div>

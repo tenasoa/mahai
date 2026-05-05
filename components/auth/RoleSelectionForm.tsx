@@ -44,7 +44,7 @@ const roles = [
   {
     value: 'CONTRIBUTEUR',
     title: 'Contributeur',
-    description: 'Soumettez des sujets d\'examens et gagnez des crédits',
+    description: 'Soumettez des sujets d\'examens et gagnez des Ar',
     icon: '✏️',
     gradient: 'role-contributeur',
   },

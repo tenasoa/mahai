@@ -37,7 +37,7 @@ export default function AProposPage() {
     {
       icon: <Users className="w-6 h-6" />,
       title: 'Accessibilité pour tous',
-      description: 'Grâce au système de crédits et au paiement Mobile Money, nos ressources sont accessibles à tous les élèves, quel que soit leur niveau économique.'
+      description: 'Grâce au système de solde en Ariary et au paiement Mobile Money, nos ressources sont accessibles à tous les élèves, quel que soit leur niveau économique.'
     },
     {
       icon: <Globe className="w-6 h-6" />,

@@ -240,7 +240,7 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
           <div className="cb-divider"></div>
           <div className="cb-item">
             <span className="cb-label">Seuil minimum</span>
-            <span className="cb-val" style={{ fontSize: '1rem' }}>{cycle.threshold} crédits</span>
+            <span className="cb-val" style={{ fontSize: '1rem' }}>{cycle.threshold} Ar</span>
           </div>
           <div className="cb-divider"></div>
           <div className="cb-item">
@@ -350,7 +350,7 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
                       </td>
                       <td>
                         <div className="w-credits">
-                          {w.credits} cr
+                          {w.credits} Ar
                         </div>
                       </td>
                       <td>
@@ -418,8 +418,8 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
                 <span className="receipt-value gold">{formatMoney(selectedWithdrawal.amount)}</span>
               </div>
               <div className="receipt-row">
-                <span className="receipt-label">Crédits déduits</span>
-                <span className="receipt-value">{selectedWithdrawal.credits} cr</span>
+                <span className="receipt-label">Ar déduits</span>
+                <span className="receipt-value">{selectedWithdrawal.credits} Ar</span>
               </div>
               <div className="receipt-row">
                 <span className="receipt-label">Opérateur</span>

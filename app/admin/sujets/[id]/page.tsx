@@ -149,7 +149,7 @@ export default async function AdminSubjectDetailPage({
                 <span className="admin-info-value">
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                     <DollarSign size={14} style={{ color: 'var(--gold)' }} />
-                    <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{subject.credits || 0} crédits</span>
+                    <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{subject.credits || 0} Ar</span>
                   </span>
                 </span>
               </div>

@@ -84,7 +84,7 @@ export function PurchasedSubjectsTab({
             Aucun sujet débloqué pour le moment.
           </p>
           <p className="empty-section-text">
-            Quand vous achetez un sujet avec vos crédits, il apparaît
+            Quand vous achetez un sujet, il apparaît
             automatiquement ici.
           </p>
           <button

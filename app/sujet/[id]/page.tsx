@@ -448,7 +448,7 @@ export default function SujetDetailPage() {
             <div className="sd-modal-summary">
               <div>
                 <span>Coût</span>
-                <strong>{aiPrices.priceDirect} crédits</strong>
+                <strong>{aiPrices.priceDirect} Ar</strong>
               </div>
               <div>
                 <span>Votre solde actuel</span>
@@ -456,7 +456,7 @@ export default function SujetDetailPage() {
               </div>
               <div className="total">
                 <span>Solde après débit</span>
-                <strong>{credits - aiPrices.priceDirect} crédits</strong>
+                <strong>{credits - aiPrices.priceDirect} Ar</strong>
               </div>
             </div>
 
@@ -727,7 +727,7 @@ export default function SujetDetailPage() {
                   <div className="exercise-footer">
                     <span>
                       {answeredExerciseCount} / {exerciseQuestions.length} questions remplies
-                      {' '}· <strong style={{ color: 'var(--gold)' }}>{aiPrices.priceSubmission} crédits</strong>
+                      {' '}· <strong style={{ color: 'var(--gold)' }}>{aiPrices.priceSubmission} Ar</strong>
                     </span>
                     <button className="sd-btn-primary" onClick={submitExerciseForAI} disabled={isSubmittingExercise || accessState === 'locked'}>
                       {isSubmittingExercise ? 'Correction en cours…' : accessState === 'locked' ? 'Débloquez pour soumettre' : `Soumettre à l'IA (${aiPrices.priceSubmission} cr.)`}
@@ -835,7 +835,7 @@ export default function SujetDetailPage() {
               <div className="unlocked-badge">Sujet débloqué — accès permanent</div>
             )}
             <button className="sd-btn-secondary" onClick={() => router.push('/recharge')}>
-              Recharger mes crédits
+              Recharger mon solde
             </button>
           </div>
 

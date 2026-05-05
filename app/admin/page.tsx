@@ -195,7 +195,7 @@ export default async function AdminDashboard() {
               <Package size={18} />
             </div>
             <div className="admin-list-content">
-              <div className="admin-list-title">Packs de crédits</div>
+              <div className="admin-list-title">Packs de recharge</div>
               <div className="admin-list-desc">Prix, bonus, popularité</div>
             </div>
             <ArrowRight size={14} style={{ color: 'var(--text-4)' }} />

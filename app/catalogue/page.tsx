@@ -411,7 +411,7 @@ function CatalogueContent() {
               className="catalogue-btn-buy"
               onClick={() => { setPreviewModalOpen(false); openBuyModal(currentSubject); }}
             >
-              Acheter pour {currentSubject.price} crédits
+              Acheter pour {currentSubject.price} Ar
             </button>
           </div>
         </div>
@@ -439,16 +439,16 @@ function CatalogueContent() {
               <p className="catalogue-modal-buy-heading">{currentSubject.title}</p>
               <div className="catalogue-modal-buy-row">
                 <span>Prix du sujet</span>
-                <strong>{currentSubject.price} crédits</strong>
+                <strong>{currentSubject.price} Ar</strong>
               </div>
               <div className="catalogue-modal-buy-row">
                 <span>Votre solde actuel</span>
-                <strong>{appUser?.credits ?? 0} crédits</strong>
+                <strong>{appUser?.balanceAr ?? 0} Ar</strong>
               </div>
               <div className="catalogue-modal-buy-row total">
                 <span>Solde après achat</span>
                 <strong>
-                  {(appUser?.credits ?? 0) - currentSubject.price} crédits
+                  {(appUser?.balanceAr ?? 0) - currentSubject.price} Ar
                 </strong>
               </div>
             </div>

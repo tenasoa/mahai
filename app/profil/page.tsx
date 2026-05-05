@@ -669,7 +669,7 @@ export default function ProfilePage() {
           <div className="ph-right">
             <div className="ph-stats">
               <div className="ph-stat">
-                <div className="n gold-text">{(appUser?.balanceAr ?? appUser?.credits ?? 0).toLocaleString('fr-FR')}</div>
+                <div className="n gold-text">{(appUser?.balanceAr ?? 0).toLocaleString('fr-FR')}</div>
                 <div className="l">Ariary</div>
               </div>
               <div className="ph-stat">

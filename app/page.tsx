@@ -1259,12 +1259,12 @@ export default function LandingPage() {
           <div className="faq-grid">
             {[
               {
-                q: "Qu'est-ce qu'un crédit et comment l'utiliser ?",
-                a: "Un crédit est la monnaie de Mah.AI. 1 crédit = accès à 1 sujet complet (aperçu + téléchargement). Vous pouvez aussi utiliser vos crédits pour obtenir des corrections détaillées par IA de vos réponses.",
+                q: "Qu'est-ce que le solde et comment l'utiliser ?",
+                a: "Le solde en Ariary est la monnaie de Mah.AI. Chaque sujet a un prix en Ar. Vous pouvez aussi utiliser votre solde pour obtenir des corrections détaillées par IA de vos réponses.",
               },
               {
                 q: "Puis-je acheter un sujet sans créer de compte ?",
-                a: "Non, un compte est nécessaire pour suivre vos crédits et historique. Mais l'inscription est gratuite et vous recevez 10 crédits offerts pour tester la plateforme.",
+                a: "Non, un compte est nécessaire pour suivre votre solde et historique. Mais l'inscription est gratuite et vous recevez 500 Ar offerts pour tester la plateforme.",
               },
               {
                 q: "Comment fonctionne la correction IA ?",
@@ -1276,11 +1276,11 @@ export default function LandingPage() {
               },
               {
                 q: "Puis-je devenir contributeur et vendre mes sujets ?",
-                a: "Oui ! Les enseignants et étudiants peuvent soumettre leurs sujets. Après validation, vos sujets sont publiés et vous recevez des crédits pour chaque achat effectué par d'autres utilisateurs.",
+                a: "Oui ! Les enseignants et étudiants peuvent soumettre leurs sujets. Après validation, vos sujets sont publiés et vous recevez des revenus en Ar pour chaque achat effectué par d'autres utilisateurs.",
               },
               {
                 q: "Quels moyens de paiement acceptez-vous ?",
-                a: "Nous acceptons les paiements Mobile Money (MVola, Orange Money, Airtel Money) largement utilisés à Madagascar. Les crédits sont crédités instantanément sur votre compte.",
+                a: "Nous acceptons les paiements Mobile Money (MVola, Orange Money, Airtel Money) largement utilisés à Madagascar. Le solde est crédité sur votre compte après validation.",
               },
             ].map((item, idx) => (
               <FaqItem key={idx} question={item.q} answer={item.a} delay={idx} />
@@ -1362,7 +1362,7 @@ export default function LandingPage() {
       >
         <Link href="/auth/register" className="sticky-cta-mobile-btn">
           Créer un compte
-          <span className="sticky-cta-mobile-bonus">10 crédits offerts</span>
+          <span className="sticky-cta-mobile-bonus">500 Ar offerts</span>
         </Link>
       </div>
     </div>

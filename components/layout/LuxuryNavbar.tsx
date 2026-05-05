@@ -187,7 +187,7 @@ export function LuxuryNavbar() {
                     <div className={styles.creditBalanceRow}>
                       <span className={styles.creditBalanceLabel}>Solde</span>
                       <span className={styles.creditBalanceValue}>
-                        {(appUser?.balanceAr ?? appUser?.credits ?? 0).toLocaleString('fr-FR')} Ar
+                        {(appUser?.balanceAr ?? 0).toLocaleString('fr-FR')} Ar
                       </span>
                     </div>
                     <Link

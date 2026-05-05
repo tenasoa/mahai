@@ -96,7 +96,7 @@ export function TransactionsTab({
                         {tx.description ||
                           (tx.type === "ACHAT"
                             ? "Achat de sujet"
-                            : "Recharge de crédits")}
+                            : "Recharge de solde")}
                       </div>
                       <div className="tx-date">
                         {new Date(tx.createdAt).toLocaleDateString(

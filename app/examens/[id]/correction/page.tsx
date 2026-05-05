@@ -27,7 +27,7 @@ export default async function ExamCorrectionPage({ params }: CorrectionPageProps
       id: 'ia',
       type: 'IA',
       icon: Bot,
-      credits: 15,
+      credits: 750,
       description: 'Correction instantanée générée par intelligence artificielle. Explications détaillées et méthode de résolution pas à pas.',
       color: 'gold',
       popular: true,
@@ -36,7 +36,7 @@ export default async function ExamCorrectionPage({ params }: CorrectionPageProps
       id: 'prof',
       type: 'Professeur',
       icon: GraduationCap,
-      credits: 45,
+      credits: 2250,
       description: 'Correction approfondie par un professeur certifié. Feedback personnalisé et conseils méthodologiques sur mesure.',
       color: 'blue',
       popular: false,
@@ -104,7 +104,7 @@ export default async function ExamCorrectionPage({ params }: CorrectionPageProps
 
                 <div className="mb-8 flex items-baseline gap-2">
                   <span className="text-4xl font-bold text-text">{option.credits}</span>
-                  <span className="font-mono text-xs uppercase tracking-widest text-text-4">crédits</span>
+                  <span className="font-mono text-xs uppercase tracking-widest text-text-4">Ar</span>
                 </div>
 
                 <button

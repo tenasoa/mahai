@@ -35,26 +35,26 @@ export default function SupportPage() {
     },
     {
       category: 'payment',
-      title: 'Comment recharger mes crédits ?',
-      content: 'Allez sur la page "Recharge", choisissez votre pack (50, 150 ou 300 crédits), sélectionnez votre opérateur Mobile Money (MVola, Orange, Airtel), effectuez le transfert et entrez le code de transaction.',
+      title: 'Comment recharger mon solde ?',
+      content: 'Allez sur la page "Recharge", choisissez votre pack (2500, 7500 ou 15000 Ar), sélectionnez votre opérateur Mobile Money (MVola, Orange, Airtel), effectuez le transfert et entrez le code de transaction.',
       icon: <Book className="w-5 h-5" />
     },
     {
       category: 'payment',
       title: 'Mon paiement n\'a pas été validé',
-      content: 'Les paiements sont validés manuellement sous 12h maximum. Si après 12h vous n\'avez toujours pas vos crédits, contactez le support avec votre code de transaction.',
+      content: 'Les paiements sont validés manuellement sous 12h maximum. Si après 12h vous n\'avez toujours pas votre solde crédité, contactez le support avec votre code de transaction.',
       icon: <AlertCircle className="w-5 h-5" />
     },
     {
       category: 'subjects',
       title: 'Comment acheter un sujet ?',
-      content: 'Parcourez le catalogue, cliquez sur un sujet pour voir l\'aperçu gratuit, puis cliquez sur "Acheter". Les crédits seront déduits de votre wallet et le sujet sera débloqué.',
+      content: 'Parcourez le catalogue, cliquez sur un sujet pour voir l\'aperçu gratuit, puis cliquez sur "Acheter". Le montant sera déduit de votre solde et le sujet sera débloqué.',
       icon: <Book className="w-5 h-5" />
     },
     {
       category: 'subjects',
-      title: 'Puis-je récupérer mes crédits après achat ?',
-      content: 'Non, les crédits consommés pour un achat ne sont pas remboursables. Cependant, vous pouvez accéder au sujet acheté autant de fois que vous le souhaitez.',
+      title: 'Puis-je récupérer mon solde après achat ?',
+      content: 'Non, le montant consommé pour un achat n\'est pas remboursable. Cependant, vous pouvez accéder au sujet acheté autant de fois que vous le souhaitez.',
       icon: <AlertCircle className="w-5 h-5" />
     },
     {
@@ -66,7 +66,7 @@ export default function SupportPage() {
     {
       category: 'correction',
       title: 'La correction IA est-elle gratuite ?',
-      content: 'La correction IA consomme des crédits supplémentaires. Le coût est indiqué avant chaque soumission. En général, cela coûte entre 2 et 5 crédits selon la complexité du sujet.',
+      content: 'La correction IA consomme du solde supplémentaire. Le coût est indiqué avant chaque soumission. En général, cela coûte entre 100 et 500 Ar selon la complexité du sujet.',
       icon: <Book className="w-5 h-5" />
     },
     {

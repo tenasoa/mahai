@@ -577,7 +577,7 @@ export default function AdminConfigurationPage() {
           </div>
           <h1 className="admin-title">Configuration Système</h1>
           <p className="admin-subtitle">
-            Gérez les numéros de réception, les packs de crédits et les
+            Gérez les numéros de réception, les packs de recharge et les
             paramètres système
           </p>
         </div>
@@ -789,7 +789,7 @@ export default function AdminConfigurationPage() {
                 alignItems: "center",
               }}
             >
-              <h3 className="admin-card-title">Packs de crédits disponibles</h3>
+              <h3 className="admin-card-title">Packs de recharge disponibles</h3>
               <button
                 className="admin-btn admin-btn-primary"
                 onClick={() => {
@@ -1749,7 +1749,7 @@ export default function AdminConfigurationPage() {
                         }}
                       >
                         <span style={{ color: "var(--text-2)" }}>
-                          Équivalent en crédits
+                          Équivalent en Ar
                         </span>
                         <span
                           style={{
@@ -2285,7 +2285,7 @@ export default function AdminConfigurationPage() {
                     margin: "0 0 1rem",
                   }}
                 >
-                  Tarifs (en crédits), modèles par provider et niveau d'effort.
+                  Tarifs (en Ar), modèles par provider et niveau d'effort.
                   Modifiez la valeur souhaitée puis cliquez sur l'icône pour
                   confirmer.
                 </p>
@@ -2892,7 +2892,7 @@ export default function AdminConfigurationPage() {
                 </div>
                 <div className="admin-form-grid-2">
                   <div className="admin-form-group">
-                    <label className="admin-label">Bonus (crédits)</label>
+                    <label className="admin-label">Bonus (Ar)</label>
                     <input
                       type="number"
                       value={packForm.bonus}

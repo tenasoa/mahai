@@ -292,7 +292,7 @@ export function OnboardingFlow({
                     🎁 Bonus
                   </span>
                   <span className="text-xs text-text-2">
-                    10 crédits ont été ajoutés après validation de votre email
+                    500 Ar ont été ajoutés après validation de votre email
                   </span>
                 </div>
               </div>

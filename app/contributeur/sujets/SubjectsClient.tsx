@@ -498,7 +498,7 @@ export default function ContributorSubjectsClient({ user, subjects, submissions,
                       </td>
                       <td>
                         <span style={{ fontFamily: 'var(--mono)', fontWeight: 500, color: subject.revenus ? 'var(--gold)' : 'var(--text-4)' }}>
-                          {isSubmission ? `${subject.prix || 0} crédits` : (subject.revenus ? `${Number(subject.revenus).toLocaleString('fr-FR')} Ar` : '0 Ar')}
+                          {isSubmission ? `${subject.prix || 0} Ar` : (subject.revenus ? `${Number(subject.revenus).toLocaleString('fr-FR')} Ar` : '0 Ar')}
                         </span>
                       </td>
                       <td>

@@ -1,6 +1,6 @@
 /* RECHARGE PAGE */
 
-.credits-page {
+.recharge-page {
   min-height: 100vh;
   background-color: var(--void);
   color: var(--text);
@@ -399,7 +399,7 @@
 }
 
 @media (max-width: 768px) {
-  .credits-page {
+  .recharge-page {
     padding-bottom: 5.5rem;
   }
 

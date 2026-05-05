@@ -56,7 +56,7 @@ export default function CorrectionIAPage() {
       title: "Vs Correction manuelle",
       items: [
         { ours: "10 secondes", theirs: "Plusieurs jours", label: "Délai" },
-        { ours: "Gratuit (crédits)", theirs: "Coûteux", label: "Coût" },
+        { ours: "Inclus (solde)", theirs: "Coûteux", label: "Coût" },
         { ours: "24h/24", theirs: "Horaires limités", label: "Disponibilité" },
         { ours: "Consistant", theirs: "Variable", label: "Qualité" }
       ]

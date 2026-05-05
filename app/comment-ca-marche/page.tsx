@@ -48,7 +48,7 @@ export default function CommentCaMarchePage() {
       num: '03',
       icon: <Smartphone className="w-8 h-8" />,
       title: 'Payez via Mobile Money',
-      description: 'Rechargez votre wallet en crédits depuis votre téléphone via MVola, Orange Money ou Airtel Money.',
+      description: 'Rechargez votre solde depuis votre téléphone via MVola, Orange Money ou Airtel Money.',
       details: [
         'MVola, Orange Money, Airtel Money',
         'Paiement sécurisé',
@@ -167,9 +167,9 @@ export default function CommentCaMarchePage() {
             </div>
 
             <div className="rounded-2xl border border-border-1 bg-card p-8">
-              <h3 className="font-display text-xl text-text mb-4">2. Achat de crédits</h3>
+              <h3 className="font-display text-xl text-text mb-4">2. Achat de sujets</h3>
               <p className="text-text-2 leading-relaxed mb-4">
-                Mah.AI fonctionne avec un système de crédits. Pour acheter des sujets, vous devez d'abord recharger votre wallet :
+                Mah.AI fonctionne avec un système de solde en Ariary. Pour acheter des sujets, vous devez d'abord recharger votre wallet :
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                 <div className="bg-lift border border-border-1 rounded-xl p-4 text-center">
@@ -196,7 +196,7 @@ export default function CommentCaMarchePage() {
             <div className="rounded-2xl border border-border-1 bg-card p-8">
               <h3 className="font-display text-xl text-text mb-4">3. Achat de sujets</h3>
               <p className="text-text-2 leading-relaxed mb-4">
-                Chaque sujet a un prix en crédits indiqué clairement. Après achat, vous pouvez :
+                Chaque sujet a un prix en Ariary indiqué clairement. Après achat, vous pouvez :
               </p>
               <ul className="space-y-2 text-text-2">
                 <li className="flex items-start gap-3">
