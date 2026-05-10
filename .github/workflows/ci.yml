@@ -37,7 +37,7 @@ jobs:
         run: pnpm lint
 
       - name: Run tests
-        run: pnpm test -- --passWithNoTests --coverage=false
+        run: pnpm exec jest --passWithNoTests --coverage=false
         env:
           NODE_ENV: test
           NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
