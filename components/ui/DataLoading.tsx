@@ -111,6 +111,10 @@ export function DataLoadingInline({
 /**
  * Variante pour les cellules de tableau (skeleton row)
  */
+// Valeurs pré-calculées pour éviter Math.random() pendant le render (règle react-hooks/purity)
+const SKELETON_WIDTHS = [40, 35, 28, 22, 45, 30, 25, 38].map(w => `${w}%`)
+const SKELETON_OPACITIES = [0.7, 0.6, 0.8, 0.65, 0.75, 0.55, 0.7, 0.6]
+
 export function TableRowSkeleton({ columns = 4 }: { columns?: number }) {
   return (
     <div className="flex items-center gap-4 py-4 px-4 animate-pulse">
@@ -119,8 +123,8 @@ export function TableRowSkeleton({ columns = 4 }: { columns?: number }) {
           key={i}
           className="h-4 rounded bg-[var(--surface)]"
           style={{
-            width: i === 0 ? '40%' : `${20 + Math.random() * 30}%`,
-            opacity: 0.5 + Math.random() * 0.3,
+            width: i === 0 ? '40%' : SKELETON_WIDTHS[i % SKELETON_WIDTHS.length],
+            opacity: SKELETON_OPACITIES[i % SKELETON_OPACITIES.length],
           }}
         />
       ))}
