@@ -64,7 +64,6 @@ stripe.exe
 # Artefacts de dev locaux
 sujet.pdf
 mahai-markdown-pdf-solution.txt
-scripts/
 
 # Rapports générés localement
 lint-results.json
