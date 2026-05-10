@@ -10,12 +10,14 @@ import { query } from '@/lib/db'
 import { ClaudeProvider } from './claude'
 import { OpenAIProvider } from './openai'
 import { PerplexityProvider } from './perplexity'
+import { OpenRouterProvider } from './openrouter'
 import type { AIProvider, AIProviderId, Effort } from './types'
 
 const PROVIDERS: Record<AIProviderId, AIProvider> = {
   claude: new ClaudeProvider(),
   perplexity: new PerplexityProvider(),
   openai: new OpenAIProvider(),
+  openrouter: new OpenRouterProvider(),
 }
 
 export const ALL_PROVIDERS: AIProvider[] = Object.values(PROVIDERS)
@@ -40,11 +42,13 @@ const DEFAULT_MODEL_BY_PROVIDER: Record<AIProviderId, string> = {
   claude: 'claude-sonnet-4-6',
   perplexity: 'sonar-pro',
   openai: 'gpt-5.4-mini',
+  openrouter: 'z-ai/glm-4.5-air:free',
 }
 
 function getProviderEnvVarName(id: AIProviderId): string {
   if (id === 'claude') return 'ANTHROPIC_API_KEY'
   if (id === 'perplexity') return 'PERPLEXITY_API_KEY'
+  if (id === 'openrouter') return 'OPENROUTER_API_KEY'
   return 'OPENAI_API_KEY'
 }
 
@@ -60,7 +64,7 @@ export async function loadAIRuntimeConfig(): Promise<AIRuntimeConfig> {
   const requestedId = (map['ai.provider'] || 'claude') as string
   const provider = getProviderById(requestedId)
   if (!provider) {
-    throw new Error(`Provider IA inconnu : "${requestedId}". Valeurs supportées : claude | perplexity | openai.`)
+    throw new Error(`Provider IA inconnu : "${requestedId}". Valeurs supportées : claude | perplexity | openai | openrouter.`)
   }
   if (!provider.isConfigured()) {
     throw new Error(
@@ -70,7 +74,7 @@ export async function loadAIRuntimeConfig(): Promise<AIRuntimeConfig> {
     )
   }
 
-  const allowedEfforts: Effort[] = ['low', 'medium', 'high', 'max']
+  const allowedEfforts: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
   const rawEffort = (map['ai.effort'] || 'medium') as Effort
   const effort = allowedEfforts.includes(rawEffort) ? rawEffort : 'medium'
 

@@ -156,7 +156,7 @@ export function OnboardingFlow({
       return;
     }
 
-    router.push("/dashboard");
+    router.push(completionResult.redirectTo || "/dashboard");
   };
 
   const handleSkip = async () => {
@@ -171,7 +171,7 @@ export function OnboardingFlow({
       return;
     }
 
-    router.push("/dashboard");
+    router.push(result.redirectTo || "/dashboard");
   };
 
   return (

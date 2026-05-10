@@ -133,7 +133,7 @@ export function LuxuryNavbar() {
     >
       <div className={styles.navInner}>
         {/* LOGO */}
-        <Link href="/" className={styles.logo}>
+        <Link href={userId ? "/dashboard" : "/"} className={styles.logo}>
           Mah
           <span className={styles.logoGem}></span>
           AI

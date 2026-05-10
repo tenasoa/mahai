@@ -5,19 +5,19 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 // Vérifier si l'utilisateur est admin
 async function checkAdmin(request: Request) {
   const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session?.user) {
-    return { error: 'Non authentifié', status: 401 }
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    return { error: 'Non authentifié', status: 401 as const }
   }
 
-  const userResult = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
+  const userResult = await query('SELECT role FROM "User" WHERE id = $1', [user.id])
   const role = userResult.rows[0]?.role
   if (!role || String(role).toUpperCase() !== 'ADMIN') {
-    return { error: 'Accès interdit', status: 403 }
+    return { error: 'Accès interdit', status: 403 as const }
   }
 
-  return { userId: session.user.id }
+  return { userId: user.id }
 }
 
 // GET /api/admin/settings - Lister tous les paramètres
@@ -93,12 +93,20 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Ce paramètre ne peut pas être modifié' }, { status: 403 })
     }
 
+    const params: unknown[] = [key, String(value)]
+    let extraSets = ''
+    if (label !== undefined) {
+      params.push(label)
+      extraSets += `, "label" = $${params.length}`
+    }
+    if (description !== undefined) {
+      params.push(description)
+      extraSets += `, "description" = $${params.length}`
+    }
+
     const result = await query(
-      `UPDATE "SystemSetting" SET value = $2, "updatedAt" = NOW() 
-       ${label !== undefined ? ', label = $3' : ''}
-       ${description !== undefined ? ', description = $4' : ''}
-       WHERE "key" = $1 RETURNING *`,
-      [key, String(value), label, description].filter(v => v !== undefined)
+      `UPDATE "SystemSetting" SET "value" = $2, "updatedAt" = NOW()${extraSets} WHERE "key" = $1 RETURNING *`,
+      params
     )
 
     return NextResponse.json({ setting: result.rows[0] })

@@ -16,21 +16,11 @@ import {
   Mail,
   Phone,
   MapPin,
-  DollarSign,
-  TrendingUp,
-  Clock,
-  Calculator,
-  AlertCircle,
-  RotateCcw,
-  History,
-  ArrowRight,
-  CheckCircle2,
 } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { ToastContainer } from "@/components/ui/ToastContainer";
 import { AIProviderPanel } from "@/components/admin/AIProviderPanel";
 import { useToast } from "@/lib/hooks/useToast";
-import { CurrencyConverter } from "@/lib/currency-converter";
 
 // Types
 type MerchantPhone = {
@@ -45,9 +35,8 @@ type MerchantPhone = {
 type CreditPack = {
   id: string;
   name: string;
-  credits: number;
-  price: number;
-  bonus: number;
+  arAmount: number;
+  bonusAr: number;
   isPopular: boolean;
   isActive: boolean;
   sortOrder: number;
@@ -67,7 +56,6 @@ type SystemSetting = {
 type TabType =
   | "phones"
   | "packs"
-  | "conversion"
   | "settings"
   | "contact"
   | "ai";
@@ -79,31 +67,13 @@ type ContactInfo = {
   address: string;
 };
 
-type CurrencyConfig = {
-  id: string;
-  arPerCredit: number;
-  platformFeePercent: number;
-  updatedAt: string;
-  note?: string;
-};
-
-type CurrencyHistory = {
-  id: string;
-  arPerCredit: number;
-  platformFeePercent: number;
-  updatedAt: string;
-  updatedBy?: string;
-  note?: string;
-};
 
 export default function AdminConfigurationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabType) || "phones";
   const [activeTab, setActiveTab] = useState<TabType>(
-    ["phones", "packs", "conversion", "settings", "contact", "ai"].includes(
-      initialTab,
-    )
+    ["phones", "packs", "settings", "contact", "ai"].includes(initialTab)
       ? initialTab
       : "phones",
   );
@@ -132,35 +102,6 @@ export default function AdminConfigurationPage() {
     phone: "+261 34 XX XXX XX",
     address: "Antananarivo 101, Madagascar",
   });
-  const [currencyConfig, setCurrencyConfig] = useState<CurrencyConfig | null>(
-    null,
-  );
-  const [currencyHistory, setCurrencyHistory] = useState<CurrencyHistory[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [previewPrice, setPreviewPrice] = useState<number>(5000);
-  const [currencyForm, setCurrencyForm] = useState({
-    arPerCredit: 50,
-    platformFeePercent: 30,
-    note: "",
-  });
-
-  // Détecte si le formulaire diffère de la config sauvegardée
-  const isCurrencyDirty = Boolean(
-    currencyConfig &&
-    (Number(currencyForm.arPerCredit) !== Number(currencyConfig.arPerCredit) ||
-      Number(currencyForm.platformFeePercent) !==
-        Number(currencyConfig.platformFeePercent)),
-  );
-
-  const resetCurrencyForm = () => {
-    if (!currencyConfig) return;
-    setCurrencyForm({
-      arPerCredit: currencyConfig.arPerCredit,
-      platformFeePercent: currencyConfig.platformFeePercent,
-      note: "",
-    });
-  };
-
   // Modal states
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [packModalOpen, setPackModalOpen] = useState(false);
@@ -187,9 +128,8 @@ export default function AdminConfigurationPage() {
   });
   const [packForm, setPackForm] = useState({
     name: "",
-    credits: 0,
-    price: 0,
-    bonus: 0,
+    arAmount: 0,
+    bonusAr: 0,
     isPopular: false,
     isActive: true,
     sortOrder: 0,
@@ -222,48 +162,18 @@ export default function AdminConfigurationPage() {
           setPacks(data.packs || []);
         }
 
-        // Charger aussi le taux de conversion pour affichage dans la modale
-        try {
-          const currRes = await fetch("/api/admin/currency-config");
-          if (currRes.ok) {
-            const currData = await currRes.json();
-            setCurrencyConfig(currData.config);
-          }
-        } catch {
-          // Ignorer l'erreur de chargement du taux de conversion
-        }
-      } else if (activeTab === "conversion") {
-        const res = await fetch("/api/admin/currency-config");
-        if (res.ok) {
-          const data = await res.json();
-          setCurrencyConfig(data.config);
-          setCurrencyForm({
-            arPerCredit: data.config?.arPerCredit || 50,
-            platformFeePercent: data.config?.platformFeePercent || 30,
-            note: "",
-          });
-        }
-
-        // Historique (non bloquant)
-        setHistoryLoading(true);
-        try {
-          const histRes = await fetch("/api/admin/currency-config?history=1");
-          if (histRes.ok) {
-            const histData = await histRes.json();
-            setCurrencyHistory(histData.history || []);
-          } else {
-            setCurrencyHistory([]);
-          }
-        } catch {
-          setCurrencyHistory([]);
-        } finally {
-          setHistoryLoading(false);
-        }
       } else if (activeTab === "settings" || activeTab === "ai") {
-        const res = await fetch("/api/admin/settings");
+        let res = await fetch("/api/admin/settings");
+        // Retry une fois si auth timeout (lock Supabase)
+        if (!res.ok && res.status === 401) {
+          await new Promise((r) => setTimeout(r, 800));
+          res = await fetch("/api/admin/settings");
+        }
         if (res.ok) {
           const data = await res.json();
           setSettings(data.settings || []);
+        } else {
+          throw new Error(`Erreur ${res.status} lors du chargement des paramètres`);
         }
       } else if (activeTab === "contact") {
         const res = await fetch("/api/admin/contact-info");
@@ -354,7 +264,7 @@ export default function AdminConfigurationPage() {
 
   // Pack CRUD
   const handleSavePack = async () => {
-    if (!packForm.name.trim() || packForm.credits <= 0 || packForm.price <= 0) {
+    if (!packForm.name.trim() || packForm.arAmount <= 0) {
       showToast("Tous les champs sont requis et doivent être valides", true);
       return;
     }
@@ -377,9 +287,8 @@ export default function AdminConfigurationPage() {
         setEditingPack(null);
         setPackForm({
           name: "",
-          credits: 0,
-          price: 0,
-          bonus: 0,
+          arAmount: 0,
+          bonusAr: 0,
           isPopular: false,
           isActive: true,
           sortOrder: 0,
@@ -472,50 +381,6 @@ export default function AdminConfigurationPage() {
     }
   };
 
-  // Currency Config handlers
-  const handleSaveCurrencyConfig = async () => {
-    // Valider les paramètres
-    const validation = CurrencyConverter.validate(
-      currencyForm.platformFeePercent,
-    );
-
-    if (!validation.valid) {
-      showToast(validation.errors.join(", "), true);
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const res = await fetch("/api/admin/currency-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          arPerCredit: currencyForm.arPerCredit,
-          platformFeePercent: currencyForm.platformFeePercent,
-          note: currencyForm.note,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        // Mettre à jour le cache immédiatement pour tous les composants
-        if (data.config?.arPerCredit) {
-          CurrencyConverter.cacheRate(data.config.arPerCredit);
-        }
-        showToast("Configuration de change mise à jour");
-        setCurrencyForm({ ...currencyForm, note: "" });
-        loadData();
-      } else {
-        const err = await res.json();
-        showToast(err.error || "Erreur lors de la sauvegarde", true);
-      }
-    } catch {
-      showToast("Erreur lors de la sauvegarde", true);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const getOperatorLabel = (op: string) => {
     switch (op) {
       case "mvola":
@@ -597,14 +462,7 @@ export default function AdminConfigurationPage() {
           className={`admin-tab ${activeTab === "packs" ? "admin-tab-active" : ""}`}
         >
           <Package size={16} />
-          Packs de Crédits
-        </button>
-        <button
-          onClick={() => changeTab("conversion")}
-          className={`admin-tab ${activeTab === "conversion" ? "admin-tab-active" : ""}`}
-        >
-          <TrendingUp size={16} />
-          Conversion Ar ↔ cr
+          Packs de Recharge
         </button>
         <button
           onClick={() => changeTab("settings")}
@@ -796,9 +654,8 @@ export default function AdminConfigurationPage() {
                   setEditingPack(null);
                   setPackForm({
                     name: "",
-                    credits: 0,
-                    price: 0,
-                    bonus: 0,
+                    arAmount: 0,
+                    bonusAr: 0,
                     isPopular: false,
                     isActive: true,
                     sortOrder: 0,
@@ -827,68 +684,26 @@ export default function AdminConfigurationPage() {
                   <thead>
                     <tr>
                       <th>Nom</th>
-                      <th>Crédits</th>
-                      <th>Prix</th>
-                      <th>Taux</th>
-                      <th>Bonus</th>
+                      <th>Montant (Ar)</th>
+                      <th>Bonus (Ar)</th>
                       <th>Populaire</th>
                       <th>Statut</th>
                       <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {packs.map((pack) => {
-                      const packRate = pack.credits > 0 ? Math.round(pack.price / pack.credits) : 0;
-                      const configRate = currencyConfig?.arPerCredit || 50;
-                      const rateGap = packRate - configRate;
-                      const rateStatus = 
-                        rateGap === 0 ? 'aligned' :
-                        rateGap > 0 ? 'above' :
-                        'below';
-                      
-                      return (
+                    {packs.map((pack) => (
                         <tr key={pack.id}>
                           <td style={{ fontWeight: 500 }}>{pack.name}</td>
-                          <td style={{ fontFamily: "var(--mono)" }}>
-                            {pack.credits} cr
-                          </td>
                           <td
                             style={{
                               fontFamily: "var(--mono)",
                               color: "var(--gold)",
                             }}
                           >
-                            {pack.price.toLocaleString()} Ar
+                            {pack.arAmount.toLocaleString()} Ar
                           </td>
-                          <td style={{
-                            fontFamily: "var(--mono)",
-                            fontSize: "0.9rem"
-                          }}>
-                            <div style={{ 
-                              display: "flex", 
-                              alignItems: "center", 
-                              gap: "0.375rem"
-                            }}>
-                              <span style={{
-                                color: rateStatus === 'aligned' ? 'var(--sage)' :
-                                       rateStatus === 'above' ? 'var(--amber)' :
-                                       'var(--ruby)',
-                                fontWeight: 600
-                              }}>
-                                {packRate} Ar/cr
-                              </span>
-                              {rateGap !== 0 && (
-                                <span style={{
-                                  fontSize: "0.75rem",
-                                  color: rateStatus === 'above' ? 'var(--amber)' : 'var(--ruby)',
-                                  whiteSpace: "nowrap"
-                                }}>
-                                  {rateGap > 0 ? '+' : ''}{rateGap} Ar
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td>+{pack.bonus} cr</td>
+                          <td>+{pack.bonusAr.toLocaleString()} Ar</td>
                           <td>
                             {pack.isPopular ? (
                               <span style={{ color: "var(--gold)" }}>
@@ -924,9 +739,8 @@ export default function AdminConfigurationPage() {
                                   setEditingPack(pack);
                                   setPackForm({
                                     name: pack.name,
-                                    credits: pack.credits,
-                                    price: pack.price,
-                                    bonus: pack.bonus,
+                                    arAmount: pack.arAmount,
+                                    bonusAr: pack.bonusAr,
                                     isPopular: pack.isPopular,
                                     isActive: pack.isActive,
                                     sortOrder: pack.sortOrder,
@@ -946,8 +760,7 @@ export default function AdminConfigurationPage() {
                           </div>
                         </td>
                       </tr>
-                    );
-                  })}
+                    ))}
                 </tbody>
                 </table>
               </div>
@@ -955,1190 +768,6 @@ export default function AdminConfigurationPage() {
           </>
         )}
 
-        {/* CONVERSION TAB */}
-        {activeTab === "conversion" && (
-          <>
-            <div className="admin-card-header">
-              <div>
-                <h3 className="admin-card-title">
-                  Configuration des Taux de Change
-                </h3>
-                <p
-                  className="admin-subtitle"
-                  style={{ margin: 0, marginTop: "0.25rem" }}
-                >
-                  Définissez le taux de conversion et les frais de plateforme
-                </p>
-              </div>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-              >
-                {isCurrencyDirty && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.375rem",
-                      fontSize: "0.75rem",
-                      color: "var(--amber)",
-                      background: "var(--amber-dim)",
-                      padding: "0.375rem 0.625rem",
-                      borderRadius: "var(--r)",
-                      border: "1px solid var(--amber-line)",
-                      fontWeight: 600,
-                    }}
-                  >
-                    <AlertCircle size={12} />
-                    Modifications non enregistrées
-                  </div>
-                )}
-                {currencyConfig?.updatedAt && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      fontSize: "0.8rem",
-                      color: "var(--text-3)",
-                      background: "var(--b2)",
-                      padding: "0.5rem 0.75rem",
-                      borderRadius: "var(--r)",
-                      border: "1px solid var(--b3)",
-                    }}
-                  >
-                    <Clock size={14} />
-                    Config active depuis le{" "}
-                    {new Date(currencyConfig.updatedAt).toLocaleDateString(
-                      "fr-FR",
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="admin-empty-state">
-                <Loader2 className="animate-spin" size={32} />
-                <p>Chargement...</p>
-              </div>
-            ) : (
-              <div style={{ padding: "1.5rem" }}>
-                {/* SECTION 1 — Aperçu global (live) */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    marginBottom: "0.75rem",
-                    paddingBottom: "0.5rem",
-                  }}
-                >
-                  <h4
-                    style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      color: "var(--text-2)",
-                      margin: 0,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    Aperçu global{" "}
-                    {isCurrencyDirty && "(valeurs en cours de modification)"}
-                  </h4>
-                </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                    gap: "1rem",
-                    marginBottom: "2rem",
-                  }}
-                >
-                  {/* Taux de change */}
-                  <div
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)",
-                      border: `1px solid ${isCurrencyDirty ? "var(--amber-line)" : "var(--gold-line)"}`,
-                      borderRadius: "var(--r-lg)",
-                      padding: "1.25rem",
-                      position: "relative",
-                      overflow: "hidden",
-                      transition: "border-color 0.2s",
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "1rem",
-                        right: "1rem",
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "var(--r)",
-                        background: "var(--gold-dim)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "var(--gold)",
-                      }}
-                    >
-                      <DollarSign size={20} />
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--text-3)",
-                        marginBottom: "0.5rem",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Taux de Change
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "2rem",
-                        fontWeight: 700,
-                        color: "var(--gold)",
-                        fontFamily: "var(--mono)",
-                        letterSpacing: "-0.02em",
-                      }}
-                    >
-                      {currencyForm.arPerCredit || 50} Ar
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--text-3)",
-                        marginTop: "0.5rem",
-                      }}
-                    >
-                      = 1 crédit
-                      {isCurrencyDirty &&
-                        currencyConfig &&
-                        Number(currencyForm.arPerCredit) !==
-                          Number(currencyConfig.arPerCredit) && (
-                          <span
-                            style={{
-                              marginLeft: "0.375rem",
-                              color: "var(--amber)",
-                              fontFamily: "var(--mono)",
-                              fontSize: "0.7rem",
-                            }}
-                          >
-                            (était {currencyConfig.arPerCredit} Ar)
-                          </span>
-                        )}
-                    </div>
-                  </div>
-
-                  {/* Frais plateforme */}
-                  <div
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(224, 96, 112, 0.1) 0%, rgba(224, 96, 112, 0.05) 100%)",
-                      border: `1px solid ${isCurrencyDirty ? "var(--amber-line)" : "var(--ruby-line)"}`,
-                      borderRadius: "var(--r-lg)",
-                      padding: "1.25rem",
-                      position: "relative",
-                      overflow: "hidden",
-                      transition: "border-color 0.2s",
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "1rem",
-                        right: "1rem",
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "var(--r)",
-                        background: "var(--ruby-dim)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "var(--ruby)",
-                      }}
-                    >
-                      <TrendingUp size={20} />
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--text-3)",
-                        marginBottom: "0.5rem",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Frais Plateforme
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "2rem",
-                        fontWeight: 700,
-                        color: "var(--ruby)",
-                        fontFamily: "var(--mono)",
-                        letterSpacing: "-0.02em",
-                      }}
-                    >
-                      {currencyForm.platformFeePercent || 30}%
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--text-3)",
-                        marginTop: "0.5rem",
-                      }}
-                    >
-                      sur chaque transaction
-                      {isCurrencyDirty &&
-                        currencyConfig &&
-                        Number(currencyForm.platformFeePercent) !==
-                          Number(currencyConfig.platformFeePercent) && (
-                          <span
-                            style={{
-                              marginLeft: "0.375rem",
-                              color: "var(--amber)",
-                              fontFamily: "var(--mono)",
-                              fontSize: "0.7rem",
-                            }}
-                          >
-                            (était {currencyConfig.platformFeePercent}%)
-                          </span>
-                        )}
-                    </div>
-                  </div>
-
-                  {/* Revenu contributeur */}
-                  <div
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(96, 176, 144, 0.1) 0%, rgba(96, 176, 144, 0.05) 100%)",
-                      border: `1px solid ${isCurrencyDirty ? "var(--amber-line)" : "var(--sage-line)"}`,
-                      borderRadius: "var(--r-lg)",
-                      padding: "1.25rem",
-                      position: "relative",
-                      overflow: "hidden",
-                      transition: "border-color 0.2s",
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "1rem",
-                        right: "1rem",
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "var(--r)",
-                        background: "var(--sage-dim)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "var(--sage)",
-                      }}
-                    >
-                      <Star size={20} />
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--text-3)",
-                        marginBottom: "0.5rem",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Revenu Contributeur
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "2rem",
-                        fontWeight: 700,
-                        color: "var(--sage)",
-                        fontFamily: "var(--mono)",
-                        letterSpacing: "-0.02em",
-                      }}
-                    >
-                      {100 - (currencyForm.platformFeePercent || 30)}%
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--text-3)",
-                        marginTop: "0.5rem",
-                      }}
-                    >
-                      du prix de vente
-                    </div>
-                  </div>
-                </div>
-
-                {/* Two Column Layout */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                    gap: "1.5rem",
-                    alignItems: "start",
-                  }}
-                >
-                  {/* Configuration Form */}
-                  <div
-                    style={{
-                      background: "var(--b1)",
-                      borderRadius: "var(--r-lg)",
-                      padding: "1.25rem",
-                      border: "1px solid var(--b2)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                        marginBottom: "1.25rem",
-                        paddingBottom: "0.75rem",
-                        borderBottom: "1px solid var(--b2)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "var(--r)",
-                          background: "var(--gold-dim)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "var(--gold)",
-                        }}
-                      >
-                        <Settings size={16} />
-                      </div>
-                      <div>
-                        <h4
-                          style={{
-                            fontSize: "0.95rem",
-                            fontWeight: 600,
-                            margin: 0,
-                          }}
-                        >
-                          Modifier la Configuration
-                        </h4>
-                        <p
-                          style={{
-                            fontSize: "0.75rem",
-                            color: "var(--text-3)",
-                            margin: 0,
-                          }}
-                        >
-                          Ajustez les taux et frais
-                        </p>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "1rem",
-                      }}
-                    >
-                      <div className="admin-form-group" style={{ margin: 0 }}>
-                        <label
-                          className="admin-label"
-                          style={{
-                            fontSize: "0.8rem",
-                            fontWeight: 500,
-                            marginBottom: "0.5rem",
-                          }}
-                        >
-                          Taux de change (1 crédit = ? Ar)
-                        </label>
-                        <div
-                          style={{
-                            position: "relative",
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          <input
-                            type="number"
-                            value={currencyForm.arPerCredit}
-                            onChange={(e) =>
-                              setCurrencyForm({
-                                ...currencyForm,
-                                arPerCredit: parseFloat(e.target.value) || 50,
-                              })
-                            }
-                            min={1}
-                            step={1}
-                            className="admin-input"
-                            style={{
-                              paddingRight: "3rem",
-                              fontSize: "1.1rem",
-                              fontWeight: 600,
-                              fontFamily: "var(--mono)",
-                            }}
-                          />
-                          <span
-                            style={{
-                              position: "absolute",
-                              right: "1rem",
-                              color: "var(--text-3)",
-                              fontSize: "0.9rem",
-                              fontWeight: 500,
-                            }}
-                          >
-                            Ar
-                          </span>
-                        </div>
-                        <small
-                          style={{
-                            color: "var(--text-3)",
-                            marginTop: "0.375rem",
-                            display: "block",
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          Montant en Ariary équivalent à 1 crédit
-                        </small>
-                      </div>
-
-                      <div className="admin-form-group" style={{ margin: 0 }}>
-                        <label
-                          className="admin-label"
-                          style={{
-                            fontSize: "0.8rem",
-                            fontWeight: 500,
-                            marginBottom: "0.5rem",
-                          }}
-                        >
-                          Frais plateforme (%)
-                        </label>
-                        <div
-                          style={{
-                            position: "relative",
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          <input
-                            type="number"
-                            value={currencyForm.platformFeePercent}
-                            onChange={(e) =>
-                              setCurrencyForm({
-                                ...currencyForm,
-                                platformFeePercent:
-                                  parseFloat(e.target.value) || 30,
-                              })
-                            }
-                            min={0}
-                            max={100}
-                            step={1}
-                            className="admin-input"
-                            style={{
-                              paddingRight: "2.5rem",
-                              fontSize: "1.1rem",
-                              fontWeight: 600,
-                              fontFamily: "var(--mono)",
-                            }}
-                          />
-                          <span
-                            style={{
-                              position: "absolute",
-                              right: "1rem",
-                              color: "var(--text-3)",
-                              fontSize: "0.9rem",
-                              fontWeight: 500,
-                            }}
-                          >
-                            %
-                          </span>
-                        </div>
-                        <small
-                          style={{
-                            color: "var(--text-3)",
-                            marginTop: "0.375rem",
-                            display: "block",
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          Pourcentage prélevé sur chaque transaction
-                        </small>
-                      </div>
-
-                      <div className="admin-form-group" style={{ margin: 0 }}>
-                        <label
-                          className="admin-label"
-                          style={{
-                            fontSize: "0.8rem",
-                            fontWeight: 500,
-                            marginBottom: "0.5rem",
-                          }}
-                        >
-                          Note de changement{" "}
-                          <span style={{ color: "var(--text-3)" }}>
-                            (optionnel)
-                          </span>
-                        </label>
-                        <textarea
-                          value={currencyForm.note}
-                          onChange={(e) =>
-                            setCurrencyForm({
-                              ...currencyForm,
-                              note: e.target.value,
-                            })
-                          }
-                          placeholder="Ex: Ajustement suite à l'inflation..."
-                          className="admin-input"
-                          rows={2}
-                          style={{ resize: "none", fontSize: "0.85rem" }}
-                        />
-                        <small
-                          style={{
-                            color: "var(--text-3)",
-                            marginTop: "0.375rem",
-                            display: "block",
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          Raison du changement pour l'historique
-                        </small>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "0.5rem",
-                          marginTop: "0.5rem",
-                        }}
-                      >
-                        {isCurrencyDirty && (
-                          <button
-                            className="admin-btn admin-btn-outline"
-                            onClick={resetCurrencyForm}
-                            disabled={saving}
-                            style={{
-                              justifyContent: "center",
-                              padding: "0.75rem",
-                              flexShrink: 0,
-                            }}
-                            aria-label="Réinitialiser le formulaire"
-                            title="Annuler les modifications"
-                          >
-                            <RotateCcw size={16} />
-                            Réinitialiser
-                          </button>
-                        )}
-                        <button
-                          className="admin-btn admin-btn-primary"
-                          onClick={handleSaveCurrencyConfig}
-                          disabled={saving || !isCurrencyDirty}
-                          style={{
-                            flex: 1,
-                            justifyContent: "center",
-                            padding: "0.75rem",
-                            opacity: !isCurrencyDirty && !saving ? 0.6 : 1,
-                          }}
-                        >
-                          {saving ? (
-                            <Loader2 className="animate-spin" size={18} />
-                          ) : (
-                            <Save size={18} />
-                          )}
-                          {saving
-                            ? "Mise à jour en cours..."
-                            : isCurrencyDirty
-                              ? "Enregistrer les modifications"
-                              : "Aucun changement"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Live Calculator Preview */}
-                  <div
-                    style={{
-                      background: "var(--b1)",
-                      borderRadius: "var(--r-lg)",
-                      padding: "1.25rem",
-                      border: "1px solid var(--b2)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                        marginBottom: "1.25rem",
-                        paddingBottom: "0.75rem",
-                        borderBottom: "1px solid var(--b2)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "var(--r)",
-                          background: "var(--sage-dim)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "var(--sage)",
-                        }}
-                      >
-                        <Calculator size={16} />
-                      </div>
-                      <div>
-                        <h4
-                          style={{
-                            fontSize: "0.95rem",
-                            fontWeight: 600,
-                            margin: 0,
-                          }}
-                        >
-                          Aperçu du Calcul
-                        </h4>
-                        <p
-                          style={{
-                            fontSize: "0.75rem",
-                            color: "var(--text-3)",
-                            margin: 0,
-                          }}
-                        >
-                          Simulation avec les nouveaux taux
-                        </p>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        background: "var(--void)",
-                        borderRadius: "var(--r)",
-                        padding: "1rem",
-                        marginBottom: "1rem",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "0.5rem",
-                        }}
-                      >
-                        <label
-                          htmlFor="preview-price-input"
-                          style={{
-                            fontSize: "0.75rem",
-                            color: "var(--text-3)",
-                            fontWeight: 500,
-                          }}
-                        >
-                          Prix de vente simulé
-                        </label>
-                        <span
-                          style={{
-                            fontSize: "0.7rem",
-                            color: "var(--text-3)",
-                            fontFamily: "var(--mono)",
-                          }}
-                        >
-                          {Math.round(previewPrice / currencyForm.arPerCredit)}{" "}
-                          cr
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          position: "relative",
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        <input
-                          id="preview-price-input"
-                          type="number"
-                          value={previewPrice}
-                          onChange={(e) =>
-                            setPreviewPrice(
-                              Math.max(0, parseFloat(e.target.value) || 0),
-                            )
-                          }
-                          min={0}
-                          step={500}
-                          className="admin-input"
-                          style={{
-                            paddingRight: "3rem",
-                            fontSize: "1.4rem",
-                            fontWeight: 700,
-                            fontFamily: "var(--mono)",
-                            background: "transparent",
-                            border: "none",
-                            color: "var(--text)",
-                            padding: "0.25rem 3rem 0.25rem 0",
-                          }}
-                          aria-label="Prix de vente simulé en Ariary"
-                        />
-                        <span
-                          style={{
-                            position: "absolute",
-                            right: "0.5rem",
-                            color: "var(--text-3)",
-                            fontSize: "0.85rem",
-                            fontWeight: 500,
-                            pointerEvents: "none",
-                          }}
-                        >
-                          Ar
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "0.375rem",
-                          marginTop: "0.625rem",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {[1000, 5000, 10000, 20000, 50000].map((preset) => (
-                          <button
-                            key={preset}
-                            type="button"
-                            onClick={() => setPreviewPrice(preset)}
-                            className="admin-btn admin-btn-sm"
-                            style={{
-                              padding: "0.25rem 0.625rem",
-                              fontSize: "0.7rem",
-                              fontFamily: "var(--mono)",
-                              background:
-                                previewPrice === preset
-                                  ? "var(--gold-dim)"
-                                  : "var(--b2)",
-                              border: `1px solid ${previewPrice === preset ? "var(--gold-line)" : "var(--b3)"}`,
-                              color:
-                                previewPrice === preset
-                                  ? "var(--gold)"
-                                  : "var(--text-2)",
-                              borderRadius: "var(--r-sm)",
-                              fontWeight: previewPrice === preset ? 600 : 500,
-                            }}
-                            aria-pressed={previewPrice === preset}
-                          >
-                            {preset.toLocaleString()}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.75rem",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          padding: "0.75rem",
-                          background: "var(--b2)",
-                          borderRadius: "var(--r)",
-                          fontSize: "0.85rem",
-                        }}
-                      >
-                        <span style={{ color: "var(--text-2)" }}>
-                          Équivalent en Ar
-                        </span>
-                        <span
-                          style={{
-                            fontWeight: 600,
-                            color: "var(--gold)",
-                            fontFamily: "var(--mono)",
-                          }}
-                        >
-                          {Math.round(
-                            previewPrice /
-                              Math.max(currencyForm.arPerCredit, 1),
-                          )}{" "}
-                          cr
-                        </span>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          padding: "0.75rem",
-                          background: "var(--b2)",
-                          borderRadius: "var(--r)",
-                          fontSize: "0.85rem",
-                        }}
-                      >
-                        <span style={{ color: "var(--text-2)" }}>
-                          Frais plateforme ({currencyForm.platformFeePercent}%)
-                        </span>
-                        <span
-                          style={{
-                            fontWeight: 600,
-                            color: "var(--ruby)",
-                            fontFamily: "var(--mono)",
-                          }}
-                        >
-                          -
-                          {Math.round(
-                            previewPrice *
-                              (currencyForm.platformFeePercent / 100),
-                          ).toLocaleString()}{" "}
-                          Ar
-                        </span>
-                      </div>
-
-                      <div
-                        style={{
-                          marginTop: "0.5rem",
-                          padding: "1rem",
-                          background: "var(--sage-dim)",
-                          borderRadius: "var(--r)",
-                          border: "1px solid var(--sage-line)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: "0.85rem",
-                              color: "var(--text-2)",
-                              fontWeight: 500,
-                            }}
-                          >
-                            Revenu contributeur
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "1.25rem",
-                              fontWeight: 700,
-                              color: "var(--sage)",
-                              fontFamily: "var(--mono)",
-                            }}
-                          >
-                            {Math.round(
-                              previewPrice *
-                                (1 - currencyForm.platformFeePercent / 100),
-                            ).toLocaleString()}{" "}
-                            Ar
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: "1rem",
-                        padding: "0.75rem",
-                        background: "var(--b2)",
-                        borderRadius: "var(--r)",
-                        fontSize: "0.75rem",
-                        color: "var(--text-3)",
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "0.5rem",
-                      }}
-                    >
-                      <AlertCircle
-                        size={14}
-                        style={{ marginTop: "0.125rem", flexShrink: 0 }}
-                      />
-                      <span>
-                        Ce calcul est indicatif et montre la répartition des
-                        revenus basée sur les taux configurés ci-contre.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SECTION 3 — Historique des modifications */}
-                <div style={{ marginTop: "2rem" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      marginBottom: "0.75rem",
-                      paddingBottom: "0.5rem",
-                    }}
-                  >
-                    <History size={16} style={{ color: "var(--text-3)" }} />
-                    <h4
-                      style={{
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        color: "var(--text-2)",
-                        margin: 0,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                      }}
-                    >
-                      Historique des modifications
-                    </h4>
-                    {currencyHistory.length > 0 && (
-                      <span
-                        style={{
-                          fontSize: "0.7rem",
-                          color: "var(--text-3)",
-                          fontFamily: "var(--mono)",
-                          background: "var(--b2)",
-                          padding: "0.125rem 0.5rem",
-                          borderRadius: "var(--r-sm)",
-                          border: "1px solid var(--b3)",
-                        }}
-                      >
-                        {currencyHistory.length} entrée
-                        {currencyHistory.length > 1 ? "s" : ""}
-                      </span>
-                    )}
-                  </div>
-
-                  {historyLoading ? (
-                    <div
-                      style={{
-                        padding: "1.5rem",
-                        background: "var(--b1)",
-                        borderRadius: "var(--r-lg)",
-                        border: "1px solid var(--b2)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "0.5rem",
-                        color: "var(--text-3)",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      <Loader2 className="animate-spin" size={14} />
-                      Chargement de l'historique...
-                    </div>
-                  ) : currencyHistory.length === 0 ? (
-                    <div
-                      style={{
-                        padding: "1.5rem",
-                        background: "var(--b1)",
-                        borderRadius: "var(--r-lg)",
-                        border: "1px dashed var(--b2)",
-                        textAlign: "center",
-                        color: "var(--text-3)",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      Aucune modification enregistrée pour le moment.
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        background: "var(--b1)",
-                        borderRadius: "var(--r-lg)",
-                        border: "1px solid var(--b2)",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {currencyHistory.slice(0, 10).map((entry, idx) => {
-                        const isActive = currencyConfig?.id === entry.id;
-                        const prev = currencyHistory[idx + 1];
-                        const arDiff = prev
-                          ? Number(entry.arPerCredit) - Number(prev.arPerCredit)
-                          : 0;
-                        const feeDiff = prev
-                          ? Number(entry.platformFeePercent) -
-                            Number(prev.platformFeePercent)
-                          : 0;
-                        return (
-                          <div
-                            key={entry.id}
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "32px 1fr auto",
-                              gap: "0.875rem",
-                              padding: "0.875rem 1rem",
-                              borderBottom:
-                                idx < Math.min(currencyHistory.length, 10) - 1
-                                  ? "1px solid var(--b2)"
-                                  : "none",
-                              alignItems: "center",
-                              background: isActive
-                                ? "var(--sage-dim)"
-                                : "transparent",
-                              transition: "background 0.15s",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "50%",
-                                background: isActive
-                                  ? "var(--sage-dim)"
-                                  : "var(--b2)",
-                                border: `1px solid ${isActive ? "var(--sage-line)" : "var(--b3)"}`,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: isActive
-                                  ? "var(--sage)"
-                                  : "var(--text-3)",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {isActive ? (
-                                <CheckCircle2 size={14} />
-                              ) : (
-                                <Clock size={14} />
-                              )}
-                            </div>
-                            <div style={{ minWidth: 0 }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "0.5rem",
-                                  flexWrap: "wrap",
-                                  marginBottom: "0.125rem",
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontFamily: "var(--mono)",
-                                    fontSize: "0.85rem",
-                                    fontWeight: 600,
-                                    color: "var(--gold)",
-                                  }}
-                                >
-                                  {entry.arPerCredit} Ar
-                                </span>
-                                {prev && arDiff !== 0 && (
-                                  <span
-                                    style={{
-                                      fontSize: "0.7rem",
-                                      color:
-                                        arDiff > 0
-                                          ? "var(--ruby)"
-                                          : "var(--sage)",
-                                      fontFamily: "var(--mono)",
-                                    }}
-                                  >
-                                    ({arDiff > 0 ? "+" : ""}
-                                    {arDiff})
-                                  </span>
-                                )}
-                                <ArrowRight
-                                  size={11}
-                                  style={{
-                                    color: "var(--text-3)",
-                                    opacity: 0.5,
-                                  }}
-                                />
-                                <span
-                                  style={{
-                                    fontFamily: "var(--mono)",
-                                    fontSize: "0.85rem",
-                                    fontWeight: 600,
-                                    color: "var(--ruby)",
-                                  }}
-                                >
-                                  {entry.platformFeePercent}%
-                                </span>
-                                {prev && feeDiff !== 0 && (
-                                  <span
-                                    style={{
-                                      fontSize: "0.7rem",
-                                      color:
-                                        feeDiff > 0
-                                          ? "var(--ruby)"
-                                          : "var(--sage)",
-                                      fontFamily: "var(--mono)",
-                                    }}
-                                  >
-                                    ({feeDiff > 0 ? "+" : ""}
-                                    {feeDiff}%)
-                                  </span>
-                                )}
-                                {isActive && (
-                                  <span
-                                    style={{
-                                      fontSize: "0.65rem",
-                                      fontWeight: 600,
-                                      color: "var(--sage)",
-                                      background: "var(--sage-dim)",
-                                      padding: "0.125rem 0.375rem",
-                                      borderRadius: "var(--r-sm)",
-                                      border: "1px solid var(--sage-line)",
-                                      textTransform: "uppercase",
-                                      letterSpacing: "0.05em",
-                                    }}
-                                  >
-                                    Active
-                                  </span>
-                                )}
-                              </div>
-                              {entry.note && (
-                                <div
-                                  style={{
-                                    fontSize: "0.75rem",
-                                    color: "var(--text-3)",
-                                    fontStyle: "italic",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  « {entry.note} »
-                                </div>
-                              )}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "0.7rem",
-                                color: "var(--text-3)",
-                                fontFamily: "var(--mono)",
-                                textAlign: "right",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {new Date(entry.updatedAt).toLocaleDateString(
-                                "fr-FR",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                },
-                              )}
-                              <div
-                                style={{ fontSize: "0.65rem", opacity: 0.7 }}
-                              >
-                                {new Date(entry.updatedAt).toLocaleTimeString(
-                                  "fr-FR",
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
-        )}
 
         {/* SETTINGS TAB */}
         {activeTab === "settings" && (
@@ -2258,11 +887,7 @@ export default function AdminConfigurationPage() {
               <AIProviderPanel
                 onChange={() => {
                   // Recharge les settings pour rafraîchir la valeur de ai.provider
-                  // dans la liste éditable en dessous.
-                  void fetch("/api/admin/settings")
-                    .then((r) => r.json())
-                    .then((d) => setSettings(d.settings || []))
-                    .catch(() => {});
+                  void loadData();
                 }}
               />
 
@@ -2299,8 +924,13 @@ export default function AdminConfigurationPage() {
                   <div className="admin-empty-state">
                     <Settings size={36} style={{ opacity: 0.5 }} />
                     <p>
-                      Aucun paramètre IA — appliquez la migration{" "}
-                      <code>20260427_ai_providers.sql</code>.
+                      Aucun paramètre IA trouvé.{" "}
+                      <button
+                        style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", textDecoration: "underline", padding: 0, font: "inherit" }}
+                        onClick={() => void loadData()}
+                      >
+                        Réessayer
+                      </button>
                     </p>
                   </div>
                 ) : (
@@ -2776,14 +1406,14 @@ export default function AdminConfigurationPage() {
                 </div>
                 <div className="admin-form-grid-2">
                   <div className="admin-form-group">
-                    <label className="admin-label">Crédits</label>
+                    <label className="admin-label">Montant (Ar)</label>
                     <input
                       type="number"
-                      value={packForm.credits}
+                      value={packForm.arAmount}
                       onChange={(e) =>
                         setPackForm({
                           ...packForm,
-                          credits: parseInt(e.target.value) || 0,
+                          arAmount: parseInt(e.target.value) || 0,
                         })
                       }
                       min={1}
@@ -2791,115 +1421,14 @@ export default function AdminConfigurationPage() {
                     />
                   </div>
                   <div className="admin-form-group">
-                    <label className="admin-label">
-                      Prix (Ar)
-                      {currencyConfig && (
-                        <span
-                          style={{
-                            fontSize: "0.75rem",
-                            color: "var(--text-3)",
-                            marginLeft: "0.5rem",
-                            fontWeight: 400,
-                          }}
-                        >
-                          @ {currencyConfig.arPerCredit} Ar/cr
-                        </span>
-                      )}
-                    </label>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <input
-                        type="number"
-                        value={packForm.price}
-                        onChange={(e) =>
-                          setPackForm({
-                            ...packForm,
-                            price: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        min={1}
-                        className="admin-input"
-                        style={{ flex: 1 }}
-                      />
-                      {currencyConfig && packForm.credits > 0 && (
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn-outline"
-                          onClick={() =>
-                            setPackForm({
-                              ...packForm,
-                              price: Math.round(
-                                packForm.credits * currencyConfig.arPerCredit,
-                              ),
-                            })
-                          }
-                          style={{
-                            padding: "0.5rem 1rem",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            whiteSpace: "nowrap",
-                          }}
-                          title={`Calculer: ${packForm.credits} × ${currencyConfig.arPerCredit} = ${Math.round(packForm.credits * currencyConfig.arPerCredit)} Ar`}
-                        >
-                          ↻ Calculer
-                        </button>
-                      )}
-                    </div>
-                    {currencyConfig && packForm.credits > 0 && (
-                      <div
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "var(--text-3)",
-                          marginTop: "0.25rem",
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span>Suggestion:</span>
-                        <span
-                          style={{
-                            fontFamily: "var(--mono)",
-                            fontWeight: 600,
-                            color:
-                              packForm.price ===
-                              Math.round(
-                                packForm.credits * currencyConfig.arPerCredit,
-                              )
-                                ? "var(--sage)"
-                                : "var(--amber)",
-                          }}
-                        >
-                          {Math.round(
-                            packForm.credits * currencyConfig.arPerCredit,
-                          )}{" "}
-                          Ar
-                          {packForm.price !==
-                            Math.round(
-                              packForm.credits * currencyConfig.arPerCredit,
-                            ) && (
-                            <span style={{ marginLeft: "0.5rem" }}>
-                              (écart:{" "}
-                              {Math.round(
-                                packForm.price -
-                                  packForm.credits * currencyConfig.arPerCredit,
-                              )}{" "}
-                              Ar)
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="admin-form-grid-2">
-                  <div className="admin-form-group">
                     <label className="admin-label">Bonus (Ar)</label>
                     <input
                       type="number"
-                      value={packForm.bonus}
+                      value={packForm.bonusAr}
                       onChange={(e) =>
                         setPackForm({
                           ...packForm,
-                          bonus: parseInt(e.target.value) || 0,
+                          bonusAr: parseInt(e.target.value) || 0,
                         })
                       }
                       min={0}

@@ -13,7 +13,7 @@ export async function GET() {
          s.type,
          s.matiere,
          s.annee,
-         s.credits,
+         s.prix as credits,
          s.badge,
          s.glyph,
          s.rating,

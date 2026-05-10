@@ -82,7 +82,7 @@ export class ClaudeProvider implements AIProvider {
         output_config: {
           effort: clampEffortForModel(args.model, args.effort),
           format: { type: 'json_schema', schema: AI_CORRECTION_JSON_SCHEMA },
-        } as any,
+        },
         system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: [{ type: 'text', text: userMessage }] }],
       })

@@ -5,19 +5,19 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 // Vérifier si l'utilisateur est admin
 async function checkAdmin(request: Request) {
   const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session?.user) {
-    return { error: 'Non authentifié', status: 401 }
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    return { error: 'Non authentifié', status: 401 as const }
   }
 
-  const userResult = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
+  const userResult = await query('SELECT role FROM "User" WHERE id = $1', [user.id])
   const role = userResult.rows[0]?.role
   if (!role || String(role).toUpperCase() !== 'ADMIN') {
-    return { error: 'Accès interdit', status: 403 }
+    return { error: 'Accès interdit', status: 403 as const }
   }
 
-  return { userId: session.user.id }
+  return { userId: user.id }
 }
 
 // GET /api/admin/merchant-phones - Lister tous les numéros
@@ -76,13 +76,18 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 })
     }
 
-    const setClause = Object.keys(updates)
-      .map((key, i) => `"${key}" = $${i + 2}`)
-      .join(', ')
+    const ALLOWED_COLUMNS = new Set(['operator', 'phone', 'label', 'isActive', 'isDefault'])
+    const filteredKeys = Object.keys(updates).filter(k => ALLOWED_COLUMNS.has(k))
+
+    if (filteredKeys.length === 0) {
+      return NextResponse.json({ error: 'Aucun champ valide à mettre à jour' }, { status: 400 })
+    }
+
+    const setClause = filteredKeys.map((key, i) => `"${key}" = $${i + 2}`).join(', ')
 
     const result = await query(
       `UPDATE "MerchantPhone" SET ${setClause}, "updatedAt" = NOW() WHERE id = $1 RETURNING *`,
-      [id, ...Object.values(updates)]
+      [id, ...filteredKeys.map(k => updates[k])]
     )
 
     if (result.rows.length === 0) {

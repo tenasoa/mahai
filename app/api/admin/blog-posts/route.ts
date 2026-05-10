@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { query } from "@/lib/db";
+
+async function checkAdmin() {
+  const supabase = await createSupabaseServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non authentifié", status: 401 as const };
+  const res = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id]);
+  if (res.rows[0]?.role !== "ADMIN") return { error: "Accès interdit", status: 403 as const };
+  return { userId: session.user.id };
+}
 
 export async function GET(request: NextRequest) {
+  const auth = await checkAdmin();
+  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -39,6 +52,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await checkAdmin();
+  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
   try {
     // Use admin client for DB operations to avoid UUID/RLS insert errors
     const supabase = await createSupabaseAdminClient();
@@ -105,6 +121,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const auth = await checkAdmin();
+  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
   try {
     const supabase = await createSupabaseAdminClient();
     const body = await request.json();
@@ -171,6 +190,9 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const auth = await checkAdmin();
+  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
   try {
     const supabase = await createSupabaseAdminClient();
     const { searchParams } = new URL(request.url);

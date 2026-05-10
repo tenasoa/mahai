@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from 'react'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { Logo } from '@/components/common/Logo'
 
@@ -14,38 +15,40 @@ export default function LoginPage() {
         <div className="auth-logo" style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <Logo size="lg" />
         </div>
-        
-        <div className="auth-card" style={{ 
-          background: 'var(--card)', 
-          border: '1px solid var(--b1)', 
-          borderRadius: 'var(--r-lg)', 
-          padding: '2.5rem', 
+
+        <div className="auth-card" style={{
+          background: 'var(--card)',
+          border: '1px solid var(--b1)',
+          borderRadius: 'var(--r-lg)',
+          padding: '2.5rem',
           boxShadow: '0 20px 60px rgba(0,0,0,0.4)'
         }}>
-          <h1 className="auth-title" style={{ 
-            fontFamily: 'var(--display)', 
-            fontSize: '2rem', 
-            fontWeight: 400, 
-            color: 'var(--text)', 
-            letterSpacing: '-0.02em', 
-            textAlign: 'center', 
+          <h1 className="auth-title" style={{
+            fontFamily: 'var(--display)',
+            fontSize: '2rem',
+            fontWeight: 400,
+            color: 'var(--text)',
+            letterSpacing: '-0.02em',
+            textAlign: 'center',
             marginBottom: '0.5rem',
             lineHeight: 1.2
           }}>
             Bon retour,<br />
             <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>connectez-vous</em>
           </h1>
-          <p className="auth-sub" style={{ 
-            fontSize: '0.82rem', 
-            color: 'var(--text-3)', 
-            textAlign: 'center', 
-            marginBottom: '2rem', 
-            lineHeight: 1.6 
+          <p className="auth-sub" style={{
+            fontSize: '0.82rem',
+            color: 'var(--text-3)',
+            textAlign: 'center',
+            marginBottom: '2rem',
+            lineHeight: 1.6
           }}>
             Accédez à vos sujets, corrections IA et à votre wallet de crédits.
           </p>
-          
-          <LoginForm />
+
+          <Suspense fallback={<div className="auth-skeleton" />}>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </div>

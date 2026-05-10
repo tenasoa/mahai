@@ -68,10 +68,10 @@ const navItems = [
     section: "Finances",
     links: [
       {
-        href: "/admin/credits",
+        href: "/admin/transactions",
         label: "Mobile Banking",
-        icon: "credits",
-        badge: "credits",
+        icon: "transactions",
+        badge: "transactions",
         badgeType: "amber",
       },
       {
@@ -124,7 +124,7 @@ function SidebarIcon({ type, size = 18 }: { type: string; size?: number }) {
       return <FileText size={size} />;
     case "submissions":
       return <ClipboardCheck size={size} />;
-    case "credits":
+    case "transactions":
       return <CreditCard size={size} />;
     case "blog":
       return <Newspaper size={size} />;
@@ -338,10 +338,10 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
                 const isActive =
                   pathname === link.href ||
                   (link.href !== "/admin" && pathname?.startsWith(link.href));
-                const isCreditsBadge = link.badge === "credits" && pendingCount > 0
+                const isTransactionsBadge = link.badge === "transactions" && pendingCount > 0
                 const isSujetsBadge = link.badge === "sujets" && submissionsCount > 0
-                const showBadge = isCreditsBadge || isSujetsBadge
-                const badgeValue = isCreditsBadge ? pendingCount : isSujetsBadge ? submissionsCount : 0
+                const showBadge = isTransactionsBadge || isSujetsBadge
+                const badgeValue = isTransactionsBadge ? pendingCount : isSujetsBadge ? submissionsCount : 0
 
                 return (
                   <Link
@@ -351,7 +351,7 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
                     title={isCollapsed ? link.label : undefined}
                     data-tooltip={link.label}
                     onClick={() => {
-                      if (link.href === "/admin/credits") {
+                      if (link.href === "/admin/transactions") {
                         resetCount();
                       }
                     }}

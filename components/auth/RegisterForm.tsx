@@ -14,6 +14,7 @@ type Step = 1 | 2 | 3
 
 export function RegisterForm() {
   const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || undefined
   const [step, setStep] = useState<Step>(1)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -103,7 +104,7 @@ export function RegisterForm() {
       ...data,
       role: selectedRole,
       newsletterOptIn: Boolean(data.newsletterOptIn),
-    })
+    }, redirectTo)
     if (result?.error) {
       addToast(result.error, 'error')
       setStep(1)
@@ -248,7 +249,7 @@ export function RegisterForm() {
                 <div className="auth-role-icon"><Sparkles size={24} /></div>
                 <div className="auth-role-title">Contributeur</div>
                 <div className="auth-role-desc">
-                  Publier des sujets, gagner des crédits et construire votre réputation
+                  Publier des sujets, gagner des Ariary et construire votre réputation
                 </div>
               </div>
             </div>

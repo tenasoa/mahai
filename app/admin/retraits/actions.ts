@@ -55,7 +55,7 @@ export async function getAdminWithdrawals() {
 
     // Liste des retraits du mois
     const withdrawalsResult = await query(`
-      SELECT w.*, u.prenom, u.nom, u.email, u.credits
+      SELECT w.*, u.prenom, u.nom, u.email, u."balanceAr"
       FROM "Withdrawal" w
       JOIN "User" u ON w."userId" = u.id
       WHERE EXTRACT(MONTH FROM w."createdAt") = EXTRACT(MONTH FROM NOW())

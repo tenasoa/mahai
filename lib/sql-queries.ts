@@ -112,10 +112,6 @@ export async function updateUserBalanceAr(userId: string, balanceAr: number): Pr
   await query('UPDATE "User" SET "balanceAr" = $1, "updatedAt" = NOW() WHERE id = $2', [balanceAr, userId])
 }
 
-// @deprecated Utiliser updateUserBalanceAr
-export async function updateUserCredits(userId: string, credits: number): Promise<void> {
-  await updateUserBalanceAr(userId, credits * 50) // Conversion: 1 crédit = 50 Ar
-}
 
 export async function createUser(userData: Partial<User>): Promise<User> {
   const { fields, placeholders, values } = buildInsertParts(userData as Record<string, unknown>)

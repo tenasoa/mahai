@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     template: "%s | Mah.AI",
   },
   description:
-    "La plateforme EdTech made in Madagascar. Accède aux sujets BAC, BEPC, CEPE avec des corrections IA instantanées. Paiement Mobile Money (MVola, Orange Money, Airtel Money). 10 crédits offerts à l'inscription.",
+    "La plateforme EdTech made in Madagascar. Accède aux sujets BAC, BEPC, CEPE avec des corrections IA instantanées. Paiement Mobile Money (MVola, Orange Money, Airtel Money). 500 Ar offerts à l'inscription.",
   keywords: [
     "BAC Madagascar",
     "BEPC Madagascar",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Mah.AI — Réussis tes examens avec l'IA",
     description:
-      "Accède à des milliers de sujets BAC, BEPC, CEPE avec correction IA instantanée. Paiement Mobile Money, 10 crédits offerts à l'inscription.",
+      "Accède à des milliers de sujets BAC, BEPC, CEPE avec correction IA instantanée. Paiement Mobile Money, 500 Ar offerts à l'inscription.",
     type: "website",
     locale: "fr_MG",
     siteName: "Mah.AI",
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Mah.AI — Réussis tes examens avec l'IA",
     description:
-      "Sujets BAC, BEPC, CEPE + correction IA instantanée. 10 crédits offerts.",
+      "Sujets BAC, BEPC, CEPE + correction IA instantanée. 500 Ar offerts.",
     images: ["/og-image.png"],
   },
   robots: {

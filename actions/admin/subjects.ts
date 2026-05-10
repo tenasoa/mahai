@@ -71,7 +71,7 @@ export async function getSubjectsAdmin(status?: string, year?: string, page?: nu
   let sql = `
     SELECT
         s.id, s.titre as title, s.type, s.matiere as motiere, s.annee as year,
-        s.serie as series, s.pages as "pagesCount", s.credits, s.difficulte as grade, s.langue,
+        s.serie as series, s.pages as "pagesCount", s.prix as credits, s.difficulte as grade, s.langue,
         s.format, s.badge, s.status, s."createdAt",
         u.prenom as "authorPrenom", u.nom as "authorNom", u.role as "authorRole",
         u."profilePicture" as "authorProfilePicture",

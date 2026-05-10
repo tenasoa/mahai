@@ -6,6 +6,7 @@ import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { loginUser } from '@/actions/auth'
 import { useState, useEffect, useId } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useToast, ToastContainer } from '@/components/ui/Toast'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import './auth-forms.css'
@@ -13,6 +14,8 @@ import './auth-forms.css'
 const REMEMBER_ME_KEY = 'mahai_remember_email'
 
 export function LoginForm() {
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || undefined
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -54,7 +57,7 @@ export function LoginForm() {
       }
     }
 
-    const result = await loginUser(data)
+    const result = await loginUser(data, redirectTo)
     if (result?.error) {
       addToast(result.error, 'error')
     } else {
@@ -151,7 +154,10 @@ export function LoginForm() {
 
         <div className="auth-footer">
           Pas encore de compte ?{' '}
-          <Link href="/auth/register" className="auth-footer-link">
+          <Link
+            href={redirectTo ? `/auth/register?redirect=${encodeURIComponent(redirectTo)}` : '/auth/register'}
+            className="auth-footer-link"
+          >
             Créer un compte gratuit →
           </Link>
         </div>

@@ -9,9 +9,9 @@
 
 import type { AICorrectionResult } from '../schemas'
 
-export type AIProviderId = 'claude' | 'perplexity' | 'openai'
+export type AIProviderId = 'claude' | 'perplexity' | 'openai' | 'openrouter'
 export type AIMode = 'SUBMISSION' | 'DIRECT'
-export type Effort = 'low' | 'medium' | 'high' | 'max'
+export type Effort = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
 
 export interface ProviderSubject {
   id: string

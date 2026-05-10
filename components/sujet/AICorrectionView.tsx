@@ -34,14 +34,128 @@ const VERDICT_META: Record<
   model: { label: 'Correction modèle', color: '#9bb7e0', bg: 'rgba(155, 183, 224, 0.10)', border: 'rgba(155, 183, 224, 0.35)', Icon: BookOpen },
 }
 
+/**
+ * Tente d'extraire un tableau GFM aplati sur une seule ligne.
+ * Format produit par certains modèles IA :
+ *   "| A | B | C | |---|---|---| | | D | E | F | | G | H | I |"
+ *
+ * Stratégie cellule-par-cellule :
+ *   1. Split sur | → toutes les cellules aplaties
+ *   2. Trouver la plus longue suite de cellules "séparateur" ([-: ]+)
+ *      — tolère "---  ---" (espaces internes, cas fréquent dans l'IA)
+ *   3. En déduire colCount = max(longueur suite sep, nb cellules d'en-tête)
+ *   4. Reconstituer les rangées de données en groupes de colCount
+ */
+function tryExpandFlatTable(line: string): string[] | null {
+  const trimmed = line.trim()
+  if (!trimmed.startsWith('|')) return null
+
+  // Parse toutes les cellules en une fois
+  const raw = trimmed.split('|').map(c => c.trim())
+  const cells = raw.slice(1, raw.length - 1)  // retire les vides de bord
+
+  // Vérifier qu'il y a à la fois des cellules sep ET du contenu normal
+  const hasSep = cells.some(c => /^[-: ]+$/.test(c))
+  const hasContent = cells.some(c => c !== '' && !/^[-: ]+$/.test(c))
+  if (!hasSep || !hasContent) return null
+
+  // Trouver la plus longue suite continue de cellules séparateur
+  let bestStart = -1
+  let bestLen = 0
+  let runStart = -1
+  let runLen = 0
+  for (let i = 0; i < cells.length; i++) {
+    if (/^[-: ]+$/.test(cells[i])) {
+      if (runStart === -1) runStart = i
+      runLen++
+      if (runLen > bestLen) { bestLen = runLen; bestStart = runStart }
+    } else {
+      runStart = -1; runLen = 0
+    }
+  }
+  if (bestLen < 2) return null  // pas un tableau (≥ 2 colonnes nécessaires)
+
+  const sepStart = bestStart
+  const sepEnd = sepStart + bestLen
+
+  // En-tête = cellules non-vides AVANT le séparateur
+  const headerCells = cells.slice(0, sepStart).filter(c => c !== '')
+  if (headerCells.length === 0) return null
+
+  // Nombre de colonnes = max entre largeur sep et largeur en-tête
+  const colCount = Math.max(bestLen, headerCells.length)
+
+  // Reconstruction des rangées de données après le séparateur
+  const after = cells.slice(sepEnd)
+  const dataRows: string[][] = []
+  let cur: string[] = []
+
+  for (const cell of after) {
+    if (cell === '') {
+      if (cur.length === 0) continue          // vide de frontière en début de rangée → ignorer
+      if (cur.length === colCount) {
+        dataRows.push(cur); cur = []          // rangée complète : on pousse et on repart
+      } else {
+        cur.push('')                          // cellule vide légitime au sein d'une rangée
+        if (cur.length === colCount) { dataRows.push(cur); cur = [] }
+      }
+    } else {
+      cur.push(cell)
+      if (cur.length === colCount) { dataRows.push(cur); cur = [] }
+    }
+  }
+  if (cur.some(c => c !== '')) {
+    while (cur.length < colCount) cur.push('')
+    dataRows.push(cur)
+  }
+
+  if (dataRows.length === 0) return null
+
+  // Construction du markdown GFM valide
+  const paddedHeader = headerCells.slice(0, colCount)
+  while (paddedHeader.length < colCount) paddedHeader.push('')
+
+  const result: string[] = [
+    '| ' + paddedHeader.join(' | ') + ' |',
+    '| ' + Array(colCount).fill('---').join(' | ') + ' |',
+    ...dataRows.map(row => '| ' + row.join(' | ') + ' |'),
+  ]
+  return result
+}
+
+function normalizeTableMarkdown(text: string): string {
+  if (!text || !text.includes('|')) return text
+
+  const lines = text.split('\n')
+  const out: string[] = []
+
+  for (const line of lines) {
+    const expanded = tryExpandFlatTable(line)
+    if (expanded !== null) {
+      if (out.length > 0 && out[out.length - 1].trim() !== '') out.push('')
+      out.push(...expanded)
+    } else {
+      const prevTrimmed = (out[out.length - 1] ?? '').trim()
+      const lineTrimmed = line.trim()
+      if (lineTrimmed.startsWith('|') && prevTrimmed !== '' && !prevTrimmed.startsWith('|')) {
+        out.push('')
+      }
+      out.push(line)
+    }
+  }
+
+  return out.join('\n')
+}
+
 function MD({ children }: { children: string }) {
+  const normalized = normalizeTableMarkdown(children || '')
   return (
     <div className="ai-md">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}
       >
-        {children || ''}
+        {normalized}
       </ReactMarkdown>
     </div>
   )
@@ -124,13 +238,13 @@ export function AICorrectionView({ result, mode, createdAt }: Props) {
           {summary.strengths?.length > 0 && (
             <div className="ai-summary-col">
               <h4>Points forts</h4>
-              <ul>{summary.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
+              <ul>{summary.strengths.map((s, i) => <li key={i}><MD>{s}</MD></li>)}</ul>
             </div>
           )}
           {summary.improvements?.length > 0 && (
             <div className="ai-summary-col">
               <h4>{mode === 'DIRECT' ? 'Conseils méthodologiques' : 'Axes de progrès'}</h4>
-              <ul>{summary.improvements.map((s, i) => <li key={i}>{s}</li>)}</ul>
+              <ul>{summary.improvements.map((s, i) => <li key={i}><MD>{s}</MD></li>)}</ul>
             </div>
           )}
         </div>
@@ -138,13 +252,11 @@ export function AICorrectionView({ result, mode, createdAt }: Props) {
 
       <style jsx>{`
         .ai-correction {
-          border: 1px solid var(--gold-line, rgba(201, 168, 76, 0.3));
+          border: 1px solid var(--gold-line);
           border-radius: 14px;
-          background: linear-gradient(180deg,
-            rgba(201, 168, 76, 0.04) 0%,
-            transparent 80%);
+          background: linear-gradient(180deg, rgba(168, 120, 42, 0.04) 0%, transparent 80%);
           padding: 1.25rem;
-          color: var(--text-1, #fff);
+          color: var(--text);
         }
         .ai-head {
           display: flex;
@@ -152,27 +264,28 @@ export function AICorrectionView({ result, mode, createdAt }: Props) {
           gap: 0.85rem;
           margin-bottom: 1.25rem;
           padding-bottom: 0.85rem;
-          border-bottom: 1px solid var(--border-1, rgba(255,255,255,0.08));
+          border-bottom: 1px solid var(--b1);
         }
         .ai-head-icon {
           width: 38px;
           height: 38px;
           border-radius: 10px;
-          background: var(--gold-dim, rgba(201, 168, 76, 0.15));
-          color: var(--gold, #C9A84C);
+          background: var(--gold-dim);
+          color: var(--gold);
           display: flex;
           align-items: center;
           justify-content: center;
         }
         .ai-title {
-          font-family: var(--font-display, serif);
+          font-family: var(--display);
           font-size: 1.05rem;
           font-weight: 600;
           margin: 0;
+          color: var(--text);
         }
         .ai-sub {
           font-size: 0.78rem;
-          color: var(--text-3, rgba(255,255,255,0.55));
+          color: var(--text-3);
           margin: 0.2rem 0 0;
         }
         .ai-items {
@@ -186,8 +299,8 @@ export function AICorrectionView({ result, mode, createdAt }: Props) {
         .ai-item {
           padding: 1rem;
           border-radius: 12px;
-          background: var(--card, rgba(255,255,255,0.02));
-          border: 1px solid var(--border-1, rgba(255,255,255,0.06));
+          background: var(--card);
+          border: 1px solid var(--b1);
         }
         .ai-item-head {
           display: flex;
@@ -200,9 +313,9 @@ export function AICorrectionView({ result, mode, createdAt }: Props) {
           width: 28px;
           height: 28px;
           border-radius: 8px;
-          background: var(--gold-dim, rgba(201, 168, 76, 0.18));
-          color: var(--gold, #C9A84C);
-          font-family: var(--font-mono, monospace);
+          background: var(--gold-dim);
+          color: var(--gold);
+          font-family: var(--mono);
           font-weight: 600;
           font-size: 0.85rem;
           display: flex;
@@ -219,6 +332,7 @@ export function AICorrectionView({ result, mode, createdAt }: Props) {
           margin: 0;
           font-weight: 500;
           font-size: 0.95rem;
+          color: var(--text);
         }
         .ai-verdict {
           display: inline-flex;
@@ -240,34 +354,34 @@ export function AICorrectionView({ result, mode, createdAt }: Props) {
           margin-top: 0.75rem;
           padding: 0.85rem 1rem;
           border-radius: 10px;
-          background: rgba(255,255,255,0.02);
-          border-left: 3px solid var(--border-1, rgba(255,255,255,0.1));
+          background: var(--depth);
+          border-left: 3px solid var(--b1);
         }
         .ai-block-user {
-          background: rgba(155, 183, 224, 0.05);
-          border-left-color: rgba(155, 183, 224, 0.55);
+          background: var(--blue-dim);
+          border-left-color: var(--blue-line);
         }
         .ai-block-correct {
-          background: rgba(110, 170, 140, 0.04);
-          border-left-color: rgba(110, 170, 140, 0.55);
+          background: var(--sage-dim);
+          border-left-color: var(--sage-line);
         }
         .ai-block-feedback {
-          background: rgba(201, 168, 76, 0.04);
-          border-left-color: rgba(201, 168, 76, 0.55);
+          background: var(--gold-dim);
+          border-left-color: var(--gold-line);
         }
         .ai-block-label {
           display: block;
           text-transform: uppercase;
           letter-spacing: 1px;
           font-size: 0.65rem;
-          color: var(--text-3, rgba(255,255,255,0.55));
+          color: var(--text-3);
           margin-bottom: 0.4rem;
           font-weight: 600;
         }
         .ai-summary {
           margin-top: 1.25rem;
           padding-top: 1rem;
-          border-top: 1px solid var(--border-1, rgba(255,255,255,0.08));
+          border-top: 1px solid var(--b1);
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
           gap: 1rem;
@@ -275,62 +389,14 @@ export function AICorrectionView({ result, mode, createdAt }: Props) {
         .ai-summary-col h4 {
           font-size: 0.85rem;
           margin: 0 0 0.5rem;
-          color: var(--gold, #C9A84C);
+          color: var(--gold);
         }
         .ai-summary-col ul {
           padding-left: 1.1rem;
           margin: 0;
           font-size: 0.85rem;
-          color: var(--text-2, rgba(255,255,255,0.7));
+          color: var(--text-2);
           line-height: 1.55;
-        }
-      `}</style>
-
-      <style jsx global>{`
-        .ai-md {
-          font-size: 0.92rem;
-          line-height: 1.65;
-          color: var(--text-2, rgba(255,255,255,0.85));
-        }
-        .ai-md p { margin: 0.4rem 0; }
-        .ai-md strong { color: var(--text-1, #fff); }
-        .ai-md ul, .ai-md ol { padding-left: 1.4rem; margin: 0.4rem 0; }
-        .ai-md li { margin: 0.15rem 0; }
-        .ai-md h1, .ai-md h2, .ai-md h3, .ai-md h4 {
-          font-size: 0.95rem;
-          margin: 0.85rem 0 0.4rem;
-          font-weight: 600;
-          color: var(--gold, #C9A84C);
-        }
-        .ai-md code {
-          background: rgba(255, 255, 255, 0.06);
-          padding: 0.1rem 0.35rem;
-          border-radius: 4px;
-          font-size: 0.85em;
-          font-family: var(--font-mono, monospace);
-        }
-        .ai-md pre {
-          background: rgba(0, 0, 0, 0.35);
-          padding: 0.65rem 0.9rem;
-          border-radius: 8px;
-          overflow-x: auto;
-          font-size: 0.82em;
-        }
-        .ai-md pre code { background: none; padding: 0; }
-        .ai-md blockquote {
-          border-left: 3px solid var(--gold-line, rgba(201, 168, 76, 0.4));
-          padding-left: 0.75rem;
-          margin: 0.5rem 0;
-          color: var(--text-3, rgba(255,255,255,0.65));
-        }
-        .ai-md .katex-display {
-          margin: 0.75rem 0 !important;
-          overflow-x: auto;
-          overflow-y: hidden;
-          padding: 0.25rem 0;
-        }
-        .ai-md .katex {
-          font-size: 1em;
         }
       `}</style>
     </div>

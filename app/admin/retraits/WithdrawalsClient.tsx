@@ -19,7 +19,7 @@ interface Withdrawal {
   prenom: string
   nom: string
   email: string
-  credits: number
+  balanceAr: number
   createdAt: string
   rejectionReason?: string
 }
@@ -350,7 +350,7 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
                       </td>
                       <td>
                         <div className="w-credits">
-                          {w.credits} Ar
+                          {w.balanceAr.toLocaleString('fr-FR')} Ar
                         </div>
                       </td>
                       <td>
@@ -419,7 +419,7 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
               </div>
               <div className="receipt-row">
                 <span className="receipt-label">Ar déduits</span>
-                <span className="receipt-value">{selectedWithdrawal.credits} Ar</span>
+                <span className="receipt-value">{selectedWithdrawal.balanceAr.toLocaleString('fr-FR')} Ar</span>
               </div>
               <div className="receipt-row">
                 <span className="receipt-label">Opérateur</span>

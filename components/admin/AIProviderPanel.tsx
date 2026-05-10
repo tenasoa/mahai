@@ -16,7 +16,7 @@ import { CheckCircle2, AlertCircle, Loader2, Bot, Sparkles, Key } from 'lucide-r
 import { getAIProviderStatus, setAIProvider } from '@/actions/ai-correction'
 
 interface ProviderStatusUI {
-  id: 'claude' | 'perplexity' | 'openai'
+  id: 'claude' | 'perplexity' | 'openai' | 'openrouter'
   label: string
   isConfigured: boolean
   isActive: boolean
@@ -45,6 +45,12 @@ const PROVIDER_META: Record<
       'OpenAI GPT — bon équilibre qualité/coût avec Structured Outputs via Responses API.',
     icon: Bot,
     helpUrl: 'https://platform.openai.com/api-keys',
+  },
+  openrouter: {
+    description:
+      'OpenRouter — agrégateur de modèles gratuits et payants. Modèles gratuits disponibles : z-ai/glm-4.5-air:free, nvidia/nemotron-3-super-120b-a12b:free, etc.',
+    icon: Sparkles,
+    helpUrl: 'https://openrouter.ai/settings/keys',
   },
 }
 
@@ -193,9 +199,10 @@ export function AIProviderPanel({ onChange }: Props) {
       <p className="ai-provider-hint">
         💡 Les modèles ainsi que les tarifs (<code>ai.price.submission</code>,{' '}
         <code>ai.price.direct</code>, <code>ai.claude.model</code>, <code>ai.perplexity.model</code>,{' '}
-        <code>ai.openai.model</code>,{' '}
+        <code>ai.openai.model</code>, <code>ai.openrouter.model</code>,{' '}
         <code>ai.effort</code>) restent éditables dans l'onglet <strong>Paramètres</strong>{' '}
-        (catégorie <em>IA</em>).
+        (catégorie <em>IA</em>). Modèles gratuits OpenRouter :{''}
+        <code>z-ai/glm-4.5-air:free</code>, <code>nvidia/nemotron-3-super-120b-a12b:free</code>.
       </p>
 
       <style jsx>{`

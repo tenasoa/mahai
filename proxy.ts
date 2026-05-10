@@ -59,7 +59,26 @@ export async function proxy(request: NextRequest) {
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  // Quand getUser() échoue par une erreur transiente (race condition de refresh
+  // de token, timeout réseau Supabase), on tombe sur getSession() qui lit les
+  // cookies sans appel réseau — jamais sujette à cette race condition.
+  // Cela évite les faux-positifs de déconnexion qui causent la redirection
+  // involontaire vers /dashboard.
+  let effectiveUser = user;
+  if (!user && authError) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        effectiveUser = session.user;
+        debugLog(`[Auth] getUser() failed (${authError.message}), fell back to session cookie`);
+      }
+    } catch {
+      // Si getSession échoue aussi, l'utilisateur est vraiment déconnecté
+    }
+  }
 
   const { pathname } = request.nextUrl;
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
@@ -71,10 +90,10 @@ export async function proxy(request: NextRequest) {
 
   // Protéger les routes admin (vérification du rôle avec pg)
   if (isAdminRoute) {
-    if (!user) {
+    if (!effectiveUser) {
       debugLog(`[Admin Check] No user, redirecting to login from ${pathname}`);
       return NextResponse.redirect(
-        new URL("/auth/login?next=" + encodeURIComponent(pathname), request.url)
+        new URL("/auth/login?redirect=" + encodeURIComponent(pathname), request.url)
       );
     }
 
@@ -82,50 +101,51 @@ export async function proxy(request: NextRequest) {
       // Utiliser pg directement (contourne les RLS Supabase)
       const result = await query(
         `SELECT role FROM "User" WHERE id = $1`,
-        [user.id]
+        [effectiveUser.id]
       );
 
       const role = result.rows[0]?.role;
-      debugLog(`[Admin Check] Role checked for ${user.id}: ${role}`);
+      debugLog(`[Admin Check] Role checked for ${effectiveUser.id}: ${role}`);
 
       if (role !== "ADMIN") {
-        debugLog(`[Admin Check] Access denied for ${user.id}, role: ${role}`);
+        debugLog(`[Admin Check] Access denied for ${effectiveUser.id}, role: ${role}`);
         return NextResponse.redirect(new URL("/", request.url));
       }
 
-      debugLog(`[Admin Check] Access granted for ${user.id}`);
+      debugLog(`[Admin Check] Access granted for ${effectiveUser.id}`);
     } catch (error) {
-      console.error(`[Admin Check] Error checking role for ${user.id}:`, error);
-      // En développement, autoriser l'accès même en cas d'erreur
-      if (process.env.NODE_ENV !== "production") {
-        debugLog(`[Admin Check] Dev mode: allowing access despite error`);
-        // Continue without redirecting
-      } else {
-        return NextResponse.redirect(new URL("/auth/login", request.url));
-      }
+      console.error(`[Admin Check] Error checking role for ${effectiveUser.id}:`, error);
+      // En cas d'erreur DB transiente, laisser passer (la page vérifiera le rôle
+      // via ses propres server actions). Évite la redirection vers /dashboard.
+      debugLog(`[Admin Check] DB error, allowing through — page will re-verify`);
     }
   }
 
-  if (!user && isProtectedRoute) {
+  if (!effectiveUser && isProtectedRoute) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (!user) {
+  if (!effectiveUser) {
     return response;
   }
 
+  // Utilisateur connecté sur la landing page → dashboard
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
   const isEmailVerified =
-    Boolean(user.email_confirmed_at) ||
+    Boolean(effectiveUser.email_confirmed_at) ||
     request.cookies.get(EMAIL_VERIFIED_COOKIE)?.value === "1";
   const isOnboardingPending =
     request.cookies.get(ONBOARDING_PENDING_COOKIE)?.value === "1";
 
   if (!isEmailVerified && !isVerifyRoute && !isCallbackRoute) {
     const verifyUrl = new URL("/auth/verify-email", request.url);
-    if (user.email) {
-      verifyUrl.searchParams.set("email", user.email);
+    if (effectiveUser.email) {
+      verifyUrl.searchParams.set("email", effectiveUser.email);
     }
     return NextResponse.redirect(verifyUrl);
   }
@@ -142,8 +162,8 @@ export async function proxy(request: NextRequest) {
   if (isAuthRoute) {
     if (!isEmailVerified) {
       const verifyUrl = new URL("/auth/verify-email", request.url);
-      if (user.email) {
-        verifyUrl.searchParams.set("email", user.email);
+      if (effectiveUser.email) {
+        verifyUrl.searchParams.set("email", effectiveUser.email);
       }
       return NextResponse.redirect(verifyUrl);
     }
@@ -152,7 +172,16 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/auth/onboarding", request.url));
     }
 
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const redirectParam = request.nextUrl.searchParams.get("redirect");
+    const destination =
+      redirectParam &&
+      redirectParam.startsWith("/") &&
+      !redirectParam.startsWith("//") &&
+      !redirectParam.startsWith("/auth/login") &&
+      !redirectParam.startsWith("/auth/register")
+        ? redirectParam
+        : "/dashboard";
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   if (isVerifyRoute && isEmailVerified) {

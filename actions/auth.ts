@@ -27,7 +27,19 @@ import {
 
 const EMAIL_VERIFIED_COOKIE = "mahai-email-verified";
 const ONBOARDING_PENDING_COOKIE = "mahai-onboarding-pending";
+const POST_AUTH_REDIRECT_COOKIE = "mahai-post-auth-redirect";
 const FLOW_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+const REDIRECT_COOKIE_MAX_AGE = 60 * 30; // 30 minutes
+
+function isSafeRedirect(url: string): boolean {
+  return (
+    typeof url === "string" &&
+    url.startsWith("/") &&
+    !url.startsWith("//") &&
+    !url.startsWith("/auth/login") &&
+    !url.startsWith("/auth/register")
+  );
+}
 const DEFAULT_SITE_URL = process.env.NODE_ENV === "production" 
   ? "https://mahai.mg" 
   : "http://localhost:3000";
@@ -92,7 +104,7 @@ function isOnboardingPending(cookieStore: Awaited<ReturnType<typeof cookies>>) {
   return cookieStore.get(ONBOARDING_PENDING_COOKIE)?.value === "1";
 }
 
-export async function registerUser(formData: RegisterFormData) {
+export async function registerUser(formData: RegisterFormData, redirectTo?: string) {
   const validation = registerSchema.safeParse(formData);
 
   if (!validation.success) {
@@ -177,6 +189,11 @@ export async function registerUser(formData: RegisterFormData) {
   await setVerificationCookie(false);
   await setOnboardingPendingCookie(true);
 
+  if (redirectTo && isSafeRedirect(redirectTo)) {
+    const cookieStore = await cookies();
+    cookieStore.set(POST_AUTH_REDIRECT_COOKIE, redirectTo, getFlowCookieOptions(REDIRECT_COOKIE_MAX_AGE));
+  }
+
   redirect("/auth/verify-email?email=" + encodeURIComponent(email));
 }
 
@@ -218,7 +235,7 @@ export async function updateUserRole(formData: RoleFormData) {
   redirect("/dashboard");
 }
 
-export async function loginUser(formData: LoginFormData) {
+export async function loginUser(formData: LoginFormData, redirectTo?: string) {
   const supabase = await createSupabaseServerClient();
 
   const validation = loginSchema.safeParse(formData);
@@ -301,10 +318,14 @@ export async function loginUser(formData: LoginFormData) {
   revalidatePath("/dashboard", "layout");
 
   if (onboardingPending) {
+    if (redirectTo && isSafeRedirect(redirectTo)) {
+      cookieStore.set(POST_AUTH_REDIRECT_COOKIE, redirectTo, getFlowCookieOptions(REDIRECT_COOKIE_MAX_AGE));
+    }
     redirect("/auth/onboarding");
   }
 
-  redirect("/dashboard");
+  const destination = redirectTo && isSafeRedirect(redirectTo) ? redirectTo : "/dashboard";
+  redirect(destination);
 }
 
 export async function logoutUser() {
@@ -534,17 +555,29 @@ export async function completeOnboarding() {
   const cookieStore = await cookies();
   cookieStore.set(ONBOARDING_PENDING_COOKIE, "0", getFlowCookieOptions());
 
+  const storedRedirect = cookieStore.get(POST_AUTH_REDIRECT_COOKIE)?.value;
+  const redirectTo = storedRedirect && isSafeRedirect(storedRedirect) ? storedRedirect : null;
+  if (storedRedirect) {
+    cookieStore.delete(POST_AUTH_REDIRECT_COOKIE);
+  }
+
   revalidatePath("/dashboard", "layout");
   revalidatePath("/profil");
 
-  return { success: true };
+  return { success: true, redirectTo };
 }
 
 export async function skipOnboarding() {
   const cookieStore = await cookies();
   cookieStore.set(ONBOARDING_PENDING_COOKIE, "0", getFlowCookieOptions());
 
-  return { success: true };
+  const storedRedirect = cookieStore.get(POST_AUTH_REDIRECT_COOKIE)?.value;
+  const redirectTo = storedRedirect && isSafeRedirect(storedRedirect) ? storedRedirect : null;
+  if (storedRedirect) {
+    cookieStore.delete(POST_AUTH_REDIRECT_COOKIE);
+  }
+
+  return { success: true, redirectTo };
 }
 
 // Get current authenticated user data from the application database

@@ -25,10 +25,11 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              "worker-src blob:",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co https://*.public.blob.vercel-storage.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.public.blob.vercel-storage.com",
+              "connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://*.public.blob.vercel-storage.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

@@ -607,7 +607,7 @@ export async function updatePaymentPreferencesAction(data: {
 }
 
 /**
- * Recharger des crédits via Mobile Money (Paiement manuel avec validation admin)
+ * Recharger le solde via Mobile Money (Paiement manuel avec validation admin)
  * NOTE: Pour la production, intégrer l'API MVola/Orange/Airtel pour paiement automatique.
  */
 export async function rechargeCreditsAction(data: {
@@ -640,11 +640,11 @@ export async function rechargeCreditsAction(data: {
       };
     }
 
-    // Bloquer les crédits à 0
+    // Bloquer les montants à 0
     if (data.packCredits <= 0) {
       return {
         success: false,
-        error: "Le nombre de crédits doit être supérieur à 0",
+        error: "Le montant de la recharge doit être supérieur à 0 Ar",
       };
     }
 

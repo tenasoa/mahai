@@ -160,6 +160,89 @@ export function AIProcessingLoadingCompact({
 }
 
 /**
+ * Overlay plein écran pour la génération PDF
+ */
+export function PDFGeneratingOverlay({ isOpen }: { isOpen: boolean }) {
+  const steps = [
+    'Vérification des droits',
+    'Capture du contenu',
+    'Rendu des formules',
+    'Assemblage du PDF',
+    'Ajout du filigrane',
+  ]
+  const [activeStep, setActiveStep] = useState(0)
+
+  useEffect(() => {
+    if (!isOpen) { setActiveStep(0); return }
+    const timings = [800, 2200, 4000, 5800, 7200]
+    const timers = timings.map((delay, i) =>
+      window.setTimeout(() => setActiveStep(i), delay)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [isOpen])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[var(--void)]/95 backdrop-blur-sm">
+      <div className="bg-[var(--card)] rounded-2xl border border-[var(--b1)] p-8 shadow-lg flex flex-col items-center">
+        {/* Icône animée PDF */}
+        <div className="relative w-[100px] h-[100px] mb-6" aria-hidden="true">
+          {[0, 10, 20].map((inset, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full border border-[var(--gold-line)] animate-[ripple_2.4s_ease-in-out_infinite]"
+              style={{ inset: `${inset}px`, animationDelay: `${i * 0.5}s` }}
+            />
+          ))}
+          <div
+            className="absolute flex items-center justify-center rounded-full bg-[var(--gold-dim)] border border-[var(--gold-line)] animate-[iconBeat_1.6s_ease-in-out_infinite]"
+            style={{ inset: '30px' }}
+          >
+            <span className="text-xl">📄</span>
+          </div>
+        </div>
+
+        <h2 className="font-[family-name:var(--display)] text-xl text-[var(--text)] tracking-tight text-center mb-1">
+          Génération du <em className="text-[var(--gold)]">PDF</em>…
+        </h2>
+        <p className="text-[var(--text-3)] text-xs mb-5 text-center font-[family-name:var(--mono)]">
+          Merci de patienter, ne quittez pas la page
+        </p>
+
+        <div className="flex flex-col gap-2 min-w-[220px]">
+          {steps.map((step, index) => (
+            <div
+              key={index}
+              className={cn(
+                'flex items-center gap-3 font-[family-name:var(--mono)] text-xs tracking-wide transition-colors duration-500',
+                index < activeStep && 'text-[var(--text-2)]',
+                index === activeStep && 'text-[var(--gold)]',
+                index > activeStep && 'text-[var(--text-3)]'
+              )}
+            >
+              <span
+                className={cn(
+                  'w-4 h-4 rounded-full border flex items-center justify-center text-[0.55rem] flex-shrink-0 transition-all duration-300',
+                  index < activeStep
+                    ? 'border-[var(--text-2)]'
+                    : index === activeStep
+                      ? 'border-[var(--gold)] bg-[var(--gold-dim)] animate-[gemPulse_1s_ease-in-out_infinite]'
+                      : 'border-[var(--text-3)]'
+                )}
+              >
+                {index < activeStep ? '✓' : '·'}
+              </span>
+              <span>{step}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
  * Overlay plein écran pour la correction IA
  */
 export function AIProcessingOverlay({

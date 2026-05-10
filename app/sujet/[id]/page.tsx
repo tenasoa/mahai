@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import {
@@ -40,6 +40,7 @@ import {
   getAIPrices,
 } from '@/actions/ai-correction'
 import type { AICorrectionResult } from '@/lib/ai/schemas'
+import { AIProcessingOverlay, PDFGeneratingOverlay } from '@/components/ui/AIProcessingLoading'
 import './detail.css'
 
 type AccessState = 'locked' | 'unlocked'
@@ -114,6 +115,7 @@ export default function SujetDetailPage() {
   } | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
+  const subjectContentRef = useRef<HTMLDivElement | null>(null)
   const [isRequestingDirect, setIsRequestingDirect] = useState(false)
   const [showDirectConfirm, setShowDirectConfirm] = useState(false)
   const [aiPrices, setAiPrices] = useState<{ priceSubmission: number; priceDirect: number }>({
@@ -356,45 +358,72 @@ export default function SujetDetailPage() {
         setDownloadError(trace.error || 'Téléchargement refusé.')
         return
       }
+
+      if (!subjectContentRef.current) throw new Error('Contenu du sujet introuvable.')
+
+      const { htmlElementToPDFPages } = await import('@/lib/html-to-pdf')
+
+      const pdfTrace = {
+        code: trace.data.watermarkCode,
+        userName: trace.data.userName,
+        userEmail: trace.data.userEmail,
+        downloadedAt: trace.data.downloadedAt,
+      }
+
+      // En-tête du sujet
+      const header = document.createElement('div')
+      header.style.cssText = 'font-family:ui-sans-serif,system-ui,sans-serif;padding:0 0 20px;margin-bottom:24px;border-bottom:1.5px solid #C9A84C;'
+      const brand = document.createElement('div')
+      brand.style.cssText = 'font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#C9A84C;margin-bottom:10px;font-weight:600;'
+      brand.textContent = 'Mah.AI · Annales Madagascar'
+      const titleEl = document.createElement('h1')
+      titleEl.style.cssText = 'font-size:20px;font-weight:700;color:#0c0c0e;margin:0 0 14px;line-height:1.3;font-family:inherit;'
+      titleEl.textContent = subject.titre
+      const chips = document.createElement('div')
+      chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px 18px;'
+      const addChip = (label: string, value: string | null | undefined) => {
+        if (!value) return
+        const chip = document.createElement('span')
+        chip.style.cssText = 'font-size:12px;color:#555;'
+        chip.innerHTML = '<span style="color:#999;margin-right:3px;">' + label + ' :</span><span style="color:#0c0c0e;font-weight:600;">' + value + '</span>'
+        chips.appendChild(chip)
+      }
+      addChip('Matière', subject.matiere)
+      const examLabel = [subject.examType || subject.type, subject.serie].filter(Boolean).join(' · ')
+      if (examLabel) addChip('Examen', examLabel)
+      addChip('Année', subject.anneeScolaire || subject.annee)
+      if (subject.etablissement) addChip('Établissement', subject.etablissement)
+      if (subject.duree) addChip('Durée', subject.duree)
+      if (subject.coefficient) addChip('Coefficient', String(subject.coefficient))
+      header.appendChild(brand)
+      header.appendChild(titleEl)
+      header.appendChild(chips)
+
+      const wrap = document.createElement('div')
+      wrap.style.cssText = [
+        'position:fixed', 'left:-9999px', 'top:0',
+        'width:780px', 'padding:32px 36px 40px',
+        'background:#ffffff', 'box-sizing:border-box',
+      ].join(';')
+      wrap.appendChild(header)
+      wrap.appendChild(subjectContentRef.current.cloneNode(true) as HTMLElement)
+      document.body.appendChild(wrap)
+
+      await new Promise(r => setTimeout(r, 200))
+
+      const pdfBytes = await htmlElementToPDFPages(wrap, {
+        scale: 3,
+        marginMm: 14,
+        trace: pdfTrace,
+        sectionLabel: subject.matiere || 'Sujet',
+      })
+
+      try { document.body.removeChild(wrap) } catch { /* déjà retiré */ }
+
       const slugify = (s: string) =>
         s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/(^-|-$)/g, '').toLowerCase().slice(0, 60)
 
-      const [{ pdf }, { default: SubjectPDF }] = await Promise.all([
-        import('@react-pdf/renderer'),
-        import('@/components/sujet/SubjectPDF'),
-      ])
-      const meta = {
-        title: subject.titre,
-        matiere: subject.matiere,
-        examType: subject.examType || subject.type || undefined,
-        baccType: subject.baccType || undefined,
-        bepcOption: subject.bepcOption || undefined,
-        concoursType: subject.concoursType || undefined,
-        etablissement: subject.etablissement || undefined,
-        filiere: subject.filiere || undefined,
-        semestre: subject.semestre || undefined,
-        serie: subject.serie || undefined,
-        anneeScolaire: subject.anneeScolaire || subject.annee || undefined,
-        dateOfficielle: subject.dateOfficielle || undefined,
-        duree: subject.duree || undefined,
-        coefficient: subject.coefficient ?? undefined,
-        authorName: subject.authorName || undefined,
-      }
-      const shouldIncludeCorr = !!aiCorrection
-      const blob = await pdf(
-        <SubjectPDF
-          content={subject.content || { type: 'doc', content: [] }}
-          meta={meta}
-          trace={{
-            watermarkCode: trace.data.watermarkCode,
-            userEmail: trace.data.userEmail,
-            userName: trace.data.userName,
-            downloadedAt: trace.data.downloadedAt,
-          }}
-          aiCorrection={shouldIncludeCorr ? aiCorrection!.result : null}
-          aiCorrectionMode={shouldIncludeCorr ? aiCorrection!.mode : undefined}
-        />
-      ).toBlob()
+      const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -432,6 +461,19 @@ export default function SujetDetailPage() {
     <div className="subject-detail-page">
       <LuxuryCursor />
 
+      {/* Overlays de chargement */}
+      <AIProcessingOverlay
+        isOpen={isSubmittingExercise}
+        title="Correction en cours"
+        steps={['Lecture de vos réponses', 'Analyse sémantique', 'Évaluation des résultats', 'Génération du rapport']}
+      />
+      <AIProcessingOverlay
+        isOpen={isRequestingDirect}
+        title="Correction directe"
+        steps={['Analyse du sujet', 'Résolution des questions', 'Rédaction du corrigé', 'Mise en forme finale']}
+      />
+      <PDFGeneratingOverlay isOpen={isDownloading} />
+
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
@@ -462,7 +504,7 @@ export default function SujetDetailPage() {
 
             <p className="sd-modal-note">
               L'IA va générer le corrigé complet (toutes les questions résolues, méthodologie incluse).
-              Aucun crédit n'est débité si la génération échoue.
+              Aucun montant n'est débité si la génération échoue.
             </p>
 
             <div className="sd-modal-actions">
@@ -478,11 +520,13 @@ export default function SujetDetailPage() {
                 onClick={requestDirectCorrection}
                 disabled={isRequestingDirect || credits < aiPrices.priceDirect}
               >
-                {isRequestingDirect
-                  ? 'Génération…'
-                  : credits < aiPrices.priceDirect
-                  ? 'Crédits insuffisants'
-                  : 'Confirmer'}
+                {isRequestingDirect ? (
+                  <><span className="sd-spinner" aria-hidden="true" />Génération…</>
+                ) : credits < aiPrices.priceDirect ? (
+                  'Solde insuffisant'
+                ) : (
+                  'Confirmer'
+                )}
               </button>
             </div>
           </div>
@@ -517,7 +561,9 @@ export default function SujetDetailPage() {
                 Annuler
               </button>
               <button className="sd-btn-primary" onClick={confirmPurchase} disabled={isPurchasing}>
-                {isPurchasing ? 'Traitement...' : 'Confirmer l’achat'}
+                {isPurchasing ? (
+                  <><span className="sd-spinner" aria-hidden="true" />Traitement…</>
+                ) : "Confirmer l’achat"}
               </button>
             </div>
           </div>
@@ -665,25 +711,31 @@ export default function SujetDetailPage() {
                   </p>
                 </div>
                 <button className="sd-btn-secondary" onClick={handleDownloadPdf} disabled={isDownloading}>
-                  <Download size={14} /> {isDownloading ? 'Préparation…' : 'Télécharger PDF'}
+                  {isDownloading ? (
+                    <><span className="sd-spinner" aria-hidden="true" />Préparation…</>
+                  ) : (
+                    <><Download size={14} />Télécharger PDF</>
+                  )}
                 </button>
               </div>
               {downloadError && (
                 <p style={{ color: 'var(--ruby)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{downloadError}</p>
               )}
 
-              <SubjectRenderer
-                content={subject.content}
-                lockAfter={accessState === 'locked' ? 2 : undefined}
-                lockOverlay={
-                  <div className="lecture-paywall">
-                    <p>Débloquez le sujet pour accéder à l’intégralité du contenu.</p>
-                    <button className="sd-btn-primary" onClick={requestUnlock}>
-                      Débloquer pour {(subject.prix ?? 0).toLocaleString('fr-FR')} Ar
-                    </button>
-                  </div>
-                }
-              />
+              <div ref={subjectContentRef}>
+                <SubjectRenderer
+                  content={subject.content}
+                  lockAfter={accessState === "locked" ? 2 : undefined}
+                  lockOverlay={
+                    <div className="lecture-paywall">
+                      <p>Débloquez le sujet pour accéder à l’intégralité du contenu.</p>
+                      <button className="sd-btn-primary" onClick={requestUnlock}>
+                        Débloquer pour {(subject.prix ?? 0).toLocaleString("fr-FR")} Ar
+                      </button>
+                    </div>
+                  }
+                />
+              </div>
             </article>
           )}
 
@@ -730,7 +782,13 @@ export default function SujetDetailPage() {
                       {' '}· <strong style={{ color: 'var(--gold)' }}>{aiPrices.priceSubmission} Ar</strong>
                     </span>
                     <button className="sd-btn-primary" onClick={submitExerciseForAI} disabled={isSubmittingExercise || accessState === 'locked'}>
-                      {isSubmittingExercise ? 'Correction en cours…' : accessState === 'locked' ? 'Débloquez pour soumettre' : `Soumettre à l'IA (${aiPrices.priceSubmission} cr.)`}
+                      {isSubmittingExercise ? (
+                        <><span className="sd-spinner" aria-hidden="true" />Correction en cours…</>
+                      ) : accessState === 'locked' ? (
+                        'Débloquez pour soumettre'
+                      ) : (
+                        `Soumettre à l'IA (${aiPrices.priceSubmission} Ar)`
+                      )}
                     </button>
                   </div>
                 </>
@@ -759,8 +817,11 @@ export default function SujetDetailPage() {
                   onClick={() => setShowDirectConfirm(true)}
                   disabled={isRequestingDirect || accessState === 'locked'}
                 >
-                  <Sparkles size={14} />
-                  {isRequestingDirect ? 'Génération…' : `Correction directe (${aiPrices.priceDirect} cr.)`}
+                  {isRequestingDirect ? (
+                    <><span className="sd-spinner" aria-hidden="true" />Génération…</>
+                  ) : (
+                    <><Sparkles size={14} />Correction directe ({aiPrices.priceDirect} Ar)</>
+                  )}
                 </button>
               </div>
             </section>
@@ -806,7 +867,11 @@ export default function SujetDetailPage() {
               </div>
 
               <button className="sd-btn-primary" onClick={startSoloExam} disabled={isConvertingExam}>
-                {isConvertingExam ? 'Préparation de la session...' : 'Lancer le mode examen solo'}
+                {isConvertingExam ? (
+                  <><span className="sd-spinner" aria-hidden="true" />Préparation de la session…</>
+                ) : (
+                  'Lancer le mode examen solo'
+                )}
               </button>
             </section>
           )}

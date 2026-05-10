@@ -1400,3 +1400,152 @@ html.modal-open .modal-content {
     transform: scale(1.1);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CORRECTION IA — styles globaux du rendu Markdown (.ai-md)
+   Définis ici (et non dans le composant) pour garantir l'injection
+   en App Router (styled-jsx global n'est pas fiable en RSC).
+   ═══════════════════════════════════════════════════════════════ */
+
+.ai-md {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+.ai-md p { margin: 0.4rem 0; }
+
+/* Gras — utilise --text (fonctionne thème clair ET sombre) */
+.ai-md strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.ai-md em { font-style: italic; }
+
+.ai-md ul,
+.ai-md ol { padding-left: 1.4rem; margin: 0.4rem 0; }
+.ai-md li { margin: 0.15rem 0; }
+
+.ai-md h1,
+.ai-md h2,
+.ai-md h3,
+.ai-md h4 {
+  font-size: 0.95rem;
+  margin: 0.85rem 0 0.4rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+/* Code inline */
+.ai-md code {
+  background: var(--surface);
+  border: 1px solid var(--b1);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: var(--mono, monospace);
+  color: var(--text);
+}
+
+/* Bloc de code */
+.ai-md pre {
+  background: #1a1714;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.82em;
+}
+.ai-md pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #d4a855;
+}
+
+/* Citation */
+.ai-md blockquote {
+  border-left: 3px solid var(--gold-line);
+  padding-left: 0.75rem;
+  margin: 0.5rem 0;
+  color: var(--text-3);
+}
+
+/* KaTeX */
+.ai-md .katex-display {
+  margin: 0.75rem 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+.ai-md .katex { font-size: 1em; }
+
+/* ── Tableaux GFM ──────────────────────────────────────────── */
+.ai-md table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.85rem 0;
+  font-size: 0.88em;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--gold-line);
+  display: table; /* force la mise en page tableau */
+}
+.ai-md thead tr {
+  background: var(--gold-dim);
+}
+.ai-md thead th {
+  padding: 0.55rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.78em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 2px solid var(--gold-line);
+  border-right: 1px solid var(--gold-line);
+  text-align: left;
+}
+.ai-md thead th:last-child { border-right: none; }
+.ai-md tbody tr:nth-child(odd)  { background: var(--void); }
+.ai-md tbody tr:nth-child(even) { background: var(--depth); }
+.ai-md tbody tr:hover           { background: var(--gold-dim); }
+.ai-md tbody td {
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--b1);
+  border-right: 1px solid var(--b1);
+  vertical-align: top;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.ai-md tbody td:last-child       { border-right: none; }
+.ai-md tbody tr:last-child td    { border-bottom: none; }
+
+/* Thème sombre — override pour garder lisibilité */
+[data-theme="dark"] .ai-md,
+.dark .ai-md {
+  color: rgba(255, 255, 255, 0.82);
+}
+[data-theme="dark"] .ai-md strong,
+.dark .ai-md strong {
+  color: #ffffff;
+}
+[data-theme="dark"] .ai-md code {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e8d5a0;
+}
+[data-theme="dark"] .ai-md blockquote,
+.dark .ai-md blockquote {
+  color: rgba(255, 255, 255, 0.6);
+}
+[data-theme="dark"] .ai-md tbody td,
+.dark .ai-md tbody td {
+  color: rgba(255, 255, 255, 0.78);
+}
+[data-theme="dark"] .ai-md tbody tr:nth-child(odd),
+.dark .ai-md tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+[data-theme="dark"] .ai-md tbody tr:nth-child(even),
+.dark .ai-md tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.04);
+}

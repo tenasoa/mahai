@@ -94,7 +94,7 @@ export default async function AdminDashboard() {
             <FileText size={16} />
             Voir les sujets
           </Link>
-          <Link href="/admin/credits" className="admin-btn admin-btn-primary">
+          <Link href="/admin/transactions" className="admin-btn admin-btn-primary">
             <CreditCard size={16} />
             Dépôts
             {data.kpi.mobilemoney > 0 && (
@@ -301,7 +301,7 @@ export default async function AdminDashboard() {
                     </div>
                   </div>
                   <div className="admin-list-actions">
-                    <Link href="/admin/credits" className="admin-btn admin-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                    <Link href="/admin/transactions" className="admin-btn admin-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
                       Valider
                     </Link>
                   </div>
@@ -310,7 +310,7 @@ export default async function AdminDashboard() {
             )}
 
             {data.kpi.mobilemoney > 4 && (
-              <Link href="/admin/credits" className="admin-card-footer-link">
+              <Link href="/admin/transactions" className="admin-card-footer-link">
                 Voir tous les {data.kpi.mobilemoney} dépôts
                 <ArrowRight size={14} />
               </Link>
