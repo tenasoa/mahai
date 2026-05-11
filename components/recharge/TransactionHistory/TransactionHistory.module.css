@@ -340,6 +340,8 @@
   .txRow {
     padding: 1rem;
     gap: var(--space-md);
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .txIcon {
@@ -354,5 +356,8 @@
 
   .txAmount {
     font-size: var(--text-xs);
+    width: 100%;
+    text-align: left;
+    padding-left: calc(36px + var(--space-md));
   }
 }

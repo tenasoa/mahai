@@ -35,7 +35,7 @@
   background: var(--card);
   border: 2px solid var(--gold-line);
   border-radius: var(--r-lg);
-  padding: 0.75rem;
+  padding: 1rem 0.75rem 0.85rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -71,7 +71,6 @@
 .amountCard.popular {
   border-color: var(--gold);
   animation: popularPulse 2s infinite;
-  overflow: visible;
 }
 
 .amountCard:focus-visible {
@@ -135,6 +134,7 @@
   border: 2px solid var(--gold-line);
   border-radius: var(--r);
   padding: 0.65rem 0.75rem;
+  padding-left: 2.35rem;
   padding-right: 2.5rem;
   font-family: var(--mono);
   font-size: var(--text-sm);
@@ -231,6 +231,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
   background: var(--gold-dim);
   border: 1px solid var(--gold-line);
   border-radius: var(--r);
@@ -277,6 +278,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .summaryLabel {
@@ -289,6 +291,7 @@
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--text);
+  text-align: right;
 }
 
 .summaryValueBonus {
@@ -296,6 +299,7 @@
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--sage);
+  text-align: right;
 }
 
 .summaryDivider {
@@ -309,6 +313,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--gold);
+  text-align: right;
 }
 
 /* === BONUS GAUGE === */
@@ -463,6 +468,7 @@
     min-height: 74px;
     text-align: left;
     gap: 0.6rem;
+    padding: 0.85rem;
   }
 
   .amountPrice {

@@ -4,6 +4,7 @@ import { transaction, query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
 import { type AICorrectionResult } from '@/lib/ai/schemas'
+import { mapAICorrectionHistoryRows, type AICorrectionHistoryItem } from '@/lib/ai-correction-history'
 import {
   loadAIRuntimeConfig,
   listProviderStatus,
@@ -379,6 +380,37 @@ export async function getLatestAICorrection(
     }
   } catch (err) {
     logger.apiError('getLatestAICorrection', err)
+    return { success: false, error: 'Erreur serveur.' }
+  }
+}
+
+/**
+ * Récupère l'historique des corrections IA de l'utilisateur connecté
+ * pour un sujet donné. Sert à rouvrir une ancienne génération sans repayer.
+ */
+export async function getAICorrectionHistory(
+  subjectId: string
+): Promise<
+  | { success: true; data: AICorrectionHistoryItem[] }
+  | { success: false; error: string }
+> {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user?.id) return { success: false, error: 'Non authentifié.' }
+
+    const res = await query(
+      `SELECT id, mode, "aiResult", "costAr", model, "cachedFromPoolId", "createdAt"
+       FROM "AICorrection"
+       WHERE "userId" = $1 AND "subjectId" = $2
+       ORDER BY "createdAt" DESC
+       LIMIT 20`,
+      [user.id, subjectId]
+    )
+
+    return { success: true, data: mapAICorrectionHistoryRows(res.rows) }
+  } catch (err) {
+    logger.apiError('getAICorrectionHistory', err)
     return { success: false, error: 'Erreur serveur.' }
   }
 }

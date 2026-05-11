@@ -18,9 +18,10 @@ import { ArrowLeft, Download, Loader2, GraduationCap, Sparkles } from 'lucide-re
 import { recordSubjectDownload } from '@/actions/subject-download'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
 import { AICorrectionView } from '@/components/sujet/AICorrectionView'
-import { getLatestAICorrection } from '@/actions/ai-correction'
+import { getAICorrectionHistory } from '@/actions/ai-correction'
 import { PDFGeneratingOverlay, AIProcessingLoadingCompact } from '@/components/ui/AIProcessingLoading'
-import type { AICorrectionResult } from '@/lib/ai/schemas'
+import { collectAICorrectionDisplayFormulas } from '@/lib/ai-correction-pdf-data'
+import type { AICorrectionHistoryItem } from '@/lib/ai-correction-history'
 
 interface ConsultSubject {
   id: string
@@ -61,58 +62,13 @@ function slugifyForFilename(input: string): string {
     .slice(0, 60)
 }
 
-function buildSubjectHeader(subject: ConsultSubject): HTMLElement {
-  const wrap = document.createElement('div')
-  wrap.style.cssText = [
-    'font-family:ui-sans-serif,system-ui,-apple-system,sans-serif',
-    'padding:0 0 20px',
-    'margin-bottom:24px',
-    'border-bottom:1.5px solid #C9A84C',
-  ].join(';')
-
-  const brand = document.createElement('div')
-  brand.style.cssText = 'font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#C9A84C;margin-bottom:10px;font-weight:600;'
-  brand.textContent = 'Mah.AI · Annales Madagascar'
-  wrap.appendChild(brand)
-
-  const title = document.createElement('h1')
-  title.style.cssText = 'font-size:20px;font-weight:700;color:#0c0c0e;margin:0 0 14px;line-height:1.3;font-family:inherit;'
-  title.textContent = subject.titre
-  wrap.appendChild(title)
-
-  const chips = document.createElement('div')
-  chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px 18px;'
-
-  const addChip = (label: string, value: string | null | undefined) => {
-    if (!value) return
-    const chip = document.createElement('span')
-    chip.style.cssText = 'font-size:12px;color:#555;'
-    chip.innerHTML = `<span style="color:#999;margin-right:3px;">${label} :</span><span style="color:#0c0c0e;font-weight:600;">${value}</span>`
-    chips.appendChild(chip)
-  }
-
-  addChip('Matière', subject.matiere)
-  const examLabel = [subject.examType || subject.type, subject.serie].filter(Boolean).join(' · ')
-  if (examLabel) addChip('Examen', examLabel)
-  addChip('Année', subject.anneeScolaire || subject.annee)
-  if (subject.etablissement) addChip('Établissement', subject.etablissement)
-  if (subject.duree) addChip('Durée', subject.duree)
-  if (subject.coefficient) addChip('Coefficient', String(subject.coefficient))
-
-  wrap.appendChild(chips)
-  return wrap
-}
-
 export function ConsultClient({ subject }: Props) {
   const searchParams = useSearchParams()
   const focusCorrection = searchParams.get('view') === 'correction'
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
-  const [aiCorrection, setAiCorrection] = useState<{
-    result: AICorrectionResult
-    mode: 'SUBMISSION' | 'DIRECT'
-    createdAt: string
-  } | null>(null)
+  const [aiCorrection, setAiCorrection] = useState<AICorrectionHistoryItem | null>(null)
+  const [correctionHistory, setCorrectionHistory] = useState<AICorrectionHistoryItem[]>([])
   const [correctionLoadError, setCorrectionLoadError] = useState<string | null>(null)
   const [correctionLoading, setCorrectionLoading] = useState(focusCorrection)
   const [includeCorrection, setIncludeCorrection] = useState<boolean>(true)
@@ -122,16 +78,18 @@ export function ConsultClient({ subject }: Props) {
 
   useEffect(() => {
     let cancelled = false
-    async function loadCorrection() {
+    async function loadCorrectionHistory() {
       setCorrectionLoading(true)
       try {
-        const res = await getLatestAICorrection(subject.id)
+        const res = await getAICorrectionHistory(subject.id)
         if (cancelled) return
-        if (res.success && res.data) {
-          setAiCorrection({
-            result: res.data.result,
-            mode: res.data.mode,
-            createdAt: res.data.createdAt,
+        if (res.success) {
+          setCorrectionHistory(res.data)
+          setAiCorrection((current) => {
+            if (current && res.data.some((item) => item.correctionId === current.correctionId)) {
+              return current
+            }
+            return res.data[0] || null
           })
         } else if (!res.success) {
           setCorrectionLoadError(res.error)
@@ -143,7 +101,7 @@ export function ConsultClient({ subject }: Props) {
         if (!cancelled) setCorrectionLoading(false)
       }
     }
-    void loadCorrection()
+    void loadCorrectionHistory()
     return () => {
       cancelled = true
     }
@@ -169,101 +127,49 @@ export function ConsultClient({ subject }: Props) {
         return
       }
 
-      const [{ htmlElementToPDFPages }, { PDFDocument }] = await Promise.all([
-        import('@/lib/html-to-pdf'),
-        import('pdf-lib'),
+      const [{ pdf }, subjectPDFModule, { renderLatexFormulasToImages }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/sujet/SubjectPDF'),
+        import('@/lib/render-latex-images'),
       ])
 
-      const pdfTrace = {
-        code: trace.data.watermarkCode,
-        userName: trace.data.userName,
-        userEmail: trace.data.userEmail,
-        downloadedAt: trace.data.downloadedAt,
-      }
+      const correctionForPDF = includeCorrection ? aiCorrection : null
+      const formulas = collectAICorrectionDisplayFormulas(correctionForPDF?.result)
+      subjectPDFModule.setLatexImages(renderLatexFormulasToImages(formulas))
+      const SubjectPDF = subjectPDFModule.default
 
-      // ── Étape 1 : Capture du sujet depuis le DOM ──────────────────────────
-      if (!subjectContentRef.current) throw new Error('Contenu du sujet introuvable.')
-
-      const subjectWrap = document.createElement('div')
-      subjectWrap.style.cssText = [
-        'position:fixed', 'left:-9999px', 'top:0',
-        'width:780px', 'padding:32px 36px 40px',
-        'background:#ffffff', 'box-sizing:border-box',
-      ].join(';')
-
-      subjectWrap.appendChild(buildSubjectHeader(subject))
-      subjectWrap.appendChild(subjectContentRef.current.cloneNode(true) as HTMLElement)
-      document.body.appendChild(subjectWrap)
-
-      await new Promise(r => setTimeout(r, 200))
-
-      const subjectBytes = await htmlElementToPDFPages(subjectWrap, {
-        scale: 3,
-        marginMm: 14,
-        trace: pdfTrace,
-        sectionLabel: subject.matiere || 'Sujet',
-      })
-
-      try { document.body.removeChild(subjectWrap) } catch { /* déjà retiré */ }
-
-      // ── Étape 2 : Capture correction IA depuis le DOM rendu ───────────────
-      let finalBytes = subjectBytes
-      if (includeCorrection && aiCorrection && aiCorrectionDOMRef.current) {
-        try {
-          const printWrap = document.createElement('div')
-          printWrap.style.cssText = [
-            'position:fixed', 'left:-9999px', 'top:0',
-            'width:780px', 'padding:28px 32px 40px',
-            'background:#ffffff', 'box-sizing:border-box',
-          ].join(';')
-
-          printWrap.appendChild(aiCorrectionDOMRef.current.cloneNode(true) as HTMLElement)
-          document.body.appendChild(printWrap)
-
-          await new Promise(r => setTimeout(r, 200))
-
-          // Fix KaTeX em → px (html2canvas calcule mal les em relatifs des fractions)
-          for (const el of Array.from(
-            printWrap.querySelectorAll<HTMLElement>('.katex .vlist > span')
-          )) {
-            const computed = window.getComputedStyle(el)
-            if (computed.position !== 'static') {
-              const topPx = parseFloat(computed.top)
-              if (!isNaN(topPx)) el.style.top = `${topPx}px`
-            }
-          }
-          for (const el of Array.from(
-            printWrap.querySelectorAll<HTMLElement>(
-              '.katex, .katex-html, .katex .vlist-t, .katex .vlist-r, .katex .vlist, .katex .mfrac'
-            )
-          )) {
-            el.style.overflow = 'visible'
-          }
-
-          const corrBytes = await htmlElementToPDFPages(printWrap, {
-            scale: 3,
-            marginMm: 14,
-            trace: pdfTrace,
-            sectionLabel: 'Correction IA',
-          })
-
-          try { document.body.removeChild(printWrap) } catch { /* déjà retiré */ }
-
-          // Fusion sujet + correction via pdf-lib
-          const [subjectDoc, corrDoc] = await Promise.all([
-            PDFDocument.load(subjectBytes),
-            PDFDocument.load(corrBytes),
-          ])
-          const copiedPages = await subjectDoc.copyPages(corrDoc, corrDoc.getPageIndices())
-          copiedPages.forEach(p => subjectDoc.addPage(p))
-          finalBytes = await subjectDoc.save()
-        } catch (corrErr) {
-          console.error('[pdf] correction capture failed, using subject-only PDF:', corrErr)
-        }
-      }
+      const finalBlob = await pdf(
+        <SubjectPDF
+          content={subject.content}
+          meta={{
+            title: subject.titre,
+            matiere: subject.matiere,
+            examType: subject.examType || subject.type,
+            baccType: subject.baccType || undefined,
+            serie: subject.serie || undefined,
+            bepcOption: subject.bepcOption || undefined,
+            concoursType: subject.concoursType || undefined,
+            etablissement: subject.etablissement || undefined,
+            filiere: subject.filiere || undefined,
+            semestre: subject.semestre || undefined,
+            anneeScolaire: subject.anneeScolaire || subject.annee,
+            dateOfficielle: subject.dateOfficielle || undefined,
+            duree: subject.duree || undefined,
+            coefficient: subject.coefficient || undefined,
+            authorName: subject.authorName || undefined,
+          }}
+          trace={{
+            watermarkCode: trace.data.watermarkCode,
+            userName: trace.data.userName,
+            userEmail: trace.data.userEmail,
+            downloadedAt: trace.data.downloadedAt,
+          }}
+          aiCorrection={correctionForPDF?.result || null}
+          aiCorrectionMode={correctionForPDF?.mode}
+        />
+      ).toBlob()
 
       // ── Étape 3 : Déclenchement du téléchargement ─────────────────────────
-      const finalBlob = new Blob([finalBytes.buffer as ArrayBuffer], { type: 'application/pdf' })
       const url = URL.createObjectURL(finalBlob)
       const a = document.createElement('a')
       a.href = url
@@ -353,6 +259,47 @@ export function ConsultClient({ subject }: Props) {
           <div className="consult-correction-notice ready" role="status">
             ✅ Correction IA prête — consultez les explications ci-dessous puis téléchargez votre PDF.
           </div>
+        )}
+
+        {correctionHistory.length > 1 && (
+          <section className="consult-history" aria-labelledby="correction-history-title">
+            <div className="consult-history-head">
+              <p className="consult-ai-eyebrow">
+                <Sparkles size={12} /> Historique
+              </p>
+              <h2 id="correction-history-title">Corrections IA générées</h2>
+            </div>
+            <div className="consult-history-list">
+              {correctionHistory.map((item, index) => {
+                const isActive = aiCorrection?.correctionId === item.correctionId
+                return (
+                  <button
+                    key={item.correctionId}
+                    type="button"
+                    className={`consult-history-item ${isActive ? 'active' : ''}`}
+                    onClick={() => setAiCorrection(item)}
+                    aria-pressed={isActive}
+                  >
+                    <span className="consult-history-main">
+                      <strong>{index === 0 ? 'Dernière correction' : `Correction ${correctionHistory.length - index}`}</strong>
+                      <span>
+                        {item.mode === 'SUBMISSION' ? 'Réponses étudiant' : 'Correction directe'}
+                        {' · '}
+                        {new Date(item.createdAt).toLocaleString('fr-FR', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </span>
+                    </span>
+                    <span className="consult-history-meta">
+                      {item.costAr.toLocaleString('fr-FR')} Ar
+                      {item.fromCache ? ' · cache' : ''}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
         )}
 
         <div ref={subjectContentRef}>
@@ -548,6 +495,71 @@ export function ConsultClient({ subject }: Props) {
           background: rgba(224, 85, 117, 0.08);
           border-color: rgba(224, 85, 117, 0.35);
           color: #E05575;
+        }
+
+        .consult-history {
+          margin: 0 0 1.5rem;
+          padding: 1rem;
+          border: 1px solid var(--b1);
+          border-radius: 12px;
+          background: var(--card);
+        }
+        .consult-history-head {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 1rem;
+          margin-bottom: 0.85rem;
+        }
+        .consult-history-head h2 {
+          margin: 0;
+          font-family: var(--display);
+          font-size: 1rem;
+          color: var(--text);
+        }
+        .consult-history-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 0.65rem;
+        }
+        .consult-history-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+          min-height: 72px;
+          padding: 0.75rem;
+          border: 1px solid var(--b1);
+          border-radius: 10px;
+          background: var(--surface);
+          color: var(--text);
+          text-align: left;
+          cursor: pointer;
+          transition: border-color 0.2s, background 0.2s;
+        }
+        .consult-history-item:hover,
+        .consult-history-item.active {
+          border-color: var(--gold-line, rgba(201, 168, 76, 0.35));
+          background: var(--gold-dim, rgba(201, 168, 76, 0.08));
+        }
+        .consult-history-main {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+          min-width: 0;
+        }
+        .consult-history-main strong {
+          font-size: 0.84rem;
+          color: var(--text);
+        }
+        .consult-history-main span,
+        .consult-history-meta {
+          font-size: 0.72rem;
+          color: var(--text-3);
+          line-height: 1.35;
+        }
+        .consult-history-meta {
+          white-space: nowrap;
         }
 
         .consult-ai-section {

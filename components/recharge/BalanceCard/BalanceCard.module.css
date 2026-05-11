@@ -15,7 +15,8 @@
     0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
-  min-width: 320px;
+  width: 100%;
+  max-width: 560px;
 }
 
 .balanceCard:hover {
@@ -166,6 +167,7 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-lg);
+  flex-wrap: wrap;
   margin-bottom: var(--space-sm);
 }
 
@@ -216,10 +218,15 @@
 @media (max-width: 768px) {
   .balanceCard {
     padding: 1.5rem;
-    min-width: auto;
+    max-width: none;
   }
 
   .balance {
+    font-size: 3rem;
+    gap: var(--space-sm);
+  }
+
+  .amount {
     font-size: 3rem;
   }
 

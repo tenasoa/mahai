@@ -36,10 +36,10 @@ import { extractQuestions, type ExtractedQuestion } from '@/lib/ai/extract-quest
 import {
   submitExerciseForCorrection,
   requestDirectAICorrection,
-  getLatestAICorrection,
+  getAICorrectionHistory,
   getAIPrices,
 } from '@/actions/ai-correction'
-import type { AICorrectionResult } from '@/lib/ai/schemas'
+import type { AICorrectionHistoryItem } from '@/lib/ai-correction-history'
 import { AIProcessingOverlay, PDFGeneratingOverlay } from '@/components/ui/AIProcessingLoading'
 import './detail.css'
 
@@ -108,11 +108,8 @@ export default function SujetDetailPage() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [exerciseAnswers, setExerciseAnswers] = useState<Record<string, string>>({})
   const [toasts, setToasts] = useState<ToastMessage[]>([])
-  const [aiCorrection, setAiCorrection] = useState<{
-    result: AICorrectionResult
-    mode: 'SUBMISSION' | 'DIRECT'
-    createdAt: string
-  } | null>(null)
+  const [aiCorrection, setAiCorrection] = useState<AICorrectionHistoryItem | null>(null)
+  const [correctionHistory, setCorrectionHistory] = useState<AICorrectionHistoryItem[]>([])
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const subjectContentRef = useRef<HTMLDivElement | null>(null)
@@ -150,11 +147,11 @@ export default function SujetDetailPage() {
 
       setLoading(true)
       try {
-        const [subjectData, userCredits, prices, latestCorr] = await Promise.all([
+        const [subjectData, userCredits, prices, historyRes] = await Promise.all([
           getSubjectById(params.id),
           userId ? getCurrentUserBalanceAr() : Promise.resolve(0),
           getAIPrices().catch(() => ({ priceSubmission: 3, priceDirect: 8 })),
-          userId ? getLatestAICorrection(params.id).catch(() => null) : Promise.resolve(null),
+          userId ? getAICorrectionHistory(params.id).catch(() => null) : Promise.resolve(null),
         ])
 
         if (subjectData) {
@@ -165,12 +162,9 @@ export default function SujetDetailPage() {
         setCredits(userCredits)
         setAiPrices(prices)
 
-        if (latestCorr && 'success' in latestCorr && latestCorr.success && latestCorr.data) {
-          setAiCorrection({
-            result: latestCorr.data.result,
-            mode: latestCorr.data.mode,
-            createdAt: latestCorr.data.createdAt,
-          })
+        if (historyRes && 'success' in historyRes && historyRes.success) {
+          setCorrectionHistory(historyRes.data)
+          setAiCorrection(historyRes.data[0] || null)
         }
       } catch (error) {
         console.error('load subject error', error)
@@ -281,10 +275,26 @@ export default function SujetDetailPage() {
       }
 
       setAiCorrection({
+        correctionId: res.data.correctionId,
         result: res.data.result,
         mode: 'SUBMISSION',
         createdAt: new Date().toISOString(),
+        costAr: res.data.costAr,
+        model: null,
+        fromCache: Boolean(res.data.fromCache),
       })
+      setCorrectionHistory((prev) => [
+        {
+          correctionId: res.data.correctionId,
+          result: res.data.result,
+          mode: 'SUBMISSION',
+          createdAt: new Date().toISOString(),
+          costAr: res.data.costAr,
+          model: null,
+          fromCache: Boolean(res.data.fromCache),
+        },
+        ...prev,
+      ])
       setCredits(res.data.balanceArRemaining)
       pushToast('success', `Correction IA prête. ${res.data.costAr.toLocaleString('fr-FR')} Ar débités.`)
       goToCorrectionPage()
@@ -310,10 +320,26 @@ export default function SujetDetailPage() {
         return
       }
       setAiCorrection({
+        correctionId: res.data.correctionId,
         result: res.data.result,
         mode: 'DIRECT',
         createdAt: new Date().toISOString(),
+        costAr: res.data.costAr,
+        model: null,
+        fromCache: Boolean(res.data.fromCache),
       })
+      setCorrectionHistory((prev) => [
+        {
+          correctionId: res.data.correctionId,
+          result: res.data.result,
+          mode: 'DIRECT',
+          createdAt: new Date().toISOString(),
+          costAr: res.data.costAr,
+          model: null,
+          fromCache: Boolean(res.data.fromCache),
+        },
+        ...prev,
+      ])
       setCredits(res.data.balanceArRemaining)
       setShowDirectConfirm(false)
       pushToast('success', `Correction IA modèle prête. ${res.data.costAr.toLocaleString('fr-FR')} Ar débités.`)
@@ -709,6 +735,98 @@ export default function SujetDetailPage() {
               <Users size={16} /> Examen groupé
             </button>
           </div>
+
+          {accessState === 'unlocked' && correctionHistory.length > 0 && (
+            <section style={{
+              marginBottom: '1rem',
+              padding: '1rem',
+              border: '1px solid var(--b1)',
+              borderRadius: 'var(--r)',
+              background: 'var(--card)',
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'space-between',
+                gap: '1rem',
+                flexWrap: 'wrap',
+                marginBottom: '0.85rem',
+              }}>
+                <div>
+                  <p style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    margin: 0,
+                    color: 'var(--gold)',
+                    fontSize: '0.7rem',
+                    letterSpacing: '1.3px',
+                    textTransform: 'uppercase',
+                  }}>
+                    <Sparkles size={12} /> Déjà payé
+                  </p>
+                  <h2 style={{ margin: '0.2rem 0 0', fontSize: '1.05rem' }}>
+                    Historique de vos corrections IA
+                  </h2>
+                </div>
+                <Link
+                  href={`/sujet/${subject.id}/consult?view=correction`}
+                  className="sd-btn-secondary"
+                  style={{ textDecoration: 'none' }}
+                >
+                  Voir en page complète
+                </Link>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+                gap: '0.65rem',
+              }}>
+                {correctionHistory.map((item, index) => {
+                  const isActive = aiCorrection?.correctionId === item.correctionId && displayMode === 'correction'
+                  return (
+                    <button
+                      key={item.correctionId}
+                      type="button"
+                      onClick={() => {
+                        setAiCorrection(item)
+                        setDisplayMode('correction')
+                        pushToast('info', 'Correction IA chargée depuis votre historique, sans nouveau débit.')
+                      }}
+                      style={{
+                        minHeight: 74,
+                        padding: '0.75rem',
+                        border: `1px solid ${isActive ? 'var(--gold-line)' : 'var(--b1)'}`,
+                        borderRadius: 'calc(var(--r) - 2px)',
+                        background: isActive ? 'var(--gold-dim)' : 'var(--surface)',
+                        color: 'var(--text)',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                      }}
+                      aria-pressed={isActive}
+                    >
+                      <span style={{ display: 'block', fontWeight: 600, fontSize: '0.84rem' }}>
+                        {index === 0 ? 'Dernière correction' : `Correction ${correctionHistory.length - index}`}
+                      </span>
+                      <span style={{ display: 'block', marginTop: '0.25rem', color: 'var(--text-3)', fontSize: '0.73rem', lineHeight: 1.35 }}>
+                        {item.mode === 'SUBMISSION' ? 'Réponses étudiant' : 'Correction directe'}
+                        {' · '}
+                        {new Date(item.createdAt).toLocaleString('fr-FR', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </span>
+                      <span style={{ display: 'block', marginTop: '0.25rem', color: 'var(--gold)', fontSize: '0.72rem' }}>
+                        Déjà débité : {item.costAr.toLocaleString('fr-FR')} Ar
+                        {item.fromCache ? ' · correction mutualisée' : ''}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+          )}
 
           {displayMode === 'lecture' && (
             <article className={`lecture-sheet ${accessState === 'locked' ? 'locked' : ''}`}>
