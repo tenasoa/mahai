@@ -3,6 +3,7 @@
 import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
 
 async function checkAdmin() {
   const supabase = await createSupabaseServerClient()
@@ -96,10 +97,10 @@ export async function getUserDetailAdmin(userId: string) {
         )
         submissions = legacyResult.rows
       } catch (legacyError) {
-        console.warn('SubjectSubmission query failed on both schemas:', legacyError)
+        logger.warn('SubjectSubmission query failed on both schemas', { error: String(legacyError) })
       }
     } else {
-      console.warn('SubjectSubmission query failed:', error)
+      logger.warn('SubjectSubmission query failed', { error: String(error) })
     }
   }
 
@@ -180,7 +181,7 @@ export async function adjustUserCreditsAdmin(
       ],
     )
   } catch (e) {
-    console.warn('Admin balance adjustment log failed:', e)
+    logger.warn('Admin balance adjustment log failed', { error: String(e) })
   }
 
   revalidatePath('/admin/utilisateurs')

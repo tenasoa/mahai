@@ -1,13 +1,37 @@
-/**
- * Logger centralisé pour l'application
- * En production, envoie vers un service de monitoring (Sentry, etc.)
- * En développement, affiche dans la console
- */
-
+/* eslint-disable no-console */
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {
   [key: string]: unknown;
+}
+
+const LEVELS: LogLevel[] = ['debug', 'info', 'warn', 'error'];
+
+function shouldLog(level: LogLevel): boolean {
+  const minLevel = (process.env.LOG_LEVEL as LogLevel) || 'info';
+  return LEVELS.indexOf(level) >= LEVELS.indexOf(minLevel);
+}
+
+function formatMessage(level: LogLevel, message: string, context?: LogContext): string {
+  const timestamp = new Date().toISOString();
+  const ctx = context ? ` ${JSON.stringify(context)}` : '';
+  return `[${timestamp}] [${level.toUpperCase()}] ${message}${ctx}`;
+}
+
+async function captureToSentry(error: Error | unknown, context?: LogContext) {
+  try {
+    const Sentry = await import('@sentry/nextjs');
+    Sentry.withScope((scope) => {
+      if (context) scope.setExtras(context as Record<string, unknown>);
+      if (error instanceof Error) {
+        Sentry.captureException(error);
+      } else {
+        Sentry.captureMessage(String(error), 'error');
+      }
+    });
+  } catch {
+    // Sentry non disponible — on continue sans planter
+  }
 }
 
 class Logger {
@@ -17,96 +41,63 @@ class Logger {
     this.isProduction = process.env.NODE_ENV === 'production';
   }
 
-  private shouldLog(level: LogLevel): boolean {
-    const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
-    const minLevel = (process.env.LOG_LEVEL as LogLevel) || 'info';
-    return levels.indexOf(level) >= levels.indexOf(minLevel);
-  }
-
-  private formatMessage(
-    level: LogLevel,
-    message: string,
-    context?: LogContext
-  ): string {
-    const timestamp = new Date().toISOString();
-    const ctx = context ? ` ${JSON.stringify(context)}` : '';
-    return `[${timestamp}] [${level.toUpperCase()}] ${message}${ctx}`;
-  }
-
   debug(message: string, context?: LogContext): void {
-    if (!this.shouldLog('debug')) return;
-    
-    if (this.isProduction) {
-      // En prod, on ignore les debugs sauf si explicitement activé
-      return;
-    }
-    console.log(this.formatMessage('debug', message, context));
+    if (!shouldLog('debug') || this.isProduction) return;
+    console.log(formatMessage('debug', message, context));
   }
 
   info(message: string, context?: LogContext): void {
-    if (!this.shouldLog('info')) return;
-    
+    if (!shouldLog('info')) return;
     if (this.isProduction) {
-      // TODO: Envoyer vers service de monitoring
+      console.log(formatMessage('info', message, context));
       return;
     }
-    console.log(this.formatMessage('info', message, context));
+    console.log(formatMessage('info', message, context));
   }
 
   warn(message: string, context?: LogContext): void {
-    if (!this.shouldLog('warn')) return;
-    
-    if (this.isProduction) {
-      // TODO: Envoyer vers service de monitoring
-      return;
-    }
-    console.warn(this.formatMessage('warn', message, context));
+    if (!shouldLog('warn')) return;
+    console.warn(formatMessage('warn', message, context));
   }
 
   error(message: string, error?: Error | unknown, context?: LogContext): void {
-    if (!this.shouldLog('error')) return;
+    if (!shouldLog('error')) return;
 
     const errorContext: LogContext = {
       ...context,
-      ...(error instanceof Error ? {
-        errorMessage: error.message,
-        errorStack: error.stack,
-      } : { error }),
+      ...(error instanceof Error
+        ? { errorMessage: error.message, errorStack: error.stack }
+        : { error }),
     };
 
+    console.error(formatMessage('error', message, errorContext));
+
     if (this.isProduction) {
-      // TODO: Envoyer vers Sentry ou équivalent
-      // captureException(error);
-      return;
+      captureToSentry(error, errorContext);
     }
-    console.error(this.formatMessage('error', message, errorContext));
   }
 
-  // Méthode spécifique pour les erreurs de base de données
   dbError(operation: string, error: unknown, query?: string): void {
     this.error(`Database error during ${operation}`, error, {
       query: query ? query.substring(0, 200) : undefined,
     });
   }
 
-  // Méthode spécifique pour les erreurs d'API
   apiError(endpoint: string, error: unknown, userId?: string): void {
     this.error(`API error on ${endpoint}`, error, { userId });
   }
 
-  // Méthode spécifique pour les erreurs d'authentification
   authError(action: string, error: unknown, userId?: string): void {
     this.error(`Auth error during ${action}`, error, { userId });
   }
 }
 
-// Export singleton
 export const logger = new Logger();
 
-// Export pour les Server Actions
 export function createActionLogger(actionName: string) {
   return {
     info: (msg: string, ctx?: LogContext) => logger.info(`[${actionName}] ${msg}`, ctx),
-    error: (msg: string, err?: unknown, ctx?: LogContext) => logger.error(`[${actionName}] ${msg}`, err, ctx),
+    error: (msg: string, err?: unknown, ctx?: LogContext) =>
+      logger.error(`[${actionName}] ${msg}`, err, ctx),
   };
 }

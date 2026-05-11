@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { notify } from '@/lib/notifications'
 import { CurrencyConverter } from '@/lib/currency-converter'
 import crypto from 'crypto'
+import { logger } from '@/lib/logger'
 
 async function checkAdmin() {
   const supabase = await createSupabaseServerClient()
@@ -219,7 +220,7 @@ export async function finalizeAndPublish(
 
     return { success: true as const, subjectId: newSubjectId }
   } catch (error) {
-    console.error('finalizeAndPublish error:', error)
+    logger.apiError('finalizeAndPublish', error)
     throw error
   }
 }
@@ -338,7 +339,7 @@ export async function getPendingSubmissionsCount(): Promise<number> {
     )
     return Number(result.rows[0]?.count || 0)
   } catch (error) {
-    console.warn('getPendingSubmissionsCount error:', error)
+    logger.warn('getPendingSubmissionsCount error', { error: String(error) })
     return 0
   }
 }

@@ -3,6 +3,7 @@
 import { query } from "@/lib/db";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReferralSettings } from "@/lib/settings";
+import { logger } from "@/lib/logger";
 
 export type ReferralItem = {
   id: string;
@@ -144,7 +145,7 @@ export async function getReferralDashboardAction(): Promise<{
       },
     };
   } catch (error) {
-    console.error("Erreur getReferralDashboardAction:", error);
+    logger.apiError("getReferralDashboardAction", error);
     return { success: false, error: "Impossible de charger vos données de parrainage" };
   }
 }

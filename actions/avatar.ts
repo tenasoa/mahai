@@ -3,6 +3,7 @@
 import { put, del, list } from '@vercel/blob'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
 
 const BLOB_FOLDER = 'avatars'
 
@@ -63,7 +64,7 @@ export async function uploadAvatarAction(userId: string, file: File) {
       .eq('id', userId)
 
     if (updateError) {
-      console.error('Erreur mise à jour profil:', updateError)
+      logger.apiError('avatar updateProfile', updateError)
       // Supprimer le fichier uploadé
       await del(data.url, { token })
       return { 
@@ -81,7 +82,7 @@ export async function uploadAvatarAction(userId: string, file: File) {
       message: 'Avatar mis à jour avec succès' 
     }
   } catch (error) {
-    console.error('Erreur upload avatar:', error)
+    logger.apiError('avatar upload', error)
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Erreur lors de l\'upload' 
@@ -119,7 +120,7 @@ export async function deleteAvatarAction(userId: string) {
       .eq('id', userId)
 
     if (updateError) {
-      console.error('Erreur mise à jour profil:', updateError)
+      logger.apiError('avatar updateProfile', updateError)
       return { 
         success: false, 
         error: 'Erreur lors de la suppression de l\'avatar' 
@@ -134,7 +135,7 @@ export async function deleteAvatarAction(userId: string) {
       message: 'Avatar supprimé avec succès' 
     }
   } catch (error) {
-    console.error('Erreur suppression avatar:', error)
+    logger.apiError('avatar delete', error)
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Erreur lors de la suppression' 
@@ -159,7 +160,7 @@ export async function listAvatarsAction() {
       blobs: data.blobs
     }
   } catch (error) {
-    console.error('Erreur liste avatars:', error)
+    logger.apiError('avatar list', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Erreur lors de la liste'

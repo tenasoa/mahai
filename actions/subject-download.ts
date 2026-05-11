@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import crypto from 'crypto'
 import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
 
 /**
  * Enregistre un téléchargement PDF d'un sujet et renvoie les méta-infos
@@ -120,7 +121,7 @@ export async function recordSubjectDownload(subjectId: string): Promise<
       },
     }
   } catch (error) {
-    console.error('recordSubjectDownload error:', error)
+    logger.apiError('recordSubjectDownload', error)
     return { success: false, error: 'Erreur serveur lors de l\'enregistrement du téléchargement.' }
   }
 }

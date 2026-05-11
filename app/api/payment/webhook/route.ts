@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { query } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 function verifyWebhookSignature(payload: string, signature: string, secret: string) {
   const expected = createHmac("sha256", secret).update(payload).digest("hex");
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ status: "ignored", receivedStatus: status });
   } catch (error) {
-    console.error("Webhook payment error:", error);
+    logger.apiError("/api/payment/webhook", error);
     return NextResponse.json(
       { error: "Erreur serveur" },
       { status: 500 }
