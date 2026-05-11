@@ -20,7 +20,7 @@
     "@fontsource/dm-sans": "^5.2.8",
     "@hookform/resolvers": "^3.9.1",
     "@react-pdf/renderer": "^4.5.1",
-    "@sentry/nextjs": "^10.52.0",
+    "@sentry/nextjs": "10",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.47.10",
     "@tiptap/core": "^3.22.4",

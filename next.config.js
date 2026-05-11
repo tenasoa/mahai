@@ -63,11 +63,17 @@ const nextConfig = {
 }
 
 export default withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  silent: true,
+  org: 'tenasoa',
+  project: 'javascript-nextjs',
+  silent: !process.env.CI,
   widenClientFileUpload: true,
+  // Tunnel via notre domaine pour contourner les bloqueurs de pub
+  tunnelRoute: '/monitoring',
   hideSourceMaps: true,
-  disableLogger: true,
-  automaticVercelMonitors: true,
+  webpack: {
+    automaticVercelMonitors: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 })
