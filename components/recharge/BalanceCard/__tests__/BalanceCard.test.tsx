@@ -47,7 +47,8 @@ describe('BalanceCard Component', () => {
   describe('Formatting', () => {
     it('formats large numbers correctly', () => {
       render(<BalanceCard balance={1000000} />)
-      expect(screen.getByText('1 000 000')).toBeInTheDocument()
+      // toLocaleString() varie selon le locale du runner (espace FR, virgule en-US)
+      expect(screen.getByText(/1.000.000/)).toBeInTheDocument()
     })
 
     it('formats zero balance', () => {
