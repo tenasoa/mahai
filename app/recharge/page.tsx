@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { useTransactionsRealtime } from "@/lib/hooks/useTransactionsRealtime";
 import { useToast } from "@/lib/hooks/useToast";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
-import { LuxuryNavbar } from "@/components/layout/LuxuryNavbar";
 import { RechargePageSkeleton } from "@/components/ui/PageSkeletons";
 import { ToastContainer } from "@/components/ui/ToastContainer";
 import { Button } from "@/components/ui";
@@ -305,7 +304,6 @@ export default function RechargePage() {
   return (
     <div className="recharge-page">
       <LuxuryCursor />
-      <LuxuryNavbar />
 
       {/* HERO */}
       <section className="hero">

@@ -12,7 +12,6 @@ import {
   Clock3,
   CheckCircle2,
 } from "lucide-react";
-import { LuxuryNavbar } from "@/components/layout/LuxuryNavbar";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { LuxuryFooter } from "@/components/layout/LuxuryFooter";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -122,7 +121,6 @@ export default function ParrainagePage() {
   if (authLoading || !userId || loading) {
     return (
       <>
-        <LuxuryNavbar />
         <LuxuryCursor />
         <main className="referral-main">
           <div className="referral-container">
@@ -136,7 +134,6 @@ export default function ParrainagePage() {
 
   return (
     <>
-      <LuxuryNavbar />
       <LuxuryCursor />
 
       <main className="referral-main">

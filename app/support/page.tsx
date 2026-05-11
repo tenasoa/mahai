@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { HelpCircle, Book, MessageSquare, Phone, Mail, Search, AlertCircle, CheckCircle, Clock, ArrowRight } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 
 export default function SupportPage() {
@@ -114,7 +113,6 @@ export default function SupportPage() {
   return (
     <div className="min-h-screen bg-void text-text">
       <LuxuryCursor />
-      <LuxuryNavbar />
 
       {/* Hero */}
       <section className="relative pt-28 pb-16 px-6 border-b border-border-1 bg-depth text-center">

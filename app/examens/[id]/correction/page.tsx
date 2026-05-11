@@ -4,7 +4,6 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { GraduationCap, ArrowRight, CheckCircle, Bot, Sparkles, ShieldCheck, Zap } from 'lucide-react'
 import { ExamenCorrectionSkeleton } from '@/components/ui/PageSkeletons'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import './correction.css'
 
@@ -45,7 +44,6 @@ export default async function ExamCorrectionPage({ params }: CorrectionPageProps
 
   return (
     <div className="correction-page">
-      <LuxuryNavbar />
       <LuxuryCursor />
 
       <Suspense fallback={<ExamenCorrectionSkeleton />}>

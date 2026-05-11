@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { LuxuryNavbar } from "@/components/layout/LuxuryNavbar";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 // import { ProfileEditModal } from "@/components/modals/ProfileEditModal"; // Supprimé au profit de l'édition inline
 import { AvatarUploadModal } from "@/components/modals/AvatarUploadModal";
@@ -412,7 +411,6 @@ export default function ProfilePage() {
   if (loading || authLoading || !userId) {
     return (
       <>
-        <LuxuryNavbar />
         <LuxuryCursor />
         <ProfilePageSkeleton />
       </>
@@ -564,7 +562,6 @@ export default function ProfilePage() {
   return (
     <div className="profile-page">
       <LuxuryCursor />
-      <LuxuryNavbar />
 
       <main id="main-content" className="profile-container">
         {/* HEADER ARCHITECTURAL */}

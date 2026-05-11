@@ -17,7 +17,6 @@ import {
   Clock,
 } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import { DashboardPageSkeleton } from '@/components/ui/PageSkeletons'
@@ -153,7 +152,6 @@ export default function DashboardPage() {
   if (authLoading || !userId || dashboardLoading) {
     return (
       <>
-        <LuxuryNavbar />
         <LuxuryCursor />
         <DashboardPageSkeleton />
       </>
@@ -197,7 +195,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <LuxuryNavbar />
       <LuxuryCursor />
 
       <main id="main-content" className="dashboard-main">

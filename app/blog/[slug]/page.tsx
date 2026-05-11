@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, Clock, Eye, MessageSquare, ArrowLeft, Send, Trash2 } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -116,7 +115,6 @@ export default function BlogPostPage() {
   return (
     <div className="min-h-screen bg-void text-text">
       <LuxuryCursor />
-      <LuxuryNavbar />
 
       {/* Header */}
       <section className="relative pt-28 pb-12 px-6 border-b border-border-1 bg-depth">

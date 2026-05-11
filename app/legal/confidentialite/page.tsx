@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Shield, Database, UserCheck, Cookie, Trash2, Mail, ArrowLeft } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 
@@ -25,7 +24,6 @@ export default function PolitiqueConfidentialitePage() {
   return (
     <div className="min-h-screen bg-void text-text">
       <LuxuryCursor />
-      <LuxuryNavbar />
 
       {/* Hero */}
       <div className="border-b border-border-1 bg-depth relative z-10 pt-28 pb-14">

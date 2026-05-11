@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Clock, ArrowRight, BookOpen, TrendingUp } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 
@@ -55,7 +54,6 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-void text-text">
       <LuxuryCursor />
-      <LuxuryNavbar />
 
       {/* Hero */}
       <section className="relative pt-28 pb-16 px-6 border-b border-border-1 bg-depth">

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { Bell, Check, X, Zap, CreditCard, BookOpen, Settings, AlertTriangle, Sparkles, Library, AlertCircle, Star } from 'lucide-react'
 import {
@@ -227,7 +226,6 @@ export default function NotificationsPage() {
   return (
     <div className="notifications-page">
       <LuxuryCursor />
-      <LuxuryNavbar />
 
       <div className="page">
         {/* Header */}

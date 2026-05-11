@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Mail, Phone, MapPin, Send } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 
@@ -53,7 +52,6 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-void text-text">
       <LuxuryCursor />
-      <LuxuryNavbar />
       <section className="relative pt-28 pb-16 px-6 border-b border-border-1 bg-depth">
         <div className="max-w-7xl mx-auto">
           <div className="font-mono text-xs text-gold flex items-center gap-2 mb-4"><div className="w-5 h-px bg-gold"></div>Contact</div>

@@ -5,7 +5,6 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Trophy, TrendingUp, BookOpen, ArrowRight, Clock, CheckCircle2, Circle, Zap } from 'lucide-react'
 import { ExamenResultsSkeleton } from '@/components/ui/PageSkeletons'
-import { LuxuryNavbar } from '@/components/layout/LuxuryNavbar'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import './results.css'
 
@@ -44,7 +43,6 @@ export default async function ExamResultsPage({ params, searchParams }: ResultsP
 
   return (
     <div className="results-page">
-      <LuxuryNavbar />
       <LuxuryCursor />
       
       <Suspense fallback={<ExamenResultsSkeleton />}>

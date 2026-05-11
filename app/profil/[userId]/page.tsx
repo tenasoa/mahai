@@ -12,7 +12,6 @@ import {
   UserRound,
   School,
 } from "lucide-react";
-import { LuxuryNavbar } from "@/components/layout/LuxuryNavbar";
 import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { PublicProfileSkeleton } from "@/components/ui/PageSkeletons";
 
@@ -105,7 +104,6 @@ export default async function PublicProfilePage({
     <Suspense fallback={<PublicProfileSkeleton />}>
       <div className="profile-page public">
         <LuxuryCursor />
-        <LuxuryNavbar />
 
         <div className="profile-container" style={{ marginTop: "120px" }}>
           {/* HEADER */}
