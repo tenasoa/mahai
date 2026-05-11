@@ -133,6 +133,17 @@ export default function SujetDetailPage() {
     }, 4200)
   }
 
+  const goToCorrectionPage = () => {
+    const href = `/sujet/${subject?.id ?? params.id}/consult?view=correction`
+    router.push(href)
+
+    window.setTimeout(() => {
+      if (window.location.pathname + window.location.search !== href) {
+        window.location.assign(href)
+      }
+    }, 300)
+  }
+
   useEffect(() => {
     async function loadSubject() {
       if (!params?.id) return
@@ -275,8 +286,8 @@ export default function SujetDetailPage() {
         createdAt: new Date().toISOString(),
       })
       setCredits(res.data.balanceArRemaining)
-      router.push(`/sujet/${subject.id}/consult?view=correction`)
       pushToast('success', `Correction IA prête. ${res.data.costAr.toLocaleString('fr-FR')} Ar débités.`)
+      goToCorrectionPage()
     } catch (err) {
       console.error('submit AI correction error:', err)
       pushToast('error', "L'IA n'a pas pu répondre. Réessayez plus tard.")
@@ -305,8 +316,8 @@ export default function SujetDetailPage() {
       })
       setCredits(res.data.balanceArRemaining)
       setShowDirectConfirm(false)
-      router.push(`/sujet/${subject.id}/consult?view=correction`)
       pushToast('success', `Correction IA modèle prête. ${res.data.costAr.toLocaleString('fr-FR')} Ar débités.`)
+      goToCorrectionPage()
     } catch (err) {
       console.error('direct AI correction error:', err)
       pushToast('error', "L'IA n'a pas pu produire la correction.")
