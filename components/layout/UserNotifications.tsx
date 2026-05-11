@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, Check, X, ChevronRight } from 'lucide-react'
+import { Bell, X, ChevronRight } from 'lucide-react'
 import {
   markAllNotificationsAsReadAction,
+  markNotificationAsReadAction,
   dismissNotificationAction,
   getUserNotificationsAction
 } from '@/actions/profile'
@@ -25,7 +26,15 @@ interface Notification {
   linkText?: string
 }
 
-export function UserNotifications() {
+interface UserNotificationsProps {
+  /** Sens d'ouverture du dropdown.
+   * - 'down-left' (défaut) : s'ouvre en bas à droite du bouton, aligné à droite (navbar)
+   * - 'up-right' : s'ouvre vers le haut à gauche du bouton, aligné à gauche (sidebar footer)
+   */
+  direction?: 'down-left' | 'up-right'
+}
+
+export function UserNotifications({ direction = 'down-left' }: UserNotificationsProps) {
   const router = useRouter()
   const { userId, appUser } = useAuth()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -321,8 +330,9 @@ export function UserNotifications() {
           ref={dropdownRef}
           style={{
             position: 'absolute',
-            right: '0',
-            top: 'calc(100% + 0.5rem)',
+            ...(direction === 'up-right'
+              ? { left: '0', bottom: 'calc(100% + 0.5rem)' }
+              : { right: '0', top: 'calc(100% + 0.5rem)' }),
             width: '340px',
             maxWidth: '94vw',
             maxHeight: '500px',
@@ -412,8 +422,11 @@ export function UserNotifications() {
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--card-hover)'}
                     onMouseLeave={(e) => e.currentTarget.style.background = !notif.read ? 'var(--surface)' : 'transparent'}
                     onClick={() => {
-                      if (notif.link) router.push(notif.link)
-                      dismissNotification(notif.id)
+                      setDropdownOpen(false)
+                      markNotificationAsReadAction(notif.id).catch(() => {})
+                      if (notif.link) {
+                        router.push(notif.link)
+                      }
                     }}
                   >
                     {!notif.read && (
