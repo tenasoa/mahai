@@ -467,6 +467,12 @@
   gap: 0.5rem;
 }
 
+.sb-notif-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .sb-theme-toggle {
   display: flex;
   align-items: center;

@@ -18,6 +18,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
+import { UserNotifications } from "@/components/layout/UserNotifications";
 
 interface ContributorSidebarProps {
   user: {
@@ -255,6 +256,9 @@ export function ContributorSidebar({
 
         {/* Footer : theme toggle compact + profil utilisateur */}
         <div className="sb-footer">
+          <div className="sb-notif-row">
+            <UserNotifications direction="up-right" />
+          </div>
           <button
             onClick={toggleTheme}
             className="sb-theme-toggle"

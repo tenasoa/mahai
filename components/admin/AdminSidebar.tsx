@@ -23,6 +23,7 @@ import {
   ClipboardCheck
 } from "lucide-react";
 import { useAdminTransactionsRealtime } from "@/lib/hooks/useAdminTransactionsRealtime";
+import { UserNotifications } from "@/components/layout/UserNotifications";
 import "@/app/dashboard-theme.css";
 
 const navItems = [
@@ -396,6 +397,11 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
         </nav>
 
         <div className="sb-footer" suppressHydrationWarning>
+          {/* Notifications */}
+          <div className="sb-notif-row" suppressHydrationWarning>
+            <UserNotifications direction="up-right" />
+          </div>
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
