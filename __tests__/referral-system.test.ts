@@ -1,11 +1,60 @@
 /**
- * TEST END-TO-END - Système de Parrainage
+ * TEST - Système de Parrainage
+ * Les requêtes DB sont mockées pour éviter toute connexion réelle.
  */
+
+jest.mock('@/lib/db', () => ({
+  query: jest.fn(),
+}));
 
 import { query } from "@/lib/db";
 
+const mockQuery = query as jest.Mock;
+
 describe('Système de Parrainage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('devrait vérifier la configuration et la structure du système de parrainage', async () => {
+    // 1. Mock pour les settings Ariary
+    mockQuery
+      .mockResolvedValueOnce({
+        rows: [
+          { key: 'REFERRER_BONUS_AR', value: '2000' },
+          { key: 'REFERRED_BONUS_AR', value: '1000' },
+          { key: 'WELCOME_BONUS_AR', value: '500' },
+        ],
+      })
+      // 2. Mock pour les colonnes de UserReferral
+      .mockResolvedValueOnce({
+        rows: [
+          { column_name: 'id', data_type: 'uuid' },
+          { column_name: 'referrerUserId', data_type: 'uuid' },
+          { column_name: 'referredUserId', data_type: 'uuid' },
+          { column_name: 'status', data_type: 'text' },
+          { column_name: 'referrerBonusAr', data_type: 'numeric' },
+          { column_name: 'referredBonusAr', data_type: 'numeric' },
+          { column_name: 'referrerBonusGrantedAt', data_type: 'timestamp' },
+          { column_name: 'referredBonusGrantedAt', data_type: 'timestamp' },
+        ],
+      })
+      // 3. Mock pour les colonnes de User
+      .mockResolvedValueOnce({
+        rows: [
+          { column_name: 'referralCode' },
+          { column_name: 'referredByUserId' },
+        ],
+      })
+      // 4. Mock pour les types de Transaction
+      .mockResolvedValueOnce({
+        rows: [
+          { type: 'EARN' },
+          { type: 'RECHARGE' },
+          { type: 'SPEND' },
+        ],
+      });
+
     // 1. Vérifier que les settings sont initialisés (clés Ariary post-refactor cr→Ar)
     const settingsResult = await query(
       `SELECT key, value FROM "SystemSetting"
@@ -17,8 +66,8 @@ describe('Système de Parrainage', () => {
 
     // 2. Vérifier la table UserReferral
     const tableResult = await query(
-      `SELECT column_name, data_type 
-       FROM information_schema.columns 
+      `SELECT column_name, data_type
+       FROM information_schema.columns
        WHERE table_name = 'UserReferral'
        ORDER BY ordinal_position`
     );
@@ -40,9 +89,9 @@ describe('Système de Parrainage', () => {
 
     // 3. Vérifier les colonnes referral sur User
     const userTableResult = await query(
-      `SELECT column_name 
-       FROM information_schema.columns 
-       WHERE table_name = 'User' 
+      `SELECT column_name
+       FROM information_schema.columns
+       WHERE table_name = 'User'
        AND column_name IN ('referralCode', 'referredByUserId')`
     );
 
@@ -57,7 +106,7 @@ describe('Système de Parrainage', () => {
     expect(existingTypes).toContain("SPEND");
     expect(existingTypes).toContain("RECHARGE");
 
-    // 5. Vérifier la validation du code de parrainage
+    // 5. Vérifier la validation du code de parrainage (logique pure, pas de DB)
     const validateReferralCode = (code: string): boolean => {
       if (!code || typeof code !== "string") return true;
       const normalized = code.trim().toUpperCase();

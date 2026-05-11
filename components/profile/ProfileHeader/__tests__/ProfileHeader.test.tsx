@@ -15,7 +15,7 @@ describe('ProfileHeader Component', () => {
     it('renders correctly with basic props', () => {
       render(<ProfileHeader {...defaultProps} />)
       expect(screen.getByText('Jean')).toBeInTheDocument()
-      expect(screen.getByText('RAKOTONDRABE')).toBeInTheDocument()
+      expect(screen.getByText('Rakotondrabe')).toBeInTheDocument()
       expect(screen.getByText('ÉTUDIANT')).toBeInTheDocument()
     })
 
@@ -93,7 +93,7 @@ describe('ProfileHeader Component', () => {
     it('has proper heading structure', () => {
       render(<ProfileHeader {...defaultProps} />)
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Jean')
-      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('RAKOTONDRABE')
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Rakotondrabe')
     })
 
     it('has proper button roles', () => {

@@ -20,9 +20,12 @@ describe('BalanceCard Component', () => {
       expect(screen.getByText('Mon solde')).toBeInTheDocument()
     })
 
-    it('renders with ARIARY equivalent', () => {
+    it('renders with ARIARY equivalent (prop dépréciée, ignorée)', () => {
+      // ariaryEquivalent est dépréciée et ignorée par le composant (migration vers Ar uniquement)
       render(<BalanceCard {...defaultProps} ariaryEquivalent="≈ 7500 Ariary" />)
-      expect(screen.getByText('≈ 7500 Ariary')).toBeInTheDocument()
+      // Le composant n'affiche plus la conversion — on vérifie juste qu'il se rend sans erreur
+      expect(screen.getByText('Solde disponible')).toBeInTheDocument()
+      expect(screen.getByText('150')).toBeInTheDocument()
     })
 
     it('renders with recharge button', () => {

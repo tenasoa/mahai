@@ -12,6 +12,7 @@ describe("Auth Validation", () => {
         confirmPassword: "Password123!",
         prenom: "Jean",
         nom: "Dupont",
+        role: "ETUDIANT",
       });
       expect(result.success).toBe(true);
     });
@@ -23,6 +24,7 @@ describe("Auth Validation", () => {
         confirmPassword: "Password123!",
         prenom: "Jean",
         nom: "Dupont",
+        role: "ETUDIANT",
       });
       expect(result.success).toBe(false);
     });
@@ -34,6 +36,7 @@ describe("Auth Validation", () => {
         confirmPassword: "123",
         prenom: "Jean",
         nom: "Dupont",
+        role: "ETUDIANT",
       });
       expect(result.success).toBe(false);
     });
@@ -45,6 +48,7 @@ describe("Auth Validation", () => {
         confirmPassword: "Different123!",
         prenom: "Jean",
         nom: "Dupont",
+        role: "ETUDIANT",
       });
       expect(result.success).toBe(false);
     });

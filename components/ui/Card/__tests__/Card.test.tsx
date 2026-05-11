@@ -9,20 +9,21 @@ describe('Card Component', () => {
     })
 
     it('renders with different variants', () => {
+      // Avec identity-obj-proxy, styles['default'] => 'default', styles['hero'] => 'hero', etc.
       const { container: defaultCard } = render(<Card variant="default">Default</Card>)
-      expect(defaultCard.firstChild).toHaveClass('card-default')
+      expect(defaultCard.firstChild).toHaveClass('default')
 
       const { container: hero } = render(<Card variant="hero">Hero</Card>)
-      expect(hero.firstChild).toHaveClass('card-hero')
+      expect(hero.firstChild).toHaveClass('hero')
 
       const { container: stat } = render(<Card variant="stat">Stat</Card>)
-      expect(stat.firstChild).toHaveClass('card-stat')
+      expect(stat.firstChild).toHaveClass('stat')
 
       const { container: interactive } = render(<Card variant="interactive">Interactive</Card>)
-      expect(interactive.firstChild).toHaveClass('card-interactive')
+      expect(interactive.firstChild).toHaveClass('interactive')
 
       const { container: glass } = render(<Card variant="glass">Glass</Card>)
-      expect(glass.firstChild).toHaveClass('card-glass')
+      expect(glass.firstChild).toHaveClass('glass')
     })
 
     it('renders with different padding', () => {
@@ -47,7 +48,7 @@ describe('Card Component', () => {
     it('handles click when interactive', () => {
       const handleClick = jest.fn()
       render(<Card variant="interactive" onClick={handleClick}>Click me</Card>)
-      
+
       screen.getByText('Click me').click()
       expect(handleClick).toHaveBeenCalledTimes(1)
     })
@@ -55,10 +56,10 @@ describe('Card Component', () => {
     it('supports keyboard navigation when interactive', () => {
       const handleClick = jest.fn()
       render(<Card variant="interactive" onClick={handleClick} tabIndex={0}>Keyboard</Card>)
-      
+
       const card = screen.getByText('Keyboard')
       card.focus()
-      
+
       expect(card).toHaveFocus()
     })
   })
@@ -76,9 +77,11 @@ describe('Card Component', () => {
   })
 
   describe('Accessibility', () => {
-    it('supports aria-label', () => {
-      render(<Card aria-label="Test card">Content</Card>)
-      expect(screen.getByRole('region')).toHaveAttribute('aria-label', 'Test card')
+    it('supports aria-label via ariaLabel prop', () => {
+      render(<Card ariaLabel="Test card">Content</Card>)
+      // Le composant utilise ariaLabel (pas aria-label) et pas de role par défaut
+      const el = screen.getByText('Content')
+      expect(el).toHaveAttribute('aria-label', 'Test card')
     })
 
     it('supports custom role', () => {
