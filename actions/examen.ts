@@ -2,6 +2,7 @@
 
 import { query } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
 
 /**
  * Vérifie si une colonne existe dans une table
@@ -164,7 +165,7 @@ export async function convertSubjectToExamAction(subjectId: string, userId: stri
 
     return { success: true, examId }
   } catch (error) {
-    console.error('Erreur lors de la conversion du sujet en examen:', error)
+    logger.apiError('convertSubjectToExamen', error)
     return { success: false, error: 'Erreur lors de la création de l\'examen' }
   }
 }

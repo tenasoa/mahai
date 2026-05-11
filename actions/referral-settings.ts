@@ -1,6 +1,7 @@
 "use server";
 
 import { query } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 /**
  * Initialise les paramètres de parrainage dans la table SystemSetting
@@ -50,7 +51,7 @@ export async function initializeReferralSettings() {
       initialized: true,
     };
   } catch (error) {
-    console.error("Erreur initializeReferralSettings:", error);
+    logger.apiError("initializeReferralSettings", error);
     return {
       success: false,
       error: "Impossible d'initialiser les paramètres de parrainage",
@@ -86,7 +87,7 @@ export async function getReferralSettingsForAdmin() {
       settings,
     };
   } catch (error) {
-    console.error("Erreur getReferralSettingsForAdmin:", error);
+    logger.apiError("getReferralSettingsForAdmin", error);
     return {
       success: false,
       error: "Impossible de récupérer les paramètres",
@@ -122,7 +123,7 @@ export async function updateReferralSetting(
       message: `Paramètre ${key} mis à jour à ${value}`,
     };
   } catch (error) {
-    console.error("Erreur updateReferralSetting:", error);
+    logger.apiError("updateReferralSetting", error);
     return {
       success: false,
       error: "Impossible de mettre à jour le paramètre",

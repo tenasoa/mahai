@@ -118,3 +118,6 @@ docs/FINAL_*.md
 docs/plans/*.md
 **/SPRINT_*.md
 **/AUDIT_*.md
+
+# Sentry Config File
+.env.sentry-build-plugin

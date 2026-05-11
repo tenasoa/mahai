@@ -4,6 +4,7 @@ import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
+import { logger } from '@/lib/logger'
 
 async function checkAdmin() {
   const supabase = await createSupabaseServerClient()
@@ -132,7 +133,7 @@ export async function getSubjectDetailAdmin(id: string) {
     logs = logsResult.rows
   } catch (e) {
     // La table n'existe peut-être pas encore (migration non passée)
-    console.warn("Table SubjectLog not yet created or error:", e)
+    logger.warn("SubjectLog table not available", { error: String(e) })
   }
 
   // Récupérer les achats liés à ce sujet
@@ -160,7 +161,7 @@ async function logSubjectAction(subjectId: string, userId: string, action: strin
       VALUES ($1, $2, $3, $4, $5, $6, $7)
     `, [logId, subjectId, userId, action, oldStatus, newStatus, notes || null])
   } catch (e) {
-    console.error("Failed to log subject action:", e)
+    logger.apiError("logSubjectAction", e)
   }
 }
 

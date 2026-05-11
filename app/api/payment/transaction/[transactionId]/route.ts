@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
 
 export async function GET(
   _req: Request,
@@ -38,7 +39,7 @@ export async function GET(
       createdAt: tx.createdAt,
     })
   } catch (err) {
-    console.error('Erreur GET /api/payment/transaction', err)
+    logger.apiError('/api/payment/transaction GET', err)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
@@ -95,7 +96,7 @@ export async function PATCH(
       createdAt: tx.createdAt,
     })
   } catch (err) {
-    console.error('Erreur PATCH /api/payment/transaction', err)
+    logger.apiError('/api/payment/transaction PATCH', err)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

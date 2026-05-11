@@ -2,6 +2,7 @@
 
 import { transaction, query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
 import { type AICorrectionResult } from '@/lib/ai/schemas'
 import {
   loadAIRuntimeConfig,
@@ -181,7 +182,7 @@ async function processCorrection(
     try {
       runtime = await loadAIRuntimeConfig()
     } catch (err) {
-      console.error('AI runtime config error:', err)
+      logger.apiError('AI runtime config', err)
       return { success: false, error: err instanceof Error ? err.message : 'Configuration IA indisponible.' }
     }
 
@@ -251,7 +252,7 @@ async function processCorrection(
     try {
       aiOutput = await runtime.provider.correct({ mode, subject, userAnswers, model: runtime.model, effort: runtime.effort })
     } catch (err) {
-      console.error('AI call error:', err)
+      logger.apiError('AI call', err)
       return handleProviderError(err, runtime.providerId)
     }
 
@@ -319,7 +320,7 @@ async function processCorrection(
       data: { correctionId, result: aiOutput.result, costAr: cost, balanceArRemaining: newBalance, mode, fromCache: false },
     }
   } catch (err) {
-    console.error('processCorrection fatal:', err)
+    logger.apiError('processCorrection', err)
     return { success: false, error: err instanceof Error ? err.message : 'Erreur serveur.' }
   }
 }
@@ -377,7 +378,7 @@ export async function getLatestAICorrection(
       },
     }
   } catch (err) {
-    console.error('getLatestAICorrection error:', err)
+    logger.apiError('getLatestAICorrection', err)
     return { success: false, error: 'Erreur serveur.' }
   }
 }
@@ -404,7 +405,7 @@ export async function getDirectCorrectionPoolStats(): Promise<
     )
     return { success: true, data: res.rows[0] }
   } catch (err) {
-    console.error('getDirectCorrectionPoolStats error:', err)
+    logger.apiError('getDirectCorrectionPoolStats', err)
     return { success: false, error: 'Erreur serveur.' }
   }
 }
@@ -434,7 +435,7 @@ export async function getAIProviderStatus(): Promise<
     const active = providers.find((p) => p.isActive)
     return { success: true, data: { providers, activeId: active?.id || 'claude' } }
   } catch (err) {
-    console.error('getAIProviderStatus error:', err)
+    logger.apiError('getAIProviderStatus', err)
     return { success: false, error: "Impossible de charger l'état des providers." }
   }
 }
