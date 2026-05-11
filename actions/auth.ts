@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { logger } from "@/lib/logger";
 import { query } from "@/lib/db";
 import { checkAuthRateLimit } from "@/lib/rate-limit";
 import {
@@ -57,7 +58,9 @@ async function getClientIp(): Promise<string> {
 
 // Helper function to generate consistent 6-digit code
 function generate6DigitCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return String(100000 + (buf[0] % 900000));
 }
 
 function getFlowCookieOptions(maxAge = FLOW_COOKIE_MAX_AGE) {
@@ -158,11 +161,7 @@ export async function registerUser(formData: RegisterFormData, redirectTo?: stri
   });
 
   if (authError) {
-    console.error("❌ Erreur Supabase Auth:", {
-      message: authError.message,
-      status: authError.status,
-      code: authError.code,
-    });
+    logger.authError("registerUser Supabase", authError, undefined);
 
     return {
       error:
@@ -227,7 +226,7 @@ export async function updateUserRole(formData: RoleFormData) {
       [updateData.role, updateData.schoolLevel || null, session.user.id],
     );
   } catch (error) {
-    console.error("Error updating role:", error);
+    logger.authError("updateUserRole", error);
     return { error: "Erreur lors de la mise à jour du rôle" };
   }
 
@@ -301,7 +300,7 @@ export async function loginUser(formData: LoginFormData, redirectTo?: string) {
     // Désynchro auth ↔ app : on logue côté serveur et on rend une erreur
     // générique côté client (pas de leak du fait que l'auth a marché mais
     // que la sync app a échoué).
-    console.error("[loginUser] sync auth ↔ app failed:", syncResult.error);
+    logger.authError("loginUser sync", new Error(syncResult.error || "sync failed"));
     await supabase.auth.signOut();
     await setVerificationCookie(false);
     return {
@@ -398,7 +397,7 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
   );
 
   if (resetError) {
-    console.error("Error sending password reset email:", resetError);
+    logger.authError("forgotPassword email send", resetError);
     // Continue even if email fails - user can still use the OTP code from database
   }
 
@@ -442,7 +441,7 @@ export async function resetPassword(formData: ResetPasswordFormData) {
   } = await supabase.auth.admin.listUsers();
 
   if (listError) {
-    console.error("Erreur récupération utilisateurs auth:", listError);
+    logger.authError("resetPassword listUsers", listError);
     return { error: "Erreur lors de la récupération du compte" };
   }
 
@@ -458,11 +457,7 @@ export async function resetPassword(formData: ResetPasswordFormData) {
   );
 
   if (updateError) {
-    console.error("Erreur mise à jour mot de passe Supabase:", {
-      message: updateError.message,
-      status: updateError.status,
-      code: updateError.code,
-    });
+    logger.authError("resetPassword updateUser", updateError);
     return { error: `Erreur Supabase: ${updateError.message}` };
   }
 
@@ -538,7 +533,7 @@ export async function resendVerificationEmail(email: string) {
     });
 
     if (resendError) {
-      console.error("Error resending verification email:", resendError);
+      logger.authError("resendVerificationEmail", resendError);
       return {
         error: "Impossible de renvoyer l'email pour le moment. Réessayez dans 1 minute.",
       };
@@ -546,7 +541,7 @@ export async function resendVerificationEmail(email: string) {
 
     return { success: "Lien de confirmation renvoyé avec succès." };
   } catch (error) {
-    console.error("Erreur resend email:", error);
+    logger.authError("resendVerificationEmail unexpected", error);
     return { error: "Erreur lors de l'envoi du lien de confirmation" };
   }
 }
@@ -605,7 +600,7 @@ export async function getCurrentUserData() {
     const syncResult = await syncAppUserWithAuthUser(user);
     return syncResult.appUser;
   } catch (error) {
-    console.error("Error fetching current user data:", error);
+    logger.authError("getCurrentUser", error);
     return null;
   }
 }

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { query } from "@/lib/db";
 import { db } from "@/lib/db-client";
+import { logger } from "@/lib/logger";
 import {
   updateProfileSchema,
   type UpdateProfileData,
@@ -82,7 +83,7 @@ export async function getCurrentProfileAction() {
 
     return { success: true, data: profile };
   } catch (error) {
-    console.error("Erreur serveur:", error);
+    logger.apiError("profile action", error);
     return { success: false, error: "Erreur serveur" };
   }
 }
@@ -142,7 +143,7 @@ export async function updateCurrentUserProfileAction(data: UpdateProfileData) {
       };
     }
 
-    console.error("Erreur serveur inattendue:", error);
+    logger.apiError("profile action unexpected", error);
     return {
       success: false,
       error:
@@ -219,7 +220,7 @@ export async function getCurrentUserPurchasedSubjectsAction() {
 
     return { success: true, data };
   } catch (error) {
-    console.error("Erreur récupération sujets achetés:", error);
+    logger.apiError("getPurchasedSubjects", error);
     return {
       success: false,
       error: "Impossible de récupérer vos sujets débloqués",
@@ -275,7 +276,7 @@ export async function updateCurrentUserSecuritySettingsAction(data: unknown) {
       return { success: false, error: "Paramètres de sécurité invalides" };
     }
 
-    console.error("Erreur mise à jour sécurité:", error);
+    logger.apiError("updateSecurity", error);
     return {
       success: false,
       error: "Impossible de sauvegarder les paramètres de sécurité",
@@ -313,7 +314,7 @@ export async function uploadCurrentUserProfilePictureAction(file: File) {
       });
 
     if (uploadError) {
-      console.error("Erreur upload:", uploadError);
+      logger.apiError("profileImageUpload", uploadError);
       return { success: false, error: "Erreur lors du téléchargement" };
     }
 
@@ -340,7 +341,7 @@ export async function uploadCurrentUserProfilePictureAction(file: File) {
 
     return { success: true, data: profile };
   } catch (error) {
-    console.error("Erreur serveur:", error);
+    logger.apiError("profile action", error);
     return { success: false, error: "Erreur serveur" };
   }
 }
@@ -374,7 +375,7 @@ export async function deleteCurrentUserProfilePictureAction() {
         .remove([storagePath]);
 
       if (deleteError) {
-        console.error("Erreur suppression image:", deleteError);
+        logger.apiError("profileImageDelete", deleteError);
       }
     }
 
@@ -396,7 +397,7 @@ export async function deleteCurrentUserProfilePictureAction() {
 
     return { success: true, data: updatedProfile };
   } catch (error) {
-    console.error("Erreur serveur:", error);
+    logger.apiError("profile action", error);
     return { success: false, error: "Erreur serveur" };
   }
 }
@@ -457,7 +458,9 @@ export async function requestPasswordChangeCodeAction(data: unknown) {
       return { success: false, error: "Le mot de passe actuel est incorrect" };
 
     // Générer un code à 6 chiffres
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    const code = String(100000 + (buf[0] % 900000));
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // Expire dans 15 minutes
 
     // Supprimer les anciens codes pour cet email
@@ -479,7 +482,7 @@ export async function requestPasswordChangeCodeAction(data: unknown) {
       });
 
     if (resetError) {
-      console.error("❌ Erreur Supabase email détaillée:", resetError);
+      logger.authError("requestPasswordChangeCode email", resetError);
       return { success: false, error: "L'envoi de l'email a échoué" };
     }
 
@@ -490,7 +493,7 @@ export async function requestPasswordChangeCodeAction(data: unknown) {
         success: false,
         error: error.errors[0]?.message || "Validation échouée",
       };
-    console.error("Erreur requestPasswordChangeCodeAction:", error);
+    logger.authError("requestPasswordChangeCodeAction", error);
     return { success: false, error: "Erreur lors de l'envoi du code" };
   }
 }
@@ -543,7 +546,7 @@ export async function changeUserPasswordAction(data: unknown) {
         success: false,
         error: error.errors[0]?.message || "Validation échouée",
       };
-    console.error("Erreur changeUserPasswordAction:", error);
+    logger.authError("changeUserPasswordAction", error);
     return { success: false, error: "Erreur serveur" };
   }
 }
@@ -563,7 +566,7 @@ export async function getUserTransactionsAction() {
 
     return { success: true, data: result.rows };
   } catch (error) {
-    console.error("Erreur getUserTransactionsAction:", error);
+    logger.apiError("getUserTransactionsAction", error);
     return {
       success: false,
       error: "Erreur lors du chargement des transactions",
@@ -598,7 +601,7 @@ export async function updatePaymentPreferencesAction(data: {
     revalidatePath("/profil");
     return { success: true, message: "Préférences de paiement mises à jour" };
   } catch (error) {
-    console.error("Erreur updatePaymentPreferencesAction:", error);
+    logger.apiError("updatePaymentPreferencesAction", error);
     return {
       success: false,
       error: "Erreur lors de la sauvegarde des préférences",
@@ -726,7 +729,7 @@ export async function rechargeCreditsAction(data: {
       message: `Recharge de ${arToAward} Ar effectuée avec succès`,
     };
   } catch (error) {
-    console.error("Erreur rechargeCreditsAction:", error);
+    logger.apiError("rechargeCreditsAction", error);
     return { success: false, error: "Erreur lors de la recharge" };
   }
 }
@@ -765,7 +768,7 @@ export async function markAllNotificationsAsReadAction() {
         [context.userId],
       )
     } catch (e) {
-      console.warn('markAllNotifications (Notification table) skipped:', e)
+      logger.warn('markAllNotifications (Notification table) skipped', { error: String(e) })
     }
 
     revalidatePath("/notifications");
@@ -774,7 +777,7 @@ export async function markAllNotificationsAsReadAction() {
       message: "Toutes les notifications ont été marquées comme lues",
     };
   } catch (error) {
-    console.error("Erreur markAllNotificationsAsReadAction:", error);
+    logger.apiError("markAllNotificationsAsReadAction", error);
     return {
       success: false,
       error: "Erreur lors de la mise à jour des notifications",
@@ -807,7 +810,7 @@ export async function markNotificationAsReadAction(notificationId: string) {
     revalidatePath("/notifications");
     return { success: true };
   } catch (error) {
-    console.error("Erreur markNotificationAsReadAction:", error);
+    logger.apiError("markNotificationAsReadAction", error);
     return {
       success: false,
       error: "Erreur lors de la mise à jour de la notification",
@@ -839,7 +842,7 @@ export async function dismissNotificationAction(notificationId: string) {
     revalidatePath("/notifications");
     return { success: true };
   } catch (error) {
-    console.error("Erreur dismissNotificationAction:", error);
+    logger.apiError("dismissNotificationAction", error);
     return {
       success: false,
       error: "Erreur lors de la suppression de la notification",
@@ -901,7 +904,7 @@ export async function getUserNotificationsAction() {
     } catch (e) {
       // Migration Notification pas encore passée — on continue avec les
       // transactions seules.
-      console.warn('getUserNotificationsAction (Notification) skipped:', e)
+      logger.warn('getUserNotificationsAction (Notification) skipped', { error: String(e) })
     }
 
     // 2) Transaction (recharges, achats, gains — système Ariary)
@@ -938,7 +941,7 @@ export async function getUserNotificationsAction() {
         })
       }
     } catch (e) {
-      console.warn('getUserNotificationsAction (Transaction) skipped:', e)
+      logger.warn('getUserNotificationsAction (Transaction) skipped', { error: String(e) })
     }
 
     // Tri global décroissant
@@ -946,7 +949,7 @@ export async function getUserNotificationsAction() {
 
     return { success: true, data: items.slice(0, 40) }
   } catch (error) {
-    console.error('Erreur getUserNotificationsAction:', error);
+    logger.apiError('getUserNotificationsAction', error);
     return { success: false, error: 'Erreur lors du chargement des notifications' };
   }
 }
@@ -980,7 +983,7 @@ export async function getUserActiveTransactionsAction() {
 
     return { success: true, data: rows };
   } catch (error) {
-    console.error("Erreur getUserActiveTransactionsAction:", error);
+    logger.apiError("getUserActiveTransactionsAction", error);
     return {
       success: false,
       error: "Erreur lors du chargement des transactions",
@@ -1030,7 +1033,7 @@ export async function getUserCreditHistoryAction(
       },
     };
   } catch (error) {
-    console.error("Erreur getUserCreditHistoryAction:", error);
+    logger.apiError("getUserCreditHistoryAction", error);
     return {
       success: false,
       error: "Erreur lors du chargement de l'historique",

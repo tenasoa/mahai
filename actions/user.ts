@@ -5,6 +5,7 @@ import { query, transaction } from '@/lib/db'
 import { findExistingPurchase } from '@/lib/sql-queries'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getSystemSetting } from '@/lib/settings'
+import { logger } from '@/lib/logger'
 
 export interface UpcomingExam {
   id: string
@@ -113,7 +114,7 @@ export async function getCurrentUserBalanceAr() {
     const result = await query('SELECT "balanceAr" FROM "User" WHERE id = $1', [userId])
     return result.rows[0]?.balanceAr || 0
   } catch (error) {
-    console.error('Error fetching current user balance:', error)
+    logger.apiError('getUserBalance', error)
     return 0
   }
 }
@@ -186,7 +187,7 @@ export async function purchaseCurrentUserSubject(subjectId: string) {
       remainingBalance,
     }
   } catch (error) {
-    console.error('Error purchasing subject:', error)
+    logger.apiError('purchaseSubject', error)
     return { success: false, error: 'Erreur lors de la transaction' }
   }
 }
@@ -265,7 +266,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       examCount: examsResult.rowCount || 0,
     }
   } catch (error) {
-    console.error('Error fetching dashboard data:', error)
+    logger.apiError('getDashboardData', error)
     return { upcomingExams: [], weeklyProgress: [], totalSolved: 0, examCount: 0 }
   }
 }
