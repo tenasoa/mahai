@@ -38,7 +38,6 @@ export default function EditorToolbar({
       // data-tip = tooltip animé géré en CSS (cf. editor.css), title = fallback
       // a11y / mobile (le navigateur affiche un tooltip natif au long-press).
       data-tip={title || label}
-      title={title || label}
       aria-label={title || label}
     >
       {label}
@@ -119,7 +118,6 @@ export default function EditorToolbar({
         className="editor-tb-select"
         value={currentHeading}
         onChange={(e) => handleHeadingChange(e.target.value)}
-        title="Style du bloc"
         aria-label="Style du bloc"
         data-tip="Style"
       >
@@ -147,8 +145,8 @@ export default function EditorToolbar({
         <button
           className={`editor-tb-btn${editor.isActive('link') ? ' active' : ''}`}
           onClick={onLink}
-          title="Insérer ou modifier un lien (⌘K)"
           aria-label="Insérer un lien"
+          data-tip="Insérer ou modifier un lien (⌘K)"
         >
           🔗
         </button>
@@ -169,14 +167,16 @@ export default function EditorToolbar({
       <button
         className={`editor-tb-btn${!canOutdentList && !editor.isActive('paragraph') ? ' disabled' : ''}`}
         onClick={handleOutdent}
-        title="Retrait à gauche (Shift+Tab)"
+        aria-label="Retrait à gauche (Shift+Tab)"
+        data-tip="Retrait à gauche (Shift+Tab)"
       >
         ⇤
       </button>
       <button
         className="editor-tb-btn"
         onClick={handleIndent}
-        title="Retrait à droite (Tab) ou Espaces"
+        aria-label="Retrait à droite (Tab) ou Espaces"
+        data-tip="Retrait à droite (Tab) ou Espaces"
       >
         ⇥
       </button>
@@ -186,8 +186,8 @@ export default function EditorToolbar({
       <button
         className="editor-tb-btn editor-tb-btn--wide"
         onClick={onKaTeX}
-        title="Formule mathématique (bloc centré)"
         aria-label="Insérer une formule en bloc"
+        data-tip="Formule mathématique (bloc centré)"
       >
         ∑ Formule
       </button>
@@ -196,8 +196,8 @@ export default function EditorToolbar({
         <button
           className="editor-tb-btn editor-tb-btn--wide"
           onClick={onKaTeXInline}
-          title="Formule inline ($x^2$ dans le texte) — Mod+M"
           aria-label="Insérer une formule inline"
+          data-tip="Formule inline ($x^2$ dans le texte) — Mod+M"
         >
           $ Inline
         </button>
@@ -206,8 +206,8 @@ export default function EditorToolbar({
       <button
         className="editor-tb-btn editor-tb-btn--wide"
         onClick={onSymbols}
-        title="Symboles mathématiques"
         aria-label="Insérer un symbole"
+        data-tip="Symboles mathématiques"
       >
         → Symboles
       </button>
@@ -217,8 +217,8 @@ export default function EditorToolbar({
       <button
         className="editor-tb-btn editor-tb-btn--wide"
         onClick={onInsertMenu}
-        title="Insérer un bloc"
         aria-label="Insérer un bloc structuré"
+        data-tip="Insérer un bloc"
         style={{ color: 'var(--gold)', borderColor: 'var(--gold-line)' }}
       >
         ⊕ Insérer

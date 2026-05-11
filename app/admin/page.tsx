@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { FileText, Users, CreditCard, TrendingUp, AlertCircle, CheckCircle2, Clock, ArrowRight, Sparkles, Settings, Smartphone, Package, Newspaper } from 'lucide-react'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { UserNotifications } from '@/components/layout/UserNotifications'
 
 async function getDashboardData() {
   // 1. KPIs
@@ -86,6 +87,7 @@ export default async function AdminDashboard() {
           <p className="admin-subtitle">Statistiques et actions requises sur Mah.AI</p>
         </div>
         <div className="admin-header-actions">
+          <UserNotifications />
           <Link href="/admin/configuration" className="admin-btn admin-btn-outline">
             <Settings size={16} />
             Configuration

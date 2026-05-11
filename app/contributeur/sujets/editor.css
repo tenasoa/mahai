@@ -322,9 +322,9 @@
 .editor-tb-btn[data-tip]::after {
   content: attr(data-tip);
   position: absolute;
-  bottom: calc(100% + 6px);
+  top: calc(100% + 6px);
   left: 50%;
-  transform: translateX(-50%) translateY(2px);
+  transform: translateX(-50%) translateY(-2px);
   background: var(--ink);
   color: var(--cream);
   font-family: var(--mono);

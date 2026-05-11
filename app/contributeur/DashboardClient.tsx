@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  Bell, TrendingUp, TrendingDown, Minus,
+  TrendingUp, TrendingDown, Minus,
   FileText, ShoppingCart, DollarSign,
   BarChart3, Edit3, Eye, Star,
-  Wallet, PlusCircle, Lightbulb, User
+  Wallet, PlusCircle, Lightbulb
 } from 'lucide-react'
-import { getUserActiveTransactionsAction } from '@/actions/profile'
+import { UserNotifications } from '@/components/layout/UserNotifications'
 import type { DashboardPeriod } from './actions'
 
 interface ContributorDashboardProps {
@@ -74,22 +74,6 @@ export default function ContributorDashboardClient({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
-  const [unreadCount, setUnreadCount] = useState(0)
-
-  useEffect(() => {
-    loadNotifications()
-  }, [])
-
-  const loadNotifications = async () => {
-    try {
-      const result = await getUserActiveTransactionsAction()
-      if (result.success && result.data) {
-        setUnreadCount(result.data.length)
-      }
-    } catch (e) {
-      console.error(e)
-    }
-  }
 
   const handlePeriodChange = (newPeriod: DashboardPeriod) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -123,15 +107,7 @@ export default function ContributorDashboardClient({
             Nouveau sujet
           </Link>
 
-          <Link 
-            href="/notifications" 
-            className="contrib-notif-btn" 
-            data-count={unreadCount}
-            aria-label={`Notifications (${unreadCount} non lue${unreadCount > 1 ? 's' : ''})`}
-            title="Voir mes notifications"
-          >
-            <Bell size={20} />
-          </Link>
+          <UserNotifications />
         </div>
       </div>
 

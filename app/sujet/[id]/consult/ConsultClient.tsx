@@ -435,7 +435,7 @@ export function ConsultClient({ subject }: Props) {
           border-bottom: 1px solid var(--b1);
         }
         .consult-header-inner {
-          max-width: 1080px;
+          max-width: var(--page-max-w, 1400px);
           margin: 0 auto;
           padding: 0.9rem 1.25rem;
           display: grid;
@@ -513,7 +513,7 @@ export function ConsultClient({ subject }: Props) {
         @keyframes consult-spin { to { transform: rotate(360deg); } }
 
         .consult-error {
-          max-width: 1080px;
+          max-width: var(--page-max-w, 1400px);
           margin: 0 auto;
           padding: 0.6rem 1.25rem;
           color: #ff6b9d;
@@ -521,7 +521,7 @@ export function ConsultClient({ subject }: Props) {
         }
 
         .consult-main {
-          max-width: 1080px;
+          max-width: var(--page-max-w, 1400px);
           margin: 0 auto;
           padding: 2rem 1.25rem 4rem;
         }

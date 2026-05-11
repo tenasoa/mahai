@@ -11,7 +11,7 @@
 }
 
 .subject-header-inner {
-  max-width: var(--page-max-w-md);
+  max-width: var(--page-max-w);
   margin: 0 auto;
   padding: 0 var(--page-gutter);
 }
@@ -158,7 +158,7 @@
 }
 
 .subject-main {
-  max-width: var(--page-max-w-md);
+  max-width: var(--page-max-w);
   margin: 0 auto;
   padding: 1.2rem var(--page-gutter) var(--space-page-y);
   display: grid;
