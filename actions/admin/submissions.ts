@@ -122,11 +122,19 @@ export async function finalizeAndPublish(
   const submission = subRes.rows[0]
   
   if (!submission) throw new Error("Soumission introuvable")
-  if (submission.status !== 'SUBMITTED') throw new Error("Cette soumission n'est pas en attente")
+
+  // Accepter tous les statuts qui indiquent une soumission en attente de validation
+  const publishableStatuses = ['SUBMITTED', 'RESUBMITTED', 'PENDING', 'REVISION_REQUESTED']
+  if (!publishableStatuses.includes(submission.status)) {
+    throw new Error(`Cette soumission ne peut pas être publiée (statut actuel: ${submission.status})`)
+  }
 
   const newSubjectId = crypto.randomUUID()
   // Prix directement en Ariary (pas de conversion crédits)
   const finalPriceAr = finalData.badge === 'FREE' ? 0 : Math.max(0, Number(submission.prix ?? 0))
+
+  const anneeString = String(finalData.annee || submission.anneeScolaire || new Date().getFullYear());
+  const anneeInt = parseInt(anneeString.split('-')[0]) || new Date().getFullYear();
 
   try {
     // Créer le sujet dans la table Subject — recopie l'intégralité des
@@ -160,7 +168,7 @@ export async function finalizeAndPublish(
       finalData.titre,
       finalData.matiere,
       finalData.type,
-      finalData.annee,
+      anneeInt,
       finalData.serie || submission.serie || null,
       finalData.pages,
       finalPriceAr,
@@ -175,7 +183,7 @@ export async function finalizeAndPublish(
       finalData.filiere ?? submission.filiere ?? null,
       submission.niveau ?? null,
       finalData.type ?? submission.examType ?? null,
-      finalData.annee ?? submission.anneeScolaire ?? null,
+      anneeString,
       submission.dateOfficielle ?? null,
       submission.bepcOption ?? null,
       submission.baccType ?? null,

@@ -191,3 +191,40 @@ export async function updateSubjectStatus(subjectId: string, newStatus: string, 
   
   return { success: true }
 }
+
+/**
+ * Supprime un sujet de la base de données.
+ * Supprime aussi les achats, logs et autres données liées.
+ */
+export async function deleteSubject(subjectId: string) {
+  const adminUser = await checkAdmin()
+  if (!adminUser) throw new Error("Non autorisé")
+
+  const currentResult = await query('SELECT id, titre, status FROM "Subject" WHERE id = $1', [subjectId])
+  const subject = currentResult.rows[0]
+
+  if (!subject) throw new Error("Sujet introuvable")
+
+  try {
+    // Supprimer les logs liés
+    try {
+      await query('DELETE FROM "SubjectLog" WHERE "subjectId" = $1', [subjectId])
+    } catch {
+      // Table peut ne pas exister
+    }
+
+    // Supprimer les achats liés
+    await query('DELETE FROM "Purchase" WHERE "subjectId" = $1', [subjectId])
+
+    // Supprimer le sujet
+    await query('DELETE FROM "Subject" WHERE id = $1', [subjectId])
+
+    revalidatePath('/admin/sujets')
+    revalidatePath('/catalogue')
+
+    return { success: true, deletedTitle: subject.titre }
+  } catch (error) {
+    logger.apiError("deleteSubject", error)
+    throw error
+  }
+}

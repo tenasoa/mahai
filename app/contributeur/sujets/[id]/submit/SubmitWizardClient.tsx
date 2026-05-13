@@ -109,7 +109,6 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
     { id: 'examType', label: 'Type d\'examen', ok: !!draft.examType, detail: draft.examType || 'Manquant' },
     { id: 'annee', label: 'Année scolaire', ok: !!draft.anneeScolaire, detail: draft.anneeScolaire || 'Manquante' },
     { id: 'content', label: 'Contenu rédigé', ok: wordCount >= 20, detail: `${wordCount} mots` },
-    { id: 'questions', label: 'Au moins une question', ok: questionCount > 0, detail: `${questionCount} question${questionCount > 1 ? 's' : ''}` },
     { id: 'prix', label: 'Prix > 0', ok: draft.prix > 0, detail: `${draft.prix.toLocaleString()} Ar` },
   ]
 
@@ -210,7 +209,7 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
               </div>
               <div className="sw-stat">
                 <span className="sw-stat-num">{questionCount}</span>
-                <span className="sw-stat-label">question{questionCount > 1 ? 's' : ''}</span>
+                <span className="sw-stat-label">question{questionCount !== 1 ? 's' : ''}</span>
               </div>
               <div className="sw-stat">
                 <span className="sw-stat-num">{draft.duree || '—'}</span>
@@ -324,7 +323,7 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
               </div>
               <div className="sw-summary-row">
                 <span>Volume rédigé</span>
-                <strong>{wordCount} mots, {questionCount} question{questionCount > 1 ? 's' : ''}</strong>
+                <strong>{wordCount} mots{questionCount > 0 ? `, ${questionCount} question${questionCount !== 1 ? 's' : ''}` : ''}</strong>
               </div>
               <div className="sw-summary-row sw-summary-row--gold">
                 <span>Vos revenus par achat</span>

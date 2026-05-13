@@ -34,6 +34,7 @@ import { common, createLowlight } from 'lowlight'
 import {
   PartieExtension,
   ExerciceExtension,
+  ProblemeExtension,
   EnonceExtension,
   QuestionExtension,
   AnnotationExtension,
@@ -94,6 +95,7 @@ export function SubjectRenderer({ content, lockAfter, lockOverlay }: Props) {
       TableCell,
       PartieExtension,
       ExerciceExtension,
+      ProblemeExtension,
       EnonceExtension,
       QuestionExtension,
       AnnotationExtension,

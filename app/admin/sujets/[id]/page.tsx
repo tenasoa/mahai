@@ -1,7 +1,7 @@
-import { getSubjectDetailAdmin, updateSubjectStatus } from '@/actions/admin/subjects'
+import { getSubjectDetailAdmin, updateSubjectStatus, deleteSubject } from '@/actions/admin/subjects'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, FileText, CheckCircle2, AlertCircle, XCircle, BookOpen, Tag, Calendar, DollarSign, User, Download, Eye, Clock, Edit3, ExternalLink } from 'lucide-react'
+import { ArrowLeft, FileText, CheckCircle2, AlertCircle, XCircle, BookOpen, Tag, Calendar, DollarSign, User, Download, Eye, Clock, Edit3, ExternalLink, Trash2 } from 'lucide-react'
 
 export const metadata = {
   title: 'Modération Sujet — Admin Mah.AI'
@@ -58,6 +58,13 @@ export default async function AdminSubjectDetailPage({
     }
   }
 
+  async function handleDelete() {
+    'use server'
+    await deleteSubject(p.id)
+    const { redirect: doRedirect } = await import('next/navigation')
+    doRedirect('/admin/sujets')
+  }
+
   return (
     <div className="admin-page-content">
       {/* Header */}
@@ -108,6 +115,22 @@ export default async function AdminSubjectDetailPage({
               Correction
             </a>
           )}
+          <form action={handleDelete}>
+            <button
+              type="submit"
+              className="admin-btn admin-btn-outline"
+              style={{ color: 'var(--ruby)', borderColor: 'var(--ruby-line)' }}
+              title="Supprimer définitivement ce sujet"
+              onClick={(e) => {
+                if (!confirm('Êtes-vous sûr de vouloir supprimer définitivement ce sujet ? Cette action est irréversible et supprimera aussi les achats liés.')) {
+                  e.preventDefault()
+                }
+              }}
+            >
+              <Trash2 size={16} />
+              Supprimer
+            </button>
+          </form>
         </div>
       </div>
 
