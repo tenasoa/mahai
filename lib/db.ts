@@ -5,9 +5,11 @@ import { logger } from './logger'
 const globalForDb = global as unknown as { pool: Pool }
 
 const pool = globalForDb.pool || new Pool({
-  connectionString: process.env.DIRECT_URL,
-  // Add resilience for serverless/high-concurrency environments
-  max: 15,
+  // Utiliser DATABASE_URL en priorité (pooler Transaction Mode, port 6543) 
+  // pour éviter "(EMAXCONNSESSION) max clients reached in session mode"
+  connectionString: process.env.DATABASE_URL || process.env.DIRECT_URL,
+  // Limiter le nombre max de connexions par instance serverless
+  max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
