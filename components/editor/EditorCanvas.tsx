@@ -2,6 +2,9 @@
 
 import 'katex/dist/katex.min.css'
 
+import { useImperativeHandle, forwardRef } from 'react'
+import type { Editor } from '@tiptap/react'
+import type { Schema } from '@tiptap/pm/model'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -18,9 +21,18 @@ import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { common, createLowlight } from 'lowlight'
-import { useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
-import type { Editor } from '@tiptap/react'
-import type { Schema } from '@tiptap/pm/model'
+import {
+  PartieExtension,
+  ExerciceExtension,
+  ProblemeExtension,
+  EnonceExtension,
+  QuestionExtension,
+  AnnotationExtension,
+  FormulaExtension,
+  SchemaExtension,
+} from './extensions'
+import { InlineMathExtension } from './inlineMath'
+import { OutlineItem } from './types'
 
 /**
  * ProseMirror omet les attrs du JSON quand elles égalent les valeurs par
@@ -57,19 +69,6 @@ function withFullAttrs(json: any, schema: Schema): any {
 
   return fix(json)
 }
-
-import {
-  PartieExtension,
-  ExerciceExtension,
-  ProblemeExtension,
-  EnonceExtension,
-  QuestionExtension,
-  AnnotationExtension,
-  FormulaExtension,
-  SchemaExtension,
-} from './extensions'
-import { InlineMathExtension } from './inlineMath'
-import { OutlineItem } from './types'
 
 const lowlight = createLowlight(common)
 
