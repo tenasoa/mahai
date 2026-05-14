@@ -20,6 +20,7 @@ import {
   FormulaExtension,
   SchemaExtension,
 } from './extensions'
+import { InlineMathExtension } from './inlineMath'
 
 import { SubjectMetadata } from './types'
 
@@ -49,6 +50,7 @@ export default function PreviewModal({ content, meta, prix, onClose }: Props) {
       AnnotationExtension,
       FormulaExtension,
       SchemaExtension,
+      InlineMathExtension,
     ],
     content,
     editable: false,

@@ -20,6 +20,43 @@ import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { common, createLowlight } from 'lowlight'
 import { useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
 import type { Editor } from '@tiptap/react'
+import type { Schema } from '@tiptap/pm/model'
+
+/**
+ * ProseMirror omet les attrs du JSON quand elles égalent les valeurs par
+ * défaut du schéma. Ce post-traitement force leur inclusion pour tous les
+ * nœuds qui ont des attrs définis — garantissant que `latex`, `hasPoints`,
+ * etc. sont toujours persistés même à leur valeur par défaut.
+ */
+function withFullAttrs(json: any, schema: Schema): any {
+  if (!json || typeof json !== 'object') return json
+
+  function fix(node: any): any {
+    if (!node || typeof node !== 'object' || !node.type) return node
+
+    const nodeType = schema.nodes[node.type]
+    if (nodeType) {
+      const schemaAttrs = nodeType.attrs as Record<string, { default: unknown }>
+      const attrNames = Object.keys(schemaAttrs)
+      if (attrNames.length > 0) {
+        const current = node.attrs || {}
+        const full: Record<string, unknown> = {}
+        for (const name of attrNames) {
+          full[name] = name in current ? current[name] : schemaAttrs[name].default
+        }
+        node = { ...node, attrs: full }
+      }
+    }
+
+    if (Array.isArray(node.content)) {
+      node = { ...node, content: node.content.map(fix) }
+    }
+
+    return node
+  }
+
+  return fix(json)
+}
 
 import {
   PartieExtension,
@@ -139,7 +176,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(function EditorCanvas
     content: initialContent || '',
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      const json = editor.getJSON()
+      const json = withFullAttrs(editor.getJSON(), editor.schema)
       const wordCount = editor.storage.characterCount?.words() ?? countWords(editor.getText())
       const outline = extractOutline(editor)
       onChange?.(json, wordCount, outline)
@@ -152,7 +189,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(function EditorCanvas
   useImperativeHandle(ref, () => ({
     getEditor: () => editor,
     getWordCount: () => editor ? countWords(editor.getText()) : 0,
-    getJSON: () => editor?.getJSON() ?? {},
+    getJSON: () => editor ? withFullAttrs(editor.getJSON(), editor.schema) : {},
     getOutline: () => extractOutline(editor),
   }))
 
