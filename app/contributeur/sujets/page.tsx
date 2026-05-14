@@ -60,7 +60,7 @@ async function getContributorSubjects() {
             prix, status, "createdAt",
             'SUBMISSION' as source
      FROM "SubjectSubmission"
-     WHERE "authorId" = $1
+     WHERE "authorId" = $1 AND status != 'VALIDATED'
      ORDER BY "createdAt" DESC`,
     [session.user.id]
   )
