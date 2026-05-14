@@ -3,7 +3,6 @@
 import 'katex/dist/katex.min.css'
 
 import { useImperativeHandle, forwardRef } from 'react'
-import type { Schema } from '@tiptap/pm/model'
 import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -39,7 +38,7 @@ import { OutlineItem } from './types'
  * nœuds qui ont des attrs définis — garantissant que `latex`, `hasPoints`,
  * etc. sont toujours persistés même à leur valeur par défaut.
  */
-function withFullAttrs(json: any, schema: Schema): any {
+function withFullAttrs(json: any, schema: { nodes: Record<string, { spec: { attrs?: Record<string, { default?: unknown }> } }> }): any {
   if (!json || typeof json !== 'object') return json
 
   function fix(node: any): any {
@@ -47,13 +46,13 @@ function withFullAttrs(json: any, schema: Schema): any {
 
     const nodeType = schema.nodes[node.type]
     if (nodeType) {
-      const schemaAttrs = nodeType.attrs as Record<string, { default: unknown }>
-      const attrNames = Object.keys(schemaAttrs)
+      const schemaAttrs = nodeType.spec.attrs
+      const attrNames = schemaAttrs ? Object.keys(schemaAttrs) : []
       if (attrNames.length > 0) {
         const current = node.attrs || {}
         const full: Record<string, unknown> = {}
         for (const name of attrNames) {
-          full[name] = name in current ? current[name] : schemaAttrs[name].default
+          full[name] = name in current ? current[name] : schemaAttrs![name].default
         }
         node = { ...node, attrs: full }
       }
