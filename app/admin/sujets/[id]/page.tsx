@@ -109,7 +109,7 @@ export default async function AdminSubjectDetailPage({
               Correction
             </a>
           )}
-          <DeleteSubjectButton subjectId={p.id} />
+          <DeleteSubjectButton subjectId={p.id} subjectTitle={subject.title} />
         </div>
       </div>
 
