@@ -132,7 +132,7 @@ export async function registerUser(formData: RegisterFormData, redirectTo?: stri
   // bot de créer 1000 comptes en boucle (et donc d'épuiser le bonus de
   // bienvenue, polluer la base, ou contourner ENABLE_REFERRAL_BONUS).
   const ip = await getClientIp();
-  const limit = checkAuthRateLimit(`register:${ip}`);
+  const limit = await checkAuthRateLimit(`register:${ip}`);
   if (!limit.allowed) {
     return {
       error: `Trop de tentatives d'inscription. Réessayez dans ${Math.ceil(
@@ -252,8 +252,8 @@ export async function loginUser(formData: LoginFormData, redirectTo?: string) {
   // attaqués depuis la même IP : limité par IP. Les deux compteurs
   // coexistent et c'est volontaire (défense en profondeur).
   const ip = await getClientIp();
-  const limitByEmail = checkAuthRateLimit(`login:email:${email.toLowerCase()}`);
-  const limitByIp = checkAuthRateLimit(`login:ip:${ip}`);
+  const limitByEmail = await checkAuthRateLimit(`login:email:${email.toLowerCase()}`);
+  const limitByIp = await checkAuthRateLimit(`login:ip:${ip}`);
   if (!limitByEmail.allowed || !limitByIp.allowed) {
     const retry = Math.max(limitByEmail.retryAfter || 0, limitByIp.retryAfter || 0);
     return {
@@ -358,8 +358,8 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
   // confirmer/infirmer l'existence du compte.
   const ip = await getClientIp();
   const emailLower = validation.data.email.toLowerCase();
-  const limitByEmail = checkAuthRateLimit(`reset:email:${emailLower}`);
-  const limitByIp = checkAuthRateLimit(`reset:ip:${ip}`);
+  const limitByEmail = await checkAuthRateLimit(`reset:email:${emailLower}`);
+  const limitByIp = await checkAuthRateLimit(`reset:ip:${ip}`);
   if (!limitByEmail.allowed || !limitByIp.allowed) {
     return {
       success:
