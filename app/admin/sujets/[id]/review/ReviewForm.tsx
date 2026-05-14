@@ -26,7 +26,7 @@ import {
   Pencil,
   RotateCcw
 } from 'lucide-react'
-import { SubmissionPreview } from '@/components/admin/SubmissionPreview'
+import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { useToast } from '@/lib/hooks/useToast'
 
@@ -1429,25 +1429,7 @@ export function ReviewForm({ submission }: { submission: Submission }) {
               maxHeight: '600px',
               overflow: 'auto'
             }}>
-              <SubmissionPreview
-                content={submission.content}
-                submission={{
-                  title: formData.titre || submission.title,
-                  matiere: formData.matiere || submission.matiere,
-                  examType: formData.type || submission.examType,
-                  anneeScolaire: formData.annee || submission.anneeScolaire,
-                  serie: formData.serie || submission.serie,
-                  filiere: formData.filiere || submission.filiere,
-                  duree: formData.duree || submission.duree,
-                  pages: formData.pages || submission.pages,
-                  coefficient: formData.coefficient || submission.coefficient,
-                  difficulte: formData.difficulte || submission.difficulte,
-                  description: formData.description || submission.description,
-                  prix: formData.credits || submission.prix,
-                  authorPrenom: submission.authorPrenom,
-                  authorNom: submission.authorNom
-                }}
-              />
+              <SubjectRenderer content={submission.content} />
             </div>
           </div>
         )}
