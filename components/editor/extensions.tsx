@@ -208,7 +208,7 @@ export const ExerciceExtension = Node.create({
     return {
       numero:    { default: '?' },
       points:    { default: 10 },
-      hasPoints: { default: true },
+      hasPoints: { default: null },
       resetNumbering: { default: false },
     }
   },
@@ -302,7 +302,7 @@ export const ProblemeExtension = Node.create({
     return {
       numero:    { default: '?' },
       points:    { default: 10 },
-      hasPoints: { default: true },
+      hasPoints: { default: null },
       resetNumbering: { default: false },
     }
   },
@@ -355,7 +355,7 @@ function QuestionView({ node, updateAttributes, deleteNode, getPos, editor }: an
     }
   }, [autoIndex, node.attrs.resetNumbering])
 
-  const hasPoints = node.attrs.hasPoints !== false
+  const hasPoints = node.attrs.hasPoints === true
   const togglePoints = () => updateAttributes({ hasPoints: !hasPoints })
 
   return (
@@ -416,7 +416,7 @@ export const QuestionExtension = Node.create({
     return {
       numero:    { default: '?' },
       points:    { default: 2 },
-      hasPoints: { default: false },
+      hasPoints: { default: null },
       resetNumbering: { default: false },
     }
   },
