@@ -116,6 +116,9 @@ function handleProviderError(err: unknown, providerId: string): AICorrectionResp
     if (raw.includes('insufficient_quota') || raw.includes('quota')) {
       return { success: false, error: 'Le quota API du provider IA actif est épuisé. Réessayez plus tard ou changez de provider dans /admin/configuration.' }
     }
+    if (!err.status && (raw.includes('connection error') || raw.includes('fetch failed') || raw.includes('econnreset') || raw.includes('etimedout'))) {
+      return { success: false, error: 'Impossible de joindre l\'IA (problème réseau temporaire). Réessayez dans quelques secondes.' }
+    }
     if (err.status === 408) {
       return { success: false, error: 'Le modèle IA a mis trop de temps à répondre (timeout 60s). Réessayez.' }
     }

@@ -15,7 +15,7 @@ export function getAnthropic(): Anthropic {
     if (!process.env.ANTHROPIC_API_KEY) {
       throw new Error('ANTHROPIC_API_KEY manquante dans .env.local')
     }
-    globalForClaude.__anthropic = new Anthropic()
+    globalForClaude.__anthropic = new Anthropic({ maxRetries: 2 })
   }
   return globalForClaude.__anthropic
 }
