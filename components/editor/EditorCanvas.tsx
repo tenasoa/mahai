@@ -2,7 +2,8 @@
 
 import 'katex/dist/katex.min.css'
 
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useImperativeHandle, forwardRef } from 'react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
@@ -18,9 +19,18 @@ import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { common, createLowlight } from 'lowlight'
-import { useEffect, useCallback, useImperativeHandle, forwardRef } from 'react'
-import type { Editor } from '@tiptap/react'
-import type { Schema } from '@tiptap/pm/model'
+import {
+  PartieExtension,
+  ExerciceExtension,
+  ProblemeExtension,
+  EnonceExtension,
+  QuestionExtension,
+  AnnotationExtension,
+  FormulaExtension,
+  SchemaExtension,
+} from './extensions'
+import { InlineMathExtension } from './inlineMath'
+import { OutlineItem } from './types'
 
 /**
  * ProseMirror omet les attrs du JSON quand elles égalent les valeurs par
@@ -28,7 +38,7 @@ import type { Schema } from '@tiptap/pm/model'
  * nœuds qui ont des attrs définis — garantissant que `latex`, `hasPoints`,
  * etc. sont toujours persistés même à leur valeur par défaut.
  */
-function withFullAttrs(json: any, schema: Schema): any {
+function withFullAttrs(json: any, schema: { nodes: Record<string, { spec: { attrs?: Record<string, { default?: unknown }> } }> }): any {
   if (!json || typeof json !== 'object') return json
 
   function fix(node: any): any {
@@ -36,13 +46,13 @@ function withFullAttrs(json: any, schema: Schema): any {
 
     const nodeType = schema.nodes[node.type]
     if (nodeType) {
-      const schemaAttrs = nodeType.attrs as Record<string, { default: unknown }>
-      const attrNames = Object.keys(schemaAttrs)
+      const schemaAttrs = nodeType.spec.attrs
+      const attrNames = schemaAttrs ? Object.keys(schemaAttrs) : []
       if (attrNames.length > 0) {
         const current = node.attrs || {}
         const full: Record<string, unknown> = {}
         for (const name of attrNames) {
-          full[name] = name in current ? current[name] : schemaAttrs[name].default
+          full[name] = name in current ? current[name] : schemaAttrs![name].default
         }
         node = { ...node, attrs: full }
       }
@@ -57,19 +67,6 @@ function withFullAttrs(json: any, schema: Schema): any {
 
   return fix(json)
 }
-
-import {
-  PartieExtension,
-  ExerciceExtension,
-  ProblemeExtension,
-  EnonceExtension,
-  QuestionExtension,
-  AnnotationExtension,
-  FormulaExtension,
-  SchemaExtension,
-} from './extensions'
-import { InlineMathExtension } from './inlineMath'
-import { OutlineItem } from './types'
 
 const lowlight = createLowlight(common)
 
