@@ -49,6 +49,7 @@
     "katex": "^0.16.45",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.468.0",
+    "mathjax-full": "^3.2.2",
     "next": "16.2.6",
     "pdf-lib": "^1.17.1",
     "pg": "^8.13.1",

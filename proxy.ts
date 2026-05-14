@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { query } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 const EMAIL_VERIFIED_COOKIE = "mahai-email-verified";
 const ONBOARDING_PENDING_COOKIE = "mahai-onboarding-pending";
@@ -21,11 +22,11 @@ const ADMIN_ROUTES = ["/admin"];
 
 const authRoutes = ["/auth/login", "/auth/register"];
 
+/**
+ * Log de debug unifié via le logger structuré (évite console.log en dev).
+ */
 function debugLog(message: string) {
-  if (process.env.NODE_ENV !== "production") {
-    // eslint-disable-next-line no-console
-    console.log(message);
-  }
+  logger.debug(message);
 }
 
 export async function proxy(request: NextRequest) {

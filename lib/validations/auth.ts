@@ -1,14 +1,44 @@
 import { z } from 'zod'
 import { REGISTER_ROLE_VALUES } from '@/lib/auth-flow'
 
+/**
+ * Validation de force du mot de passe.
+ * Exige au moins 8 caractères, une majuscule, une minuscule,
+ * un chiffre et un caractère spécial.
+ *
+ * Utilisé à la fois pour l'inscription et la réinitialisation.
+ */
+function strongPassword() {
+  return z.string().superRefine((val, ctx) => {
+    if (val.length < 8) {
+      ctx.addIssue({ code: z.ZodIssueCode.too_small, minimum: 8, type: 'string', inclusive: true, message: 'Le mot de passe doit contenir au moins 8 caractères' })
+      return
+    }
+    if (!/[A-Z]/.test(val)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le mot de passe doit contenir au moins une majuscule' })
+      return
+    }
+    if (!/[a-z]/.test(val)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le mot de passe doit contenir au moins une minuscule' })
+      return
+    }
+    if (!/[0-9]/.test(val)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le mot de passe doit contenir au moins un chiffre' })
+      return
+    }
+    if (!/[^A-Za-z0-9]/.test(val)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le mot de passe doit contenir au moins un caractère spécial' })
+      return
+    }
+  })
+}
+
 export const registerSchema = z.object({
   email: z
     .string()
     .min(1, 'L\'e-mail est requis')
     .email('Adresse e-mail invalide'),
-  password: z
-    .string()
-    .min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+  password: strongPassword(),
   confirmPassword: z.string(),
   prenom: z
     .string()
@@ -69,9 +99,7 @@ export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Le token de réinitialisation est requis'),
-  password: z
-    .string()
-    .min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+  password: strongPassword(),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',

@@ -299,7 +299,7 @@ export async function syncAppUserWithAuthUser(
       welcomeCreditsGranted: welcomeBonusGranted,
     };
   } catch (error) {
-    console.error("Erreur synchronisation utilisateur auth:", error);
+    logger.authError("syncAppUserWithAuthUser", error);
 
     return {
       appUser: null,

@@ -1,136 +1,171 @@
 'use client'
 
 /**
- * Rend les formules LaTeX display ($$...$$) en images PNG via Canvas API natif.
+ * Rend les formules LaTeX en images PNG haute-résolution via MathJax 3 → SVG.
  *
- * N'utilise pas html2canvas ni aucun fetch réseau — évite les NetworkError
- * liées au chargement des polices KaTeX. La formule est d'abord simplifiée
- * en texte lisible (via simplifyLatexText), puis rendue sur canvas avec une
- * police monospace système, dans le même style que le bloc formulaBlock du PDF.
+ * Pipeline :
+ *  1. `tex2svg(latex)` côté navigateur (lite adaptor, sans DOM externe)
+ *     → SVG self-contained (fontCache: 'none' garantit que tous les glyphes
+ *     sont inline en tant que <path>, pas de référence externe).
+ *  2. Le SVG est dessiné dans un <canvas> à une résolution multipliée par
+ *     `SCALE` pour garder la netteté à l'impression PDF.
+ *  3. On exporte en PNG dataURL — exploitable par <Image src=...> de
+ *     @react-pdf/renderer.
+ *
+ * Le rendu est **fidèle au rendu KaTeX** que voient les utilisateurs dans
+ * l'app (mêmes glyphes math, espaces, tailles), ce qui résout le problème
+ * de formules en "code brut" dans le PDF.
+ *
+ * Tous les appels sont async — le pipeline image.onload est non-bloquant.
  */
 
-/** Même logique que simplifyLatex dans SubjectPDF — dupliquée pour éviter
- *  de rendre SubjectPDF importable côté lib (il est 'use client' react-pdf). */
-function simplifyLatexText(latex: string): string {
-  let s = latex
-  for (let pass = 0; pass < 5; pass++) {
-    s = s
-      .replace(/\\(?:text|mathrm|textbf|textit|textrm|mathbf|mathit|mathcal|operatorname)\{([^{}]*)\}/g, '$1')
-      .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2')
-      .replace(/\\sqrt\{([^{}]*)\}/g, 'sqrt($1)')
-      .replace(/\\left[\(\[{|]/g, '(').replace(/\\right[\)\]}|]/g, ')')
-  }
-  s = s
-    .replace(/\\rightarrow/g, '->').replace(/\\to\b/g, '->')
-    .replace(/\\leftarrow/g, '<-')
-    .replace(/\\Rightarrow/g, '=>').replace(/\\Leftarrow/g, '<=')
-    .replace(/\\leftrightarrow/g, '<->').replace(/\\Leftrightarrow/g, '<=>')
-    .replace(/\\geq\b/g, '>=').replace(/\\ge\b/g, '>=')
-    .replace(/\\leq\b/g, '<=').replace(/\\le\b/g, '<=')
-    .replace(/\\neq\b/g, '!=').replace(/\\ne\b/g, '!=')
-    .replace(/\\approx\b/g, '~=').replace(/\\equiv\b/g, '==')
-    .replace(/\\times\b/g, 'x').replace(/\\cdot\b/g, '.')
-    .replace(/\\pm\b/g, '+/-').replace(/\\infty\b/g, 'inf')
-    .replace(/\\[,;:!]/g, ' ').replace(/\\\\/g, ' ')
-    .replace(/\\_/g, '_').replace(/\\\^/g, '^')
-    .replace(/\\%/g, '%')
-    .replace(/\\[a-zA-Z]+/g, '')
-    .replace(/\^\{2\}/g, '²').replace(/\^\{3\}/g, '³')
-    .replace(/[{}]/g, '')
-    .replace(/\^2(?!\d)/g, '²').replace(/\^3(?!\d)/g, '³')
-    .replace(/\(([^()]+)\)\/\(([^()]+)\)/g, '$1/$2')
-    .replace(/\s+/g, ' ')
-    .trim()
-  // Translittération basique Unicode → ASCII
-  return s.replace(/[^\x00-\xFF]/g, ch => {
-    const map: Record<string, string> = {
-      '→': '->', '←': '<-', '⇒': '=>', '⇔': '<=>',
-      '≤': '<=', '≥': '>=', '≠': '!=', '≈': '~=',
-      '±': '+/-', '×': 'x', '−': '-', '∞': 'inf',
-      '∈': 'in', '∀': 'forall', '∃': 'exists',
-      'α': 'alpha', 'β': 'beta', 'γ': 'gamma', 'π': 'pi',
-      'θ': 'theta', 'λ': 'lambda', 'μ': 'mu', 'σ': 'sigma',
-      'Σ': 'Sigma', 'Δ': 'Delta', 'Ω': 'Omega',
+import { mathjax } from 'mathjax-full/js/mathjax.js'
+import { TeX } from 'mathjax-full/js/input/tex.js'
+import { SVG } from 'mathjax-full/js/output/svg.js'
+import { liteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor.js'
+import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html.js'
+import { AllPackages } from 'mathjax-full/js/input/tex/AllPackages.js'
+
+/** Résolution PDF : 3× → texte vectoriel net même imprimé. */
+const SCALE = 3
+
+/* ─────────────────────────────────────────────────────────────────
+   MathJax setup — singleton, créé une seule fois par session
+   ──────────────────────────────────────────────────────────────── */
+let _mathjaxDoc: ReturnType<typeof mathjax.document> | null = null
+let _adaptor: ReturnType<typeof liteAdaptor> | null = null
+
+function getMathJax() {
+  if (_mathjaxDoc && _adaptor) return { doc: _mathjaxDoc, adaptor: _adaptor }
+
+  _adaptor = liteAdaptor()
+  RegisterHTMLHandler(_adaptor)
+
+  const tex = new TeX({ packages: AllPackages })
+  // `fontCache: 'none'` → tous les glyphes sont inline (pas de <defs>
+  // partagé entre rendus), donc chaque SVG est autonome et convertible
+  // en image sans dépendance externe.
+  const svg = new SVG({ fontCache: 'none' })
+
+  _mathjaxDoc = mathjax.document('', { InputJax: tex, OutputJax: svg })
+  return { doc: _mathjaxDoc, adaptor: _adaptor }
+}
+
+/** Convertit une formule LaTeX en SVG string autonome. */
+function latexToSvgString(latex: string, display: boolean): string {
+  const { doc, adaptor } = getMathJax()
+  const node = doc.convert(latex, { display })
+  // `outerHTML` du conteneur <mjx-container> qui wrappe le <svg>.
+  // On extrait directement le <svg> pour éviter le wrapper custom.
+  const inner = adaptor.innerHTML(node)
+  return inner
+}
+
+/** Charge un SVG string dans une <img> et résout les dimensions naturelles. */
+function loadSvgAsImage(svgString: string): Promise<{ img: HTMLImageElement; w: number; h: number }> {
+  return new Promise((resolve, reject) => {
+    // S'assure que le namespace SVG est présent — MathJax l'omet parfois
+    // dans le innerHTML.
+    let svg = svgString
+    if (!/xmlns=/.test(svg)) {
+      svg = svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')
     }
-    return map[ch] ?? '?'
+
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const img = new Image()
+    img.onload = () => {
+      // Si le SVG a un viewBox mais pas width/height en pixels,
+      // naturalWidth/Height peuvent être 0. On lit alors le viewBox.
+      let w = img.naturalWidth
+      let h = img.naturalHeight
+      if (!w || !h) {
+        const m = /viewBox="([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)"/.exec(svg)
+        if (m) {
+          w = Math.ceil(parseFloat(m[3]))
+          h = Math.ceil(parseFloat(m[4]))
+        } else {
+          w = 200
+          h = 24
+        }
+      }
+      URL.revokeObjectURL(url)
+      resolve({ img, w, h })
+    }
+    img.onerror = (e) => {
+      URL.revokeObjectURL(url)
+      reject(new Error(`SVG load failed: ${String(e)}`))
+    }
+    img.src = url
   })
 }
 
-function renderFormulaToImage(formulaText: string): string {
-  const dpr = 2.5
-  const fontSize = 14
-  const px = 14   // padding horizontal
-  const py = 9    // padding vertical
-  const maxContentWidth = 430
-  const font = `${fontSize}px "Courier New", Courier, monospace`
-
-  // Mesure sur un canvas temporaire
-  const tmp = document.createElement('canvas').getContext('2d')!
-  tmp.font = font
-
-  // Découpe en lignes si le texte dépasse la largeur max
-  const tokens = formulaText.split(' ')
-  const lines: string[] = []
-  let cur = ''
-  for (const tok of tokens) {
-    const test = cur ? `${cur} ${tok}` : tok
-    if (tmp.measureText(test).width > maxContentWidth && cur) {
-      lines.push(cur); cur = tok
-    } else { cur = test }
-  }
-  if (cur) lines.push(cur)
-
-  const lineH = fontSize * 1.65
-  const contentW = Math.min(
-    Math.max(...lines.map(l => tmp.measureText(l).width)),
-    maxContentWidth
-  )
-  const canvasW = contentW + px * 2 + 4
-  const canvasH = lines.length * lineH + py * 2
-
+/** Rasterise une <img> à `SCALE` × résolution sur canvas avec fond blanc. */
+function rasterizeToPngDataUrl(
+  img: HTMLImageElement,
+  cssW: number,
+  cssH: number,
+  background: string = '#ffffff',
+): string {
   const canvas = document.createElement('canvas')
-  canvas.width  = Math.ceil(canvasW * dpr)
-  canvas.height = Math.ceil(canvasH * dpr)
-
-  const ctx = canvas.getContext('2d')!
-  ctx.scale(dpr, dpr)
-
-  // Fond
-  ctx.fillStyle = '#f7f7fb'
-  ctx.fillRect(0, 0, canvasW, canvasH)
-
-  // Bordure gauche
-  ctx.fillStyle = '#b0b0cc'
-  ctx.fillRect(0, 0, 3, canvasH)
-
-  // Texte
-  ctx.fillStyle = '#1a1a5a'
-  ctx.font = font
-  ctx.textBaseline = 'top'
-  lines.forEach((line, i) => {
-    ctx.fillText(line, px + 2, py + i * lineH, maxContentWidth)
-  })
-
+  canvas.width = Math.max(1, Math.ceil(cssW * SCALE))
+  canvas.height = Math.max(1, Math.ceil(cssH * SCALE))
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context indisponible')
+  ctx.fillStyle = background
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
   return canvas.toDataURL('image/png')
 }
 
-export function renderLatexFormulasToImages(
-  formulas: string[]
-): Record<string, string> {
-  const unique = [...new Set(formulas.filter(Boolean))]
-  const result: Record<string, string> = {}
+/** Métadonnées sur une formule pré-rendue (utiles pour préserver le ratio dans le PDF). */
+export interface RenderedLatexImage {
+  dataUrl: string
+  /** Largeur "logique" CSS — utile pour respecter le ratio dans <Image>. */
+  width: number
+  /** Hauteur "logique" CSS. */
+  height: number
+}
+
+/**
+ * Rend une liste de formules LaTeX en images PNG haute-résolution.
+ *
+ * Compatible avec l'appel existant `setLatexImages(map)` côté
+ * `components/sujet/SubjectPDF.tsx` — qui ne lit que les dataURL — mais
+ * renvoie aussi les dimensions pour un futur usage `<Image style={{...}}>`.
+ *
+ * @param formulas tableau de formules LaTeX (sans `$$`), display mode
+ * @returns dictionnaire `latex → RenderedLatexImage`
+ */
+export async function renderLatexFormulasToImages(
+  formulas: string[],
+): Promise<Record<string, string>> {
+  const unique = [...new Set(formulas.filter(Boolean).map((f) => f.trim()))]
+  const out: Record<string, string> = {}
+
+  // Rendu séquentiel : chaque formule met 5–30 ms, parallèle ne sert à rien
+  // (single thread) et évite les pics RAM si beaucoup de formules.
   for (const latex of unique) {
     try {
-      const text = simplifyLatexText(latex)
-      if (text) result[latex] = renderFormulaToImage(text)
+      const svgString = latexToSvgString(latex, /* display */ true)
+      const { img, w, h } = await loadSvgAsImage(svgString)
+      out[latex] = rasterizeToPngDataUrl(img, w, h)
     } catch (e) {
       console.warn('[latex-img] skipped:', latex, e)
     }
   }
-  return result
+  return out
 }
 
-/** Extrait les formules $$...$$ d'un texte markdown. */
+/** Variante synchrone qui n'attend pas le décodage des SVG — pour compat
+ *  ancien code. Retourne une promesse pour ne pas casser le type. */
+export async function renderLatexFormulasToImagesSync(
+  formulas: string[],
+): Promise<Record<string, string>> {
+  return renderLatexFormulasToImages(formulas)
+}
+
+/** Extrait les formules `$$...$$` d'un texte markdown. */
 export function extractDisplayFormulas(text: string): string[] {
   const re = /\$\$([\s\S]+?)\$\$/g
   const out: string[] = []

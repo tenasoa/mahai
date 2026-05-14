@@ -37,7 +37,7 @@ export function LuxuryNavbar() {
     ? [
         { label: "Tableau de bord", href: "/dashboard" },
         { label: "Catalogue", href: "/catalogue" },
-        { label: "Crédits", href: "/recharge" },
+        { label: "Recharge (Ar)", href: "/recharge" },
         { label: "Parrainage", href: "/parrainage" },
       ]
     : [

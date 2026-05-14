@@ -7,6 +7,10 @@ const __dirname = path.dirname(__filename)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // mathjax-full utilise des imports .js explicites + dynamic imports
+  // internes. `transpilePackages` force Webpack/Turbopack à le traiter
+  // comme du code source local, donc à résoudre correctement ses sous-modules.
+  transpilePackages: ['mathjax-full'],
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

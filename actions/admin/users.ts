@@ -127,7 +127,7 @@ export async function updateUserRoleAdmin(userId: string, newRole: string) {
   return { success: true }
 }
 
-export async function adjustUserCreditsAdmin(
+export async function adjustUserBalanceAdmin(
   userId: string,
   delta: number,
   reason: string,

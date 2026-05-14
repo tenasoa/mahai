@@ -135,7 +135,10 @@ export function ConsultClient({ subject }: Props) {
 
       const correctionForPDF = includeCorrection ? aiCorrection : null
       const formulas = collectAICorrectionDisplayFormulas(correctionForPDF?.result)
-      subjectPDFModule.setLatexImages(renderLatexFormulasToImages(formulas))
+      // Rendu des formules LaTeX en PNG haute-résolution via MathJax (vectoriel
+      // côté SVG, puis rasterisé à 3× pour rester net dans le PDF).
+      const latexImages = await renderLatexFormulasToImages(formulas)
+      subjectPDFModule.setLatexImages(latexImages)
       const SubjectPDF = subjectPDFModule.default
 
       const finalBlob = await pdf(

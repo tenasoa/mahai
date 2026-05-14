@@ -332,7 +332,11 @@ export async function logoutUser() {
   const cookieStore = await cookies();
 
   await supabase.auth.signOut();
+
+  // Nettoyer tous les cookies du flux d'authentification
   cookieStore.delete(EMAIL_VERIFIED_COOKIE);
+  cookieStore.delete(ONBOARDING_PENDING_COOKIE);
+  cookieStore.delete(POST_AUTH_REDIRECT_COOKIE);
 
   revalidatePath("/", "layout");
   redirect("/auth/login");
@@ -434,25 +438,17 @@ export async function resetPassword(formData: ResetPasswordFormData) {
   // Update password in Supabase
   const supabase = await createSupabaseAdminClient();
 
-  // Find Supabase Auth user by email to be 100% sure of the ID
-  const {
-    data: { users },
-    error: listError,
-  } = await supabase.auth.admin.listUsers();
+  // L'utilisateur app a le même ID que l'utilisateur Supabase Auth.
+  const { data: supabaseUser, error: getUserError } =
+    await supabase.auth.admin.getUserById(user.id);
 
-  if (listError) {
-    logger.authError("resetPassword listUsers", listError);
-    return { error: "Erreur lors de la récupération du compte" };
-  }
-
-  const supabaseUser = users.find((u) => u.email === resetToken.email);
-
-  if (!supabaseUser) {
+  if (getUserError || !supabaseUser?.user) {
+    logger.authError("resetPassword getUserById", getUserError, user.id);
     return { error: "Compte non trouvé dans le système d'authentification" };
   }
 
   const { error: updateError } = await supabase.auth.admin.updateUserById(
-    supabaseUser.id,
+    user.id,
     { password },
   );
 
@@ -602,5 +598,132 @@ export async function getCurrentUserData() {
   } catch (error) {
     logger.authError("getCurrentUser", error);
     return null;
+  }
+}
+
+/**
+ * Supprime définitivement le compte utilisateur (droit à l'effacement RGPD).
+ *
+ * Processus :
+ *  1. Anonymise les données personnelles dans la table User
+ *  2. Supprime le compte Supabase Auth
+ *  3. Nettoie les cookies de session
+ *
+ * Les achats, transactions et soumissions sont conservés de manière
+ * anonymisée pour l'intégrité comptable et la traçabilité.
+ */
+export async function deleteAccount() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { error: "Vous devez être connecté pour effectuer cette action" };
+  }
+
+  try {
+    // 1. Anonymiser les données personnelles
+    const anonymizedId = `deleted-${user.id.slice(0, 8)}`;
+    await query(
+      `UPDATE "User"
+       SET email = $1,
+           prenom = 'Utilisateur',
+           nom = 'Supprimé',
+           phone = NULL,
+           "profilePicture" = NULL,
+           bio = NULL,
+           etablissement = NULL,
+           "referralCode" = NULL,
+           "referredByUserId" = NULL,
+           "deletedAt" = NOW(),
+           "updatedAt" = NOW()
+       WHERE id = $2`,
+      [`${anonymizedId}@deleted.mahai.mg`, user.id]
+    );
+
+    // 2. Supprimer le compte Supabase Auth via l'admin client
+    const adminClient = await createSupabaseAdminClient();
+    const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
+
+    if (deleteError) {
+      logger.authError("deleteAccount Supabase", deleteError, user.id);
+      // L'anonymisation a réussi, on continue même si la suppression Auth échoue
+    }
+
+    // 3. Nettoyer les cookies
+    const cookieStore = await cookies();
+    cookieStore.delete(EMAIL_VERIFIED_COOKIE);
+    cookieStore.delete(ONBOARDING_PENDING_COOKIE);
+    cookieStore.delete(POST_AUTH_REDIRECT_COOKIE);
+
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error) {
+    logger.authError("deleteAccount", error, user.id);
+    return { error: "Erreur lors de la suppression du compte" };
+  }
+}
+
+/**
+ * Exporte les données personnelles de l'utilisateur (droit d'accès RGPD).
+ *
+ * Retourne un objet JSON structuré contenant :
+ *  - Les informations du profil utilisateur
+ *  - L'historique des achats
+ *  - L'historique des transactions (solde Ariary)
+ *  - Les soumissions de sujets (si contributeur)
+ */
+export async function exportUserData() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { error: "Vous devez être connecté pour effectuer cette action" };
+  }
+
+  try {
+    const userResult = await query(
+      `SELECT id, email, prenom, nom, pseudo, role, "balanceAr",
+              phone, "phoneVerified", "schoolLevel", "educationLevel",
+              etablissement, region, district, bio, "matieresPreferees",
+              "objectifsEtude", "referralCode", "createdAt", "updatedAt"
+       FROM "User" WHERE id = $1`,
+      [user.id]
+    );
+
+    const purchasesResult = await query(
+      `SELECT p.*, s.titre as "subjectTitle", s.matiere, s.type as "examType"
+       FROM "Purchase" p
+       LEFT JOIN "Subject" s ON p."subjectId" = s.id
+       WHERE p."userId" = $1
+       ORDER BY p."createdAt" DESC`,
+      [user.id]
+    );
+
+    const transactionsResult = await query(
+      `SELECT id, "amountAr", type, description, status, "paymentMethod", "createdAt"
+       FROM "Transaction"
+       WHERE "userId" = $1
+       ORDER BY "createdAt" DESC`,
+      [user.id]
+    );
+
+    return {
+      success: true,
+      data: {
+        profile: userResult.rows[0],
+        purchases: purchasesResult.rows,
+        transactions: transactionsResult.rows,
+        exportedAt: new Date().toISOString(),
+      },
+    };
+  } catch (error) {
+    logger.authError("exportUserData", error, user.id);
+    return { error: "Erreur lors de l'export des données" };
   }
 }
