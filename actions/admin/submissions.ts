@@ -60,7 +60,7 @@ export async function getPendingSubmissions() {
       u.id as "authorId"
     FROM "SubjectSubmission" s
     JOIN "User" u ON s."authorId" = u.id
-    WHERE s.status = 'SUBMITTED'
+    WHERE s.status IN ('SUBMITTED', 'RESUBMITTED')
     ORDER BY s."createdAt" DESC
   `)
   
@@ -131,7 +131,7 @@ export async function finalizeAndPublish(
 
   const newSubjectId = crypto.randomUUID()
   // Prix directement en Ariary (pas de conversion crédits)
-  const finalPriceAr = finalData.badge === 'FREE' ? 0 : Math.max(0, Number(submission.prix ?? 0))
+  const finalPriceAr = finalData.badge === 'FREE' ? 0 : Math.max(0, Number(finalData.prix ?? submission.prix ?? 0))
 
   const anneeString = String(finalData.annee || submission.anneeScolaire || new Date().getFullYear());
   const anneeInt = parseInt(anneeString.split('-')[0]) || new Date().getFullYear();
@@ -190,9 +190,9 @@ export async function finalizeAndPublish(
       submission.concoursType ?? null,
       submission.etablissement ?? null,
       submission.semestre ?? null,
-      submission.customMeta ?? null,
+      submission.customMeta != null ? JSON.stringify(submission.customMeta) : null,
       submissionId,
-      submission.content ?? null,
+      submission.content != null ? JSON.stringify(submission.content) : null,
       submission.contentType ?? null,
       submission.tags ?? null,
       submission.prixMode ?? null,
@@ -300,7 +300,7 @@ export async function requestRevision(submissionId: string, message: string) {
   )
   const submission = subRes.rows[0]
   if (!submission) throw new Error("Soumission introuvable")
-  if (submission.status !== 'SUBMITTED') {
+  if (!['SUBMITTED', 'RESUBMITTED'].includes(submission.status)) {
     throw new Error("Seule une soumission en attente de validation peut être renvoyée en révision")
   }
 
@@ -343,7 +343,7 @@ export async function getPendingSubmissionsCount(): Promise<number> {
     const adminUser = await checkAdmin()
     if (!adminUser) return 0
     const result = await query(
-      `SELECT COUNT(*)::int as count FROM "SubjectSubmission" WHERE status = 'SUBMITTED'`
+      `SELECT COUNT(*)::int as count FROM "SubjectSubmission" WHERE status IN ('SUBMITTED', 'RESUBMITTED')`
     )
     return Number(result.rows[0]?.count || 0)
   } catch (error) {
