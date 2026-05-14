@@ -40,6 +40,7 @@ function getRomanNumeral(n: number): string {
 function PartieView({ node, updateAttributes, deleteNode, getPos, editor }: any) {
   const [editingTitle, setEditingTitle] = useState(false)
   const [titre, setTitre] = useState(node.attrs.titre || '')
+  const isEditable = editor?.isEditable
 
   // Numérotation auto
   const pos = typeof getPos === 'function' ? getPos() : 0
@@ -65,7 +66,7 @@ function PartieView({ node, updateAttributes, deleteNode, getPos, editor }: any)
         <div className="ed-partie-header">
           <span className="ed-partie-label">
             <span className="ed-bloc-num">{displayNum}</span>
-            {editingTitle ? (
+            {isEditable && editingTitle ? (
               <input
                 className="ed-partie-title-input"
                 value={titre}
@@ -75,28 +76,34 @@ function PartieView({ node, updateAttributes, deleteNode, getPos, editor }: any)
                 onKeyDown={e => e.key === 'Enter' && handleTitreBlur()}
               />
             ) : (
-              <span className="ed-partie-title" onClick={() => setEditingTitle(true)}>
+              <span
+                className="ed-partie-title"
+                onClick={() => isEditable && setEditingTitle(true)}
+                style={{ cursor: isEditable ? 'pointer' : 'default' }}
+              >
                 {titre || 'Titre de la partie'}
               </span>
             )}
           </span>
-          <div className="ed-bloc-controls">
-            <button
-              type="button"
-              className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
-              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
-              }}
-              title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
-              style={{ fontSize: '11px', fontWeight: 'bold' }}
-            >
-              ↺ 1
-            </button>
-            <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
-          </div>
+          {isEditable && (
+            <div className="ed-bloc-controls">
+              <button
+                type="button"
+                className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
+                }}
+                title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
+                style={{ fontSize: '11px', fontWeight: 'bold' }}
+              >
+                ↺ 1
+              </button>
+              <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
+            </div>
+          )}
         </div>
         <NodeViewContent className="ed-partie-content" />
       </div>
@@ -113,9 +120,21 @@ export const PartieExtension = Node.create({
 
   addAttributes() {
     return {
-      numero: { default: '?' },
-      titre:  { default: '' },
-      resetNumbering: { default: false },
+      numero: {
+        default: '?',
+        parseHTML: element => element.getAttribute('data-numero'),
+        renderHTML: attributes => ({ 'data-numero': attributes.numero }),
+      },
+      titre:  {
+        default: '',
+        parseHTML: element => element.getAttribute('data-titre'),
+        renderHTML: attributes => ({ 'data-titre': attributes.titre }),
+      },
+      resetNumbering: {
+        default: false,
+        parseHTML: element => element.getAttribute('data-reset-numbering') === 'true',
+        renderHTML: attributes => ({ 'data-reset-numbering': attributes.resetNumbering }),
+      },
     }
   },
 
@@ -130,6 +149,7 @@ export const PartieExtension = Node.create({
 
 function ExerciceView({ node, updateAttributes, deleteNode, getPos, editor }: any) {
   const [points, setPoints] = useState(String(node.attrs.points || 10))
+  const isEditable = editor?.isEditable
 
   const pos = typeof getPos === 'function' ? getPos() : 0
   const autoIndex = getNodeIndex(editor, pos, 'exercice')
@@ -153,42 +173,54 @@ function ExerciceView({ node, updateAttributes, deleteNode, getPos, editor }: an
             Exercice {node.attrs.numero || autoIndex}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button
-              className={`ed-ctrl-btn ed-points-toggle${hasPoints ? ' active' : ''}`}
-              onClick={togglePoints}
-              title={hasPoints ? 'Retirer le barème' : 'Ajouter un barème'}
-            >
-              {hasPoints ? '⚖ Barème' : '⚖ Sans barème'}
-            </button>
+            {isEditable && (
+              <button
+                className={`ed-ctrl-btn ed-points-toggle${hasPoints ? ' active' : ''}`}
+                onClick={togglePoints}
+                title={hasPoints ? 'Retirer le barème' : 'Ajouter un barème'}
+              >
+                {hasPoints ? '⚖ Barème' : '⚖ Sans barème'}
+              </button>
+            )}
             {hasPoints && (
               <>
                 <span className="ed-points-label">Points :</span>
-                <input
-                  className="ed-points-input"
-                  type="number"
-                  min={0}
-                  value={points}
-                  onChange={e => setPoints(e.target.value)}
-                  onBlur={() => updateAttributes({ points: Number(points) })}
-                  style={{ width: '48px' }}
-                />
+                {isEditable ? (
+                  <input
+                    className="ed-points-input"
+                    type="number"
+                    min={0}
+                    value={points}
+                    onChange={e => setPoints(e.target.value)}
+                    onBlur={() => updateAttributes({ points: Number(points) })}
+                    style={{ width: '48px' }}
+                  />
+                ) : (
+                  <span className="ed-points-display" style={{ fontFamily: 'var(--mono)', fontSize: '0.85rem', color: 'var(--gold)' }}>
+                    {points}
+                  </span>
+                )}
               </>
             )}
-            <button
-              type="button"
-              className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
-              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
-              }}
-              title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
-              style={{ fontSize: '11px', fontWeight: 'bold' }}
-            >
-              ↺ 1
-            </button>
-            <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
+            {isEditable && (
+              <>
+                <button
+                  type="button"
+                  className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
+                  }}
+                  title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
+                  style={{ fontSize: '11px', fontWeight: 'bold' }}
+                >
+                  ↺ 1
+                </button>
+                <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
+              </>
+            )}
           </div>
         </div>
         <NodeViewContent className="ed-exercice-content" />
@@ -206,10 +238,26 @@ export const ExerciceExtension = Node.create({
 
   addAttributes() {
     return {
-      numero:    { default: '?' },
-      points:    { default: 10 },
-      hasPoints: { default: null },
-      resetNumbering: { default: false },
+      numero: {
+        default: '?',
+        parseHTML: element => element.getAttribute('data-numero'),
+        renderHTML: attributes => ({ 'data-numero': attributes.numero }),
+      },
+      points: {
+        default: 10,
+        parseHTML: element => Number(element.getAttribute('data-points')),
+        renderHTML: attributes => ({ 'data-points': attributes.points }),
+      },
+      hasPoints: {
+        default: true,
+        parseHTML: element => element.getAttribute('data-has-points') !== 'false',
+        renderHTML: attributes => ({ 'data-has-points': attributes.hasPoints }),
+      },
+      resetNumbering: {
+        default: false,
+        parseHTML: element => element.getAttribute('data-reset-numbering') === 'true',
+        renderHTML: attributes => ({ 'data-reset-numbering': attributes.resetNumbering }),
+      },
     }
   },
 
@@ -224,6 +272,7 @@ export const ExerciceExtension = Node.create({
 
 function ProblemeView({ node, updateAttributes, deleteNode, getPos, editor }: any) {
   const [points, setPoints] = useState(String(node.attrs.points || 10))
+  const isEditable = editor?.isEditable
 
   const pos = typeof getPos === 'function' ? getPos() : 0
   const autoIndex = getNodeIndex(editor, pos, 'probleme')
@@ -247,42 +296,54 @@ function ProblemeView({ node, updateAttributes, deleteNode, getPos, editor }: an
             Problème {node.attrs.numero || autoIndex}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button
-              className={`ed-ctrl-btn ed-points-toggle${hasPoints ? ' active' : ''}`}
-              onClick={togglePoints}
-              title={hasPoints ? 'Retirer le barème' : 'Ajouter un barème'}
-            >
-              {hasPoints ? '⚖ Barème' : '⚖ Sans barème'}
-            </button>
+            {isEditable && (
+              <button
+                className={`ed-ctrl-btn ed-points-toggle${hasPoints ? ' active' : ''}`}
+                onClick={togglePoints}
+                title={hasPoints ? 'Retirer le barème' : 'Ajouter un barème'}
+              >
+                {hasPoints ? '⚖ Barème' : '⚖ Sans barème'}
+              </button>
+            )}
             {hasPoints && (
               <>
                 <span className="ed-points-label">Points :</span>
-                <input
-                  className="ed-points-input"
-                  type="number"
-                  min={0}
-                  value={points}
-                  onChange={e => setPoints(e.target.value)}
-                  onBlur={() => updateAttributes({ points: Number(points) })}
-                  style={{ width: '48px' }}
-                />
+                {isEditable ? (
+                  <input
+                    className="ed-points-input"
+                    type="number"
+                    min={0}
+                    value={points}
+                    onChange={e => setPoints(e.target.value)}
+                    onBlur={() => updateAttributes({ points: Number(points) })}
+                    style={{ width: '48px' }}
+                  />
+                ) : (
+                  <span className="ed-points-display" style={{ fontFamily: 'var(--mono)', fontSize: '0.85rem', color: 'var(--gold)' }}>
+                    {points}
+                  </span>
+                )}
               </>
             )}
-            <button
-              type="button"
-              className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
-              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
-              }}
-              title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
-              style={{ fontSize: '11px', fontWeight: 'bold' }}
-            >
-              ↺ 1
-            </button>
-            <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
+            {isEditable && (
+              <>
+                <button
+                  type="button"
+                  className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
+                  }}
+                  title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
+                  style={{ fontSize: '11px', fontWeight: 'bold' }}
+                >
+                  ↺ 1
+                </button>
+                <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} title="Supprimer">✕</button>
+              </>
+            )}
           </div>
         </div>
         <NodeViewContent className="ed-exercice-content" />
@@ -300,10 +361,26 @@ export const ProblemeExtension = Node.create({
 
   addAttributes() {
     return {
-      numero:    { default: '?' },
-      points:    { default: 10 },
-      hasPoints: { default: null },
-      resetNumbering: { default: false },
+      numero: {
+        default: '?',
+        parseHTML: element => element.getAttribute('data-numero'),
+        renderHTML: attributes => ({ 'data-numero': attributes.numero }),
+      },
+      points: {
+        default: 10,
+        parseHTML: element => Number(element.getAttribute('data-points')),
+        renderHTML: attributes => ({ 'data-points': attributes.points }),
+      },
+      hasPoints: {
+        default: true,
+        parseHTML: element => element.getAttribute('data-has-points') !== 'false',
+        renderHTML: attributes => ({ 'data-has-points': attributes.hasPoints }),
+      },
+      resetNumbering: {
+        default: false,
+        parseHTML: element => element.getAttribute('data-reset-numbering') === 'true',
+        renderHTML: attributes => ({ 'data-reset-numbering': attributes.resetNumbering }),
+      },
     }
   },
 
@@ -316,13 +393,14 @@ export const ProblemeExtension = Node.create({
 
 // ─── ENONCE ────────────────────────────────────────────────────────────────
 
-function EnonceView({ deleteNode }: any) {
+function EnonceView({ deleteNode, editor }: any) {
+  const isEditable = editor?.isEditable
   return (
     <NodeViewWrapper>
       <div className="ed-enonce" data-type="enonce">
         <span className="ed-enonce-label">¶ Énoncé</span>
         <NodeViewContent className="ed-enonce-content" />
-        <button className="ed-ctrl-btn ed-ctrl-del ed-ctrl-abs" onClick={deleteNode}>✕</button>
+        {isEditable && <button className="ed-ctrl-btn ed-ctrl-del ed-ctrl-abs" onClick={deleteNode}>✕</button>}
       </div>
     </NodeViewWrapper>
   )
@@ -345,6 +423,7 @@ export const EnonceExtension = Node.create({
 
 function QuestionView({ node, updateAttributes, deleteNode, getPos, editor }: any) {
   const [pts, setPts] = useState(String(node.attrs.points || 2))
+  const isEditable = editor?.isEditable
   const pos = typeof getPos === 'function' ? getPos() : 0
   const autoIndex = getNodeIndex(editor, pos, 'question')
 
@@ -366,40 +445,50 @@ function QuestionView({ node, updateAttributes, deleteNode, getPos, editor }: an
         <div className="ed-question-meta">
           {hasPoints && (
             <>
-              <input
-                className="ed-points-input"
-                type="number"
-                min={0}
-                value={pts}
-                onChange={e => setPts(e.target.value)}
-                onBlur={() => updateAttributes({ points: Number(pts) })}
-                style={{ width: '40px' }}
-              />
+              {isEditable ? (
+                <input
+                  className="ed-points-input"
+                  type="number"
+                  min={0}
+                  value={pts}
+                  onChange={e => setPts(e.target.value)}
+                  onBlur={() => updateAttributes({ points: Number(pts) })}
+                  style={{ width: '40px' }}
+                />
+              ) : (
+                <span className="ed-points-display" style={{ fontFamily: 'var(--mono)', fontSize: '0.75rem', color: 'var(--gold)' }}>
+                  {pts}
+                </span>
+              )}
               <span className="ed-points-label">pts</span>
             </>
           )}
-          <button
-            className="ed-ctrl-btn ed-points-toggle"
-            onClick={togglePoints}
-            title={hasPoints ? 'Retirer les points' : 'Ajouter des points'}
-          >
-            {hasPoints ? '×' : '+'}
-          </button>
-          <button
-            type="button"
-            className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
-            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
-            }}
-            title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
-            style={{ fontSize: '11px', fontWeight: 'bold' }}
-          >
-            ↺ 1
-          </button>
-          <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode}>✕</button>
+          {isEditable && (
+            <>
+              <button
+                className="ed-ctrl-btn ed-points-toggle"
+                onClick={togglePoints}
+                title={hasPoints ? 'Retirer les points' : 'Ajouter des points'}
+              >
+                {hasPoints ? '×' : '+'}
+              </button>
+              <button
+                type="button"
+                className={`ed-ctrl-btn${node.attrs.resetNumbering ? ' active' : ''}`}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  updateAttributes({ resetNumbering: !node.attrs.resetNumbering });
+                }}
+                title={node.attrs.resetNumbering ? 'Continuer la numérotation' : 'Recommencer à 1'}
+                style={{ fontSize: '11px', fontWeight: 'bold' }}
+              >
+                ↺ 1
+              </button>
+              <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode}>✕</button>
+            </>
+          )}
         </div>
       </div>
     </NodeViewWrapper>
@@ -414,10 +503,26 @@ export const QuestionExtension = Node.create({
 
   addAttributes() {
     return {
-      numero:    { default: '?' },
-      points:    { default: 2 },
-      hasPoints: { default: null },
-      resetNumbering: { default: false },
+      numero: {
+        default: '?',
+        parseHTML: element => element.getAttribute('data-numero'),
+        renderHTML: attributes => ({ 'data-numero': attributes.numero }),
+      },
+      points: {
+        default: 2,
+        parseHTML: element => Number(element.getAttribute('data-points')),
+        renderHTML: attributes => ({ 'data-points': attributes.points }),
+      },
+      hasPoints: {
+        default: false,
+        parseHTML: element => element.getAttribute('data-has-points') === 'true',
+        renderHTML: attributes => ({ 'data-has-points': attributes.hasPoints }),
+      },
+      resetNumbering: {
+        default: false,
+        parseHTML: element => element.getAttribute('data-reset-numbering') === 'true',
+        renderHTML: attributes => ({ 'data-reset-numbering': attributes.resetNumbering }),
+      },
     }
   },
 
@@ -441,9 +546,10 @@ const ANNOTATION_META: Record<string, { icon: string; label: string; colorClass:
   correction: { icon: '✓',  label: 'Correction (masquée)', colorClass: 'sage'  },
 }
 
-function AnnotationView({ node, deleteNode }: any) {
+function AnnotationView({ node, deleteNode, editor }: any) {
   const meta = ANNOTATION_META[node.attrs.type] || ANNOTATION_META.note
   const [hidden, setHidden] = useState(node.attrs.type === 'correction')
+  const isEditable = editor?.isEditable
 
   return (
     <NodeViewWrapper>
@@ -456,7 +562,7 @@ function AnnotationView({ node, deleteNode }: any) {
               {hidden ? '[Afficher]' : '[Masquer]'}
             </button>
           )}
-          <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} style={{ marginLeft: 'auto' }}>✕</button>
+          {isEditable && <button className="ed-ctrl-btn ed-ctrl-del" onClick={deleteNode} style={{ marginLeft: 'auto' }}>✕</button>}
         </div>
         {!hidden && <NodeViewContent className="ed-annotation-content" />}
       </div>
@@ -471,7 +577,13 @@ export const AnnotationExtension = Node.create({
   defining: true,
 
   addAttributes() {
-    return { type: { default: 'note' } }
+    return {
+      type: {
+        default: 'note',
+        parseHTML: element => element.getAttribute('data-annotation-type'),
+        renderHTML: attributes => ({ 'data-annotation-type': attributes.type }),
+      }
+    }
   },
 
   parseHTML() { return [{ tag: 'div[data-type="annotation"]' }] },
@@ -483,8 +595,9 @@ export const AnnotationExtension = Node.create({
 
 // ─── FORMULA (KaTeX) ───────────────────────────────────────────────────────
 
-function FormulaView({ node, deleteNode }: any) {
+function FormulaView({ node, deleteNode, editor }: any) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const isEditable = editor?.isEditable
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -512,7 +625,7 @@ function FormulaView({ node, deleteNode }: any) {
     <NodeViewWrapper>
       <div className="ed-formula" data-type="formula">
         <div ref={containerRef} className="ed-formula-render" />
-        <button className="ed-ctrl-btn ed-ctrl-del ed-ctrl-abs" onClick={deleteNode}>✕</button>
+        {isEditable && <button className="ed-ctrl-btn ed-ctrl-del ed-ctrl-abs" onClick={deleteNode}>✕</button>}
       </div>
     </NodeViewWrapper>
   )
@@ -525,17 +638,25 @@ export const FormulaExtension = Node.create({
   draggable: true,
 
   addAttributes() {
-    return { latex: { default: null } }
+    return {
+      latex: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-latex'),
+        renderHTML: attributes => {
+          if (!attributes.latex) return {}
+          return { 'data-latex': attributes.latex }
+        },
+      }
+    }
   },
 
   parseHTML() {
     return [{
       tag: 'div[data-type="formula"]',
-      getAttrs: (el) => ({ latex: (el as HTMLElement).getAttribute('data-latex') || null }),
     }]
   },
-  renderHTML({ HTMLAttributes, node }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'formula', 'data-latex': node.attrs.latex || '' })]
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'formula' })]
   },
   addNodeView() { return ReactNodeViewRenderer(FormulaView) },
 })
@@ -544,13 +665,14 @@ export const FormulaExtension = Node.create({
 
 type UploadState = 'idle' | 'uploading' | 'done' | 'error'
 
-function SchemaView({ node, updateAttributes, deleteNode }: any) {
+function SchemaView({ node, updateAttributes, deleteNode, editor }: any) {
   const [uploadState, setUploadState] = useState<UploadState>(
     node.attrs.url ? 'done' : 'idle'
   )
   const [errorMsg, setErrorMsg] = useState('')
   const [progress, setProgress] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const isEditable = editor?.isEditable
 
   const handleFile = async (file: File) => {
     setUploadState('uploading')
@@ -626,12 +748,14 @@ function SchemaView({ node, updateAttributes, deleteNode }: any) {
               <span style={{ fontSize: '0.7rem', color: 'var(--text-4)', fontFamily: 'var(--mono)' }}>
                 {node.attrs.filename || 'image'}
               </span>
-              <button
-                className="ed-schema-replace-btn"
-                onClick={() => { updateAttributes({ url: '', filename: '' }); setUploadState('idle') }}
-              >
-                Remplacer
-              </button>
+              {isEditable && (
+                <button
+                  className="ed-schema-replace-btn"
+                  onClick={() => { updateAttributes({ url: '', filename: '' }); setUploadState('idle') }}
+                >
+                  Remplacer
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -673,15 +797,17 @@ function SchemaView({ node, updateAttributes, deleteNode }: any) {
           </div>
         )}
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
-          style={{ display: 'none' }}
-          onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
-        />
+        {isEditable && (
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+            style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+          />
+        )}
 
-        <button className="ed-ctrl-btn ed-ctrl-del ed-ctrl-abs" onClick={handleDelete}>✕</button>
+        {isEditable && <button className="ed-ctrl-btn ed-ctrl-del ed-ctrl-abs" onClick={handleDelete}>✕</button>}
       </div>
     </NodeViewWrapper>
   )
@@ -695,9 +821,21 @@ export const SchemaExtension = Node.create({
 
   addAttributes() {
     return {
-      url:      { default: '' },
-      filename: { default: '' },
-      mimeType: { default: '' },
+      url: {
+        default: '',
+        parseHTML: element => element.getAttribute('data-url'),
+        renderHTML: attributes => ({ 'data-url': attributes.url }),
+      },
+      filename: {
+        default: '',
+        parseHTML: element => element.getAttribute('data-filename'),
+        renderHTML: attributes => ({ 'data-filename': attributes.filename }),
+      },
+      mimeType: {
+        default: '',
+        parseHTML: element => element.getAttribute('data-mimetype'),
+        renderHTML: attributes => ({ 'data-mimetype': attributes.mimeType }),
+      },
     }
   },
 
