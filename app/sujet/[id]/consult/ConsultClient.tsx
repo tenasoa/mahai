@@ -7,7 +7,7 @@
  * - Bouton « Télécharger le PDF » :
  *     1. Appelle `recordSubjectDownload(subjectId)` côté serveur (insère une ligne
  *        SubjectDownload + génère un code filigrane unique).
- *     2. Génère le PDF avec @react-pdf/renderer et déclenche le download navigateur.
+ *     2. Envoie le HTML rendu à /api/pdf/generate (Playwright) et déclenche le download.
  *     3. Le filigrane et le pied de page contiennent le code de traçabilité.
  */
 
@@ -16,11 +16,11 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Download, Loader2, GraduationCap, Sparkles } from 'lucide-react'
 import { recordSubjectDownload } from '@/actions/subject-download'
+import { generateAndDownloadPDF } from '@/lib/pdf-client'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
 import { AICorrectionView } from '@/components/sujet/AICorrectionView'
 import { getAICorrectionHistory } from '@/actions/ai-correction'
 import { PDFGeneratingOverlay, AIProcessingLoadingCompact } from '@/components/ui/AIProcessingLoading'
-import { collectAICorrectionDisplayFormulas } from '@/lib/ai-correction-pdf-data'
 import type { AICorrectionHistoryItem } from '@/lib/ai-correction-history'
 
 interface ConsultSubject {
@@ -127,57 +127,38 @@ export function ConsultClient({ subject }: Props) {
         return
       }
 
-      const [{ pdf }, subjectPDFModule, { renderLatexFormulasToImages }] = await Promise.all([
-        import('@react-pdf/renderer'),
-        import('@/components/sujet/SubjectPDF'),
-        import('@/lib/render-latex-images'),
-      ])
+      if (!subjectContentRef.current) throw new Error('Contenu du sujet introuvable.')
 
-      const correctionForPDF = includeCorrection ? aiCorrection : null
-      const formulas = collectAICorrectionDisplayFormulas(correctionForPDF?.result)
-      subjectPDFModule.setLatexImages(renderLatexFormulasToImages(formulas))
-      const SubjectPDF = subjectPDFModule.default
+      // Construire le HTML du corps : sujet + correction IA optionnelle
+      let bodyHTML = subjectContentRef.current.outerHTML
+      if (includeCorrection && aiCorrection && aiCorrectionDOMRef.current) {
+        bodyHTML += `
+          <div class="pdf-correction-sep">
+            <div class="pdf-correction-sep-label">Correction IA</div>
+          </div>
+          <div class="ai-correction-section">${aiCorrectionDOMRef.current.outerHTML}</div>
+        `
+      }
 
-      const finalBlob = await pdf(
-        <SubjectPDF
-          content={subject.content}
-          meta={{
-            title: subject.titre,
-            matiere: subject.matiere,
-            examType: subject.examType || subject.type,
-            baccType: subject.baccType || undefined,
-            serie: subject.serie || undefined,
-            bepcOption: subject.bepcOption || undefined,
-            concoursType: subject.concoursType || undefined,
-            etablissement: subject.etablissement || undefined,
-            filiere: subject.filiere || undefined,
-            semestre: subject.semestre || undefined,
-            anneeScolaire: subject.anneeScolaire || subject.annee,
-            dateOfficielle: subject.dateOfficielle || undefined,
-            duree: subject.duree || undefined,
-            coefficient: subject.coefficient || undefined,
-            authorName: subject.authorName || undefined,
-          }}
-          trace={{
-            watermarkCode: trace.data.watermarkCode,
-            userName: trace.data.userName,
-            userEmail: trace.data.userEmail,
-            downloadedAt: trace.data.downloadedAt,
-          }}
-          aiCorrection={correctionForPDF?.result || null}
-          aiCorrectionMode={correctionForPDF?.mode}
-        />
-      ).toBlob()
-
-      // ── Étape 3 : Déclenchement du téléchargement ─────────────────────────
-      const url = URL.createObjectURL(finalBlob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `mahai-${slugifyForFilename(subject.titre)}-${trace.data.watermarkCode}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 5000)
+      await generateAndDownloadPDF({
+        bodyHTML,
+        meta: {
+          title: subject.titre,
+          matiere: subject.matiere,
+          examType: subject.examType || subject.type,
+          serie: subject.serie,
+          anneeScolaire: subject.anneeScolaire || subject.annee,
+          duree: subject.duree,
+          coefficient: subject.coefficient,
+        },
+        trace: {
+          watermarkCode: trace.data.watermarkCode,
+          userName: trace.data.userName,
+          userEmail: trace.data.userEmail,
+          downloadedAt: trace.data.downloadedAt,
+        },
+        filename: `mahai-${slugifyForFilename(subject.titre)}-${trace.data.watermarkCode}.pdf`,
+      })
     } catch (err) {
       console.error('[pdf] download error:', err)
       setDownloadError('Erreur lors de la génération du PDF.')
