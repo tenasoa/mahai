@@ -525,12 +525,17 @@ export const FormulaExtension = Node.create({
   draggable: true,
 
   addAttributes() {
-    return { latex: { default: '' } }
+    return { latex: { default: null } }
   },
 
-  parseHTML() { return [{ tag: 'div[data-type="formula"]' }] },
-  renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'formula' })]
+  parseHTML() {
+    return [{
+      tag: 'div[data-type="formula"]',
+      getAttrs: (el) => ({ latex: (el as HTMLElement).getAttribute('data-latex') || null }),
+    }]
+  },
+  renderHTML({ HTMLAttributes, node }) {
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'formula', 'data-latex': node.attrs.latex || '' })]
   },
   addNodeView() { return ReactNodeViewRenderer(FormulaView) },
 })

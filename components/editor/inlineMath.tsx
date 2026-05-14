@@ -41,7 +41,7 @@ function emitEdit(detail: { latex: string; pos: number | null }) {
 
 function InlineMathView({ node, selected, getPos }: any) {
   const ref = useRef<HTMLSpanElement>(null)
-  const latex = node.attrs.latex || ''
+  const latex = node.attrs.latex ?? ''
 
   useEffect(() => {
     if (!ref.current) return
@@ -101,7 +101,7 @@ export const InlineMathExtension = Node.create({
 
   addAttributes() {
     return {
-      latex: { default: '' },
+      latex: { default: null },
     }
   },
 
