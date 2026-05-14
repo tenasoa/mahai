@@ -220,7 +220,6 @@ export async function finalizeAndPublish(
       metadata: { submissionId, subjectId: newSubjectId },
     })
 
-    revalidatePath('/admin/soumissions')
     revalidatePath('/admin/sujets')
     revalidatePath('/catalogue')
     revalidatePath('/contributeur/sujets')
@@ -271,7 +270,6 @@ export async function rejectSubmission(submissionId: string, reason: string) {
     })
   }
 
-  revalidatePath('/admin/soumissions')
   revalidatePath('/contributeur/sujets')
   revalidatePath('/notifications')
 
@@ -325,7 +323,6 @@ export async function requestRevision(submissionId: string, message: string) {
     metadata: { submissionId },
   })
 
-  revalidatePath('/admin/soumissions')
   revalidatePath('/admin/sujets')
   revalidatePath('/contributeur/sujets')
   revalidatePath('/contributeur')
