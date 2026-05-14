@@ -149,7 +149,7 @@ export function ConsultClient({ subject }: Props) {
           serie: subject.serie,
           anneeScolaire: subject.anneeScolaire || subject.annee,
           duree: subject.duree,
-          coefficient: subject.coefficient,
+          coefficient: subject.coefficient != null ? Number(subject.coefficient) : undefined,
         },
         trace: {
           watermarkCode: trace.data.watermarkCode,

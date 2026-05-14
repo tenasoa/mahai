@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       // En production Vercel : utiliser @sparticuz/chromium-min + playwright-core
       // Installer via : pnpm add @sparticuz/chromium-min playwright-core
       try {
+        // @ts-ignore – dépendance optionnelle, non installée par défaut
         const chromium = await import('@sparticuz/chromium-min')
         executablePath = await chromium.default.executablePath(
           // URL publique du binaire Chromium (requis pour chromium-min)
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
       displayHeaderFooter: false,
     })
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
