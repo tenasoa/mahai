@@ -483,6 +483,15 @@ body {
   color: var(--gold);
 }
 
+.catalogue-modal-buy-error {
+  margin: 0.4rem 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ruby) 12%, transparent);
+  color: var(--ruby);
+  font-size: 0.8rem;
+}
+
 .catalogue-modal-buy-footnote {
   margin-top: -0.4rem;
   margin-bottom: 0.2rem;
