@@ -6,6 +6,7 @@ import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { useCatalogue } from "@/lib/hooks/useCatalogue";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { AuthModal } from "@/components/ui/AuthModal";
+import { ToastContainer } from "@/components/ui/ToastContainer";
 import { CataloguePageSkeleton } from "@/components/ui/PageSkeletons";
 import {
   PaperCard,
@@ -39,6 +40,7 @@ function CatalogueContent() {
 
   const pageSize = 9;
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
@@ -121,6 +123,7 @@ function CatalogueContent() {
       return;
     }
     setCurrentSubject(subject);
+    setPurchaseError(null);
     setBuyModalOpen(true);
   };
 
@@ -136,6 +139,7 @@ function CatalogueContent() {
   const confirmBuy = async () => {
     if (!currentSubject || !userId) return;
     setIsPurchasing(true);
+    setPurchaseError(null);
     try {
       const result = await purchaseCurrentUserSubject(currentSubject.id);
       if (result.success) {
@@ -147,14 +151,14 @@ function CatalogueContent() {
         setBuyModalOpen(false);
         router.push(`/sujet/${currentSubject.id}`);
       } else {
-        showToast(
-          "error",
-          "Erreur",
-          result.error || "Impossible de finaliser l'achat",
-        );
+        const msg = result.error || "Impossible de finaliser l'achat";
+        setPurchaseError(msg);
+        showToast("error", "Erreur", msg);
       }
     } catch {
-      showToast("error", "Erreur", "Une erreur inattendue est survenue");
+      const msg = "Une erreur inattendue est survenue";
+      setPurchaseError(msg);
+      showToast("error", "Erreur", msg);
     } finally {
       setIsPurchasing(false);
     }
@@ -452,6 +456,9 @@ function CatalogueContent() {
                 </strong>
               </div>
             </div>
+            {purchaseError && (
+              <p className="catalogue-modal-buy-error">{purchaseError}</p>
+            )}
             <p className="catalogue-modal-buy-footnote">
               Achat immédiat, accès permanent, correction IA incluse.
             </p>
@@ -480,6 +487,8 @@ function CatalogueContent() {
         onClose={() => setAuthModalOpen(false)}
         title="Authentification requise"
       />
+
+      <ToastContainer />
     </>
   );
 }
