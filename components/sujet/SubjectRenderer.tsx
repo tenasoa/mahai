@@ -105,7 +105,7 @@ export function SubjectRenderer({ content, lockAfter, lockOverlay }: Props) {
     ],
     content: renderContent || '',
     editable: false,
-    immediatelyRender: false,
+    immediatelyRender: true,
   })
 
   // Met à jour le rendu si le contenu change (changement de sujet, etc.)

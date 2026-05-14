@@ -39,9 +39,10 @@ function emitEdit(detail: { latex: string; pos: number | null }) {
   window.dispatchEvent(new CustomEvent('mahai:inline-math:edit', { detail }))
 }
 
-function InlineMathView({ node, selected, getPos }: any) {
+function InlineMathView({ node, selected, getPos, editor }: any) {
   const ref = useRef<HTMLSpanElement>(null)
   const latex = node.attrs.latex ?? ''
+  const isEditable = editor?.isEditable
 
   useEffect(() => {
     if (!ref.current) return
@@ -72,6 +73,7 @@ function InlineMathView({ node, selected, getPos }: any) {
   }, [latex])
 
   const handleClick = (e: React.MouseEvent) => {
+    if (!isEditable) return
     e.preventDefault()
     e.stopPropagation()
     const pos = typeof getPos === 'function' ? getPos() : null
@@ -81,10 +83,11 @@ function InlineMathView({ node, selected, getPos }: any) {
   return (
     <NodeViewWrapper
       as="span"
-      className={`ed-inline-math${selected ? ' ed-inline-math-selected' : ''}`}
+      className={`ed-inline-math${selected && isEditable ? ' ed-inline-math-selected' : ''}`}
       data-type="inline-math"
       onClick={handleClick}
-      title="Cliquer pour modifier la formule"
+      title={isEditable ? "Cliquer pour modifier la formule" : undefined}
+      style={{ cursor: isEditable ? 'pointer' : 'default' }}
     >
       <span ref={ref} className="ed-inline-math-render" />
     </NodeViewWrapper>
@@ -101,7 +104,14 @@ export const InlineMathExtension = Node.create({
 
   addAttributes() {
     return {
-      latex: { default: null },
+      latex: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-latex'),
+        renderHTML: attributes => {
+          if (!attributes.latex) return {}
+          return { 'data-latex': attributes.latex }
+        },
+      },
     }
   },
 
@@ -124,7 +134,6 @@ export const InlineMathExtension = Node.create({
       'span',
       mergeAttributes(HTMLAttributes, {
         'data-inline-math': '',
-        'data-latex': latex,
       }),
       `$${latex}$`,
     ]
