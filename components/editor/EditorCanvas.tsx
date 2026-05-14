@@ -3,9 +3,8 @@
 import 'katex/dist/katex.min.css'
 
 import { useImperativeHandle, forwardRef } from 'react'
-import type { Editor } from '@tiptap/react'
 import type { Schema } from '@tiptap/pm/model'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
