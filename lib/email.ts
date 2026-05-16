@@ -21,6 +21,7 @@ async function getResend() {
   }
 
   try {
+    // @ts-ignore - `resend` est une dependance optionnelle non listee dans package.json
     const { Resend } = await import('resend')
     resendClient = new Resend(process.env.RESEND_API_KEY)
     return resendClient
