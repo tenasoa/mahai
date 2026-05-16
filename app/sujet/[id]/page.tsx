@@ -717,22 +717,34 @@ export default function SujetDetailPage() {
               <BookOpen size={16} /> Lecture simple
             </button>
             <button
-              className={displayMode === 'exercice' ? 'active' : ''}
-              onClick={() => setDisplayMode('exercice')}
+              className="mode-disabled"
+              onClick={() => pushToast('info', 'Mode exercice — bientôt disponible. Cette fonctionnalité est en cours de développement.')}
+              disabled
             >
               <PencilLine size={16} /> Mode exercice
+              <span className="mode-coming-soon">Bientôt</span>
             </button>
             <button
-              className={displayMode === 'solo' ? 'active' : ''}
-              onClick={() => setDisplayMode('solo')}
+              className="mode-disabled"
+              onClick={() => pushToast('info', 'Examen blanc solo — bientôt disponible. Cette fonctionnalité est en cours de développement.')}
+              disabled
             >
               <Timer size={16} /> Examen blanc solo
+              <span className="mode-coming-soon">Bientôt</span>
             </button>
             <button
-              className={displayMode === 'groupe' ? 'active' : ''}
-              onClick={() => setDisplayMode('groupe')}
+              className="mode-disabled"
+              onClick={() => pushToast('info', 'Examen groupé — bientôt disponible. Cette fonctionnalité est en cours de développement.')}
+              disabled
             >
               <Users size={16} /> Examen groupé
+              <span className="mode-coming-soon">Bientôt</span>
+            </button>
+            <button
+              className="mode-correction-ia"
+              onClick={() => setShowDirectConfirm(true)}
+            >
+              <Sparkles size={16} /> Correction IA complète
             </button>
           </div>
 
