@@ -3,12 +3,39 @@
 import {
   Document,
   Page,
+  Font,
   Text,
   View,
   StyleSheet,
   pdf,
 } from '@react-pdf/renderer'
 import type { ReactElement } from 'react'
+
+// ── Polices (identiques à l'application) ──────────────────────────────
+
+Font.register({
+  family: 'Cormorant Garamond',
+  fonts: [
+    { src: '/fonts/CG-400.woff', fontWeight: 400, format: 'woff' },
+    { src: '/fonts/CG-400i.woff', fontWeight: 400, fontStyle: 'italic', format: 'woff' },
+    { src: '/fonts/CG-600.woff', fontWeight: 600, format: 'woff' },
+    { src: '/fonts/CG-700.woff', fontWeight: 700, format: 'woff' },
+    { src: '/fonts/CG-700i.woff', fontWeight: 700, fontStyle: 'italic', format: 'woff' },
+  ],
+})
+
+Font.register({
+  family: 'DM Sans',
+  fonts: [
+    { src: '/fonts/DMS-400.woff', fontWeight: 400, format: 'woff' },
+    { src: '/fonts/DMS-400i.woff', fontWeight: 400, fontStyle: 'italic', format: 'woff' },
+    { src: '/fonts/DMS-500.woff', fontWeight: 500, format: 'woff' },
+    { src: '/fonts/DMS-700.woff', fontWeight: 700, format: 'woff' },
+    { src: '/fonts/DMS-700i.woff', fontWeight: 700, fontStyle: 'italic', format: 'woff' },
+  ],
+})
+
+Font.register({ family: 'DM Mono', fonts: [{ src: '/fonts/DMM-400.woff', fontWeight: 400, format: 'woff' }] })
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -39,7 +66,7 @@ export interface SubjectMeta {
 const styles = StyleSheet.create({
   page: {
     padding: '2cm 2.2cm',
-    fontFamily: 'Times-Roman',
+    fontFamily: 'Cormorant Garamond',
     fontSize: 12,
     lineHeight: 1.65,
     color: '#1a1714',
@@ -52,11 +79,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Times-Bold',
+    fontFamily: 'Cormorant Garamond',
     color: '#C9A84C',
+    fontWeight: 700,
     marginBottom: 4,
   },
-  headerMeta: { fontSize: 9, color: '#666', fontFamily: 'Helvetica' },
+  headerMeta: { fontSize: 9, color: '#666', fontFamily: 'DM Sans' },
   metaRow: { flexDirection: 'row', gap: 12, marginBottom: 2 },
   partie: {
     marginTop: 20,
@@ -66,16 +94,18 @@ const styles = StyleSheet.create({
   },
   partieTitle: {
     fontSize: 15,
-    fontFamily: 'Times-Bold',
+    fontFamily: 'Cormorant Garamond',
     color: '#1c2b4a',
+    fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
   },
   exercice: { marginTop: 16, marginBottom: 8, paddingLeft: 6 },
   exerciceTitle: {
     fontSize: 13,
-    fontFamily: 'Times-Bold',
+    fontFamily: 'Cormorant Garamond',
     color: '#1a1714',
+    fontWeight: 700,
     marginBottom: 4,
   },
   enonce: {
@@ -86,7 +116,7 @@ const styles = StyleSheet.create({
   enonceLabel: {
     fontSize: 9,
     color: '#888',
-    fontFamily: 'Helvetica',
+    fontFamily: 'DM Sans',
     marginBottom: 4,
   },
   question: {
@@ -98,24 +128,25 @@ const styles = StyleSheet.create({
   },
   questionLabel: {
     fontSize: 11,
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'DM Sans',
     color: '#C9A84C',
+    fontWeight: 700,
     marginBottom: 4,
   },
   heading: { marginTop: 12, marginBottom: 4 },
-  heading1: { fontSize: 16, fontFamily: 'Times-Bold', color: '#1c2b4a' },
-  heading2: { fontSize: 14, fontFamily: 'Times-Bold', color: '#1c2b4a' },
-  heading3: { fontSize: 12, fontFamily: 'Times-Bold', color: '#333' },
+  heading1: { fontSize: 16, fontFamily: 'Cormorant Garamond', fontWeight: 700, color: '#1c2b4a' },
+  heading2: { fontSize: 14, fontFamily: 'Cormorant Garamond', fontWeight: 700, color: '#1c2b4a' },
+  heading3: { fontSize: 12, fontFamily: 'Cormorant Garamond', fontWeight: 700, color: '#333' },
   paragraph: { marginBottom: 4, textAlign: 'justify' as const },
-  textInline: { fontFamily: 'Times-Roman' },
+  textInline: { fontFamily: 'Cormorant Garamond' },
   mathInline: {
-    fontFamily: 'Courier',
+    fontFamily: 'DM Mono',
     fontSize: 10,
     backgroundColor: '#f5f5f2',
     padding: '1 3',
   },
   formulaBlock: {
-    fontFamily: 'Courier',
+    fontFamily: 'DM Mono',
     fontSize: 10,
     backgroundColor: '#f5f5f2',
     padding: '6 8',
@@ -123,10 +154,10 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   listItem: { marginLeft: 12, marginBottom: 2, flexDirection: 'row' as const },
-  bullet: { width: 12, fontFamily: 'Times-Roman' },
+  bullet: { width: 12, fontFamily: 'Cormorant Garamond' },
   listText: { flex: 1 },
   codeBlock: {
-    fontFamily: 'Courier',
+    fontFamily: 'DM Mono',
     fontSize: 9,
     backgroundColor: '#ede8e0',
     padding: 8,
@@ -140,14 +171,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f2',
   },
   tableCell: { flex: 1, padding: '3 5', fontSize: 9 },
-  tableCellHeader: { flex: 1, padding: '3 5', fontSize: 9, fontFamily: 'Helvetica-Bold' },
+  tableCellHeader: { flex: 1, padding: '3 5', fontSize: 9, fontFamily: 'DM Sans', fontWeight: 700 },
   annotation: {
     marginVertical: 4,
     padding: '4 8',
     backgroundColor: '#fff8e1',
     borderLeft: '2px solid #C9A84C',
     fontSize: 9,
-    fontFamily: 'Helvetica',
+    fontFamily: 'DM Sans',
     fontStyle: 'italic',
   },
   schema: {
@@ -158,7 +189,7 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
     fontSize: 9,
     color: '#888',
-    fontFamily: 'Helvetica',
+    fontFamily: 'DM Sans',
   },
   footer: {
     position: 'absolute',
@@ -168,7 +199,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 7,
     color: '#aaa',
-    fontFamily: 'Helvetica',
+    fontFamily: 'DM Sans',
   },
   watermark: {
     position: 'absolute',
@@ -182,7 +213,7 @@ const styles = StyleSheet.create({
   },
   watermarkText: {
     fontSize: 48,
-    fontFamily: 'Times-Bold',
+    fontFamily: 'Cormorant Garamond',
     color: '#000',
     transform: 'rotate(-35deg)',
   },
