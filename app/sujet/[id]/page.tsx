@@ -394,7 +394,7 @@ export default function SujetDetailPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Erreur inconnue' }))
-        setDownloadError(err.error || 'Téléchargement refusé.')
+        pushToast('error', err.error || 'Téléchargement refusé.')
         return
       }
 
@@ -412,7 +412,7 @@ export default function SujetDetailPage() {
       setTimeout(() => URL.revokeObjectURL(url), 5000)
     } catch (err) {
       console.error('PDF download error:', err)
-      setDownloadError('Erreur lors de la génération du PDF.')
+      pushToast('error', 'Erreur lors de la génération du PDF.')
     } finally {
       setIsDownloading(false)
     }
@@ -800,9 +800,6 @@ export default function SujetDetailPage() {
                   )}
                 </button>
               </div>
-              {downloadError && (
-                <p style={{ color: 'var(--ruby)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{downloadError}</p>
-              )}
 
               <div ref={subjectContentRef}>
                 <SubjectRenderer

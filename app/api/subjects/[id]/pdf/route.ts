@@ -50,9 +50,12 @@ export async function GET(
     const subjectRes = await query(
       `SELECT
          id, titre, type, matiere, annee, serie, pages, prix,
-         difficulte, duree, coefficient, "authorName", etablissement,
+         difficulte, duree, coefficient, etablissement,
          description, content
-       FROM "Subject" WHERE id = $1 LIMIT 1`,
+         u.prenom || ' ' || u.nom AS "authorName"
+       FROM "Subject" s
+       LEFT JOIN "User" u ON s."authorId" = u.id
+       WHERE s.id = $1 LIMIT 1`,
       [id],
     )
 
