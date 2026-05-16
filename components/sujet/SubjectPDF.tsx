@@ -34,7 +34,7 @@ import type { AICorrectionResult, AICorrectionItem } from '@/lib/ai/schemas'
 
 let _fontsRegistered = false
 
-function ensureFonts() {
+export function ensureFonts() {
   if (_fontsRegistered) return
   _fontsRegistered = true
 
