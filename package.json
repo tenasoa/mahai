@@ -61,6 +61,7 @@
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "resend": "^6.12.3",
     "scoop": "^0.0.2",
     "stripe": "^22.1.0",
     "supabase": "^2.98.0",

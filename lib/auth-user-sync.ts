@@ -7,6 +7,7 @@ import {
   type User as AppUser,
 } from "@/lib/sql-queries";
 import { getReferralSettings } from "./settings";
+import { logger } from "@/lib/logger";
 import type { User as SupabaseAuthUser } from "@supabase/supabase-js";
 
 
