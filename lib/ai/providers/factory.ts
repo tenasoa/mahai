@@ -39,7 +39,7 @@ export interface AIRuntimeConfig {
 }
 
 const DEFAULT_MODEL_BY_PROVIDER: Record<AIProviderId, string> = {
-  claude: 'claude-sonnet-4-6',
+  claude: 'claude-sonnet-4-20250514',
   perplexity: 'sonar-pro',
   openai: 'gpt-5.4-mini',
   openrouter: 'z-ai/glm-4.5-air:free',
