@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 import { ContributorLayout } from './ContributorLayout'
 import './contributeur.css'
 
@@ -9,10 +9,8 @@ export const metadata = {
 }
 
 export default async function ContributorRootLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) {
+  const auth = await requireAuth()
+  if (isAuthFailure(auth)) {
     redirect('/auth/login')
   }
 
@@ -25,7 +23,7 @@ export default async function ContributorRootLayout({ children }: { children: Re
       (SELECT COUNT(*) FROM "Subject" WHERE "authorId" = u.id) as "totalSubjects"
      FROM "User" u
      WHERE u.id = $1 LIMIT 1`,
-    [session.user.id]
+    [auth.userId]
   )
   
   const userData = dataRes.rows[0]

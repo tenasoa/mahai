@@ -1,6 +1,6 @@
 import { query } from '@/lib/db'
 import Link from 'next/link'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 import { redirect } from 'next/navigation'
 import { FileText, Users, CreditCard, TrendingUp, AlertCircle, CheckCircle2, Clock, ArrowRight, Sparkles, Settings, Smartphone, Package, Newspaper } from 'lucide-react'
 import { UserAvatar } from '@/components/ui/UserAvatar'
@@ -67,10 +67,8 @@ function formatMoney(amount: number) {
 }
 
 export default async function AdminDashboard() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) redirect('/auth/login')
+  const auth = await requireAuth()
+  if (isAuthFailure(auth)) redirect('/auth/login')
 
   const data = await getDashboardData()
 

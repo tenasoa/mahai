@@ -1,19 +1,17 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
 import { redirect } from 'next/navigation'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 import ContributorSubjectsClient from './SubjectsClient'
 
 async function getContributorSubjects() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) redirect('/auth/login')
+  const auth = await requireAuth()
+  if (isAuthFailure(auth)) redirect('/auth/login')
 
   // Récupérer l'utilisateur
-  const userResult = await query('SELECT role, prenom, nom FROM "User" WHERE id = $1', [session.user.id])
+  const userResult = await query('SELECT role, prenom, nom FROM "User" WHERE id = $1', [auth.userId])
   const user = userResult.rows[0]
 
-  if (!['CONTRIBUTEUR', 'PROFESSEUR', 'ADMIN'].includes(user.role)) {
+  if (!user || !['CONTRIBUTEUR', 'PROFESSEUR', 'ADMIN'].includes(user.role)) {
     redirect('/dashboard')
   }
 
@@ -32,7 +30,7 @@ async function getContributorSubjects() {
      WHERE s."authorId" = $1
      GROUP BY s.id
      ORDER BY s."createdAt" DESC`,
-    [session.user.id]
+    [auth.userId]
   )
 
   // Compter par statut
@@ -41,7 +39,7 @@ async function getContributorSubjects() {
      FROM "Subject"
      WHERE "authorId" = $1
      GROUP BY status`,
-    [session.user.id]
+    [auth.userId]
   )
 
   const stats = {
@@ -62,7 +60,7 @@ async function getContributorSubjects() {
      FROM "SubjectSubmission"
      WHERE "authorId" = $1
      ORDER BY "createdAt" DESC`,
-    [session.user.id]
+    [auth.userId]
   )
 
   // Compter les soumissions par statut
