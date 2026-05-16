@@ -51,7 +51,7 @@ export async function GET(
       `SELECT
          id, titre, type, matiere, annee, serie, pages, prix,
          difficulte, duree, coefficient, etablissement,
-         description, content
+         description, content,
          u.prenom || ' ' || u.nom AS "authorName"
        FROM "Subject" s
        LEFT JOIN "User" u ON s."authorId" = u.id
