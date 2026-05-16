@@ -72,6 +72,21 @@ export async function proxy(request: NextRequest) {
     // getSession() échoue rarement ; si c'est le cas, pas de session.
   }
 
+  // Vérification serveur en arrière-plan (non-bloquant, fire-and-forget).
+  // getSession() lit les cookies locaux (~5ms), getUser() contacte Supabase
+  // pour confirmer que le token n'a pas été révoqué côté serveur.
+  // Si getUser() échoue, on log l'erreur mais on ne bloque ni ne redirige :
+  // la décision d'auth est déjà prise via getSession(). Le prochain cycle
+  // du middleware verra la session expirée naturellement.
+  if (effectiveUser) {
+    supabase.auth.getUser().then(({ error }) => {
+      if (error) {
+        debugLog(`[Auth] Background getUser() failed: ${error.message} - token may be revoked, session will expire naturally`);
+      }
+    }).catch(() => {
+    });
+  }
+
   const { pathname } = request.nextUrl;
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
