@@ -2,7 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import { query } from '@/lib/db'
 import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 import { getSubjectDraft } from '../../editor-actions'
-import EditorClient from '../../nouveau/EditorClient'
+import EditorClient from '../../nouveau/EditorClientLazy'
 
 export const metadata = {
   title: 'Modifier le sujet — Mah.AI',

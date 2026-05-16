@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { query } from '@/lib/db'
 import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
-import EditorClient from './EditorClient'
+import EditorClient from './EditorClientLazy'
 
 export const metadata = {
   title: 'Nouveau sujet — Mah.AI',
