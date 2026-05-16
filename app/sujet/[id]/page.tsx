@@ -717,6 +717,12 @@ export default function SujetDetailPage() {
               <BookOpen size={16} /> Lecture simple
             </button>
             <button
+              className="mode-correction-ia"
+              onClick={() => setShowDirectConfirm(true)}
+            >
+              <Sparkles size={16} /> Correction IA complète
+            </button>
+            <button
               className="mode-disabled"
               onClick={() => pushToast('info', 'Mode exercice — bientôt disponible. Cette fonctionnalité est en cours de développement.')}
               disabled
@@ -739,12 +745,6 @@ export default function SujetDetailPage() {
             >
               <Users size={16} /> Examen groupé
               <span className="mode-coming-soon">Bientôt</span>
-            </button>
-            <button
-              className="mode-correction-ia"
-              onClick={() => setShowDirectConfirm(true)}
-            >
-              <Sparkles size={16} /> Correction IA complète
             </button>
           </div>
 
