@@ -26,36 +26,41 @@ import type { AICorrectionResult, AICorrectionItem } from '@/lib/ai/schemas'
 
 /* ─────────────────────────────────────────────────────────────────
    Polices — on utilise les polices PDF intégrées (Times/Helvetica/Courier)
-   que l'on remplace maintenant par les vraies polices du site. Le bug
-   "unsupported number" de fontkit est contourné via le callback de
-   césure qui évite les calculs de métriques problématiques.
+   que l'on remplace maintenant par les vraies polices du site.
+   Le bug "unsupported number" de fontkit est contourné via le
+   callback de césure. Font.register() est dans ensureFonts() pour
+   éviter "CJS module can't be async" avec Turbopack.
    ──────────────────────────────────────────────────────────────── */
 
-// Polices identiques à l'application (Cormorant Garamond / DM Sans / DM Mono)
-Font.register({
-  family: 'Cormorant Garamond',
-  fonts: [
-    { src: '/fonts/CG-400.woff', fontWeight: 400, format: 'woff' },
-    { src: '/fonts/CG-400i.woff', fontWeight: 400, fontStyle: 'italic', format: 'woff' },
-    { src: '/fonts/CG-600.woff', fontWeight: 600, format: 'woff' },
-    { src: '/fonts/CG-700.woff', fontWeight: 700, format: 'woff' },
-    { src: '/fonts/CG-700i.woff', fontWeight: 700, fontStyle: 'italic', format: 'woff' },
-  ],
-})
-Font.register({
-  family: 'DM Sans',
-  fonts: [
-    { src: '/fonts/DMS-400.woff', fontWeight: 400, format: 'woff' },
-    { src: '/fonts/DMS-400i.woff', fontWeight: 400, fontStyle: 'italic', format: 'woff' },
-    { src: '/fonts/DMS-500.woff', fontWeight: 500, format: 'woff' },
-    { src: '/fonts/DMS-700.woff', fontWeight: 700, format: 'woff' },
-    { src: '/fonts/DMS-700i.woff', fontWeight: 700, fontStyle: 'italic', format: 'woff' },
-  ],
-})
-Font.register({ family: 'DM Mono', fonts: [{ src: '/fonts/DMM-400.woff', fontWeight: 400, format: 'woff' }] })
+let _fontsRegistered = false
 
-Font.registerHyphenationCallback((word) => [word])
-  Font.registerHyphenationCallback(word => [word])
+function ensureFonts() {
+  if (_fontsRegistered) return
+  _fontsRegistered = true
+
+  Font.register({
+    family: 'Cormorant Garamond',
+    fonts: [
+      { src: '/fonts/CG-400.woff', fontWeight: 400, format: 'woff' },
+      { src: '/fonts/CG-400i.woff', fontWeight: 400, fontStyle: 'italic', format: 'woff' },
+      { src: '/fonts/CG-600.woff', fontWeight: 600, format: 'woff' },
+      { src: '/fonts/CG-700.woff', fontWeight: 700, format: 'woff' },
+      { src: '/fonts/CG-700i.woff', fontWeight: 700, fontStyle: 'italic', format: 'woff' },
+    ],
+  })
+  Font.register({
+    family: 'DM Sans',
+    fonts: [
+      { src: '/fonts/DMS-400.woff', fontWeight: 400, format: 'woff' },
+      { src: '/fonts/DMS-400i.woff', fontWeight: 400, fontStyle: 'italic', format: 'woff' },
+      { src: '/fonts/DMS-500.woff', fontWeight: 500, format: 'woff' },
+      { src: '/fonts/DMS-700.woff', fontWeight: 700, format: 'woff' },
+      { src: '/fonts/DMS-700i.woff', fontWeight: 700, fontStyle: 'italic', format: 'woff' },
+    ],
+  })
+  Font.register({ family: 'DM Mono', fonts: [{ src: '/fonts/DMM-400.woff', fontWeight: 400, format: 'woff' }] })
+
+  Font.registerHyphenationCallback((word) => [word])
 }
 
 /* ─────────────────────────────────────────────────────────────────
