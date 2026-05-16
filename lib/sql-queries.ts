@@ -124,9 +124,27 @@ export async function createUser(userData: Partial<User>): Promise<User> {
 }
 
 // Subject queries
-export async function getSubjects(filters: any = {}, userId?: string) {
+interface SubjectFilters {
+  search?: string
+  types?: string[]
+  matiere?: string
+  minRating?: number
+  maxPrice?: number
+  sortBy?: 'rating' | 'price_asc' | 'price_desc'
+  limit?: number
+  page?: number
+}
+
+interface SubjectQueryResult {
+  subjects: unknown[]
+  total: number
+  totalPages: number
+  currentPage: number
+}
+
+export async function getSubjects(filters: SubjectFilters = {}, userId?: string): Promise<SubjectQueryResult> {
   let whereClause = 'WHERE 1=1'
-  const params: any[] = []
+  const params: unknown[] = []
   let paramIndex = 1
 
   // Build WHERE clause based on filters

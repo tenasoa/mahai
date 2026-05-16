@@ -54,3 +54,24 @@ export async function transaction<T>(callback: (client: any) => Promise<T>): Pro
 }
 
 export default pool
+
+// ── Pool metrics ────────────────────────────────────────────────────────
+
+export interface PoolMetrics {
+  totalCount: number
+  idleCount: number
+  waitingCount: number
+}
+
+export function getPoolMetrics(): PoolMetrics {
+  return {
+    totalCount: pool.totalCount,
+    idleCount: pool.idleCount,
+    waitingCount: pool.waitingCount,
+  }
+}
+
+// Log les événements d'erreur du pool (connexion perdue, timeout, etc.)
+pool.on('error', (err) => {
+  logger.error('[DB Pool] Unexpected pool error', err.message)
+})

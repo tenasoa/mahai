@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { verifyCsrf } from "@/lib/csrf";
 import { query } from "@/lib/db";
 
 async function checkAdmin() {
@@ -51,7 +52,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  return handlePost(req)
+}
+
+async function handlePost(request: NextRequest) {
   const auth = await checkAdmin();
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -120,7 +127,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+export async function PATCH(req: NextRequest) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  return handlePatch(req)
+}
+
+async function handlePatch(request: NextRequest) {
   const auth = await checkAdmin();
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -189,7 +202,13 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(req: NextRequest) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  return handleDelete(req)
+}
+
+async function handleDelete(request: NextRequest) {
   const auth = await checkAdmin();
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 

@@ -8,6 +8,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(20),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
   DATABASE_URL: z.string().startsWith('postgresql://'),
+  DIRECT_URL: z.string().startsWith('postgresql://').optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
 })
 

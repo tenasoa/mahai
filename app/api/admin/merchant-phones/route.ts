@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verifyCsrf } from '@/lib/csrf'
 import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
@@ -37,8 +38,11 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/admin/merchant-phones - Créer un numéro
-export async function POST(request: Request) {
+export async function POST(req: Request) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  const request = req
+  // POST /api/admin/merchant-phones - Créer un numéro
   const auth = await checkAdmin(request)
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -63,8 +67,11 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH /api/admin/merchant-phones - Mettre à jour
-export async function PATCH(request: Request) {
+export async function PATCH(req: Request) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  const request = req
+  // PATCH /api/admin/merchant-phones - Mettre à jour
   const auth = await checkAdmin(request)
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -101,8 +108,11 @@ export async function PATCH(request: Request) {
   }
 }
 
-// DELETE /api/admin/merchant-phones?id=xxx - Supprimer
-export async function DELETE(request: Request) {
+export async function DELETE(req: Request) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  const request = req
+  // DELETE /api/admin/merchant-phones?id=xxx - Supprimer
   const auth = await checkAdmin(request)
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

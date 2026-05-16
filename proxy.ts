@@ -116,10 +116,11 @@ export async function proxy(request: NextRequest) {
 
       debugLog(`[Admin Check] Access granted for ${effectiveUser.id}`);
     } catch (error) {
-      console.error(`[Admin Check] Error checking role for ${effectiveUser.id}:`, error);
-      // En cas d'erreur DB transiente, laisser passer (la page vérifiera le rôle
-      // via ses propres server actions). Évite la redirection vers /dashboard.
-      debugLog(`[Admin Check] DB error, allowing through — page will re-verify`);
+      // En cas d'erreur DB, refuser l'accès par sécurité. Une panne DB
+      // ne doit jamais ouvrir les routes admin. L'utilisateur est redirigé
+      // vers la landing page.
+      logger.error('[Admin Check] DB error during role verification', error instanceof Error ? error.message : String(error));
+      return NextResponse.redirect(new URL('/', request.url));
     }
   }
 

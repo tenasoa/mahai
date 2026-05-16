@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verifyCsrf } from '@/lib/csrf'
 import { query } from '@/lib/db'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
@@ -37,11 +38,15 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/admin/credit-packs - Créer un pack
-export async function POST(request: Request) {
+export async function POST(req: Request) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  const request = req
+  
   const auth = await checkAdmin(request)
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
+  // POST /api/admin/credit-packs - Créer un pack
   try {
     const body = await request.json()
     const {
@@ -103,7 +108,10 @@ const LEGACY_COLUMN_MAP: Record<string, string> = {
   bonus: 'bonusAr',
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(req: Request) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  const request = req
   const auth = await checkAdmin(request)
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -158,8 +166,11 @@ export async function PATCH(request: Request) {
   }
 }
 
-// DELETE /api/admin/credit-packs?id=xxx - Supprimer
-export async function DELETE(request: Request) {
+export async function DELETE(req: Request) {
+  const csrf = verifyCsrf(req)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
+  const request = req
+  // DELETE /api/admin/credit-packs?id=xxx - Supprimer
   const auth = await checkAdmin(request)
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
