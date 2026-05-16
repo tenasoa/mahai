@@ -45,6 +45,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.36.0",
     "html2canvas": "^1.4.1",
+    "isomorphic-dompurify": "^3.13.0",
     "jspdf": "^4.2.1",
     "katex": "^0.16.45",
     "lowlight": "^3.3.0",

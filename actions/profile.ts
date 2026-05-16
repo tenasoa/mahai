@@ -619,7 +619,6 @@ export async function rechargeCreditsAction(data: {
   operator: string;
   phoneNumber: string;
   transferCode?: string;
-  status?: "PENDING" | "COMPLETED";
 }) {
   const context = await getAuthenticatedContext();
   if ("error" in context) return { success: false, error: context.error };
@@ -686,9 +685,11 @@ export async function rechargeCreditsAction(data: {
     // Solde Ar total à créditer = arAmount + bonusAr (le bonus n'augmente PAS le prix).
     const arToAward = expectedAmount + (Number(pack.bonusAr) || 0);
 
-    const isPending = data.status === "PENDING";
-
-    // 1. Créer la transaction dans la nouvelle table Transaction (système Ariary)
+    // ⚠ Sécurité : une recharge est TOUJOURS créée en "PENDING". Le crédit du
+    // solde (`balanceAr`) ne se fait JAMAIS ici — il est exclusivement réalisé
+    // lors de la validation administrateur (ou par un webhook de paiement
+    // signé). Le client ne peut donc pas auto-créditer son compte en envoyant
+    // un statut arbitraire.
     await query(
       `INSERT INTO "Transaction"
          ("id", "userId", "type", "amountAr", "description", "paymentMethod", "phoneNumber", "senderCode", "status")
@@ -702,31 +703,16 @@ export async function rechargeCreditsAction(data: {
         data.operator,
         data.phoneNumber,
         data.transferCode || null,
-        isPending ? "PENDING" : "COMPLETED",
+        "PENDING",
       ],
     );
-
-    // 2. Mettre à jour le solde Ar (seulement si validé immédiatement)
-    if (!isPending) {
-      await query(
-        `UPDATE "User" SET "balanceAr" = "balanceAr" + $1, "updatedAt" = NOW() WHERE "id" = $2`,
-        [arToAward, context.userId],
-      );
-    }
 
     revalidatePath("/recharge");
     revalidatePath("/profil");
 
-    if (isPending) {
-      return {
-        success: true,
-        message: `Votre demande de recharge de ${arToAward} Ar a été enregistrée. Validation par l'administrateur sous 12h.`,
-      };
-    }
-
     return {
       success: true,
-      message: `Recharge de ${arToAward} Ar effectuée avec succès`,
+      message: `Votre demande de recharge de ${arToAward} Ar a été enregistrée. Validation par l'administrateur sous 12h.`,
     };
   } catch (error) {
     logger.apiError("rechargeCreditsAction", error);

@@ -42,45 +42,50 @@ function getRomanNumeral(n: number): string {
   return String(n)
 }
 
-function renderText(node: JSONContent): string {
-  if (!node.text) return ''
-  let text = node.text
+/**
+ * Rend un nœud texte sous forme d'éléments React. Le texte (contenu fourni par
+ * un contributeur) n'est JAMAIS interpolé dans du HTML brut : React échappe
+ * automatiquement le contenu, ce qui empêche toute injection XSS.
+ */
+function renderTextNode(node: JSONContent): React.ReactNode {
+  if (!node.text) return null
+  let element: React.ReactNode = node.text
 
   if (node.marks) {
     node.marks.forEach(mark => {
       switch (mark.type) {
         case 'bold':
-          text = `<strong>${text}</strong>`
+          element = <strong>{element}</strong>
           break
         case 'italic':
-          text = `<em>${text}</em>`
+          element = <em>{element}</em>
           break
         case 'underline':
-          text = `<u>${text}</u>`
+          element = <u>{element}</u>
           break
         case 'strike':
-          text = `<s>${text}</s>`
+          element = <s>{element}</s>
           break
         case 'code':
-          text = `<code>${text}</code>`
+          element = <code>{element}</code>
           break
         case 'highlight':
-          text = `<mark>${text}</mark>`
+          element = <mark>{element}</mark>
           break
         case 'superscript':
-          text = `<sup>${text}</sup>`
+          element = <sup>{element}</sup>
           break
         case 'subscript':
-          text = `<sub>${text}</sub>`
+          element = <sub>{element}</sub>
           break
         case 'formula':
-          text = `<span class="formula-latex">${text}</span>`
+          element = <span className="formula-latex">{element}</span>
           break
       }
     })
   }
 
-  return text
+  return element
 }
 
 /** Composant KaTeX block — rendu dynamique côté client */
@@ -320,8 +325,7 @@ function renderNode(node: JSONContent, index: number, counters: { partie: number
     }
 
     case 'text': {
-      const html = renderText(node)
-      return <span key={`text-${index}`} dangerouslySetInnerHTML={{ __html: html }} />
+      return <span key={`text-${index}`}>{renderTextNode(node)}</span>
     }
 
     case 'heading': {
