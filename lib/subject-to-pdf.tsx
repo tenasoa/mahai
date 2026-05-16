@@ -37,6 +37,10 @@ Font.register({
 
 Font.register({ family: 'DM Mono', fonts: [{ src: '/fonts/DMM-400.woff', fontWeight: 400, format: 'woff' }] })
 
+// Evite les erreurs "unsupported number" de fontkit sur les metriques
+// de polices WOFF (largeur de glyphe hors-limites).
+Font.registerHyphenationCallback((word) => [word])
+
 // ── Types ───────────────────────────────────────────────────────────
 
 interface TipTapNode {
