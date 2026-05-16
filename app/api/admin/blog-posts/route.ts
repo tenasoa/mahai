@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { query } from "@/lib/db";
+import { requireAdmin, isAuthFailure } from "@/lib/auth-guards";
 
+// Garde admin centralisée (cf. lib/auth-guards.ts)
 async function checkAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return { error: "Non authentifié", status: 401 as const };
-  const res = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id]);
-  if (res.rows[0]?.role !== "ADMIN") return { error: "Accès interdit", status: 403 as const };
-  return { userId: session.user.id };
+  const guard = await requireAdmin();
+  if (isAuthFailure(guard)) return { error: guard.error, status: guard.status };
+  return { userId: guard.userId };
 }
 
 export async function GET(request: NextRequest) {

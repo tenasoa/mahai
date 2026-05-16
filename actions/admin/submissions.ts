@@ -1,23 +1,18 @@
 'use server'
 
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { notify } from '@/lib/notifications'
 import { CurrencyConverter } from '@/lib/currency-converter'
 import crypto from 'crypto'
 import { logger } from '@/lib/logger'
+import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
+/** Garde admin centralisée. Retourne `{ id, role }` ou `null`. */
 async function checkAdmin() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) return null
-  
-  const result = await query('SELECT id, role FROM "User" WHERE id = $1', [session.user.id])
-  const user = result.rows[0]
-  
-  return user?.role === 'ADMIN' ? user : null
+  const guard = await requireAdmin()
+  if (isAuthFailure(guard)) return null
+  return { id: guard.userId, role: guard.role }
 }
 
 // NOTE: Le système de crédits a été supprimé. Tout est maintenant en Ariary.

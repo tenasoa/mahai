@@ -1,20 +1,14 @@
 'use server'
 
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logger } from '@/lib/logger'
+import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
+/** Garde admin centralisée. Retourne `{ supabase, userId, role }` ou `null`. */
 async function checkAdmin() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) return false
-  
-  const result = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
-  const user = result.rows[0]
-  
-  return user?.role === 'ADMIN'
+  const guard = await requireAdmin()
+  return isAuthFailure(guard) ? null : guard
 }
 
 export async function getUsersAdmin(searchTerm?: string, page?: number, pageSize?: number) {
@@ -132,12 +126,8 @@ export async function adjustUserBalanceAdmin(
   delta: number,
   reason: string,
 ) {
-  const isAdmin = await checkAdmin()
-  if (!isAdmin) throw new Error("Non autorisé")
-
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) throw new Error("Session introuvable")
+  const admin = await checkAdmin()
+  if (!admin) throw new Error("Non autorisé")
 
   if (!Number.isFinite(delta) || delta === 0) {
     throw new Error("Montant invalide")
@@ -177,7 +167,7 @@ export async function adjustUserBalanceAdmin(
         'COMPLETED',
         'ADMIN_ADJUSTMENT',
         `[Admin] ${reason.trim()}`,
-        session.user.id,
+        admin.userId,
       ],
     )
   } catch (e) {
