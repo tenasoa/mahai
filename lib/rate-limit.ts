@@ -27,7 +27,7 @@ async function getRedis() {
   if (redisClient) return redisClient
 
   try {
-    // @ts-ignore - `@upstash/redis` est une dependance optionnelle non listee dans package.json
+    // @ts-expect-error - `@upstash/redis` est une dependance optionnelle non listee dans package.json
     const { Redis } = await import('@upstash/redis')
     redisClient = Redis.fromEnv()
     // Test de connexion
