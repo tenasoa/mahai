@@ -59,27 +59,17 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  // Quand getUser() échoue par une erreur transiente (race condition de refresh
-  // de token, timeout réseau Supabase), on tombe sur getSession() qui lit les
-  // cookies sans appel réseau — jamais sujette à cette race condition.
-  // Cela évite les faux-positifs de déconnexion qui causent la redirection
-  // involontaire vers /dashboard.
-  let effectiveUser = user;
-  if (!user && authError) {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        effectiveUser = session.user;
-        debugLog(`[Auth] getUser() failed (${authError.message}), fell back to session cookie`);
-      }
-    } catch {
-      // Si getSession échoue aussi, l'utilisateur est vraiment déconnecté
+  // Utiliser getSession() UNIQUEMENT : lecture des cookies, 0 appel réseau.
+  // getUser() fait un appel HTTP à Supabase qui prend 300-800ms et cause
+  // des race conditions de refresh token → redirections involontaires.
+  let effectiveUser = null;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      effectiveUser = session.user;
     }
+  } catch {
+    // getSession() échoue rarement ; si c'est le cas, pas de session.
   }
 
   const { pathname } = request.nextUrl;
