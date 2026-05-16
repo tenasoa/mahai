@@ -2,14 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { notify } from '@/lib/notifications'
-
-async function assertAdminUser(userId: string) {
-  const adminResult = await query('SELECT role FROM "User" WHERE id = $1 LIMIT 1', [userId])
-  const adminUser = adminResult.rows[0]
-  return adminUser?.role === 'ADMIN'
-}
+import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
 async function contributorApplicationTableExists() {
   const result = await query(
@@ -30,17 +24,8 @@ export async function reviewContributorApplicationAction(formData: FormData) {
     return
   }
 
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  if (!session?.user) {
-    return
-  }
-
-  const isAdmin = await assertAdminUser(session.user.id)
-  if (!isAdmin) {
+  const admin = await requireAdmin()
+  if (isAuthFailure(admin)) {
     return
   }
 
@@ -70,7 +55,7 @@ export async function reviewContributorApplicationAction(formData: FormData) {
       "updatedAt" = NOW()
     WHERE id = $1
     `,
-    [applicationId, decision, adminNotes || null, session.user.id],
+    [applicationId, decision, adminNotes || null, admin.userId],
   )
 
   if (decision === 'APPROVED') {

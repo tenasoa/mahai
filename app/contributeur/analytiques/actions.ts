@@ -1,22 +1,13 @@
 'use server'
 
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
+import { requireRole, isAuthFailure } from '@/lib/auth-guards'
 
+/** Garde contributeur centralisée. Retourne `{ userId, role }` ou `null`. */
 async function getAuthenticatedContributor() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) return null
-
-  const result = await query('SELECT id, role FROM "User" WHERE id = $1', [session.user.id])
-  const user = result.rows[0]
-
-  if (!user || !['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR'].includes(user.role)) {
-    return null
-  }
-
-  return { userId: user.id, role: user.role }
+  const guard = await requireRole(['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR'])
+  if (isAuthFailure(guard)) return null
+  return { userId: guard.userId, role: guard.role }
 }
 
 export type AnalyticsPeriod = '7d' | '30d' | '12m'

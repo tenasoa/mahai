@@ -1,8 +1,8 @@
 'use server'
 
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
 import { redirect } from 'next/navigation'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 
 export type DashboardPeriod = '7d' | '30d' | '90d' | '12m' | 'all'
 
@@ -18,20 +18,18 @@ function periodToInterval(period: DashboardPeriod): string | null {
 }
 
 export async function getContributorDashboard(period: DashboardPeriod = '30d') {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) redirect('/auth/login')
+  const auth = await requireAuth()
+  if (isAuthFailure(auth)) redirect('/auth/login')
 
   // Vérifier que l'utilisateur est contributeur
-  const userResult = await query('SELECT role, prenom, nom FROM "User" WHERE id = $1', [session.user.id])
+  const userResult = await query('SELECT role, prenom, nom FROM "User" WHERE id = $1', [auth.userId])
   const user = userResult.rows[0]
 
-  if (!['CONTRIBUTEUR', 'PROFESSEUR', 'ADMIN'].includes(user.role)) {
+  if (!user || !['CONTRIBUTEUR', 'PROFESSEUR', 'ADMIN'].includes(user.role)) {
     redirect('/dashboard')
   }
 
-  const userId = session.user.id
+  const userId = auth.userId
   const interval = periodToInterval(period)
 
   // Clause WHERE période (sur Purchase.createdAt)
