@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Calendar, Clock, Eye, MessageSquare, ArrowLeft, Send, Trash2 } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
@@ -157,8 +158,15 @@ export default function BlogPostPage() {
       <section className="py-12 px-6">
         <div className="max-w-4xl mx-auto">
           {post.cover_image && (
-            <div className="mb-10 rounded-2xl overflow-hidden border border-border-1">
-              <img src={post.cover_image} alt={post.title} className="w-full object-cover" />
+            <div className="relative aspect-video mb-10 rounded-2xl overflow-hidden border border-border-1">
+              <Image
+                src={post.cover_image}
+                alt={post.title}
+                fill
+                priority
+                sizes="(max-width: 896px) 100vw, 896px"
+                className="object-cover"
+              />
             </div>
           )}
           <div 
@@ -227,9 +235,11 @@ export default function BlogPostPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       {comment.User?.profilePicture ? (
-                        <img
+                        <Image
                           src={comment.User.profilePicture}
                           alt={comment.userName}
+                          width={40}
+                          height={40}
                           className="w-10 h-10 rounded-full object-cover border border-border-1"
                         />
                       ) : (
