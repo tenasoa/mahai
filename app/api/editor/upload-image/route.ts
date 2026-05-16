@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
+import { requireRole, isAuthFailure } from '@/lib/auth-guards'
 import crypto from 'crypto'
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
+// SVG volontairement exclu : un SVG peut embarquer du <script> et, servi
+// depuis un domaine public (Vercel Blob), provoquer un XSS s'il est ouvert
+// directement. Seuls les formats raster sont acceptés.
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
 
 function getBlobToken(): string {
@@ -16,19 +19,11 @@ function getBlobToken(): string {
 export async function POST(req: NextRequest) {
   try {
     // ── Auth ────────────────────────────────────────────────────────
-    const supabase = await createSupabaseServerClient()
-    const { data: { session } } = await supabase.auth.getSession()
-
-    if (!session) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    const guard = await requireRole(['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR'])
+    if (isAuthFailure(guard)) {
+      return NextResponse.json({ error: guard.error }, { status: guard.status })
     }
-
-    const userRes = await query('SELECT id, role FROM "User" WHERE id = $1', [session.user.id])
-    const user = userRes.rows[0]
-
-    if (!user || !['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR'].includes(user.role)) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
-    }
+    const userId = guard.userId
 
     // ── Parse multipart form ────────────────────────────────────────
     const formData = await req.formData()
@@ -58,8 +53,8 @@ export async function POST(req: NextRequest) {
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
     const uniqueName = `${crypto.randomUUID()}.${ext}`
     const blobPath = submissionId
-      ? `editor-images/${user.id}/${submissionId}/${uniqueName}`
-      : `editor-images/${user.id}/unsaved/${uniqueName}`
+      ? `editor-images/${userId}/${submissionId}/${uniqueName}`
+      : `editor-images/${userId}/unsaved/${uniqueName}`
 
     const blob = await put(blobPath, file, {
       access: 'public',
@@ -77,7 +72,7 @@ export async function POST(req: NextRequest) {
           [
             crypto.randomUUID(),
             submissionId,
-            user.id,
+            userId,
             blob.url,
             file.name,
             file.type,
@@ -110,12 +105,32 @@ export async function POST(req: NextRequest) {
 // Méthode DELETE — supprimer une image Vercel Blob
 export async function DELETE(req: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    const guard = await requireRole(['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR'])
+    if (isAuthFailure(guard)) {
+      return NextResponse.json({ error: guard.error }, { status: guard.status })
+    }
 
     const { url } = await req.json() as { url?: string }
     if (!url) return NextResponse.json({ error: 'URL manquante' }, { status: 400 })
+
+    // ── Contrôle de propriété (anti-IDOR) ───────────────────────────
+    // Les images sont stockées sous `editor-images/{userId}/...`. On
+    // n'autorise la suppression que si l'URL appartient à l'utilisateur,
+    // ou si une ligne SubjectImage le désigne comme auteur, ou s'il est
+    // ADMIN. Sinon un utilisateur pourrait supprimer les images d'autrui.
+    let isOwner = url.includes(`editor-images/${guard.userId}/`)
+    if (!isOwner && guard.role !== 'ADMIN') {
+      try {
+        const owned = await query(
+          'SELECT 1 FROM "SubjectImage" WHERE url = $1 AND "authorId" = $2 LIMIT 1',
+          [url, guard.userId],
+        )
+        isOwner = owned.rows.length > 0
+      } catch { /* table absente — on retombe sur le refus */ }
+    }
+    if (!isOwner && guard.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
 
     const { del } = await import('@vercel/blob')
     await del(url, { token: getBlobToken() })

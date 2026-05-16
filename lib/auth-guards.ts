@@ -25,6 +25,7 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createSupabaseServerClient
 export type AuthSuccess = {
   supabase: SupabaseServerClient
   userId: string
+  email: string | null
 }
 
 export type RoleSuccess = AuthSuccess & {
@@ -51,7 +52,7 @@ export async function requireAuth(): Promise<AuthSuccess | AuthFailure> {
     return { error: 'Vous devez être connecté pour effectuer cette action', status: 401 }
   }
 
-  return { supabase, userId: user.id }
+  return { supabase, userId: user.id, email: user.email ?? null }
 }
 
 /**
