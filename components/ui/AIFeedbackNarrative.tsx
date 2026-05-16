@@ -40,7 +40,7 @@ export function AIFeedbackNarrative({ isVisible, onComplete }: { isVisible: bool
   if (!isVisible) return null
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 bg-white/[0.02] border border-white/[0.08] rounded-3xl backdrop-blur-xl">
+    <div className="flex flex-col items-center justify-center p-8 bg-card border border-border-1 rounded-3xl backdrop-blur-xl">
       <div className="relative w-24 h-24 mb-8">
         <motion.div 
           animate={{ rotate: 360 }}
@@ -52,7 +52,7 @@ export function AIFeedbackNarrative({ isVisible, onComplete }: { isVisible: bool
         </div>
       </div>
 
-      <h3 className="text-xl font-semibold text-white mb-2">L'IA Mah.AI travaille...</h3>
+      <h3 className="text-xl font-semibold text-text mb-2">L'IA Mah.AI travaille...</h3>
       
       <div className="w-full max-w-xs h-1.5 bg-white/5 rounded-full overflow-hidden mb-8">
         <motion.div 
@@ -76,9 +76,9 @@ export function AIFeedbackNarrative({ isVisible, onComplete }: { isVisible: bool
               className="flex items-center gap-4"
             >
               <div className={`p-2 rounded-lg ${isActive ? 'bg-white/5' : ''}`}>
-                <Icon className={`w-5 h-5 ${isDone ? 'text-emerald-400' : isActive ? step.color : 'text-white/20'}`} />
+                <Icon className={`w-5 h-5 ${isDone ? 'text-sage' : isActive ? step.color : 'text-text-4'}`} />
               </div>
-              <span className={`text-sm ${isActive ? 'text-white font-medium' : 'text-white/40'}`}>
+              <span className={`text-sm ${isActive ? 'text-text font-medium' : 'text-text-3'}`}>
                 {step.label}
               </span>
               {isActive && (

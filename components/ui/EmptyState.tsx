@@ -25,18 +25,18 @@ export function EmptyState({
   return (
     <div className={cn(
       "flex flex-col items-center justify-center text-center p-12",
-      "rounded-3xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm",
+      "rounded-3xl border border-border-1 bg-card backdrop-blur-sm",
       className
     )}>
       <div className="w-20 h-20 rounded-full bg-gold/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
         <Icon className="w-10 h-10 text-gold opacity-60" />
       </div>
-      
-      <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight">
+
+      <h3 className="text-2xl font-semibold text-text mb-3 tracking-tight">
         {title}
       </h3>
-      
-      <p className="text-white/40 max-w-sm mb-8 leading-relaxed">
+
+      <p className="text-text-3 max-w-sm mb-8 leading-relaxed">
         {description}
       </p>
       

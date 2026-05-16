@@ -56,53 +56,57 @@ export async function getUserDetailAdmin(userId: string) {
   const isAdmin = await checkAdmin()
   if (!isAdmin) throw new Error("Non autorisé")
 
-  // Récupérer l'utilisateur
-  const userResult = await query('SELECT * FROM "User" WHERE id = $1', [userId])
-  const user = userResult.rows[0]
-  if (!user) return null
-
-  // Récupérer les achats de sujets
-  const purchasesResult = await query(`
-    SELECT p.*, s.titre as title, s.difficulte as grade, s.annee as year 
-    FROM "Purchase" p
-    JOIN "Subject" s ON p."subjectId" = s.id
-    WHERE p."userId" = $1
-    ORDER BY p."createdAt" DESC
-  `, [userId])
-
-  // Récupérer l'historique de transactions Ariary
-  const creditsResult = await query('SELECT * FROM "Transaction" WHERE "userId" = $1 ORDER BY "createdAt" DESC', [userId])
-
   // Récupérer les soumissions de sujets (schémas legacy + nouveau schéma).
-  let submissions: any[] = []
-  try {
-    const submissionsResult = await query(
-      'SELECT * FROM "SubjectSubmission" WHERE "authorId" = $1 ORDER BY "createdAt" DESC',
-      [userId],
-    )
-    submissions = submissionsResult.rows
-  } catch (error: any) {
-    const message = String(error?.message || '')
-    if (message.toLowerCase().includes('colonne') || message.toLowerCase().includes('column')) {
-      try {
-        const legacyResult = await query(
-          'SELECT * FROM "SubjectSubmission" WHERE "userId" = $1 ORDER BY "createdAt" DESC',
-          [userId],
-        )
-        submissions = legacyResult.rows
-      } catch (legacyError) {
-        logger.warn('SubjectSubmission query failed on both schemas', { error: String(legacyError) })
+  const fetchSubmissions = async (): Promise<any[]> => {
+    try {
+      const submissionsResult = await query(
+        'SELECT * FROM "SubjectSubmission" WHERE "authorId" = $1 ORDER BY "createdAt" DESC',
+        [userId],
+      )
+      return submissionsResult.rows
+    } catch (error: any) {
+      const message = String(error?.message || '')
+      if (message.toLowerCase().includes('colonne') || message.toLowerCase().includes('column')) {
+        try {
+          const legacyResult = await query(
+            'SELECT * FROM "SubjectSubmission" WHERE "userId" = $1 ORDER BY "createdAt" DESC',
+            [userId],
+          )
+          return legacyResult.rows
+        } catch (legacyError) {
+          logger.warn('SubjectSubmission query failed on both schemas', { error: String(legacyError) })
+          return []
+        }
       }
-    } else {
       logger.warn('SubjectSubmission query failed', { error: String(error) })
+      return []
     }
   }
+
+  // Les 4 requêtes sont indépendantes → exécution parallèle (1 aller-retour
+  // groupé au lieu de 4 séquentiels).
+  const [userResult, purchasesResult, creditsResult, submissions] = await Promise.all([
+    query('SELECT * FROM "User" WHERE id = $1', [userId]),
+    query(
+      `SELECT p.*, s.titre as title, s.difficulte as grade, s.annee as year
+       FROM "Purchase" p
+       JOIN "Subject" s ON p."subjectId" = s.id
+       WHERE p."userId" = $1
+       ORDER BY p."createdAt" DESC`,
+      [userId],
+    ),
+    query('SELECT * FROM "Transaction" WHERE "userId" = $1 ORDER BY "createdAt" DESC', [userId]),
+    fetchSubmissions(),
+  ])
+
+  const user = userResult.rows[0]
+  if (!user) return null
 
   return {
     ...user,
     purchases: purchasesResult.rows,
     creditHistory: creditsResult.rows,
-    submissions
+    submissions,
   }
 }
 
