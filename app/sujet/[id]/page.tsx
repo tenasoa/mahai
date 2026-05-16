@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useToast } from '@/lib/hooks/useToast'
+import { ToastContainer } from '@/components/ui/ToastContainer'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import {
@@ -94,6 +96,7 @@ export default function SujetDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const { userId } = useAuth()
+  const toast = useToast()
 
   const [subject, setSubject] = useState<SubjectPayload | null>(null)
   const [accessState, setAccessState] = useState<AccessState>('locked')
@@ -412,7 +415,7 @@ export default function SujetDetailPage() {
       setTimeout(() => URL.revokeObjectURL(url), 5000)
     } catch (err) {
       console.error('PDF download error:', err)
-      pushToast('error', 'Erreur lors de la génération du PDF.')
+      toast.error('Erreur', 'Erreur lors de la génération du PDF.')
     } finally {
       setIsDownloading(false)
     }
@@ -548,6 +551,7 @@ export default function SujetDetailPage() {
         </div>
       )}
 
+      <ToastContainer />
       <div className="sd-toast-stack">
         {toasts.map((toast) => (
           <div key={toast.id} className={`sd-toast sd-toast-${toast.type}`}>

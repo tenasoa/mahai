@@ -16,6 +16,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Download, Loader2, GraduationCap, Sparkles } from 'lucide-react'
+import { useToast } from '@/lib/hooks/useToast'
+import { ToastContainer } from '@/components/ui/ToastContainer'
 import { recordSubjectDownload } from '@/actions/subject-download'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
 import { AICorrectionView } from '@/components/sujet/AICorrectionView'
@@ -73,16 +75,11 @@ export function ConsultClient({ subject }: Props) {
   const [correctionLoadError, setCorrectionLoadError] = useState<string | null>(null)
   const [correctionLoading, setCorrectionLoading] = useState(focusCorrection)
   const [includeCorrection, setIncludeCorrection] = useState<boolean>(true)
-  const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([])
   const correctionSectionRef = useRef<HTMLElement | null>(null)
   const subjectContentRef = useRef<HTMLDivElement | null>(null)
   const aiCorrectionDOMRef = useRef<HTMLDivElement | null>(null)
 
-  const pushToast = (type: 'success' | 'error' | 'info', message: string) => {
-    const id = crypto.randomUUID()
-    setToasts((prev) => [...prev, { id, type, message }])
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4500)
-  }
+  const toast = useToast()
 
   useEffect(() => {
     let cancelled = false
@@ -131,7 +128,7 @@ export function ConsultClient({ subject }: Props) {
     try {
       const trace = await recordSubjectDownload(subject.id)
       if (!trace.success) {
-        pushToast('error', trace.error || 'Téléchargement refusé.')
+        toast.error('Erreur', trace.error || 'Téléchargement refusé.')
         return
       }
 
@@ -192,7 +189,7 @@ export function ConsultClient({ subject }: Props) {
       setTimeout(() => URL.revokeObjectURL(url), 5000)
     } catch (err) {
       console.error('[pdf] download error:', err)
-      pushToast('error', 'Erreur lors de la génération du PDF.')
+      toast.error('Erreur', 'Erreur lors de la génération du PDF.')
     } finally {
       setIsDownloading(false)
     }
@@ -249,13 +246,7 @@ export function ConsultClient({ subject }: Props) {
           </div>
         </div>
 
-        <div className="sd-toast-stack">
-          {toasts.map((toast) => (
-            <div key={toast.id} className={`sd-toast sd-toast-${toast.type}`}>
-              {toast.message}
-            </div>
-          ))}
-        </div>
+        <ToastContainer />
       </header>
 
       <main className="consult-main">
