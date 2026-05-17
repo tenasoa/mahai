@@ -19,12 +19,15 @@ import { logger } from './logger'
 
 // ── Redis client (lazy init pour éviter les erreurs si absent) ──────────
 
-let redisClient: ReturnType<typeof import('@upstash/redis').Redis.fromEnv> | null = null
+// Type `any` volontaire : `@upstash/redis` est une dependance optionnelle non
+// listee dans package.json, chargee dynamiquement (cf. getRedis ci-dessous).
+let redisClient: any = null
 
 async function getRedis() {
   if (redisClient) return redisClient
 
   try {
+    // @ts-expect-error - `@upstash/redis` est une dependance optionnelle non listee dans package.json
     const { Redis } = await import('@upstash/redis')
     redisClient = Redis.fromEnv()
     // Test de connexion
