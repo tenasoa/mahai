@@ -8,7 +8,10 @@
 
 import { logger } from './logger'
 
-let resendClient: import('resend').Resend | null = null
+// Type laissé en `any` volontairement : `resend` est une dépendance optionnelle
+// chargée dynamiquement (cf. getResend ci-dessous). Si le paquet n'est pas
+// installé, l'import dynamique echoue et on retourne null sans bloquer le build.
+let resendClient: any = null
 
 async function getResend() {
   if (resendClient) return resendClient
