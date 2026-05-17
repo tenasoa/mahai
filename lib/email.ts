@@ -8,10 +8,7 @@
 
 import { logger } from './logger'
 
-// Type laissé en `any` volontairement : `resend` est une dépendance optionnelle
-// chargée dynamiquement (cf. getResend ci-dessous). Si le paquet n'est pas
-// installé, l'import dynamique echoue et on retourne null sans bloquer le build.
-let resendClient: any = null
+let resendClient: import('resend').Resend | null = null
 
 async function getResend() {
   if (resendClient) return resendClient
@@ -21,7 +18,6 @@ async function getResend() {
   }
 
   try {
-    // @ts-expect-error - `resend` est une dependance optionnelle non listee dans package.json
     const { Resend } = await import('resend')
     resendClient = new Resend(process.env.RESEND_API_KEY)
     return resendClient
