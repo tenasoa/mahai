@@ -1,4 +1,5 @@
 'use client'
+import '@/app/sujet/[id]/detail.css'
 
 /**
  * ConsultClient — Vue lecture intégrale d'un sujet acheté + téléchargement PDF tracé.
@@ -15,6 +16,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Download, Loader2, GraduationCap, Sparkles } from 'lucide-react'
+import { useToast } from '@/lib/hooks/useToast'
+import { ToastContainer } from '@/components/ui/ToastContainer'
 import { recordSubjectDownload } from '@/actions/subject-download'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
 import { AICorrectionView } from '@/components/sujet/AICorrectionView'
@@ -76,6 +79,8 @@ export function ConsultClient({ subject }: Props) {
   const subjectContentRef = useRef<HTMLDivElement | null>(null)
   const aiCorrectionDOMRef = useRef<HTMLDivElement | null>(null)
 
+  const toast = useToast()
+
   useEffect(() => {
     let cancelled = false
     async function loadCorrectionHistory() {
@@ -123,7 +128,7 @@ export function ConsultClient({ subject }: Props) {
     try {
       const trace = await recordSubjectDownload(subject.id)
       if (!trace.success) {
-        setDownloadError(trace.error || 'Téléchargement refusé.')
+        toast.error('Erreur', trace.error || 'Téléchargement refusé.')
         return
       }
 
@@ -133,10 +138,11 @@ export function ConsultClient({ subject }: Props) {
         import('@/lib/render-latex-images'),
       ])
 
+      // Enregistrer les polices AVANT de générer le PDF (évite "Font family not registered")
+      subjectPDFModule.ensureFonts()
+
       const correctionForPDF = includeCorrection ? aiCorrection : null
       const formulas = collectAICorrectionDisplayFormulas(correctionForPDF?.result)
-      // Rendu des formules LaTeX en PNG haute-résolution via MathJax (vectoriel
-      // côté SVG, puis rasterisé à 3× pour rester net dans le PDF).
       const latexImages = await renderLatexFormulasToImages(formulas)
       subjectPDFModule.setLatexImages(latexImages)
       const SubjectPDF = subjectPDFModule.default
@@ -183,7 +189,7 @@ export function ConsultClient({ subject }: Props) {
       setTimeout(() => URL.revokeObjectURL(url), 5000)
     } catch (err) {
       console.error('[pdf] download error:', err)
-      setDownloadError('Erreur lors de la génération du PDF.')
+      toast.error('Erreur', 'Erreur lors de la génération du PDF.')
     } finally {
       setIsDownloading(false)
     }
@@ -240,11 +246,7 @@ export function ConsultClient({ subject }: Props) {
           </div>
         </div>
 
-        {downloadError && (
-          <div className="consult-error" role="alert">
-            {downloadError}
-          </div>
-        )}
+        <ToastContainer />
       </header>
 
       <main className="consult-main">

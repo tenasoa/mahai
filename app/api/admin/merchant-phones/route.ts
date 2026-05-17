@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verifyCsrf } from '@/lib/csrf'
 import { query } from '@/lib/db'
 import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
@@ -28,6 +29,8 @@ export async function GET(request: Request) {
 
 // POST /api/admin/merchant-phones - Créer un numéro
 export async function POST(request: Request) {
+  const csrf = verifyCsrf(request)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
   const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -54,6 +57,8 @@ export async function POST(request: Request) {
 
 // PATCH /api/admin/merchant-phones - Mettre à jour
 export async function PATCH(request: Request) {
+  const csrf = verifyCsrf(request)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
   const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -92,6 +97,8 @@ export async function PATCH(request: Request) {
 
 // DELETE /api/admin/merchant-phones?id=xxx - Supprimer
 export async function DELETE(request: Request) {
+  const csrf = verifyCsrf(request)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
   const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

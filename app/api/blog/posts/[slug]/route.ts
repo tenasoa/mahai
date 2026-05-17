@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { query } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
@@ -10,17 +11,13 @@ export async function GET(
     // Use admin client to bypass RLS - this is a public-facing API
     const supabase = await createSupabaseAdminClient()
     
-    // Increment view count atomically
-    const { data: currentPost } = await supabase
-      .from('BlogPost')
-      .select('views')
-      .eq('slug', slug)
-      .single()
-    
-    await supabase
-      .from('BlogPost')
-      .update({ views: (currentPost?.views ?? 0) + 1 })
-      .eq('slug', slug)
+    // Incrément atomique du compteur de vues (race-condition free).
+    // Le SELECT + UPDATE en deux étapes pouvait perdre des vues
+    // sur requêtes concurrentes.
+    await query(
+      `UPDATE "BlogPost" SET views = views + 1 WHERE slug = $1`,
+      [slug]
+    )
     
     const { data: post, error } = await supabase
       .from('BlogPost')

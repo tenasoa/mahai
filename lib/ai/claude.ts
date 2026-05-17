@@ -25,7 +25,7 @@ export function getAnthropic(): Anthropic {
  * Sonnet 4.6 = bon compromis qualité/coût pour le raisonnement scientifique
  * en français. Opus 4.7 disponible si on veut le ceiling.
  */
-export const DEFAULT_AI_MODEL = 'claude-sonnet-4-6'
+export const DEFAULT_AI_MODEL = 'claude-sonnet-4-20250514'
 
 /**
  * Niveau d'effort par défaut. Sonnet 4.6 défaute à `high` ce qui peut

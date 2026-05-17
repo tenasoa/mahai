@@ -59,27 +59,32 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  // Quand getUser() échoue par une erreur transiente (race condition de refresh
-  // de token, timeout réseau Supabase), on tombe sur getSession() qui lit les
-  // cookies sans appel réseau — jamais sujette à cette race condition.
-  // Cela évite les faux-positifs de déconnexion qui causent la redirection
-  // involontaire vers /dashboard.
-  let effectiveUser = user;
-  if (!user && authError) {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        effectiveUser = session.user;
-        debugLog(`[Auth] getUser() failed (${authError.message}), fell back to session cookie`);
-      }
-    } catch {
-      // Si getSession échoue aussi, l'utilisateur est vraiment déconnecté
+  // Utiliser getSession() UNIQUEMENT : lecture des cookies, 0 appel réseau.
+  // getUser() fait un appel HTTP à Supabase qui prend 300-800ms et cause
+  // des race conditions de refresh token → redirections involontaires.
+  let effectiveUser = null;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      effectiveUser = session.user;
     }
+  } catch {
+    // getSession() échoue rarement ; si c'est le cas, pas de session.
+  }
+
+  // Vérification serveur en arrière-plan (non-bloquant, fire-and-forget).
+  // getSession() lit les cookies locaux (~5ms), getUser() contacte Supabase
+  // pour confirmer que le token n'a pas été révoqué côté serveur.
+  // Si getUser() échoue, on log l'erreur mais on ne bloque ni ne redirige :
+  // la décision d'auth est déjà prise via getSession(). Le prochain cycle
+  // du middleware verra la session expirée naturellement.
+  if (effectiveUser) {
+    supabase.auth.getUser().then(({ error }) => {
+      if (error) {
+        debugLog(`[Auth] Background getUser() failed: ${error.message} - token may be revoked, session will expire naturally`);
+      }
+    }).catch(() => {
+    });
   }
 
   const { pathname } = request.nextUrl;
@@ -116,10 +121,11 @@ export async function proxy(request: NextRequest) {
 
       debugLog(`[Admin Check] Access granted for ${effectiveUser.id}`);
     } catch (error) {
-      console.error(`[Admin Check] Error checking role for ${effectiveUser.id}:`, error);
-      // En cas d'erreur DB transiente, laisser passer (la page vérifiera le rôle
-      // via ses propres server actions). Évite la redirection vers /dashboard.
-      debugLog(`[Admin Check] DB error, allowing through — page will re-verify`);
+      // En cas d'erreur DB, refuser l'accès par sécurité. Une panne DB
+      // ne doit jamais ouvrir les routes admin. L'utilisateur est redirigé
+      // vers la landing page.
+      logger.error('[Admin Check] DB error during role verification', error instanceof Error ? error.message : String(error));
+      return NextResponse.redirect(new URL('/', request.url));
     }
   }
 

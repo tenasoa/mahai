@@ -172,7 +172,7 @@
 
 .mode-switcher {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.55rem;
   margin-bottom: 0.9rem;
 }
@@ -196,6 +196,34 @@
   border-color: var(--gold-line);
   background: var(--gold-dim);
   color: var(--gold);
+}
+
+.mode-switcher button.mode-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--b1);
+  background: var(--surface);
+}
+
+.mode-coming-soon {
+  font-size: 0.55rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-dim);
+  border-radius: 3px;
+  padding: 0.1rem 0.35rem;
+  margin-left: 0.15rem;
+  white-space: nowrap;
+}
+
+.mode-switcher button.mode-correction-ia {
+  border-color: var(--gold-line);
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+.mode-switcher button.mode-correction-ia:hover {
+  background: var(--gold-glow);
 }
 
 .lecture-sheet,

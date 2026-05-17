@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useToast } from '@/lib/hooks/useToast'
+import { ToastContainer } from '@/components/ui/ToastContainer'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import {
@@ -27,7 +29,6 @@ import { AuthModal } from '@/components/ui/AuthModal'
 import { getSubjectById } from '@/lib/supabase/subjects'
 import { getCurrentUserBalanceAr, purchaseCurrentUserSubject } from '@/actions/user'
 import { convertSubjectToExamAction } from '@/actions/examen'
-import { recordSubjectDownload } from '@/actions/subject-download'
 import { SujetDetailSkeleton } from '@/components/ui/PageSkeletons'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
@@ -95,6 +96,7 @@ export default function SujetDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const { userId } = useAuth()
+  const toast = useToast()
 
   const [subject, setSubject] = useState<SubjectPayload | null>(null)
   const [accessState, setAccessState] = useState<AccessState>('locked')
@@ -390,88 +392,30 @@ export default function SujetDetailPage() {
     setDownloadError(null)
     setIsDownloading(true)
     try {
-      const trace = await recordSubjectDownload(subject.id)
-      if (!trace.success) {
-        setDownloadError(trace.error || 'Téléchargement refusé.')
+      // Appel au nouvel endpoint PDF vectoriel (@react-pdf/renderer)
+      const res = await fetch(`/api/subjects/${subject.id}/pdf`)
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erreur inconnue' }))
+        pushToast('error', err.error || 'Téléchargement refusé.')
         return
       }
 
-      if (!subjectContentRef.current) throw new Error('Contenu du sujet introuvable.')
-
-      const { htmlElementToPDFPages } = await import('@/lib/html-to-pdf')
-
-      const pdfTrace = {
-        code: trace.data.watermarkCode,
-        userName: trace.data.userName,
-        userEmail: trace.data.userEmail,
-        downloadedAt: trace.data.downloadedAt,
-      }
-
-      // En-tête du sujet
-      const header = document.createElement('div')
-      header.style.cssText = 'font-family:ui-sans-serif,system-ui,sans-serif;padding:0 0 20px;margin-bottom:24px;border-bottom:1.5px solid #C9A84C;'
-      const brand = document.createElement('div')
-      brand.style.cssText = 'font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#C9A84C;margin-bottom:10px;font-weight:600;'
-      brand.textContent = 'Mah.AI · Annales Madagascar'
-      const titleEl = document.createElement('h1')
-      titleEl.style.cssText = 'font-size:20px;font-weight:700;color:#0c0c0e;margin:0 0 14px;line-height:1.3;font-family:inherit;'
-      titleEl.textContent = subject.titre
-      const chips = document.createElement('div')
-      chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px 18px;'
-      const addChip = (label: string, value: string | null | undefined) => {
-        if (!value) return
-        const chip = document.createElement('span')
-        chip.style.cssText = 'font-size:12px;color:#555;'
-        chip.innerHTML = '<span style="color:#999;margin-right:3px;">' + label + ' :</span><span style="color:#0c0c0e;font-weight:600;">' + value + '</span>'
-        chips.appendChild(chip)
-      }
-      addChip('Matière', subject.matiere)
-      const examLabel = [subject.examType || subject.type, subject.serie].filter(Boolean).join(' · ')
-      if (examLabel) addChip('Examen', examLabel)
-      addChip('Année', subject.anneeScolaire || subject.annee)
-      if (subject.etablissement) addChip('Établissement', subject.etablissement)
-      if (subject.duree) addChip('Durée', subject.duree)
-      if (subject.coefficient) addChip('Coefficient', String(subject.coefficient))
-      header.appendChild(brand)
-      header.appendChild(titleEl)
-      header.appendChild(chips)
-
-      const wrap = document.createElement('div')
-      wrap.style.cssText = [
-        'position:fixed', 'left:-9999px', 'top:0',
-        'width:780px', 'padding:32px 36px 40px',
-        'background:#ffffff', 'box-sizing:border-box',
-      ].join(';')
-      wrap.appendChild(header)
-      wrap.appendChild(subjectContentRef.current.cloneNode(true) as HTMLElement)
-      document.body.appendChild(wrap)
-
-      await new Promise(r => setTimeout(r, 200))
-
-      const pdfBytes = await htmlElementToPDFPages(wrap, {
-        scale: 3,
-        marginMm: 14,
-        trace: pdfTrace,
-        sectionLabel: subject.matiere || 'Sujet',
-      })
-
-      try { document.body.removeChild(wrap) } catch { /* déjà retiré */ }
-
+      const pdfBlob = await res.blob()
       const slugify = (s: string) =>
         s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/(^-|-$)/g, '').toLowerCase().slice(0, 60)
 
-      const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
+      const url = URL.createObjectURL(pdfBlob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `mahai-${slugify(subject.titre)}-${trace.data.watermarkCode}.pdf`
+      a.download = `mahai-${slugify(subject.titre)}.pdf`
       document.body.appendChild(a)
       a.click()
       a.remove()
       setTimeout(() => URL.revokeObjectURL(url), 5000)
     } catch (err) {
       console.error('PDF download error:', err)
-      setDownloadError('Erreur lors de la génération du PDF.')
+      toast.error('Erreur', 'Erreur lors de la génération du PDF.')
     } finally {
       setIsDownloading(false)
     }
@@ -607,6 +551,7 @@ export default function SujetDetailPage() {
         </div>
       )}
 
+      <ToastContainer />
       <div className="sd-toast-stack">
         {toasts.map((toast) => (
           <div key={toast.id} className={`sd-toast sd-toast-${toast.type}`}>
@@ -717,22 +662,34 @@ export default function SujetDetailPage() {
               <BookOpen size={16} /> Lecture simple
             </button>
             <button
-              className={displayMode === 'exercice' ? 'active' : ''}
-              onClick={() => setDisplayMode('exercice')}
+              className="mode-correction-ia"
+              onClick={() => setShowDirectConfirm(true)}
+            >
+              <Sparkles size={16} /> Correction IA complète
+            </button>
+            <button
+              className="mode-disabled"
+              onClick={() => pushToast('info', 'Mode exercice — bientôt disponible. Cette fonctionnalité est en cours de développement.')}
+              disabled
             >
               <PencilLine size={16} /> Mode exercice
+              <span className="mode-coming-soon">Bientôt</span>
             </button>
             <button
-              className={displayMode === 'solo' ? 'active' : ''}
-              onClick={() => setDisplayMode('solo')}
+              className="mode-disabled"
+              onClick={() => pushToast('info', 'Examen blanc solo — bientôt disponible. Cette fonctionnalité est en cours de développement.')}
+              disabled
             >
               <Timer size={16} /> Examen blanc solo
+              <span className="mode-coming-soon">Bientôt</span>
             </button>
             <button
-              className={displayMode === 'groupe' ? 'active' : ''}
-              onClick={() => setDisplayMode('groupe')}
+              className="mode-disabled"
+              onClick={() => pushToast('info', 'Examen groupé — bientôt disponible. Cette fonctionnalité est en cours de développement.')}
+              disabled
             >
               <Users size={16} /> Examen groupé
+              <span className="mode-coming-soon">Bientôt</span>
             </button>
           </div>
 
@@ -847,9 +804,6 @@ export default function SujetDetailPage() {
                   )}
                 </button>
               </div>
-              {downloadError && (
-                <p style={{ color: 'var(--ruby)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{downloadError}</p>
-              )}
 
               <div ref={subjectContentRef}>
                 <SubjectRenderer

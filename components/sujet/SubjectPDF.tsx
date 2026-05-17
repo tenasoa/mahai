@@ -26,18 +26,41 @@ import type { AICorrectionResult, AICorrectionItem } from '@/lib/ai/schemas'
 
 /* ─────────────────────────────────────────────────────────────────
    Polices — on utilise les polices PDF intégrées (Times/Helvetica/Courier)
-   qui sont garanties stables dans @react-pdf/renderer. Les WOFF custom
-   provoquaient une erreur "unsupported number" liée à des dépassements
-   de métriques fontkit. On approxime visuellement le site :
-   · Times-Roman → titres serif (à la place de Cormorant Garamond)
-   · Helvetica   → corps sans-serif (à la place de DM Sans)
-   · Courier     → mono (à la place de DM Mono)
+   que l'on remplace maintenant par les vraies polices du site.
+   Le bug "unsupported number" de fontkit est contourné via le
+   callback de césure. Font.register() est dans ensureFonts() pour
+   éviter "CJS module can't be async" avec Turbopack.
    ──────────────────────────────────────────────────────────────── */
 
-function ensureFonts() {
-  // Désactive la césure automatique — limite les calculs de métriques
-  // qui peuvent produire des nombres hors-limites.
-  Font.registerHyphenationCallback(word => [word])
+let _fontsRegistered = false
+
+export function ensureFonts() {
+  if (_fontsRegistered) return
+  _fontsRegistered = true
+
+  Font.register({
+    family: 'Cormorant Garamond',
+    fonts: [
+      { src: '/fonts/CG-400.woff', fontWeight: 400 },
+      { src: '/fonts/CG-400i.woff', fontWeight: 400, fontStyle: 'italic' },
+      { src: '/fonts/CG-600.woff', fontWeight: 600 },
+      { src: '/fonts/CG-700.woff', fontWeight: 700 },
+      { src: '/fonts/CG-700i.woff', fontWeight: 700, fontStyle: 'italic' },
+    ],
+  })
+  Font.register({
+    family: 'DM Sans',
+    fonts: [
+      { src: '/fonts/DMS-400.woff', fontWeight: 400 },
+      { src: '/fonts/DMS-400i.woff', fontWeight: 400, fontStyle: 'italic' },
+      { src: '/fonts/DMS-500.woff', fontWeight: 500 },
+      { src: '/fonts/DMS-700.woff', fontWeight: 700 },
+      { src: '/fonts/DMS-700i.woff', fontWeight: 700, fontStyle: 'italic' },
+    ],
+  })
+  Font.register({ family: 'DM Mono', fonts: [{ src: '/fonts/DMM-400.woff', fontWeight: 400 }] })
+
+  Font.registerHyphenationCallback((word) => [word])
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -55,7 +78,7 @@ const styles = StyleSheet.create({
     paddingTop: 52,
     paddingBottom: 64,
     paddingHorizontal: 48,
-    fontFamily: 'Helvetica',
+    fontFamily: 'DM Sans',
     fontSize: 11,
     lineHeight: 1.55,
     color: '#1a1a1a',
@@ -119,7 +142,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.35
   },
   compactExamTitle: {
-    fontFamily: 'Times-Roman',
+    fontFamily: 'Cormorant Garamond',
     marginTop: 8,
     textAlign: 'center',
     fontSize: 16,
@@ -197,7 +220,7 @@ const styles = StyleSheet.create({
     color: '#C9A84C', marginBottom: 12
   },
   coverTitle: {
-    fontFamily: 'Times-Roman',
+    fontFamily: 'Cormorant Garamond',
     fontSize: 40,
     color: '#0c0c0e',
     fontWeight: 700,
@@ -241,7 +264,7 @@ const styles = StyleSheet.create({
     borderTopStyle: 'solid'
   },
   coverLogo: {
-    fontFamily: 'Times-Roman',
+    fontFamily: 'Cormorant Garamond',
     fontSize: 26,
     color: '#0c0c0e',
     fontWeight: 700,
@@ -257,7 +280,7 @@ const styles = StyleSheet.create({
 
   /* ───── CONTENT BLOCKS ───── */
   h1: {
-    fontFamily: 'Times-Roman',
+    fontFamily: 'Cormorant Garamond',
     fontSize: 22,
     fontWeight: 700,
     color: '#0c0c0e',
@@ -265,7 +288,7 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   h2: {
-    fontFamily: 'Times-Roman',
+    fontFamily: 'Cormorant Garamond',
     fontSize: 17,
     fontWeight: 700,
     color: '#1a1a1a',
@@ -273,7 +296,7 @@ const styles = StyleSheet.create({
     marginBottom: 6
   },
   h3: {
-    fontFamily: 'Times-Roman',
+    fontFamily: 'Cormorant Garamond',
     fontSize: 14,
     fontWeight: 600,
     color: '#1a1a1a',
@@ -359,12 +382,12 @@ const styles = StyleSheet.create({
     borderStyle: 'solid'
   },
   codeBlockLang: {
-    fontFamily: 'Courier',
+    fontFamily: 'DM Mono',
     fontSize: 7,
     color: '#89b4fa',
     marginBottom: 5},
   codeBlockText: {
-    fontFamily: 'Courier',
+    fontFamily: 'DM Mono',
     fontSize: 9,
     color: '#cdd6f4',
     lineHeight: 1.65
@@ -446,7 +469,7 @@ const styles = StyleSheet.create({
   exercicePoints: {
     fontSize: 8,
     color: '#666',
-    fontFamily: 'Courier'
+    fontFamily: 'DM Mono'
   },
 
   enonce: {
@@ -479,7 +502,7 @@ const styles = StyleSheet.create({
   questionNum: {
     width: 24,
     color: '#C9A84C',
-    fontFamily: 'Courier',
+    fontFamily: 'DM Mono',
     fontSize: 11,
     fontWeight: 700
   },
@@ -523,7 +546,7 @@ const styles = StyleSheet.create({
   formulaLatex: {
     fontSize: 9,
     color: '#1a1a5a',
-    fontFamily: 'Courier',
+    fontFamily: 'DM Mono',
     textAlign: 'center',
   },
   formulaBlock: {
@@ -641,14 +664,14 @@ const styles = StyleSheet.create({
     borderTopStyle: 'solid'
   },
   extraCorrectionsTitle: {
-    fontFamily: 'Times-Roman',
+    fontFamily: 'Cormorant Garamond',
     fontSize: 14,
     fontWeight: 700,
     color: '#3f7758',
     marginBottom: 8
   },
   extraCorrectionLabel: {
-    fontFamily: 'Courier',
+    fontFamily: 'DM Mono',
     fontSize: 8,
     color: '#888',
     marginBottom: 3},
@@ -1000,32 +1023,32 @@ function renderInlineRich(text: string): React.ReactNode[] {
     if (token.startsWith('**')) {
       // fontStyle:'normal' évite que l'héritage italic du parent donne Helvetica-BoldOblique
       nodes.push(
-        <Text key={`ri-${k++}`} style={{ fontFamily: 'Helvetica-Bold', fontStyle: 'normal' }}>
+        <Text key={`ri-${k++}`} style={{ fontFamily: 'DM Sans', fontStyle: 'normal' }}>
           {sanitizePDFText(token.slice(2, -2))}
         </Text>
       )
     } else if (token.startsWith('*')) {
       // fontFamily Helvetica-Oblique + reset fontWeight pour éviter Helvetica-BoldOblique
       nodes.push(
-        <Text key={`ri-${k++}`} style={{ fontFamily: 'Helvetica-Oblique', fontStyle: 'normal' }}>
+        <Text key={`ri-${k++}`} style={{ fontFamily: 'DM Sans', fontStyle: 'normal' }}>
           {sanitizePDFText(token.slice(1, -1))}
         </Text>
       )
     } else if (token.startsWith('`')) {
       nodes.push(
-        <Text key={`ri-${k++}`} style={{ fontFamily: 'Courier', fontStyle: 'normal', fontSize: 9, backgroundColor: '#f0ede4' }}>
+        <Text key={`ri-${k++}`} style={{ fontFamily: 'DM Mono', fontStyle: 'normal', fontSize: 9, backgroundColor: '#f0ede4' }}>
           {sanitizePDFText(token.slice(1, -1))}
         </Text>
       )
     } else if (token.startsWith('$$')) {
       nodes.push(
-        <Text key={`ri-${k++}`} style={{ fontFamily: 'Courier', fontStyle: 'normal', color: '#2a4a6a' }}>
+        <Text key={`ri-${k++}`} style={{ fontFamily: 'DM Mono', fontStyle: 'normal', color: '#2a4a6a' }}>
           {simplifyLatex(token.slice(2, -2))}
         </Text>
       )
     } else if (token.startsWith('$')) {
       nodes.push(
-        <Text key={`ri-${k++}`} style={{ fontFamily: 'Courier', fontStyle: 'normal', color: '#2a4a6a' }}>
+        <Text key={`ri-${k++}`} style={{ fontFamily: 'DM Mono', fontStyle: 'normal', color: '#2a4a6a' }}>
           {simplifyLatex(token.slice(1, -1))}
         </Text>
       )
@@ -1219,7 +1242,7 @@ function CorrectionBlock({
         <Text style={styles.aiCorrLabel}>Correction IA</Text>
         <Text style={[styles.aiCorrVerdict, verdict.style]}>{verdict.label}</Text>
         {item.score ? (
-          <Text style={{ fontSize: 7, color: '#666', fontFamily: 'Courier' }}>
+          <Text style={{ fontSize: 7, color: '#666', fontFamily: 'DM Mono' }}>
             {item.score}
           </Text>
         ) : null}
@@ -1522,7 +1545,6 @@ function formatDateFr(iso: string): string {
 }
 
 export default function SubjectPDF({ content, meta, trace, aiCorrection, aiCorrectionMode }: Props) {
-  ensureFonts()
   const watermarkLabel = trace.userEmail || trace.userName
 
   // État de rendu des corrections — on consomme items[] au fur et à mesure
@@ -1633,7 +1655,7 @@ export default function SubjectPDF({ content, meta, trace, aiCorrection, aiCorre
             {aiSummary.totalScore && aiSummary.totalScore !== '—' ? (
               <View style={styles.aiSummaryRow}>
                 <Text style={styles.aiSummaryRowLabel}>Note globale</Text>
-                <Text style={[styles.aiSummaryItem, { fontWeight: 700, fontFamily: 'Courier' }]}>
+                <Text style={[styles.aiSummaryItem, { fontWeight: 700, fontFamily: 'DM Mono' }]}>
                   {aiSummary.totalScore}
                 </Text>
               </View>
@@ -1673,7 +1695,7 @@ export default function SubjectPDF({ content, meta, trace, aiCorrection, aiCorre
           </View>
           <View style={styles.pageFooterCenter}>
             <Text style={styles.pageFooterLabel}>Code de traçabilité</Text>
-            <Text style={[styles.pageFooterValue, { fontFamily: 'Courier', color: '#C9A84C' }]}>
+            <Text style={[styles.pageFooterValue, { fontFamily: 'DM Mono', color: '#C9A84C' }]}>
               {trace.watermarkCode}
             </Text>
           </View>

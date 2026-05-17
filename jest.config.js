@@ -15,9 +15,11 @@ const customJestConfig = {
   testPathIgnorePatterns: [
     "<rootDir>/node_modules/",
     "<rootDir>/.next/",
+    "<rootDir>/.claude/",
     "<rootDir>/__tests__/jest.setup.tsx",
     "<rootDir>/__tests__/__utils__/",
   ],
+  modulePathIgnorePatterns: ["<rootDir>/.claude/"],
   collectCoverageFrom: [
     "components/**/*.{ts,tsx}",
     "!components/**/*.stories.{ts,tsx}",

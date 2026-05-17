@@ -90,15 +90,24 @@ export class ClaudeProvider implements AIProvider {
       const textBlock = response.content.find((b) => b.type === 'text') as
         | { type: 'text'; text: string }
         | undefined
-      if (!textBlock) {
+
+      // Certains modèles avec thinking:adaptive peuvent ne retourner que
+      // des blocs thinking sans bloc text (ex: timeout, interruption).
+      // On essaie alors de récupérer le contenu du dernier bloc thinking.
+      let responseText = textBlock?.text
+      if (!responseText) {
+        const thinkingBlock = [...response.content].reverse().find((b) => b.type === 'thinking') as { type: 'thinking'; thinking: string } | undefined
+        responseText = thinkingBlock?.thinking
+      }
+      if (!responseText) {
         throw new ProviderError('claude', 'Réponse Claude vide ou inattendue.')
       }
 
       let parsed: AICorrectionResult
       try {
-        parsed = JSON.parse(textBlock.text)
+        parsed = JSON.parse(responseText)
       } catch {
-        const match = textBlock.text.match(/\{[\s\S]*\}/)
+        const match = responseText.match(/\{[\s\S]*\}/)
         if (!match) throw new ProviderError('claude', 'Sortie Claude non-JSON.')
         parsed = JSON.parse(match[0])
       }

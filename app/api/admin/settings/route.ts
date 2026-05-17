@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verifyCsrf } from '@/lib/csrf'
 import { query } from '@/lib/db'
 import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
@@ -28,6 +29,8 @@ export async function GET(request: Request) {
 
 // POST /api/admin/settings - Créer un paramètre
 export async function POST(request: Request) {
+  const csrf = verifyCsrf(request)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
   const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -57,6 +60,8 @@ export async function POST(request: Request) {
 
 // PATCH /api/admin/settings - Mettre à jour
 export async function PATCH(request: Request) {
+  const csrf = verifyCsrf(request)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
   const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -107,6 +112,8 @@ export async function PATCH(request: Request) {
 
 // DELETE /api/admin/settings?key=xxx - Supprimer
 export async function DELETE(request: Request) {
+  const csrf = verifyCsrf(request)
+  if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
   const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
