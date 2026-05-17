@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import styles from './ProfileHeader.module.css'
 
 export interface ProfileHeaderProps {
@@ -33,7 +34,7 @@ export function ProfileHeader({
         <div className={styles.avatarContainer} onClick={onAvatarClick}>
           {avatarUrl ? (
             <div className={styles.avatarImage}>
-              <img src={avatarUrl} alt="Avatar" />
+              <Image src={avatarUrl} alt="Avatar" width={120} height={120} />
             </div>
           ) : (
             <div className={styles.avatarPlaceholder}>

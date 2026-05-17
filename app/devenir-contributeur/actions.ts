@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 
 const contributorApplicationSchema = z.object({
   fullName: z.string().min(4, 'Nom complet requis (min 4 caractères)'),
@@ -34,24 +34,21 @@ export interface ContributorApplicationState {
 }
 
 export async function getCurrentUserAndApplication() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const auth = await requireAuth()
 
-  if (!session?.user) {
+  if (isAuthFailure(auth)) {
     return null
   }
 
   const userResult = await query('SELECT id, role, prenom, nom, email, phone FROM "User" WHERE id = $1 LIMIT 1', [
-    session.user.id,
+    auth.userId,
   ])
 
   let application: any = null
   const hasApplicationTable = await contributorApplicationTableExists()
   if (hasApplicationTable) {
     const applicationResult = await query('SELECT * FROM "ContributorApplication" WHERE "userId" = $1 LIMIT 1', [
-      session.user.id,
+      auth.userId,
     ])
     application = applicationResult.rows[0] ?? null
   }

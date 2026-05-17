@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session?.user) {
+  const auth = await requireAuth()
+  if (isAuthFailure(auth)) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
@@ -14,7 +12,7 @@ export async function GET() {
     // 1. Récupérer les numéros de la table UserPhone
     const phonesResult = await query(
       'SELECT id, phone, provider, label, "createdAt" FROM "UserPhone" WHERE "userId" = $1 ORDER BY "createdAt" DESC',
-      [session.user.id]
+      [auth.userId]
     )
 
     let phones = phonesResult.rows
@@ -23,7 +21,7 @@ export async function GET() {
     if (phones.length === 0) {
       const userResult = await query(
         'SELECT phone FROM "User" WHERE id = $1 AND phone IS NOT NULL',
-        [session.user.id]
+        [auth.userId]
       )
 
       if (userResult.rows.length > 0 && userResult.rows[0].phone) {
@@ -54,25 +52,23 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session?.user) {
+  const auth = await requireAuth()
+  if (isAuthFailure(auth)) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
   try {
     const { phone, provider, label } = await req.json()
-    
+
     if (!phone || !provider) {
       return NextResponse.json({ error: 'Numéro et opérateur requis' }, { status: 400 })
     }
 
     const result = await query(
-      `INSERT INTO "UserPhone" (id, "userId", phone, provider, label) 
-       VALUES (gen_random_uuid()::TEXT, $1, $2, $3, $4) 
+      `INSERT INTO "UserPhone" (id, "userId", phone, provider, label)
+       VALUES (gen_random_uuid()::TEXT, $1, $2, $3, $4)
        RETURNING *`,
-      [session.user.id, phone, provider, label || null]
+      [auth.userId, phone, provider, label || null]
     )
     
     return NextResponse.json(result.rows[0])
@@ -86,17 +82,15 @@ export async function DELETE(req: Request) {
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
 
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session?.user || !id) {
+  const auth = await requireAuth()
+  if (isAuthFailure(auth) || !id) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
   try {
     await query(
       'DELETE FROM "UserPhone" WHERE id = $1 AND "userId" = $2',
-      [id, session.user.id]
+      [id, auth.userId]
     )
     return NextResponse.json({ success: true })
   } catch (err) {

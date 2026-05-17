@@ -1,28 +1,17 @@
 import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
-// Vérifier si l'utilisateur est admin
-async function checkAdmin(request: Request) {
-  const supabase = await createSupabaseServerClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    return { error: 'Non authentifié', status: 401 as const }
-  }
-
-  const userResult = await query('SELECT role FROM "User" WHERE id = $1', [user.id])
-  const role = userResult.rows[0]?.role
-  if (!role || String(role).toUpperCase() !== 'ADMIN') {
-    return { error: 'Accès interdit', status: 403 as const }
-  }
-
-  return { userId: user.id }
+// Garde admin centralisée (cf. lib/auth-guards.ts)
+async function checkAdmin() {
+  const guard = await requireAdmin()
+  if (isAuthFailure(guard)) return { error: guard.error, status: guard.status }
+  return { userId: guard.userId }
 }
 
 // GET /api/admin/settings - Lister tous les paramètres
 export async function GET(request: Request) {
-  const auth = await checkAdmin(request)
+  const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
@@ -39,7 +28,7 @@ export async function GET(request: Request) {
 
 // POST /api/admin/settings - Créer un paramètre
 export async function POST(request: Request) {
-  const auth = await checkAdmin(request)
+  const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
@@ -68,7 +57,7 @@ export async function POST(request: Request) {
 
 // PATCH /api/admin/settings - Mettre à jour
 export async function PATCH(request: Request) {
-  const auth = await checkAdmin(request)
+  const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
@@ -118,7 +107,7 @@ export async function PATCH(request: Request) {
 
 // DELETE /api/admin/settings?key=xxx - Supprimer
 export async function DELETE(request: Request) {
-  const auth = await checkAdmin(request)
+  const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {

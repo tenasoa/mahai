@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Calendar, Clock, ArrowRight, BookOpen, TrendingUp } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
@@ -130,11 +131,13 @@ export default function BlogPage() {
                 <Link key={post.id} href={`/blog/${post.slug}`} className="group">
                   <article className="bg-card border border-border-1 rounded-2xl overflow-hidden hover:border-gold-line transition-all h-full flex flex-col hover:-translate-y-1">
                     {post.cover_image ? (
-                      <div className="aspect-video bg-depth overflow-hidden flex-shrink-0">
-                        <img 
-                          src={post.cover_image} 
+                      <div className="relative aspect-video bg-depth overflow-hidden flex-shrink-0">
+                        <Image
+                          src={post.cover_image}
                           alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform"
                         />
                       </div>
                     ) : (

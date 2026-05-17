@@ -265,7 +265,6 @@ export default function RechargePage() {
         operator: selectedProvider.toUpperCase(),
         phoneNumber,
         transferCode: code,
-        status: "PENDING",
       });
 
       if (result.success) {

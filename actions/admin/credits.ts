@@ -1,20 +1,15 @@
 'use server'
 
 import { query, transaction } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logAdminAction } from '@/lib/audit'
+import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
+/** Garde admin centralisée. Retourne `{ id, role }` ou `null`. */
 async function checkAdmin() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) return false
-  
-  const result = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
-  const user = result.rows[0]
-  
-  return user?.role === 'ADMIN' ? user : null
+  const guard = await requireAdmin()
+  if (isAuthFailure(guard)) return null
+  return { id: guard.userId, role: guard.role }
 }
 
 export async function getCreditTransactionsAdmin(status?: string, page?: number, pageSize?: number) {
@@ -84,9 +79,7 @@ export async function validateCreditTransaction(id: string) {
   const adminUser = await checkAdmin()
   if (!adminUser) throw new Error("Non autorisé")
 
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  const adminId = session!.user.id
+  const adminId = adminUser.id
 
   // ⚠ Race condition fix : on UPDATE atomiquement avec WHERE status='PENDING'
   // et RETURNING. Si rowCount = 0, c'est qu'un autre admin a déjà validé
@@ -150,9 +143,7 @@ export async function rejectCreditTransaction(id: string, reason: string) {
   const adminUser = await checkAdmin()
   if (!adminUser) throw new Error("Non autorisé")
 
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  const adminId = session!.user.id
+  const adminId = adminUser.id
 
   // Atomique + idempotent (pas de double-rejet possible).
   const upd = await query(

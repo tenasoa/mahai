@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { finalizeAndPublish, rejectSubmission, requestRevision } from '@/actions/admin/submissions'
-import { CurrencyConverter } from '@/lib/currency-converter'
 import {
   CheckCircle,
   XCircle,
@@ -131,7 +130,6 @@ export function ReviewForm({ submission }: { submission: Submission }) {
   const [rejectReason, setRejectReason] = useState('')
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
   const [editInfoMode, setEditInfoMode] = useState(false)
-  const [currencyRate, setCurrencyRate] = useState<number | null>(null)
 
   const [formData, setFormData] = useState({
     titre: submission.title || '',
@@ -152,34 +150,8 @@ export function ReviewForm({ submission }: { submission: Submission }) {
     notes: ''
   })
 
-  useEffect(() => {
-    let isMounted = true
-
-    const loadCurrencyRate = async () => {
-      try {
-        const res = await fetch('/api/admin/currency-config')
-        if (!res.ok) return
-        const data = await res.json()
-        const rate = Number(data?.config?.arPerCredit)
-        if (!Number.isFinite(rate) || rate <= 0) return
-
-        if (!isMounted) return
-        setCurrencyRate(rate)
-
-        // Plus de conversion Ar→crédits : on garde directement le prix en Ar.
-        const arPrice = Number(submission.prix || 0)
-        const _ = CurrencyConverter.arToCredits(arPrice) // alias identité
-        setFormData(prev => ({ ...prev, prix: arPrice, credits: arPrice }))
-      } catch {
-        // fallback silencieux sur 50 Ar/cr
-      }
-    }
-
-    void loadCurrencyRate()
-    return () => {
-      isMounted = false
-    }
-  }, [submission.id, submission.prix])
+  // Système unifié en Ariary : le prix est déjà initialisé depuis
+  // submission.prix, plus aucune conversion ni configuration à charger.
 
   const handlePublish = async () => {
     if (!formData.titre.trim()) {
@@ -692,11 +664,10 @@ export function ReviewForm({ submission }: { submission: Submission }) {
                             fontSize: '0.85rem',
                             borderRadius: 'var(--r)',
                             border: '1px solid var(--b2)',
-                            background: currencyRate === null ? 'var(--b1)' : 'var(--void)',
+                            background: 'var(--void)',
                             color: 'var(--text)',
                             fontFamily: 'var(--mono)',
-                            fontWeight: 600,
-                            opacity: currencyRate === null ? 0.6 : 1
+                            fontWeight: 600
                           }}
                         />
                       </div>

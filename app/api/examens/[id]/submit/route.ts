@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db-client'
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 
 export async function POST(
   request: Request,
@@ -9,10 +9,9 @@ export async function POST(
 ) {
   const { id } = await params
 
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const auth = await requireAuth()
 
-  if (!session?.user) {
+  if (isAuthFailure(auth)) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
@@ -61,7 +60,7 @@ export async function POST(
     const bonusAr = score > 0 ? Math.floor(score / 10) * 50 : 0
     await db.transaction.create({
       data: {
-        userId: session.user.id,
+        userId: auth.userId,
         amountAr: bonusAr,
         type: 'EARN',
         status: 'COMPLETED',
@@ -72,7 +71,7 @@ export async function POST(
     if (bonusAr > 0) {
       await query(
         `UPDATE "User" SET "balanceAr" = "balanceAr" + $1, "updatedAt" = NOW() WHERE id = $2`,
-        [bonusAr, session.user.id],
+        [bonusAr, auth.userId],
       )
     }
 

@@ -7,6 +7,7 @@ import {
   Edit3, ShieldCheck, MapPin, GraduationCap
 } from 'lucide-react'
 import { AdminCreditAdjuster, AdminUserInfoEditor } from './UserActions'
+import { formatAr } from '@/lib/utils'
 
 export const metadata = {
   title: 'Détail Utilisateur — Admin Mah.AI'
@@ -27,9 +28,7 @@ function formatDateShort(dateString: string) {
   }).format(date)
 }
 
-function formatBalance(amountAr: number) {
-  return new Intl.NumberFormat('fr-FR').format(amountAr) + ' Ar'
-}
+const formatBalance = formatAr
 
 function RoleBadge({ role }: { role: string }) {
   const roleConfig: Record<string, { label: string; class: string }> = {

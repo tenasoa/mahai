@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 import { logger } from '@/lib/logger'
 
 export async function GET(
@@ -8,10 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ transactionId: string }> }
 ) {
   const { transactionId } = await params
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const auth = await requireAuth()
 
-  if (!session?.user) {
+  if (isAuthFailure(auth)) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
@@ -20,7 +19,7 @@ export async function GET(
       `SELECT id, status, "amountAr", "phoneNumber", "paymentMethod", "senderCode", "createdAt"
        FROM "Transaction"
        WHERE id = $1 AND "userId" = $2`,
-      [transactionId, session.user.id]
+      [transactionId, auth.userId]
     )
 
     if (result.rows.length === 0) {
@@ -49,10 +48,9 @@ export async function PATCH(
   { params }: { params: Promise<{ transactionId: string }> }
 ) {
   const { transactionId } = await params
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const auth = await requireAuth()
 
-  if (!session?.user) {
+  if (isAuthFailure(auth)) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
@@ -66,7 +64,7 @@ export async function PATCH(
     // Vérifier que la transaction appartient à cet utilisateur et est encore en attente
     const checkResult = await query(
       `SELECT id, status FROM "Transaction" WHERE id = $1 AND "userId" = $2`,
-      [transactionId, session.user.id]
+      [transactionId, auth.userId]
     )
 
     if (checkResult.rows.length === 0) {
@@ -81,7 +79,7 @@ export async function PATCH(
     const result = await query(
       `UPDATE "Transaction" SET "senderCode" = $1 WHERE id = $2 AND "userId" = $3
        RETURNING id, status, "amountAr", "phoneNumber", "paymentMethod", "senderCode", "createdAt"`,
-      [transactionCode, transactionId, session.user.id]
+      [transactionCode, transactionId, auth.userId]
     )
 
     const tx = result.rows[0]
