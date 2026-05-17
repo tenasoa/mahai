@@ -87,7 +87,7 @@ export async function GET(
     // Générer le PDF vectoriel
     const pdfBuffer = await generateSubjectPDF(meta, subjectRow.content, traceCode)
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `inline; filename="${encodeURIComponent(subjectRow.titre || 'sujet')}.pdf"`,

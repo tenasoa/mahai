@@ -41,24 +41,24 @@ export function ensureFonts() {
   Font.register({
     family: 'Cormorant Garamond',
     fonts: [
-      { src: '/fonts/CG-400.woff', fontWeight: 400, format: 'woff' },
-      { src: '/fonts/CG-400i.woff', fontWeight: 400, fontStyle: 'italic', format: 'woff' },
-      { src: '/fonts/CG-600.woff', fontWeight: 600, format: 'woff' },
-      { src: '/fonts/CG-700.woff', fontWeight: 700, format: 'woff' },
-      { src: '/fonts/CG-700i.woff', fontWeight: 700, fontStyle: 'italic', format: 'woff' },
+      { src: '/fonts/CG-400.woff', fontWeight: 400 },
+      { src: '/fonts/CG-400i.woff', fontWeight: 400, fontStyle: 'italic' },
+      { src: '/fonts/CG-600.woff', fontWeight: 600 },
+      { src: '/fonts/CG-700.woff', fontWeight: 700 },
+      { src: '/fonts/CG-700i.woff', fontWeight: 700, fontStyle: 'italic' },
     ],
   })
   Font.register({
     family: 'DM Sans',
     fonts: [
-      { src: '/fonts/DMS-400.woff', fontWeight: 400, format: 'woff' },
-      { src: '/fonts/DMS-400i.woff', fontWeight: 400, fontStyle: 'italic', format: 'woff' },
-      { src: '/fonts/DMS-500.woff', fontWeight: 500, format: 'woff' },
-      { src: '/fonts/DMS-700.woff', fontWeight: 700, format: 'woff' },
-      { src: '/fonts/DMS-700i.woff', fontWeight: 700, fontStyle: 'italic', format: 'woff' },
+      { src: '/fonts/DMS-400.woff', fontWeight: 400 },
+      { src: '/fonts/DMS-400i.woff', fontWeight: 400, fontStyle: 'italic' },
+      { src: '/fonts/DMS-500.woff', fontWeight: 500 },
+      { src: '/fonts/DMS-700.woff', fontWeight: 700 },
+      { src: '/fonts/DMS-700i.woff', fontWeight: 700, fontStyle: 'italic' },
     ],
   })
-  Font.register({ family: 'DM Mono', fonts: [{ src: '/fonts/DMM-400.woff', fontWeight: 400, format: 'woff' }] })
+  Font.register({ family: 'DM Mono', fonts: [{ src: '/fonts/DMM-400.woff', fontWeight: 400 }] })
 
   Font.registerHyphenationCallback((word) => [word])
 }
