@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { CreditCard, Edit3, Plus, Minus, X, Check } from 'lucide-react'
 import {
-  adjustUserCreditsAdmin,
+  adjustUserBalanceAdmin,
   updateUserInfoAdmin,
 } from '@/actions/admin/users'
 
@@ -58,7 +58,7 @@ export function AdminCreditAdjuster({ user }: Props) {
 
     startTransition(async () => {
       try {
-        await adjustUserCreditsAdmin(user.id, delta, reason.trim())
+        await adjustUserBalanceAdmin(user.id, delta, reason.trim())
         setOpen(false)
         reset()
         router.refresh()
