@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Menu,
@@ -419,9 +420,11 @@ export function AdminSidebar({ user, initials }: AdminSidebarProps) {
             data-tooltip={`${user.prenom} ${user.nom}`}
           >
             {user.profilePicture ? (
-              <img
+              <Image
                 src={user.profilePicture}
                 alt={`${user.prenom} ${user.nom}`}
+                width={36}
+                height={36}
                 className="sb-av"
               />
             ) : (

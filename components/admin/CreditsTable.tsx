@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Clock, CheckCircle2, XCircle, CreditCard, ArrowRight, Phone, Hash, Wallet, User, ArrowLeft } from 'lucide-react'
 import { AdminModal } from './AdminModal'
+import { formatAr } from '@/lib/utils'
 
 interface Transaction {
   id: string
@@ -29,9 +30,7 @@ function formatDate(dateString: string) {
   }).format(date)
 }
 
-function formatMoney(amount: number) {
-  return new Intl.NumberFormat('fr-FR').format(amount) + ' Ar'
-}
+const formatMoney = formatAr
 
 
 export function CreditsTable({

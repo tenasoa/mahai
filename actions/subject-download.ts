@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 import crypto from 'crypto'
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 import { logger } from '@/lib/logger'
 
 /**
@@ -32,16 +32,13 @@ export async function recordSubjectDownload(subjectId: string): Promise<
   | { success: false; error: string }
 > {
   try {
-    const supabase = await createSupabaseServerClient()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const auth = await requireAuth()
 
-    if (!session?.user?.id) {
+    if (isAuthFailure(auth)) {
       return { success: false, error: 'Non authentifié' }
     }
 
-    const userId = session.user.id
+    const userId = auth.userId
 
     // Vérifier l'accès : achat complété OU rôle privilégié OU auteur.
     const accessRes = await query(

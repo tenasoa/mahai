@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -275,7 +276,7 @@ export function ContributorSidebar({
             data-tooltip={`${user.prenom} ${user.nom}`}
           >
             {user.profilePicture ? (
-              <img src={user.profilePicture} alt={`${user.prenom} ${user.nom}`} className="sb-av" />
+              <Image src={user.profilePicture} alt={`${user.prenom} ${user.nom}`} width={36} height={36} className="sb-av" />
             ) : (
               <div className="sb-av">{(user.prenom?.charAt(0) || "C").toUpperCase()}</div>
             )}

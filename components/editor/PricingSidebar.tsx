@@ -46,35 +46,26 @@ export default function PricingSidebar({
   onPrixModeChange,
   onVisibiliteChange,
 }: Props) {
-  const [currencyRate, setCurrencyRate] = useState<number | null>(null);
   const [platformFeePercent, setPlatformFeePercent] = useState(30);
-  const [loading, setLoading] = useState(true);
 
-  // Charger la configuration de change au montage
+  // Charger le pourcentage de frais plateforme au montage.
   useEffect(() => {
-    const fetchCurrencyConfig = async () => {
+    const fetchPlatformFee = async () => {
       try {
-        const res = await fetch("/api/admin/currency-config");
+        const res = await fetch("/api/admin/platform-fee");
         if (res.ok) {
           const data = await res.json();
-          setCurrencyRate(data.config?.arPerCredit || 50);
           setPlatformFeePercent(data.config?.platformFeePercent || 30);
-          CurrencyConverter.cacheRate(data.config?.arPerCredit || 50);
         }
       } catch (err) {
         console.error("Erreur charge config:", err);
-        setCurrencyRate(50);
         setPlatformFeePercent(30);
-      } finally {
-        setLoading(false);
       }
     };
-    fetchCurrencyConfig();
+    fetchPlatformFee();
   }, []);
 
-  // Calculer les valeurs avec conversions
-  // Système unifié en Ariary : plus de conversion. priceInCredits == prix.
-  const priceInCredits = CurrencyConverter.arToCredits(prix);
+  // Système unifié en Ariary : plus de conversion crédit↔Ar.
   const commission = CurrencyConverter.calculatePlatformFee(
     prix,
     platformFeePercent,

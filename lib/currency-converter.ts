@@ -8,27 +8,8 @@ export interface PlatformFeeConfig {
 }
 
 export class CurrencyConverter {
-  // NOTE: Les méthodes de conversion crédits ↔ Ariary ont été supprimées.
-  // Le système utilise uniquement l'Ariary comme devise.
-  //
-  // On garde des stubs no-op pour quelques méthodes encore appelées par l'UI,
-  // afin de ne pas casser le build pendant la transition. À supprimer en
-  // Phase 4 du refactoring.
-
-  /** @deprecated No-op : la conversion crédit↔Ar a été supprimée. */
-  static cacheRate(_rate: number): void {
-    // Plus de cache de taux, le système est unifié en Ariary.
-  }
-
-  /** @deprecated Identité : 1 crédit historique = 1 unité Ar (système unifié). */
-  static arToCredits(amountAr: number): number {
-    return Math.round(Number(amountAr) || 0)
-  }
-
-  /** @deprecated Identité : 1 crédit = 1 Ar dans le système unifié. */
-  static creditsToAr(credits: number): number {
-    return Math.round(Number(credits) || 0)
-  }
+  // Système unifié en Ariary : aucune conversion de devise. Cette classe
+  // ne gère plus que le calcul des frais plateforme.
 
   /**
    * Calculer le revenu du contributeur après frais plateforme

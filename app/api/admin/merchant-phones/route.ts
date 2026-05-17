@@ -1,29 +1,18 @@
 import { NextResponse } from 'next/server'
 import { verifyCsrf } from '@/lib/csrf'
 import { query } from '@/lib/db'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
-// Vérifier si l'utilisateur est admin
-async function checkAdmin(request: Request) {
-  const supabase = await createSupabaseServerClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    return { error: 'Non authentifié', status: 401 as const }
-  }
-
-  const userResult = await query('SELECT role FROM "User" WHERE id = $1', [user.id])
-  const role = userResult.rows[0]?.role
-  if (!role || String(role).toUpperCase() !== 'ADMIN') {
-    return { error: 'Accès interdit', status: 403 as const }
-  }
-
-  return { userId: user.id }
+// Garde admin centralisée (cf. lib/auth-guards.ts)
+async function checkAdmin() {
+  const guard = await requireAdmin()
+  if (isAuthFailure(guard)) return { error: guard.error, status: guard.status }
+  return { userId: guard.userId }
 }
 
 // GET /api/admin/merchant-phones - Lister tous les numéros
 export async function GET(request: Request) {
-  const auth = await checkAdmin(request)
+  const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
@@ -38,12 +27,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(req: Request) {
-  const csrf = verifyCsrf(req)
+// POST /api/admin/merchant-phones - Créer un numéro
+export async function POST(request: Request) {
+  const csrf = verifyCsrf(request)
   if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
-  const request = req
-  // POST /api/admin/merchant-phones - Créer un numéro
-  const auth = await checkAdmin(request)
+  const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
@@ -67,12 +55,11 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PATCH(req: Request) {
-  const csrf = verifyCsrf(req)
+// PATCH /api/admin/merchant-phones - Mettre à jour
+export async function PATCH(request: Request) {
+  const csrf = verifyCsrf(request)
   if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
-  const request = req
-  // PATCH /api/admin/merchant-phones - Mettre à jour
-  const auth = await checkAdmin(request)
+  const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
@@ -108,12 +95,11 @@ export async function PATCH(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
-  const csrf = verifyCsrf(req)
+// DELETE /api/admin/merchant-phones?id=xxx - Supprimer
+export async function DELETE(request: Request) {
+  const csrf = verifyCsrf(request)
   if (csrf.error) return NextResponse.json(csrf.error, { status: 403 })
-  const request = req
-  // DELETE /api/admin/merchant-phones?id=xxx - Supprimer
-  const auth = await checkAdmin(request)
+  const auth = await checkAdmin()
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {

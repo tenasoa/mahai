@@ -8,6 +8,7 @@ import { ToastContainer } from '@/components/ui/ToastContainer'
 import { useToast } from '@/lib/hooks/useToast'
 import { processWithdrawal, runBulkPayments } from './actions'
 import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
+import { formatAr } from '@/lib/utils'
 
 interface Withdrawal {
   id: string
@@ -118,9 +119,7 @@ export default function AdminWithdrawalsClient({ withdrawals, stats, cycle }: Ad
     return config[status] || { label: status, class: 'pending' }
   }
 
-  const formatMoney = (amount: number) => {
-    return amount.toLocaleString('fr-FR') + ' Ar'
-  }
+  const formatMoney = formatAr
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {

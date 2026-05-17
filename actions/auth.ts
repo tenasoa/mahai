@@ -252,8 +252,10 @@ export async function loginUser(formData: LoginFormData, redirectTo?: string) {
   // attaqués depuis la même IP : limité par IP. Les deux compteurs
   // coexistent et c'est volontaire (défense en profondeur).
   const ip = await getClientIp();
-  const limitByEmail = await checkAuthRateLimit(`login:email:${email.toLowerCase()}`);
-  const limitByIp = await checkAuthRateLimit(`login:ip:${ip}`);
+  const [limitByEmail, limitByIp] = await Promise.all([
+    checkAuthRateLimit(`login:email:${email.toLowerCase()}`),
+    checkAuthRateLimit(`login:ip:${ip}`),
+  ]);
   if (!limitByEmail.allowed || !limitByIp.allowed) {
     const retry = Math.max(limitByEmail.retryAfter || 0, limitByIp.retryAfter || 0);
     return {
@@ -358,8 +360,10 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
   // confirmer/infirmer l'existence du compte.
   const ip = await getClientIp();
   const emailLower = validation.data.email.toLowerCase();
-  const limitByEmail = await checkAuthRateLimit(`reset:email:${emailLower}`);
-  const limitByIp = await checkAuthRateLimit(`reset:ip:${ip}`);
+  const [limitByEmail, limitByIp] = await Promise.all([
+    checkAuthRateLimit(`reset:email:${emailLower}`),
+    checkAuthRateLimit(`reset:ip:${ip}`),
+  ]);
   if (!limitByEmail.allowed || !limitByIp.allowed) {
     return {
       success:

@@ -1,8 +1,8 @@
 import { redirect, notFound } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { query } from '@/lib/db'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 import { getSubjectDraft } from '../../editor-actions'
-import EditorClient from '../../nouveau/EditorClient'
+import EditorClient from '../../nouveau/EditorClientLazy'
 
 export const metadata = {
   title: 'Modifier le sujet — Mah.AI',
@@ -15,12 +15,10 @@ interface Props {
 export default async function EditSubjectPage({ params }: Props) {
   const { id } = await params
 
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const auth = await requireAuth()
+  if (isAuthFailure(auth)) redirect('/auth/login')
 
-  if (!session) redirect('/auth/login')
-
-  const userRes = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
+  const userRes = await query('SELECT role FROM "User" WHERE id = $1', [auth.userId])
   const user = userRes.rows[0]
 
   if (!user || !['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR', 'VALIDATEUR', 'VERIFICATEUR'].includes(user.role)) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 
 export async function GET(
   request: NextRequest,
@@ -84,34 +84,33 @@ export async function POST(
 ) {
   try {
     const { postId } = await params
-    const supabase = await createSupabaseServerClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session?.user) {
+    const auth = await requireAuth()
+
+    if (isAuthFailure(auth)) {
       return NextResponse.json(
         { error: 'Vous devez être connecté pour commenter' },
         { status: 401 }
       )
     }
-    
+
     const body = await request.json()
     const { content, parentId } = body
-    
+
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
         { error: 'Le commentaire ne peut pas être vide' },
         { status: 400 }
       )
     }
-    
+
     // Get user info
-    const { data: userData } = await supabase
+    const { data: userData } = await auth.supabase
       .from('User')
       .select('prenom, nom')
-      .eq('id', session.user.id)
+      .eq('id', auth.userId)
       .single()
-    
-    const fullName = userData ? [userData.prenom, userData.nom].filter(Boolean).join(' ') : session.user.email
+
+    const fullName = userData ? [userData.prenom, userData.nom].filter(Boolean).join(' ') : auth.email
     const userName = fullName || 'Utilisateur'
 
     // Use admin client to bypass RLS for comment insertion
@@ -121,7 +120,7 @@ export async function POST(
       .from('BlogComment')
       .insert({
         post_id: postId as string,
-        user_id: session.user.id as string,
+        user_id: auth.userId,
         user_name: userName,
         content: content.trim(),
         parent_id: parentId || null,

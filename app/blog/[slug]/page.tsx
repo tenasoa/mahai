@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Calendar, Clock, Eye, MessageSquare, ArrowLeft, Send, Trash2 } from 'lucide-react'
 import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
 import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
 import { LegalPageSkeleton } from '@/components/ui/PageSkeletons'
 import { useAuth } from '@/lib/hooks/useAuth'
+import DOMPurify from 'isomorphic-dompurify'
 
 export default function BlogPostPage() {
   const params = useParams()
@@ -156,13 +158,20 @@ export default function BlogPostPage() {
       <section className="py-12 px-6">
         <div className="max-w-4xl mx-auto">
           {post.cover_image && (
-            <div className="mb-10 rounded-2xl overflow-hidden border border-border-1">
-              <img src={post.cover_image} alt={post.title} className="w-full object-cover" />
+            <div className="relative aspect-video mb-10 rounded-2xl overflow-hidden border border-border-1">
+              <Image
+                src={post.cover_image}
+                alt={post.title}
+                fill
+                priority
+                sizes="(max-width: 896px) 100vw, 896px"
+                className="object-cover"
+              />
             </div>
           )}
           <div 
             className="prose prose-invert max-w-none text-lg prose-headings:font-display prose-headings:font-normal prose-headings:tracking-tight prose-h1:text-4xl prose-h1:text-text prose-h2:text-3xl prose-h2:text-text prose-h2:mt-12 prose-h2:mb-6 prose-h2:border-b prose-h2:border-border-1 prose-h2:pb-4 prose-h3:text-2xl prose-h3:text-text prose-h3:mt-8 prose-h3:mb-4 prose-p:text-text-2 prose-p:leading-relaxed prose-p:mb-6 prose-a:text-gold hover:prose-a:text-gold-hi prose-a:no-underline hover:prose-a:underline prose-strong:text-text prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-gold prose-blockquote:bg-gold-dim prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:my-8 prose-blockquote:rounded-r-2xl prose-blockquote:not-italic prose-blockquote:text-text-2 prose-blockquote:shadow-sm prose-img:rounded-2xl prose-img:border prose-img:border-border-1 prose-img:shadow-sm prose-img:my-10 prose-ul:list-disc prose-ol:list-decimal marker:text-gold prose-li:text-text-2 prose-li:leading-relaxed prose-code:text-gold prose-code:bg-gold-dim prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:font-mono prose-code:text-sm prose-pre:bg-card prose-pre:border prose-pre:border-border-1 prose-pre:rounded-2xl"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || '') }}
           />
         </div>
       </section>
@@ -226,9 +235,11 @@ export default function BlogPostPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       {comment.User?.profilePicture ? (
-                        <img
+                        <Image
                           src={comment.User.profilePicture}
                           alt={comment.userName}
+                          width={40}
+                          height={40}
                           className="w-10 h-10 rounded-full object-cover border border-border-1"
                         />
                       ) : (

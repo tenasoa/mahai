@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { query } from '@/lib/db'
 import { getPlatformFeePercent, setPlatformFeePercent } from '@/lib/settings'
+import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
 /**
  * Endpoint admin : gestion du pourcentage de frais plateforme.
@@ -9,16 +8,9 @@ import { getPlatformFeePercent, setPlatformFeePercent } from '@/lib/settings'
  * a été supprimée, plus de conversion crédit↔Ar).
  */
 async function checkAdmin() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) return { error: 'Non authentifié', status: 401 as const }
-
-  const userResult = await query('SELECT role FROM "User" WHERE id = $1', [session.user.id])
-  const role = userResult.rows[0]?.role
-  if (!role || String(role).toUpperCase() !== 'ADMIN') {
-    return { error: 'Accès interdit', status: 403 as const }
-  }
-  return { userId: session.user.id }
+  const guard = await requireAdmin()
+  if (isAuthFailure(guard)) return { error: guard.error, status: guard.status }
+  return { userId: guard.userId }
 }
 
 export async function GET() {

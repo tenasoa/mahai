@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import styles from './ProviderCard.module.css'
 
 export type ProviderType = 'mvola' | 'orange' | 'airtel'
@@ -50,7 +51,7 @@ export function ProviderCard({
     >
       <div className={styles.providerLogo}>
         {provider.logo ? (
-          <img src={provider.logo} alt={`Logo ${provider.name}`} className={styles.logoImage} />
+          <Image src={provider.logo} alt={`Logo ${provider.name}`} width={48} height={48} className={styles.logoImage} />
         ) : (
           <div className={styles.logoPlaceholder} style={{ backgroundColor: provider.color }}>
             {provider.name.charAt(0)}

@@ -3,25 +3,12 @@ import { getPendingSubmissions, getSubmissionsStats } from '@/actions/admin/subm
 import { SubmissionsList } from './SubmissionsList'
 import { SubmissionsHeader } from './SubmissionsHeader'
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { query } from '@/lib/db'
-
-async function checkAdmin() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) return null
-  
-  const result = await query('SELECT id, role FROM "User" WHERE id = $1', [session.user.id])
-  const user = result.rows[0]
-  
-  return user?.role === 'ADMIN' ? user : null
-}
+import { requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
 export default async function AdminSubmissionsPage() {
-  const adminUser = await checkAdmin()
-  
-  if (!adminUser) {
+  const adminUser = await requireAdmin()
+
+  if (isAuthFailure(adminUser)) {
     redirect('/login')
   }
 
