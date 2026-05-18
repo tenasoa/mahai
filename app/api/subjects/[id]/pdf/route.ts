@@ -49,9 +49,9 @@ export async function GET(
     // Charger le sujet
     const subjectRes = await query(
       `SELECT
-         id, titre, type, matiere, annee, serie, pages, prix,
-         difficulte, duree, coefficient, etablissement,
-         description, content,
+         s.id, s.titre, s.type, s.matiere, s.annee, s.serie, s.pages, s.prix,
+         s.difficulte, s.duree, s.coefficient, s.etablissement,
+         s.description, s.content,
          u.prenom || ' ' || u.nom AS "authorName"
        FROM "Subject" s
        LEFT JOIN "User" u ON s."authorId" = u.id
