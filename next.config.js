@@ -11,6 +11,11 @@ const nextConfig = {
   // internes. `transpilePackages` force Webpack/Turbopack à le traiter
   // comme du code source local, donc à résoudre correctement ses sous-modules.
   transpilePackages: ['mathjax-full'],
+  // La route /api/subjects/[id]/pdf lit les .woff de public/fonts côté
+  // serveur ; sans ceci, Vercel ne les inclut pas dans le bundle serverless.
+  outputFileTracingIncludes: {
+    '/api/subjects/[id]/pdf': ['./public/fonts/**'],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

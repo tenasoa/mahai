@@ -1,5 +1,6 @@
-'use client'
+// Module exécuté côté serveur uniquement (route API /api/subjects/[id]/pdf).
 
+import path from 'path'
 import {
   Document,
   Page,
@@ -12,30 +13,35 @@ import {
 import type { ReactElement } from 'react'
 
 // ── Polices (identiques à l'application) ──────────────────────────────
+// Côté serveur, @react-pdf/renderer ne peut pas résoudre une URL relative
+// au navigateur (« /fonts/x.woff ») : il faut un chemin de fichier absolu
+// pointant vers le dossier public/fonts.
+
+const fontPath = (file: string) => path.join(process.cwd(), 'public', 'fonts', file)
 
 Font.register({
   family: 'Cormorant Garamond',
   fonts: [
-    { src: '/fonts/CG-400.woff', fontWeight: 400 },
-    { src: '/fonts/CG-400i.woff', fontWeight: 400, fontStyle: 'italic' },
-    { src: '/fonts/CG-600.woff', fontWeight: 600 },
-    { src: '/fonts/CG-700.woff', fontWeight: 700 },
-    { src: '/fonts/CG-700i.woff', fontWeight: 700, fontStyle: 'italic' },
+    { src: fontPath('CG-400.woff'), fontWeight: 400 },
+    { src: fontPath('CG-400i.woff'), fontWeight: 400, fontStyle: 'italic' },
+    { src: fontPath('CG-600.woff'), fontWeight: 600 },
+    { src: fontPath('CG-700.woff'), fontWeight: 700 },
+    { src: fontPath('CG-700i.woff'), fontWeight: 700, fontStyle: 'italic' },
   ],
 })
 
 Font.register({
   family: 'DM Sans',
   fonts: [
-    { src: '/fonts/DMS-400.woff', fontWeight: 400 },
-    { src: '/fonts/DMS-400i.woff', fontWeight: 400, fontStyle: 'italic' },
-    { src: '/fonts/DMS-500.woff', fontWeight: 500 },
-    { src: '/fonts/DMS-700.woff', fontWeight: 700 },
-    { src: '/fonts/DMS-700i.woff', fontWeight: 700, fontStyle: 'italic' },
+    { src: fontPath('DMS-400.woff'), fontWeight: 400 },
+    { src: fontPath('DMS-400i.woff'), fontWeight: 400, fontStyle: 'italic' },
+    { src: fontPath('DMS-500.woff'), fontWeight: 500 },
+    { src: fontPath('DMS-700.woff'), fontWeight: 700 },
+    { src: fontPath('DMS-700i.woff'), fontWeight: 700, fontStyle: 'italic' },
   ],
 })
 
-Font.register({ family: 'DM Mono', fonts: [{ src: '/fonts/DMM-400.woff', fontWeight: 400 }] })
+Font.register({ family: 'DM Mono', fonts: [{ src: fontPath('DMM-400.woff'), fontWeight: 400 }] })
 
 // Evite les erreurs "unsupported number" de fontkit sur les metriques
 // de polices WOFF (largeur de glyphe hors-limites).
@@ -43,11 +49,17 @@ Font.registerHyphenationCallback((word) => [word])
 
 // ── Types ───────────────────────────────────────────────────────────
 
+interface TipTapMark {
+  type: string
+  attrs?: Record<string, unknown>
+}
+
 interface TipTapNode {
   type: string
   attrs?: Record<string, unknown>
   content?: TipTapNode[]
   text?: string
+  marks?: TipTapMark[]
 }
 
 export interface SubjectMeta {
@@ -143,6 +155,10 @@ const styles = StyleSheet.create({
   heading3: { fontSize: 12, fontFamily: 'Cormorant Garamond', fontWeight: 700, color: '#333' },
   paragraph: { marginBottom: 4, textAlign: 'justify' as const },
   textInline: { fontFamily: 'Cormorant Garamond' },
+  markBold: { fontWeight: 700 },
+  markItalic: { fontStyle: 'italic' as const },
+  markUnderline: { textDecoration: 'underline' as const },
+  markStrike: { textDecoration: 'line-through' as const },
   mathInline: {
     fontFamily: 'DM Mono',
     fontSize: 10,
@@ -178,12 +194,19 @@ const styles = StyleSheet.create({
   tableCellHeader: { flex: 1, padding: '3 5', fontSize: 9, fontFamily: 'DM Sans', fontWeight: 700 },
   annotation: {
     marginVertical: 4,
-    padding: '4 8',
+    padding: '6 8',
     backgroundColor: '#fff8e1',
     borderLeft: '2px solid #C9A84C',
     fontSize: 9,
     fontFamily: 'DM Sans',
-    fontStyle: 'italic',
+  },
+  annotationLabel: {
+    fontSize: 7,
+    fontFamily: 'DM Sans',
+    fontWeight: 700,
+    color: '#C9A84C',
+    letterSpacing: 1,
+    marginBottom: 3,
   },
   schema: {
     marginVertical: 8,
@@ -213,17 +236,36 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    opacity: 0.03,
+    opacity: 0.12,
   },
   watermarkText: {
-    fontSize: 48,
+    fontSize: 60,
     fontFamily: 'Cormorant Garamond',
-    color: '#000',
+    fontWeight: 700,
+    color: '#C9A84C',
     transform: 'rotate(-35deg)',
   },
 })
 
 // ── Rendu inline (text, inlineMath, hardBreak) ────────────────────
+
+// Convertit les marques TipTap (bold/italic/underline/strike) en styles PDF.
+function styleFromMarks(marks?: TipTapMark[]) {
+  if (!marks) return []
+  type MarkStyle =
+    | (typeof styles)['markBold']
+    | (typeof styles)['markItalic']
+    | (typeof styles)['markUnderline']
+    | (typeof styles)['markStrike']
+  const out: MarkStyle[] = []
+  for (const mark of marks) {
+    if (mark.type === 'bold') out.push(styles.markBold)
+    else if (mark.type === 'italic') out.push(styles.markItalic)
+    else if (mark.type === 'underline') out.push(styles.markUnderline)
+    else if (mark.type === 'strike') out.push(styles.markStrike)
+  }
+  return out
+}
 
 function RenderInline({ children }: { children?: TipTapNode[] }) {
   if (!children) return null
@@ -232,7 +274,7 @@ function RenderInline({ children }: { children?: TipTapNode[] }) {
       {children.map((node, i) => {
         if (node.type === 'text') {
           return (
-            <Text key={i} style={styles.textInline}>
+            <Text key={i} style={[styles.textInline, ...styleFromMarks(node.marks)]}>
               {node.text || ''}
             </Text>
           )
@@ -325,10 +367,12 @@ function RenderNode({ node }: { node: TipTapNode; index: number }): ReactElement
     case 'annotation':
       return (
         <View style={styles.annotation}>
-          <Text>
-            [{((attrs?.type as string) || 'NOTE').toUpperCase()}]{' '}
+          <Text style={styles.annotationLabel}>
+            [{((attrs?.type as string) || 'NOTE').toUpperCase()}]
           </Text>
-          <RenderInline>{content}</RenderInline>
+          {content?.map((child, i) => (
+            <RenderNode key={i} node={child} index={i} />
+          ))}
         </View>
       )
 
@@ -508,11 +552,25 @@ function SubjectPDF({ meta, content, traceCode }: SubjectPDFProps) {
 
 // ── Fonction d'export ─────────────────────────────────────────────
 
+// Numérote séquentiellement les nœuds `question` dépourvus d'attribut
+// `numero` (comme le fait l'affichage « lecture simple » de l'application).
+function numberQuestions(node: TipTapNode, counter: { n: number }): void {
+  if (node.type === 'question') {
+    counter.n += 1
+    const current = node.attrs?.numero
+    if (current === undefined || current === null || current === '') {
+      node.attrs = { ...node.attrs, numero: counter.n }
+    }
+  }
+  node.content?.forEach((child) => numberQuestions(child, counter))
+}
+
 export async function generateSubjectPDF(
   meta: SubjectMeta,
   content: TipTapNode,
   traceCode?: string,
 ): Promise<Buffer> {
+  numberQuestions(content, { n: 0 })
   const document = <SubjectPDF meta={meta} content={content} traceCode={traceCode} />
   const pdfBlob = await pdf(document).toBlob()
   const arrayBuffer = await pdfBlob.arrayBuffer()
