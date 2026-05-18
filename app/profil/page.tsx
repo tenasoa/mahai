@@ -271,7 +271,7 @@ export default function ProfilePage() {
 
     try {
       setSaveLoading(true);
-      const result = await uploadAvatarAction(userId, file);
+      const result = await uploadAvatarAction(file);
 
       if (result.success) {
         setNotification({
