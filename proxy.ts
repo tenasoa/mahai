@@ -104,22 +104,45 @@ export async function proxy(request: NextRequest) {
       );
     }
 
+    // Sécurité : pour les routes admin (et uniquement celles-ci, pour limiter
+    // le surcoût réseau), on REVALIDE le JWT auprès de Supabase via getUser().
+    // getSession() lit seulement le cookie local : un token révoqué (logout,
+    // bannissement, session invalidée) y reste valide jusqu'à son expiration.
+    // getUser() confirme côté serveur que la session est toujours active.
+    let adminUser = effectiveUser;
+    try {
+      const { data: { user: revalidatedUser }, error: revalidationError } =
+        await supabase.auth.getUser();
+      if (revalidationError || !revalidatedUser) {
+        debugLog(`[Admin Check] getUser() revalidation failed for ${pathname} - access denied`);
+        return NextResponse.redirect(
+          new URL("/auth/login?redirect=" + encodeURIComponent(pathname), request.url)
+        );
+      }
+      adminUser = revalidatedUser;
+    } catch (error) {
+      logger.error('[Admin Check] getUser() revalidation error', error instanceof Error ? error.message : String(error));
+      return NextResponse.redirect(
+        new URL("/auth/login?redirect=" + encodeURIComponent(pathname), request.url)
+      );
+    }
+
     try {
       // Utiliser pg directement (contourne les RLS Supabase)
       const result = await query(
         `SELECT role FROM "User" WHERE id = $1`,
-        [effectiveUser.id]
+        [adminUser.id]
       );
 
       const role = result.rows[0]?.role;
-      debugLog(`[Admin Check] Role checked for ${effectiveUser.id}: ${role}`);
+      debugLog(`[Admin Check] Role checked for ${adminUser.id}: ${role}`);
 
       if (role !== "ADMIN") {
-        debugLog(`[Admin Check] Access denied for ${effectiveUser.id}, role: ${role}`);
+        debugLog(`[Admin Check] Access denied for ${adminUser.id}, role: ${role}`);
         return NextResponse.redirect(new URL("/", request.url));
       }
 
-      debugLog(`[Admin Check] Access granted for ${effectiveUser.id}`);
+      debugLog(`[Admin Check] Access granted for ${adminUser.id}`);
     } catch (error) {
       // En cas d'erreur DB, refuser l'accès par sécurité. Une panne DB
       // ne doit jamais ouvrir les routes admin. L'utilisateur est redirigé

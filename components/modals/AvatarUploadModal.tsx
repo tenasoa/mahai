@@ -9,16 +9,14 @@ import './AvatarUploadModal.css'
 interface AvatarUploadModalProps {
   isOpen: boolean
   onClose: () => void
-  userId: string
   currentAvatarUrl?: string | null
   onAvatarChange: (url: string) => void
   onError: (message: string) => void
 }
 
-export function AvatarUploadModal({ 
-  isOpen, 
-  onClose, 
-  userId, 
+export function AvatarUploadModal({
+  isOpen,
+  onClose,
   currentAvatarUrl,
   onAvatarChange,
   onError
@@ -131,7 +129,7 @@ export function AvatarUploadModal({
     setUploading(true)
     setError(null)
 
-    const result = await uploadAvatarAction(userId, selectedFile)
+    const result = await uploadAvatarAction(selectedFile)
 
     if (result.success && result.url) {
       onAvatarChange(result.url)
@@ -150,7 +148,7 @@ export function AvatarUploadModal({
     setDeleting(true)
     setError(null)
 
-    const result = await deleteAvatarAction(userId)
+    const result = await deleteAvatarAction()
 
     if (result.success) {
       onAvatarChange('')

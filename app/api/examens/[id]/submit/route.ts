@@ -1,86 +1,25 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db-client'
-import { query } from '@/lib/db'
-import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-
-  const auth = await requireAuth()
-
-  if (isAuthFailure(auth)) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  }
-
-  try {
-    const body = await request.json()
-    const { answers } = body
-
-    const exam = await db.examenBlanc.findUnique({
-      where: { id },
-    })
-
-    if (!exam) {
-      return NextResponse.json({ error: 'Examen non trouvé' }, { status: 404 })
-    }
-
-    let score = 0
-    const correctAnswers: Record<string, string> = {
-      q1: '3x² + 4x - 5',
-      q2: 'x² + x + C',
-      q3: '4',
-    }
-
-    if (answers) {
-      Object.entries(answers).forEach(([questionId, answer]) => {
-        if (correctAnswers[questionId] === answer) {
-          const questionPoints: Record<string, number> = {
-            q1: 5,
-            q2: 3,
-            q3: 2,
-          }
-          score += questionPoints[questionId] || 0
-        }
-      })
-    }
-
-    await db.examenBlanc.update({
-      where: { id },
-      data: {
-        score,
-        submittedAt: new Date(),
-        status: 'GRADED',
-      },
-    })
-
-    // Bonus en Ariary : ancien score/10 (en crédits) × 50 = score × 5 Ar.
-    const bonusAr = score > 0 ? Math.floor(score / 10) * 50 : 0
-    await db.transaction.create({
-      data: {
-        userId: auth.userId,
-        amountAr: bonusAr,
-        type: 'EARN',
-        status: 'COMPLETED',
-        description: `Points examen ${exam.titre}`,
-      },
-    })
-
-    if (bonusAr > 0) {
-      await query(
-        `UPDATE "User" SET "balanceAr" = "balanceAr" + $1, "updatedAt" = NOW() WHERE id = $2`,
-        [bonusAr, auth.userId],
-      )
-    }
-
-    return NextResponse.json({ score, maxScore: exam.scoreMax || 10 })
-  } catch (error) {
-    console.error('Error submitting exam:', error)
-    return NextResponse.json(
-      { error: 'Erreur lors de la soumission' },
-      { status: 500 }
-    )
-  }
+/**
+ * Endpoint DÉSACTIVÉ — la fonctionnalité « examens blancs » est en pause.
+ *
+ * L'ancienne implémentation présentait une faille critique (audit sécurité) :
+ * elle créditait `balanceAr` sans vérifier que l'examen appartenait à
+ * l'utilisateur ni empêcher la re-soumission → farming de crédits illimité.
+ *
+ * À la réimplémentation de la feature, NE PAS restaurer le code tel quel.
+ * Corriger impérativement avant réactivation :
+ *  1. Vérifier la propriété : `exam.userId === auth.userId` (sinon 403).
+ *  2. Idempotence : refuser si l'examen est déjà SUBMITTED/GRADED
+ *     (UPDATE conditionnel + contrôle du rowCount).
+ *  3. Englober mise à jour de l'examen + crédit du solde + Transaction
+ *     dans une seule transaction atomique.
+ *
+ * L'implémentation d'origine reste disponible dans l'historique git.
+ */
+export async function POST() {
+  return NextResponse.json(
+    { error: 'La soumission d’examens est temporairement indisponible.' },
+    { status: 503 },
+  )
 }

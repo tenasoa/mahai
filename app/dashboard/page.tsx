@@ -29,7 +29,7 @@ interface DashboardCardProps {
   label: string
   value: string | number
   subtitle: string
-  route: string
+  route?: string
   color: 'gold' | 'blue' | 'green' | 'ruby'
 }
 
@@ -180,7 +180,7 @@ export default function DashboardPage() {
       label: 'Examens planifiés',
       value: upcomingExams.length,
       subtitle: `Prochaine échéance dans ${nearestExamDays} jour(s)`,
-      route: '/examens',
+      // Lien vers /examens désactivé — fonctionnalité à implémenter ultérieurement.
       color: 'ruby',
     },
     {
@@ -323,7 +323,8 @@ export default function DashboardPage() {
               {upcomingExams.length === 0 ? (
                 <div className="planning-empty">
                   <p>Aucun examen blanc programmé</p>
-                  <Link href="/examens" className="planning-cta">Créer un examen blanc</Link>
+                  {/* Lien « Créer un examen blanc » désactivé — fonctionnalité à implémenter ultérieurement. */}
+                  <span className="planning-cta planning-cta-disabled" aria-disabled="true">Bientôt disponible</span>
                 </div>
               ) : (
                 upcomingExams.map((exam) => (
@@ -394,6 +395,8 @@ export default function DashboardPage() {
                     <div className="ai-sub">Partagez votre code de parrainage et gagnez des Ar bonus quand vos filleuls deviennent actifs.</div>
                   </div>
                 </div>
+                {/* Action « Démarrer un examen blanc » désactivée — lien vers /examens
+                    retiré, fonctionnalité à implémenter ultérieurement.
                 <div className="activity-item" onClick={() => router.push('/examens')}>
                   <div className="ai-dot free"></div>
                   <div className="ai-content">
@@ -401,6 +404,7 @@ export default function DashboardPage() {
                     <div className="ai-sub">Passez en conditions réelles avec chrono et correction IA.</div>
                   </div>
                 </div>
+                */}
               </div>
             </section>
 
@@ -481,7 +485,10 @@ function DashboardCard({ icon, label, value, subtitle, route, color }: Dashboard
   const Icon = icon
 
   return (
-    <div className={`stat-card stat-card-${color}`} onClick={() => router.push(route)}>
+    <div
+      className={`stat-card stat-card-${color}`}
+      onClick={() => { if (route) router.push(route) }}
+    >
       <div className="sc-label">{label}</div>
       <div className="sc-value">{value}</div>
       <div className="sc-subtitle">{subtitle}</div>

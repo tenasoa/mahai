@@ -4,6 +4,7 @@ import { put, del, list } from '@vercel/blob'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logger } from '@/lib/logger'
+import { requireAuth, requireAdmin, isAuthFailure } from '@/lib/auth-guards'
 
 const BLOB_FOLDER = 'avatars'
 
@@ -19,8 +20,16 @@ function getBlobToken(): string {
 /**
  * Upload d'un avatar vers Vercel Blob
  */
-export async function uploadAvatarAction(userId: string, file: File) {
+export async function uploadAvatarAction(file: File) {
   try {
+    // Sécurité : l'utilisateur cible est TOUJOURS dérivé de la session
+    // serveur (JWT revalidé), jamais d'un paramètre fourni par le client.
+    const auth = await requireAuth()
+    if (isAuthFailure(auth)) {
+      return { success: false, error: auth.error }
+    }
+    const userId = auth.userId
+
     const token = getBlobToken()
 
     // Validation du fichier
@@ -93,8 +102,15 @@ export async function uploadAvatarAction(userId: string, file: File) {
 /**
  * Supprimer un avatar de Vercel Blob
  */
-export async function deleteAvatarAction(userId: string) {
+export async function deleteAvatarAction() {
   try {
+    // Sécurité : utilisateur cible dérivé de la session serveur uniquement.
+    const auth = await requireAuth()
+    if (isAuthFailure(auth)) {
+      return { success: false, error: auth.error }
+    }
+    const userId = auth.userId
+
     const token = getBlobToken()
 
     // Récupérer l'URL actuelle de l'avatar
@@ -148,6 +164,12 @@ export async function deleteAvatarAction(userId: string) {
  */
 export async function listAvatarsAction() {
   try {
+    // Réservé aux administrateurs : énumère tous les avatars du stockage.
+    const guard = await requireAdmin()
+    if (isAuthFailure(guard)) {
+      return { success: false, error: guard.error }
+    }
+
     const token = getBlobToken()
     
     const data = await list({
