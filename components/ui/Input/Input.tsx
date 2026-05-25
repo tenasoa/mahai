@@ -65,6 +65,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className={styles.input}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
+            aria-invalid={hasError ? 'true' : 'false'}
+            aria-describedby={id ? `${error ? `${id}-error` : ''} ${hint && !error ? `${id}-hint` : ''}`.trim() || undefined : undefined}
             {...props}
           />
 
@@ -85,9 +87,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {error && <span className={styles.errorMessage}>{error}</span>}
+        {error && <span id={id ? `${id}-error` : undefined} className={styles.errorMessage} role="alert">{error}</span>}
 
-        {hint && !error && <span className={styles.hint}>{hint}</span>}
+        {hint && !error && <span id={id ? `${id}-hint` : undefined} className={styles.hint}>{hint}</span>}
       </div>
     )
   }

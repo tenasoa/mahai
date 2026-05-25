@@ -297,6 +297,8 @@ export function UserNotifications({ direction = 'down-left' }: UserNotifications
           e.currentTarget.style.borderColor = 'var(--b1)'
           e.currentTarget.style.color = 'var(--text-3)'
         }}
+        aria-label="Notifications"
+        aria-expanded={dropdownOpen}
         title="Notifications"
       >
         <Bell size={18} />

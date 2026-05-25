@@ -5,6 +5,7 @@ import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { ConditionalNavbar } from "@/components/layout/ConditionalNavbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { SITE_URL } from "@/lib/site-url";
 
 // Police d'affichage : Cormorant Garamond (titres, canvas éditeur, hero).
 // Police de corps : DM Sans (paragraphes, UI, body). Remplace l'ancienne
@@ -56,9 +57,7 @@ export const metadata: Metadata = {
     "Airtel Money",
     "éducation Madagascar",
   ],
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://mahai.mg"
-  ),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     title: "Mah.AI — Réussis tes examens avec l'IA",
     description:
