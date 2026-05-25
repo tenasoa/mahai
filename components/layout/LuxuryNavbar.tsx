@@ -12,6 +12,8 @@ import {
   RefreshCw,
   Settings,
   FolderOpen,
+  Menu,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { UserNotifications } from "./UserNotifications";
@@ -32,6 +34,7 @@ export function LuxuryNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState("dark");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const centerNavItems: NavItem[] = userId
@@ -106,6 +109,17 @@ export function LuxuryNavbar() {
     // Force re-render when userId changes
   }, [userId]);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   if (pathname?.startsWith("/admin")) {
     return null;
   }
@@ -129,135 +143,186 @@ export function LuxuryNavbar() {
   const showLandingThemeToggle = !userId && pathname === "/";
 
   return (
-    <nav
-      aria-label="Navigation principale"
-      className={`${styles.nav} ${scrolled ? styles.navScrolled : styles.navTransparent}`}
-    >
-      <div className={styles.navInner}>
-        {/* LOGO */}
-        <Link href={userId ? "/dashboard" : "/"} className={styles.logo}>
-          Mah
-          <span className={styles.logoGem}></span>
-          AI
-        </Link>
+    <>
+      <nav
+        aria-label="Navigation principale"
+        className={`${styles.nav} ${scrolled ? styles.navScrolled : styles.navTransparent}`}
+      >
+        <div className={styles.navInner}>
+          {/* LOGO */}
+          <Link href={userId ? "/dashboard" : "/"} className={styles.logo}>
+            Mah
+            <span className={styles.logoGem}></span>
+            AI
+          </Link>
 
-        {/* CENTER NAV */}
-        <ul className={styles.centerNav}>
-          {centerNavItems.map((item) => (
-            <li key={item.href} className={styles.navItem}>
-              <Link
-                href={item.href}
-                className={`${styles.navLink} ${isActive(item.href) ? styles.navLinkActive : ""}`}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+          {/* CENTER NAV */}
+          <ul className={styles.centerNav}>
+            {centerNavItems.map((item) => (
+              <li key={item.href} className={styles.navItem}>
+                <Link
+                  href={item.href}
+                  className={`${styles.navLink} ${isActive(item.href) ? styles.navLinkActive : ""}`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
 
-        {/* RIGHT ACTIONS */}
-        <div className={styles.rightActions}>
-          {/* NOTIFICATIONS */}
-          {userId && <UserNotifications />}
-          {userId && <NotificationToast />}
+          {/* RIGHT ACTIONS */}
+          <div className={styles.rightActions}>
+            {/* HAMBURGER (mobile) */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className={styles.hamburger}
+              aria-label="Ouvrir le menu"
+            >
+              <Menu size={22} />
+            </button>
 
-          {/* AVATAR & DROPDOWN */}
-          {userId ? (
-            <div className={styles.dropdown} ref={dropdownRef}>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={styles.avatarButton}
-                aria-label="Menu utilisateur"
-                aria-expanded={dropdownOpen}
-              >
-                {appUser?.profilePicture ? (
-                  <img
-                    src={appUser.profilePicture}
-                    alt="Avatar"
-                    className={styles.avatarImage}
-                  />
-                ) : (
-                  <div className={styles.avatarPlaceholder}>
-                    {(appUser?.prenom?.charAt(0) || "U").toUpperCase()}
-                  </div>
-                )}
-              </button>
+            {/* NOTIFICATIONS */}
+            {userId && <UserNotifications />}
+            {userId && <NotificationToast />}
 
-              {dropdownOpen && (
-                <div className={styles.dropdownMenu}>
-                  {/* Credit Balance */}
-                  <div className={styles.creditBalance}>
-                    <div className={styles.creditBalanceRow}>
-                      <span className={styles.creditBalanceLabel}>Solde</span>
-                      <span className={styles.creditBalanceValue}>
-                        {(appUser?.balanceAr ?? 0).toLocaleString("fr-FR")} Ar
-                      </span>
+            {/* AVATAR & DROPDOWN */}
+            {userId ? (
+              <div className={styles.dropdown} ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className={styles.avatarButton}
+                  aria-label="Menu utilisateur"
+                  aria-expanded={dropdownOpen}
+                >
+                  {appUser?.profilePicture ? (
+                    <img
+                      src={appUser.profilePicture}
+                      alt="Avatar"
+                      className={styles.avatarImage}
+                    />
+                  ) : (
+                    <div className={styles.avatarPlaceholder}>
+                      {(appUser?.prenom?.charAt(0) || "U").toUpperCase()}
                     </div>
-                    <Link
-                      href="/recharge"
-                      className={styles.rechargeButton}
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      <RefreshCw size={14} />
-                      Recharger
-                    </Link>
-                  </div>
+                  )}
+                </button>
 
-                  {/* Navigation Links */}
-                  <div className={styles.dropdownSection}>
-                    {dropdownNavItems.map((item) => (
+                {dropdownOpen && (
+                  <div className={styles.dropdownMenu}>
+                    {/* Credit Balance */}
+                    <div className={styles.creditBalance}>
+                      <div className={styles.creditBalanceRow}>
+                        <span className={styles.creditBalanceLabel}>Solde</span>
+                        <span className={styles.creditBalanceValue}>
+                          {(appUser?.balanceAr ?? 0).toLocaleString("fr-FR")} Ar
+                        </span>
+                      </div>
                       <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`${styles.dropdownLink} ${isActive(item.href) ? styles.dropdownLinkActive : ""}`}
+                        href="/recharge"
+                        className={styles.rechargeButton}
                         onClick={() => setDropdownOpen(false)}
                       >
-                        {item.icon && <item.icon size={16} />}
-                        {item.label}
+                        <RefreshCw size={14} />
+                        Recharger
                       </Link>
-                    ))}
-                  </div>
+                    </div>
 
-                  <div className={styles.dropdownDivider} />
+                    {/* Navigation Links */}
+                    <div className={styles.dropdownSection}>
+                      {dropdownNavItems.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`${styles.dropdownLink} ${isActive(item.href) ? styles.dropdownLinkActive : ""}`}
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          {item.icon && <item.icon size={16} />}
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
 
-                  {/* Theme & Logout */}
-                  <div className={styles.dropdownSection}>
-                    <button
-                      onClick={toggleTheme}
-                      className={styles.dropdownButton}
-                    >
-                      {theme === "dark" ? (
-                        <Sun size={16} />
-                      ) : (
-                        <Moon size={16} />
-                      )}
-                      {theme === "dark" ? "Mode Clair" : "Mode Sombre"}
-                    </button>
-                    <button
-                      onClick={() => logoutUser()}
-                      className={`${styles.dropdownButton} ${styles.dropdownButtonDanger}`}
-                    >
-                      <LogOut size={16} /> Déconnexion
-                    </button>
+                    <div className={styles.dropdownDivider} />
+
+                    {/* Theme & Logout */}
+                    <div className={styles.dropdownSection}>
+                      <button
+                        onClick={toggleTheme}
+                        className={styles.dropdownButton}
+                      >
+                        {theme === "dark" ? (
+                          <Sun size={16} />
+                        ) : (
+                          <Moon size={16} />
+                        )}
+                        {theme === "dark" ? "Mode Clair" : "Mode Sombre"}
+                      </button>
+                      <button
+                        onClick={() => logoutUser()}
+                        className={`${styles.dropdownButton} ${styles.dropdownButtonDanger}`}
+                      >
+                        <LogOut size={16} /> Déconnexion
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className={styles.authLinks}>
-              {showLandingThemeToggle ? (
-                <ThemeToggleButton variant="navbar" />
-              ) : null}
-              <Link href="/auth/login" className={styles.authLink}>
-                Connexion
-              </Link>
-              <Link href="/auth/register" className={styles.authLinkPrimary}>
-                Inscription
-              </Link>
-            </div>
-          )}
+                )}
+              </div>
+            ) : (
+              <div className={styles.authLinks}>
+                {showLandingThemeToggle ? (
+                  <ThemeToggleButton variant="navbar" />
+                ) : null}
+                <Link href="/auth/login" className={styles.authLink}>
+                  Connexion
+                </Link>
+                <Link href="/auth/register" className={styles.authLinkPrimary}>
+                  Inscription
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+      {/* MOBILE DRAWER */}
+      <>
+        {/* Overlay */}
+        <div
+          className={`${styles.drawerOverlay} ${mobileMenuOpen ? styles.drawerOverlayVisible : ""}`}
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+        {/* Drawer panel */}
+        <aside
+          className={`${styles.drawer} ${mobileMenuOpen ? styles.drawerOpen : ""}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu de navigation"
+        >
+          <div className={styles.drawerHeader}>
+            <span className={styles.drawerTitle}>Menu</span>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className={styles.drawerClose}
+              aria-label="Fermer le menu"
+            >
+              <X size={22} />
+            </button>
+          </div>
+          <ul className={styles.drawerNav}>
+            {centerNavItems.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`${styles.drawerLink} ${isActive(item.href) ? styles.drawerLinkActive : ""}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      </>
+    </>
   );
 }

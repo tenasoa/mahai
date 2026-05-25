@@ -205,6 +205,7 @@ export function Toast({ message, type, actions, onClose }: ToastProps) {
           position: relative;
           overflow: hidden;
           width: 340px;
+          max-width: calc(100vw - 24px);
           transform: translateX(calc(100% + 2rem));
           opacity: 0;
           transition:
