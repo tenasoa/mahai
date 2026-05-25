@@ -53,12 +53,7 @@ type SystemSetting = {
   isEditable: boolean;
 };
 
-type TabType =
-  | "phones"
-  | "packs"
-  | "settings"
-  | "contact"
-  | "ai";
+type TabType = "phones" | "packs" | "settings" | "contact" | "ai";
 
 type ContactInfo = {
   generalEmail: string;
@@ -66,7 +61,6 @@ type ContactInfo = {
   phone: string;
   address: string;
 };
-
 
 export default function AdminConfigurationPage() {
   const router = useRouter();
@@ -161,7 +155,6 @@ export default function AdminConfigurationPage() {
           const data = await res.json();
           setPacks(data.packs || []);
         }
-
       } else if (activeTab === "settings" || activeTab === "ai") {
         let res = await fetch("/api/admin/settings");
         // Retry une fois si auth timeout (lock Supabase)
@@ -173,7 +166,9 @@ export default function AdminConfigurationPage() {
           const data = await res.json();
           setSettings(data.settings || []);
         } else {
-          throw new Error(`Erreur ${res.status} lors du chargement des paramètres`);
+          throw new Error(
+            `Erreur ${res.status} lors du chargement des paramètres`,
+          );
         }
       } else if (activeTab === "contact") {
         const res = await fetch("/api/admin/contact-info");
@@ -403,7 +398,7 @@ export default function AdminConfigurationPage() {
       case "airtel":
         return "#FF0000";
       default:
-        return "#666";
+        return "var(--text-3)";
     }
   };
 
@@ -647,7 +642,9 @@ export default function AdminConfigurationPage() {
                 alignItems: "center",
               }}
             >
-              <h3 className="admin-card-title">Packs de recharge disponibles</h3>
+              <h3 className="admin-card-title">
+                Packs de recharge disponibles
+              </h3>
               <button
                 className="admin-btn admin-btn-primary"
                 onClick={() => {
@@ -693,61 +690,61 @@ export default function AdminConfigurationPage() {
                   </thead>
                   <tbody>
                     {packs.map((pack) => (
-                        <tr key={pack.id}>
-                          <td style={{ fontWeight: 500 }}>{pack.name}</td>
-                          <td
+                      <tr key={pack.id}>
+                        <td style={{ fontWeight: 500 }}>{pack.name}</td>
+                        <td
+                          style={{
+                            fontFamily: "var(--mono)",
+                            color: "var(--gold)",
+                          }}
+                        >
+                          {pack.arAmount.toLocaleString()} Ar
+                        </td>
+                        <td>+{pack.bonusAr.toLocaleString()} Ar</td>
+                        <td>
+                          {pack.isPopular ? (
+                            <span style={{ color: "var(--gold)" }}>
+                              <Star size={16} fill="currentColor" />
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td>
+                          {pack.isActive ? (
+                            <span className="status-badge status-emerald">
+                              Actif
+                            </span>
+                          ) : (
+                            <span className="status-badge status-gray">
+                              Inactif
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <div
                             style={{
-                              fontFamily: "var(--mono)",
-                              color: "var(--gold)",
+                              display: "flex",
+                              gap: "0.5rem",
+                              justifyContent: "flex-end",
                             }}
                           >
-                            {pack.arAmount.toLocaleString()} Ar
-                          </td>
-                          <td>+{pack.bonusAr.toLocaleString()} Ar</td>
-                          <td>
-                            {pack.isPopular ? (
-                              <span style={{ color: "var(--gold)" }}>
-                                <Star size={16} fill="currentColor" />
-                              </span>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                          <td>
-                            {pack.isActive ? (
-                              <span className="status-badge status-emerald">
-                                Actif
-                              </span>
-                            ) : (
-                              <span className="status-badge status-gray">
-                                Inactif
-                              </span>
-                            )}
-                          </td>
-                          <td style={{ textAlign: "right" }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "0.5rem",
-                                justifyContent: "flex-end",
+                            <button
+                              className="admin-btn admin-btn-sm admin-btn-outline"
+                              aria-label={`Modifier le pack ${pack.name}`}
+                              onClick={() => {
+                                setEditingPack(pack);
+                                setPackForm({
+                                  name: pack.name,
+                                  arAmount: pack.arAmount,
+                                  bonusAr: pack.bonusAr,
+                                  isPopular: pack.isPopular,
+                                  isActive: pack.isActive,
+                                  sortOrder: pack.sortOrder,
+                                });
+                                setPackModalOpen(true);
                               }}
                             >
-                              <button
-                                className="admin-btn admin-btn-sm admin-btn-outline"
-                                aria-label={`Modifier le pack ${pack.name}`}
-                                onClick={() => {
-                                  setEditingPack(pack);
-                                  setPackForm({
-                                    name: pack.name,
-                                    arAmount: pack.arAmount,
-                                    bonusAr: pack.bonusAr,
-                                    isPopular: pack.isPopular,
-                                    isActive: pack.isActive,
-                                    sortOrder: pack.sortOrder,
-                                  });
-                                  setPackModalOpen(true);
-                                }}
-                              >
                               <Edit2 size={14} aria-hidden="true" />
                             </button>
                             <button
@@ -761,13 +758,12 @@ export default function AdminConfigurationPage() {
                         </td>
                       </tr>
                     ))}
-                </tbody>
+                  </tbody>
                 </table>
               </div>
             )}
           </>
         )}
-
 
         {/* SETTINGS TAB */}
         {activeTab === "settings" && (
@@ -926,7 +922,15 @@ export default function AdminConfigurationPage() {
                     <p>
                       Aucun paramètre IA trouvé.{" "}
                       <button
-                        style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", textDecoration: "underline", padding: 0, font: "inherit" }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "var(--gold)",
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                          padding: 0,
+                          font: "inherit",
+                        }}
                         onClick={() => void loadData()}
                       >
                         Réessayer

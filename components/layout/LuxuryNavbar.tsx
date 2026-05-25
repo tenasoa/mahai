@@ -129,6 +129,7 @@ export function LuxuryNavbar() {
 
   return (
     <nav
+      aria-label="Navigation principale"
       className={`${styles.nav} ${scrolled ? styles.navScrolled : styles.navTransparent}`}
     >
       <div className={styles.navInner}>
@@ -187,7 +188,7 @@ export function LuxuryNavbar() {
                     <div className={styles.creditBalanceRow}>
                       <span className={styles.creditBalanceLabel}>Solde</span>
                       <span className={styles.creditBalanceValue}>
-                        {(appUser?.balanceAr ?? 0).toLocaleString('fr-FR')} Ar
+                        {(appUser?.balanceAr ?? 0).toLocaleString("fr-FR")} Ar
                       </span>
                     </div>
                     <Link

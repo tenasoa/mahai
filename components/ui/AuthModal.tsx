@@ -1,107 +1,110 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useEffect, useId, useRef } from "react"
-import { Lock, LogIn, UserPlus } from "lucide-react"
-import "@/components/modals/Modal.css"
+import Link from "next/link";
+import { useEffect, useId, useRef } from "react";
+import { Lock, LogIn, UserPlus } from "lucide-react";
+import "@/components/modals/Modal.css";
 
 interface AuthModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  message?: string
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  message?: string;
 }
 
 const FOCUSABLE_SELECTOR =
-  'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function AuthModal({ isOpen, onClose, title, message }: AuthModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const previouslyFocusedElement = useRef<HTMLElement | null>(null)
-  const titleId = useId()
-  const descriptionId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) return;
 
-    previouslyFocusedElement.current = document.activeElement as HTMLElement | null
-    const dialog = dialogRef.current
+    previouslyFocusedElement.current =
+      document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
 
-    if (!dialog) return
+    if (!dialog) return;
 
     const getFocusableElements = () =>
-      Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-        (element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true'
-      )
+      Array.from(
+        dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter(
+        (element) =>
+          !element.hasAttribute("disabled") &&
+          element.getAttribute("aria-hidden") !== "true",
+      );
 
-    const focusableElements = getFocusableElements()
-    const initialFocusTarget = focusableElements[0] ?? dialog
+    const focusableElements = getFocusableElements();
+    const initialFocusTarget = focusableElements[0] ?? dialog;
 
-    document.body.style.overflow = 'hidden'
-    initialFocusTarget.focus()
+    document.body.style.overflow = "hidden";
+    initialFocusTarget.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        onClose()
-        return
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
       }
 
-      if (event.key !== 'Tab') return
+      if (event.key !== "Tab") return;
 
-      const currentFocusableElements = getFocusableElements()
+      const currentFocusableElements = getFocusableElements();
 
       if (currentFocusableElements.length === 0) {
-        event.preventDefault()
-        dialog.focus()
-        return
+        event.preventDefault();
+        dialog.focus();
+        return;
       }
 
-      const firstElement = currentFocusableElements[0]
-      const lastElement = currentFocusableElements[currentFocusableElements.length - 1]
-      const activeElement = document.activeElement as HTMLElement | null
+      const firstElement = currentFocusableElements[0];
+      const lastElement =
+        currentFocusableElements[currentFocusableElements.length - 1];
+      const activeElement = document.activeElement as HTMLElement | null;
 
       if (event.shiftKey) {
         if (activeElement === firstElement || activeElement === dialog) {
-          event.preventDefault()
-          lastElement.focus()
+          event.preventDefault();
+          lastElement.focus();
         }
-        return
+        return;
       }
 
       if (activeElement === lastElement) {
-        event.preventDefault()
-        firstElement.focus()
+        event.preventDefault();
+        firstElement.focus();
       }
-    }
+    };
 
-    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = ''
-      document.removeEventListener('keydown', handleKeyDown)
-      previouslyFocusedElement.current?.focus()
-    }
-  }, [isOpen, onClose])
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocusedElement.current?.focus();
+    };
+  }, [isOpen, onClose]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const modalTitle = title || 'Authentification requise'
+  const modalTitle = title || "Authentification requise";
   const modalMessage =
-    message || 'Connectez-vous ou créez un compte pour accéder à cette fonctionnalité'
+    message ||
+    "Connectez-vous ou créez un compte pour accéder à cette fonctionnalité";
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
-      onClose()
+      onClose();
     }
-  }
+  };
 
   return (
-    <div
-      className="auth-modal-overlay"
-      onClick={handleOverlayClick}
-      aria-hidden="true"
-    >
+    <div className="auth-modal-overlay" onClick={handleOverlayClick}>
       <div
         ref={dialogRef}
         className="auth-modal-dialog"
@@ -116,8 +119,12 @@ export function AuthModal({ isOpen, onClose, title, message }: AuthModalProps) {
           <div className="auth-modal-icon" aria-hidden="true">
             <Lock size={36} />
           </div>
-          <h2 id={titleId} className="auth-modal-title">{modalTitle}</h2>
-          <p id={descriptionId} className="auth-modal-desc">{modalMessage}</p>
+          <h2 id={titleId} className="auth-modal-title">
+            {modalTitle}
+          </h2>
+          <p id={descriptionId} className="auth-modal-desc">
+            {modalMessage}
+          </p>
         </div>
 
         <div className="auth-modal-actions">
@@ -144,5 +151,5 @@ export function AuthModal({ isOpen, onClose, title, message }: AuthModalProps) {
         </button>
       </div>
     </div>
-  )
+  );
 }

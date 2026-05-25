@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * SubmitWizardClient — wizard 4 étapes de publication post-édition.
@@ -17,133 +17,170 @@
  * et notifie les admins.
  */
 
-import { useState, useTransition } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, ArrowRight, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
-import StepsBar from '@/components/editor/StepsBar'
-import { SubjectRenderer } from '@/components/sujet/SubjectRenderer'
-import Badge from '@/components/ui/Badge/Badge'
-import { useToast, ToastContainer } from '@/components/ui/Toast'
-import { submitSubject } from '../../editor-actions'
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import StepsBar from "@/components/editor/StepsBar";
+import { SubjectRenderer } from "@/components/sujet/SubjectRenderer";
+import Badge from "@/components/ui/Badge/Badge";
+import { useToast, ToastContainer } from "@/components/ui/Toast";
+import { submitSubject } from "../../editor-actions";
 
 interface DraftPayload {
-  title: string
-  matiere: string
-  examType: string
-  baccType: string
-  bepcOption: string
-  serie: string
-  concoursType: string
-  anneeScolaire: string
-  duree: string
-  coefficient: string
-  contentType: string
-  tags: string[]
-  prix: number
-  prixMode: string
-  visibilite: string
-  content: any
-  status: string
+  title: string;
+  matiere: string;
+  examType: string;
+  baccType: string;
+  bepcOption: string;
+  serie: string;
+  concoursType: string;
+  anneeScolaire: string;
+  duree: string;
+  coefficient: string;
+  contentType: string;
+  tags: string[];
+  prix: number;
+  prixMode: string;
+  visibilite: string;
+  content: any;
+  status: string;
 }
 
 interface Props {
-  draftId: string
-  draft: DraftPayload
+  draftId: string;
+  draft: DraftPayload;
 }
 
 interface Check {
-  id: string
-  label: string
-  ok: boolean
-  detail?: string
+  id: string;
+  label: string;
+  ok: boolean;
+  detail?: string;
 }
 
 const STEPS = [
-  { num: 1, label: 'Aperçu' },
-  { num: 2, label: 'Validation' },
-  { num: 3, label: 'Tarification' },
-  { num: 4, label: 'Confirmation' },
-]
+  { num: 1, label: "Aperçu" },
+  { num: 2, label: "Validation" },
+  { num: 3, label: "Tarification" },
+  { num: 4, label: "Confirmation" },
+];
 
 function countQuestions(content: any): number {
-  if (!content?.content) return 0
-  let n = 0
+  if (!content?.content) return 0;
+  let n = 0;
   function walk(node: any) {
-    if (!node) return
-    if (node.type === 'question') n++
-    if (Array.isArray(node.content)) node.content.forEach(walk)
+    if (!node) return;
+    if (node.type === "question") n++;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
   }
-  walk(content)
-  return n
+  walk(content);
+  return n;
 }
 
 function countWords(content: any): number {
-  if (!content?.content) return 0
-  let txt = ''
+  if (!content?.content) return 0;
+  let txt = "";
   function walk(node: any) {
-    if (!node) return
-    if (typeof node.text === 'string') txt += ' ' + node.text
-    if (Array.isArray(node.content)) node.content.forEach(walk)
+    if (!node) return;
+    if (typeof node.text === "string") txt += " " + node.text;
+    if (Array.isArray(node.content)) node.content.forEach(walk);
   }
-  walk(content)
-  return txt.trim().split(/\s+/).filter(Boolean).length
+  walk(content);
+  return txt.trim().split(/\s+/).filter(Boolean).length;
 }
 
 export default function SubmitWizardClient({ draftId, draft }: Props) {
-  const router = useRouter()
-  const [step, setStep] = useState(1)
-  const [acceptCGU, setAcceptCGU] = useState(false)
-  const [pending, startTransition] = useTransition()
-  const { toasts, addToast, removeToast } = useToast()
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [acceptCGU, setAcceptCGU] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const { toasts, addToast, removeToast } = useToast();
 
   // ── Calculs dérivés ─────────────────────────────────────────────
-  const wordCount = countWords(draft.content)
-  const questionCount = countQuestions(draft.content)
-  const commission = Math.round(draft.prix * 0.3)
-  const revenu = draft.prix - commission
+  const wordCount = countWords(draft.content);
+  const questionCount = countQuestions(draft.content);
+  const commission = Math.round(draft.prix * 0.3);
+  const revenu = draft.prix - commission;
 
   const checks: Check[] = [
-    { id: 'title', label: 'Titre du sujet', ok: !!draft.title.trim(), detail: draft.title || 'Manquant' },
-    { id: 'matiere', label: 'Matière', ok: !!draft.matiere.trim(), detail: draft.matiere || 'Manquante' },
-    { id: 'examType', label: 'Type d\'examen', ok: !!draft.examType, detail: draft.examType || 'Manquant' },
-    { id: 'annee', label: 'Année scolaire', ok: !!draft.anneeScolaire, detail: draft.anneeScolaire || 'Manquante' },
-    { id: 'content', label: 'Contenu rédigé', ok: wordCount >= 20, detail: `${wordCount} mots` },
-    { id: 'prix', label: 'Prix > 0', ok: draft.prix > 0, detail: `${draft.prix.toLocaleString()} Ar` },
-  ]
+    {
+      id: "title",
+      label: "Titre du sujet",
+      ok: !!draft.title.trim(),
+      detail: draft.title || "Manquant",
+    },
+    {
+      id: "matiere",
+      label: "Matière",
+      ok: !!draft.matiere.trim(),
+      detail: draft.matiere || "Manquante",
+    },
+    {
+      id: "examType",
+      label: "Type d'examen",
+      ok: !!draft.examType,
+      detail: draft.examType || "Manquant",
+    },
+    {
+      id: "annee",
+      label: "Année scolaire",
+      ok: !!draft.anneeScolaire,
+      detail: draft.anneeScolaire || "Manquante",
+    },
+    {
+      id: "content",
+      label: "Contenu rédigé",
+      ok: wordCount >= 20,
+      detail: `${wordCount} mots`,
+    },
+    {
+      id: "prix",
+      label: "Prix > 0",
+      ok: draft.prix > 0,
+      detail: `${draft.prix.toLocaleString()} Ar`,
+    },
+  ];
 
-  const allChecksOk = checks.every((c) => c.ok)
-  const failingChecks = checks.filter((c) => !c.ok)
+  const allChecksOk = checks.every((c) => c.ok);
+  const failingChecks = checks.filter((c) => !c.ok);
 
-  const canGoStep2 = true
-  const canGoStep3 = allChecksOk
-  const canGoStep4 = allChecksOk
-  const canSubmit = allChecksOk && acceptCGU
+  const canGoStep2 = true;
+  const canGoStep3 = allChecksOk;
+  const canGoStep4 = allChecksOk;
+  const canSubmit = allChecksOk && acceptCGU;
 
   // ── Submit ──────────────────────────────────────────────────────
   const handleSubmit = () => {
-    if (!canSubmit) return
+    if (!canSubmit) return;
     startTransition(async () => {
       try {
-        const res = await submitSubject(draftId)
+        const res = await submitSubject(draftId);
         if (res.success) {
           addToast(
-            'Sujet soumis à la modération. Vous recevrez une notification dès la validation.',
-            'success',
-          )
-          setTimeout(() => router.push('/contributeur/sujets'), 1500)
-        } else if ('errors' in res && res.errors) {
-          addToast(`Validation échouée : ${res.errors.join(', ')}`, 'error')
-        } else if ('error' in res) {
-          addToast(res.error || 'Erreur lors de la soumission', 'error')
+            "Sujet soumis à la modération. Vous recevrez une notification dès la validation.",
+            "success",
+          );
+          setTimeout(() => router.push("/contributeur/sujets"), 1500);
+        } else if ("errors" in res && res.errors) {
+          addToast(`Validation échouée : ${res.errors.join(", ")}`, "error");
+        } else if ("error" in res) {
+          addToast(res.error || "Erreur lors de la soumission", "error");
         } else {
-          addToast('Erreur inconnue lors de la soumission', 'error')
+          addToast("Erreur inconnue lors de la soumission", "error");
         }
       } catch (err) {
-        addToast(err instanceof Error ? err.message : 'Erreur réseau', 'error')
+        addToast(err instanceof Error ? err.message : "Erreur réseau", "error");
       }
-    })
-  }
+    });
+  };
 
   return (
     <div className="submit-wizard">
@@ -163,15 +200,20 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
 
           <div className="sw-title-block">
             <p className="sw-eyebrow">Publication</p>
-            <h1>{draft.title || 'Sujet sans titre'}</h1>
+            <h1>{draft.title || "Sujet sans titre"}</h1>
             <p className="sw-subtitle">
-              {[draft.matiere, draft.examType, draft.anneeScolaire].filter(Boolean).join(' · ')}
+              {[draft.matiere, draft.examType, draft.anneeScolaire]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           </div>
 
           <div className="sw-status">
-            <Badge variant={draft.status === 'REVISION_REQUESTED' ? 'amber' : 'gold'} size="sm">
-              {draft.status === 'REVISION_REQUESTED' ? 'Révision' : 'Brouillon'}
+            <Badge
+              variant={draft.status === "REVISION_REQUESTED" ? "amber" : "gold"}
+              size="sm"
+            >
+              {draft.status === "REVISION_REQUESTED" ? "Révision" : "Brouillon"}
             </Badge>
           </div>
         </div>
@@ -183,10 +225,10 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
             onStepClick={(n) => {
               // Navigation libre vers l'étape précédente, pas vers une étape
               // future qui n'a pas validé ses checks.
-              if (n < step) setStep(n)
-              else if (n === 2 && canGoStep2) setStep(n)
-              else if (n === 3 && canGoStep3) setStep(n)
-              else if (n === 4 && canGoStep4) setStep(n)
+              if (n < step) setStep(n);
+              else if (n === 2 && canGoStep2) setStep(n);
+              else if (n === 3 && canGoStep3) setStep(n);
+              else if (n === 4 && canGoStep4) setStep(n);
             }}
           />
         </div>
@@ -194,29 +236,34 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
 
       {/* ─── Body ─── */}
       <main className="sw-main">
-
         {step === 1 && (
           <section className="sw-step">
             <div className="sw-step-head">
               <h2>Aperçu du sujet</h2>
-              <p>Vérifiez le rendu lecture tel que vu par l'élève après achat.</p>
+              <p>
+                Vérifiez le rendu lecture tel que vu par l'élève après achat.
+              </p>
             </div>
 
             <div className="sw-stats-row">
               <div className="sw-stat">
-                <span className="sw-stat-num">{wordCount.toLocaleString()}</span>
+                <span className="sw-stat-num">
+                  {wordCount.toLocaleString()}
+                </span>
                 <span className="sw-stat-label">mots</span>
               </div>
               <div className="sw-stat">
                 <span className="sw-stat-num">{questionCount}</span>
-                <span className="sw-stat-label">question{questionCount !== 1 ? 's' : ''}</span>
+                <span className="sw-stat-label">
+                  question{questionCount !== 1 ? "s" : ""}
+                </span>
               </div>
               <div className="sw-stat">
-                <span className="sw-stat-num">{draft.duree || '—'}</span>
+                <span className="sw-stat-num">{draft.duree || "—"}</span>
                 <span className="sw-stat-label">durée</span>
               </div>
               <div className="sw-stat">
-                <span className="sw-stat-num">{draft.coefficient || '—'}</span>
+                <span className="sw-stat-num">{draft.coefficient || "—"}</span>
                 <span className="sw-stat-label">coefficient</span>
               </div>
             </div>
@@ -233,8 +280,8 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
               <h2>Validation pré-soumission</h2>
               <p>
                 {allChecksOk
-                  ? '✓ Toutes les vérifications sont passées. Vous pouvez continuer.'
-                  : `${failingChecks.length} point${failingChecks.length > 1 ? 's' : ''} à corriger avant de pouvoir publier.`}
+                  ? "✓ Toutes les vérifications sont passées. Vous pouvez continuer."
+                  : `${failingChecks.length} point${failingChecks.length > 1 ? "s" : ""} à corriger avant de pouvoir publier.`}
               </p>
             </div>
 
@@ -242,14 +289,20 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
               {checks.map((c) => (
                 <li
                   key={c.id}
-                  className={`sw-check sw-check--${c.ok ? 'ok' : 'fail'}`}
+                  className={`sw-check sw-check--${c.ok ? "ok" : "fail"}`}
                 >
                   <span className="sw-check-icon">
-                    {c.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                    {c.ok ? (
+                      <CheckCircle2 size={16} />
+                    ) : (
+                      <AlertCircle size={16} />
+                    )}
                   </span>
                   <div className="sw-check-text">
                     <span className="sw-check-label">{c.label}</span>
-                    {c.detail && <span className="sw-check-detail">{c.detail}</span>}
+                    {c.detail && (
+                      <span className="sw-check-detail">{c.detail}</span>
+                    )}
                   </div>
                 </li>
               ))}
@@ -258,8 +311,11 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
             {!allChecksOk && (
               <div className="sw-fix-hint">
                 <p>
-                  Pour corriger ces points, retournez à l'éditeur :{' '}
-                  <Link href={`/contributeur/sujets/${draftId}/edit`} className="sw-link">
+                  Pour corriger ces points, retournez à l'éditeur :{" "}
+                  <Link
+                    href={`/contributeur/sujets/${draftId}/edit`}
+                    className="sw-link"
+                  >
                     Modifier le sujet →
                   </Link>
                 </p>
@@ -272,33 +328,47 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           <section className="sw-step">
             <div className="sw-step-head">
               <h2>Tarification & revenus</h2>
-              <p>Récapitulatif des conditions financières définies à la création.</p>
+              <p>
+                Récapitulatif des conditions financières définies à la création.
+              </p>
             </div>
 
             <div className="sw-pricing-grid">
               <div className="sw-pricing-card">
                 <span className="sw-pricing-label">Prix affiché élève</span>
-                <span className="sw-pricing-value">{draft.prix.toLocaleString()} <em>Ar</em></span>
-                <span className="sw-pricing-mode">Mode : {draft.prixMode === 'forfait' ? 'Forfait' : 'Par page'}</span>
+                <span className="sw-pricing-value">
+                  {draft.prix.toLocaleString()} <em>Ar</em>
+                </span>
+                <span className="sw-pricing-mode">
+                  Mode : {draft.prixMode === "forfait" ? "Forfait" : "Par page"}
+                </span>
               </div>
               <div className="sw-pricing-card sw-pricing-card--neg">
                 <span className="sw-pricing-label">Commission plateforme</span>
-                <span className="sw-pricing-value">− {commission.toLocaleString()} <em>Ar</em></span>
+                <span className="sw-pricing-value">
+                  − {commission.toLocaleString()} <em>Ar</em>
+                </span>
                 <span className="sw-pricing-mode">30 % du prix</span>
               </div>
               <div className="sw-pricing-card sw-pricing-card--gold">
                 <span className="sw-pricing-label">Vos revenus nets</span>
-                <span className="sw-pricing-value">{revenu.toLocaleString()} <em>Ar</em></span>
+                <span className="sw-pricing-value">
+                  {revenu.toLocaleString()} <em>Ar</em>
+                </span>
                 <span className="sw-pricing-mode">70 % à chaque achat</span>
               </div>
             </div>
 
             <div className="sw-pricing-note">
               <p>
-                Le prix sera réajustable depuis l'éditeur après publication. La commission Mah.AI est
-                fixe à 30 % et finance l'hébergement, la modération et les corrections IA.
+                Le prix sera réajustable depuis l'éditeur après publication. La
+                commission Mah.AI est fixe à 30 % et finance l'hébergement, la
+                modération et les corrections IA.
               </p>
-              <Link href={`/contributeur/sujets/${draftId}/edit`} className="sw-link">
+              <Link
+                href={`/contributeur/sujets/${draftId}/edit`}
+                className="sw-link"
+              >
                 Modifier la tarification →
               </Link>
             </div>
@@ -309,7 +379,10 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           <section className="sw-step">
             <div className="sw-step-head">
               <h2>Confirmation et envoi</h2>
-              <p>Dernière étape : acceptez les conditions puis envoyez à la modération.</p>
+              <p>
+                Dernière étape : acceptez les conditions puis envoyez à la
+                modération.
+              </p>
             </div>
 
             <div className="sw-summary">
@@ -319,11 +392,20 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
               </div>
               <div className="sw-summary-row">
                 <span>Matière · Type · Année</span>
-                <strong>{[draft.matiere, draft.examType, draft.anneeScolaire].filter(Boolean).join(' · ')}</strong>
+                <strong>
+                  {[draft.matiere, draft.examType, draft.anneeScolaire]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </strong>
               </div>
               <div className="sw-summary-row">
                 <span>Volume rédigé</span>
-                <strong>{wordCount} mots{questionCount > 0 ? `, ${questionCount} question${questionCount !== 1 ? 's' : ''}` : ''}</strong>
+                <strong>
+                  {wordCount} mots
+                  {questionCount > 0
+                    ? `, ${questionCount} question${questionCount !== 1 ? "s" : ""}`
+                    : ""}
+                </strong>
               </div>
               <div className="sw-summary-row sw-summary-row--gold">
                 <span>Vos revenus par achat</span>
@@ -339,9 +421,15 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
                 disabled={pending}
               />
               <span>
-                Je certifie être l'auteur du sujet (ou en avoir les droits) et accepte que Mah.AI le
-                modère, le diffuse et le commercialise selon les{' '}
-                <Link href="/legal/cgu" target="_blank" rel="noopener noreferrer" className="sw-link">
+                Je certifie être l'auteur du sujet (ou en avoir les droits) et
+                accepte que Mah.AI le modère, le diffuse et le commercialise
+                selon les{" "}
+                <Link
+                  href="/legal/cgu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sw-link"
+                >
                   Conditions Générales d'Utilisation
                 </Link>
                 .
@@ -368,7 +456,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
                 )}
               </button>
               {!acceptCGU && allChecksOk && (
-                <span className="sw-submit-hint">Cochez les CGU pour activer le bouton.</span>
+                <span className="sw-submit-hint">
+                  Cochez les CGU pour activer le bouton.
+                </span>
               )}
             </div>
           </section>
@@ -392,9 +482,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
             <button
               className="sw-nav-btn sw-nav-btn--primary"
               onClick={() => {
-                if (step === 1 && canGoStep2) setStep(2)
-                else if (step === 2 && canGoStep3) setStep(3)
-                else if (step === 3 && canGoStep4) setStep(4)
+                if (step === 1 && canGoStep2) setStep(2);
+                else if (step === 2 && canGoStep3) setStep(3);
+                else if (step === 3 && canGoStep4) setStep(4);
               }}
               disabled={
                 (step === 1 && !canGoStep2) ||
@@ -442,7 +532,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           color: var(--text-2);
           text-decoration: none;
           border-radius: var(--r-xs);
-          transition: background 0.15s, color 0.15s;
+          transition:
+            background 0.15s,
+            color 0.15s;
           font-family: var(--mono);
           letter-spacing: 0.04em;
         }
@@ -450,7 +542,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           background: var(--surface);
           color: var(--text);
         }
-        .sw-title-block { min-width: 0; }
+        .sw-title-block {
+          min-width: 0;
+        }
         .sw-eyebrow {
           font-family: var(--mono);
           font-size: 0.6rem;
@@ -473,7 +567,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           color: var(--text-3);
           margin: 0.2rem 0 0;
         }
-        .sw-status { padding-top: 0.4rem; }
+        .sw-status {
+          padding-top: 0.4rem;
+        }
         .sw-stepsbar-wrap {
           max-width: 1100px;
           margin: 0 auto;
@@ -496,8 +592,14 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           animation: sw-fadeUp 0.32s ease both;
         }
         @keyframes sw-fadeUp {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         .sw-step-head {
           padding-bottom: 1rem;
@@ -582,9 +684,16 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           background: var(--ruby-dim);
           border-color: var(--ruby-line);
         }
-        .sw-check-icon { display: inline-flex; flex-shrink: 0; }
-        .sw-check--ok .sw-check-icon { color: var(--sage); }
-        .sw-check--fail .sw-check-icon { color: var(--ruby); }
+        .sw-check-icon {
+          display: inline-flex;
+          flex-shrink: 0;
+        }
+        .sw-check--ok .sw-check-icon {
+          color: var(--sage);
+        }
+        .sw-check--fail .sw-check-icon {
+          color: var(--ruby);
+        }
         .sw-check-text {
           flex: 1;
           display: flex;
@@ -615,7 +724,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           font-size: 0.82rem;
           color: var(--text-2);
         }
-        .sw-fix-hint p { margin: 0; }
+        .sw-fix-hint p {
+          margin: 0;
+        }
 
         /* Pricing (étape 3) */
         .sw-pricing-grid {
@@ -631,7 +742,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           border-radius: var(--r-xs);
           text-align: center;
         }
-        .sw-pricing-card--neg { background: var(--surface); }
+        .sw-pricing-card--neg {
+          background: var(--surface);
+        }
         .sw-pricing-card--gold {
           background: var(--gold-dim);
           border-color: var(--gold-line);
@@ -653,7 +766,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           color: var(--text);
           line-height: 1;
         }
-        .sw-pricing-card--gold .sw-pricing-value { color: var(--gold); }
+        .sw-pricing-card--gold .sw-pricing-value {
+          color: var(--gold);
+        }
         .sw-pricing-value em {
           font-size: 0.9rem;
           font-style: normal;
@@ -675,7 +790,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           color: var(--text-2);
           line-height: 1.55;
         }
-        .sw-pricing-note p { margin: 0 0 0.5rem; }
+        .sw-pricing-note p {
+          margin: 0 0 0.5rem;
+        }
 
         /* Confirmation (étape 4) */
         .sw-summary {
@@ -693,7 +810,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           font-size: 0.85rem;
           border-bottom: 1px solid var(--b1);
         }
-        .sw-summary-row:last-child { border-bottom: none; }
+        .sw-summary-row:last-child {
+          border-bottom: none;
+        }
         .sw-summary-row span {
           color: var(--text-3);
           font-family: var(--mono);
@@ -706,7 +825,10 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           font-weight: 500;
           text-align: right;
         }
-        .sw-summary-row--gold strong { color: var(--gold); font-size: 0.95rem; }
+        .sw-summary-row--gold strong {
+          color: var(--gold);
+          font-size: 0.95rem;
+        }
 
         .sw-cgu {
           display: flex;
@@ -721,7 +843,9 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           cursor: pointer;
           transition: border-color 0.15s;
         }
-        .sw-cgu:hover { border-color: var(--gold-line); }
+        .sw-cgu:hover {
+          border-color: var(--gold-line);
+        }
         .sw-cgu input {
           margin-top: 0.18rem;
           accent-color: var(--gold);
@@ -743,7 +867,7 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           gap: 0.5rem;
           padding: 0.75rem 1.5rem;
           background: var(--gold);
-          color: #1a1714;
+          color: var(--text);
           border: 1px solid var(--gold);
           border-radius: var(--r-xs);
           font-family: var(--body);
@@ -751,7 +875,10 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           font-weight: 600;
           letter-spacing: 0.02em;
           cursor: pointer;
-          transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+          transition:
+            opacity 0.15s,
+            transform 0.15s,
+            box-shadow 0.15s;
           box-shadow: var(--shadow-gold);
         }
         .sw-submit-btn:not(:disabled):hover {
@@ -770,8 +897,14 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           color: var(--text-3);
           font-style: italic;
         }
-        .sw-spin { animation: sw-rot 0.9s linear infinite; }
-        @keyframes sw-rot { to { transform: rotate(360deg); } }
+        .sw-spin {
+          animation: sw-rot 0.9s linear infinite;
+        }
+        @keyframes sw-rot {
+          to {
+            transform: rotate(360deg);
+          }
+        }
 
         /* Footer nav */
         .sw-footer {
@@ -833,21 +966,31 @@ export default function SubmitWizardClient({ draftId, draft }: Props) {
           text-decoration-color: var(--gold-line);
           text-underline-offset: 3px;
         }
-        .sw-link:hover { text-decoration-color: var(--gold); }
+        .sw-link:hover {
+          text-decoration-color: var(--gold);
+        }
 
         /* Responsive */
         @media (max-width: 720px) {
           .sw-header-inner {
             grid-template-columns: 1fr;
-            grid-template-areas: 'back' 'title' 'status';
+            grid-template-areas: "back" "title" "status";
             row-gap: 0.5rem;
           }
-          .sw-stats-row { grid-template-columns: 1fr 1fr; }
-          .sw-pricing-grid { grid-template-columns: 1fr; }
-          .sw-step { padding: 1.25rem; }
-          .sw-title-block h1 { font-size: 1.25rem; }
+          .sw-stats-row {
+            grid-template-columns: 1fr 1fr;
+          }
+          .sw-pricing-grid {
+            grid-template-columns: 1fr;
+          }
+          .sw-step {
+            padding: 1.25rem;
+          }
+          .sw-title-block h1 {
+            font-size: 1.25rem;
+          }
         }
       `}</style>
     </div>
-  )
+  );
 }

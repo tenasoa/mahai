@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 
 /**
  * Action attachée à un toast — affichée comme un bouton inline en bas du toast.
@@ -15,106 +15,150 @@ import { X } from 'lucide-react'
  * après 5s — l'utilisateur doit le fermer ou cliquer sur une action.
  */
 export interface ToastAction {
-  label: string
-  onClick: () => void
-  variant?: 'primary' | 'ghost'
-  closeOnClick?: boolean
+  label: string;
+  onClick: () => void;
+  variant?: "primary" | "ghost";
+  closeOnClick?: boolean;
 }
 
 interface ToastProps {
-  message: string
-  title?: string
-  type: 'success' | 'error' | 'info' | 'warning'
-  actions?: ToastAction[]
-  onClose: () => void
+  message: string;
+  title?: string;
+  type: "success" | "error" | "info" | "warning";
+  actions?: ToastAction[];
+  onClose: () => void;
 }
 
 const TOAST_CONFIG = {
   success: {
-    line: '#4A6B5A',
-    prog: '#8ECAAC',
-    icBg: 'rgba(74,107,90,.15)',
-    icBd: 'rgba(74,107,90,.3)',
-    title: 'Succès',
+    line: "#4A6B5A",
+    prog: "#8ECAAC",
+    icBg: "rgba(74,107,90,.15)",
+    icBd: "rgba(74,107,90,.3)",
+    title: "Succès",
     shake: false,
-    svg: <path d="M4 8L7 11L13 5" stroke="#8ECAAC" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    svg: (
+      <path
+        d="M4 8L7 11L13 5"
+        stroke="#8ECAAC"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
   },
   error: {
-    line: '#9B2335',
-    prog: '#E06070',
-    icBg: 'rgba(155,35,53,.13)',
-    icBd: 'rgba(155,35,53,.3)',
-    title: 'Erreur',
+    line: "#9B2335",
+    prog: "#E06070",
+    icBg: "rgba(155,35,53,.13)",
+    icBd: "rgba(155,35,53,.3)",
+    title: "Erreur",
     shake: true,
-    svg: <path d="M8 4V9M8 11.5V11.4" stroke="#E06070" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    svg: (
+      <path
+        d="M8 4V9M8 11.5V11.4"
+        stroke="#E06070"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
   },
   info: {
-    line: '#C9A84C',
-    prog: '#C9A84C',
-    icBg: 'rgba(201,168,76,.08)',
-    icBd: 'rgba(201,168,76,.22)',
-    title: 'Information',
+    line: "#C9A84C",
+    prog: "#C9A84C",
+    icBg: "rgba(201,168,76,.08)",
+    icBd: "rgba(201,168,76,.22)",
+    title: "Information",
     shake: false,
-    svg: <path d="M8 5V5.1M8 7V12" stroke="#C9A84C" strokeWidth="1.6" strokeLinecap="round"/>
+    svg: (
+      <path
+        d="M8 5V5.1M8 7V12"
+        stroke="#C9A84C"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    ),
   },
   warning: {
-    line: '#C9843C',
-    prog: '#C9843C',
-    icBg: 'rgba(201,132,60,.12)',
-    icBd: 'rgba(201,132,60,.28)',
-    title: 'Attention',
+    line: "#C9843C",
+    prog: "#C9843C",
+    icBg: "rgba(201,132,60,.12)",
+    icBd: "rgba(201,132,60,.28)",
+    title: "Attention",
     shake: false,
-    svg: <><path d="M8 2.5L14 13.5H2L8 2.5Z" stroke="#C9843C" strokeWidth="1.3" strokeLinejoin="round"/><path d="M8 7V9.5M8 11V11.1" stroke="#C9843C" strokeWidth="1.3" strokeLinecap="round"/></>
-  }
-}
+    svg: (
+      <>
+        <path
+          d="M8 2.5L14 13.5H2L8 2.5Z"
+          stroke="#C9843C"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M8 7V9.5M8 11V11.1"
+          stroke="#C9843C"
+          strokeWidth="1.3"
+          strokeLinecap="round"
+        />
+      </>
+    ),
+  },
+};
 
 export function Toast({ message, type, actions, onClose }: ToastProps) {
-  const [isEntering, setIsEntering] = useState(false)
-  const [isExiting, setIsExiting] = useState(false)
-  const [shouldShake, setShouldShake] = useState(false)
-  const config = TOAST_CONFIG[type]
-  const hasActions = !!(actions && actions.length > 0)
+  const [isEntering, setIsEntering] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const [shouldShake, setShouldShake] = useState(false);
+  const config = TOAST_CONFIG[type];
+  const hasActions = !!(actions && actions.length > 0);
 
   useEffect(() => {
-    const entryTimer = setTimeout(() => setIsEntering(true), 50)
+    const entryTimer = setTimeout(() => setIsEntering(true), 50);
 
     if (config.shake) {
-      setTimeout(() => setShouldShake(true), 500)
-      setTimeout(() => setShouldShake(false), 1000)
+      setTimeout(() => setShouldShake(true), 500);
+      setTimeout(() => setShouldShake(false), 1000);
     }
 
     // Pas d'auto-close quand le toast a des actions : on attend une décision
     // explicite de l'utilisateur (sinon l'action serait inaccessible).
     if (hasActions) {
-      return () => clearTimeout(entryTimer)
+      return () => clearTimeout(entryTimer);
     }
 
-    const duration = 5000
+    const duration = 5000;
     const closeTimer = setTimeout(() => {
-      handleClose()
-    }, duration)
+      handleClose();
+    }, duration);
 
     return () => {
-      clearTimeout(entryTimer)
-      clearTimeout(closeTimer)
-    }
+      clearTimeout(entryTimer);
+      clearTimeout(closeTimer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, config.shake, hasActions])
+  }, [type, config.shake, hasActions]);
 
   const handleClose = () => {
-    setIsExiting(true)
-    setTimeout(onClose, 400)
-  }
+    setIsExiting(true);
+    setTimeout(onClose, 400);
+  };
 
   const handleAction = (action: ToastAction) => {
-    action.onClick()
-    if (action.closeOnClick !== false) handleClose()
-  }
+    action.onClick();
+    if (action.closeOnClick !== false) handleClose();
+  };
 
   return (
-    <div className={`luxury-toast ${isEntering ? 'in' : ''} ${isExiting ? 'out' : ''} ${shouldShake ? 'shake' : ''}`}>
+    <div
+      role={type === "error" ? "alert" : "status"}
+      className={`luxury-toast ${isEntering ? "in" : ""} ${isExiting ? "out" : ""} ${shouldShake ? "shake" : ""}`}
+    >
       <div className="toast-line" style={{ background: config.line }}></div>
-      <div className="toast-ic" style={{ background: config.icBg, border: `1px solid ${config.icBd}` }}>
+      <div
+        className="toast-ic"
+        style={{ background: config.icBg, border: `1px solid ${config.icBd}` }}
+      >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           {config.svg}
         </svg>
@@ -127,7 +171,7 @@ export function Toast({ message, type, actions, onClose }: ToastProps) {
             {actions!.map((a, i) => (
               <button
                 key={i}
-                className={`toast-action toast-action-${a.variant || 'ghost'}`}
+                className={`toast-action toast-action-${a.variant || "ghost"}`}
                 onClick={() => handleAction(a)}
               >
                 {a.label}
@@ -136,7 +180,11 @@ export function Toast({ message, type, actions, onClose }: ToastProps) {
           </div>
         )}
       </div>
-      <button className="toast-x" onClick={handleClose}>
+      <button
+        className="toast-x"
+        onClick={handleClose}
+        aria-label="Fermer la notification"
+      >
         <X size={14} />
       </button>
       {/* Progress bar uniquement quand le toast s'auto-ferme — sinon elle
@@ -147,31 +195,57 @@ export function Toast({ message, type, actions, onClose }: ToastProps) {
 
       <style jsx>{`
         .luxury-toast {
-          background: #1C1916;
-          border: 1px solid rgba(201,168,76,.16);
-          border-radius: 8px;
-          padding: 13px 15px;
+          background: #1c1916;
+          border: 1px solid rgba(201, 168, 76, 0.16);
+          border-radius: 0.5rem;
+          padding: 0.8125rem 0.9375rem;
           display: flex;
           align-items: flex-start;
-          gap: 11px;
+          gap: 0.6875rem;
           position: relative;
           overflow: hidden;
           width: 340px;
           transform: translateX(calc(100% + 2rem));
           opacity: 0;
-          transition: transform .42s cubic-bezier(.22,.68,0,1.2), opacity .35s ease;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          transition:
+            transform 0.42s cubic-bezier(0.22, 0.68, 0, 1.2),
+            opacity 0.35s ease;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
           pointer-events: auto;
-          margin-bottom: 8px;
+          margin-bottom: 0.5rem;
         }
-        .luxury-toast.in { transform: translateX(0); opacity: 1; }
-        .luxury-toast.out { transform: translateX(calc(100% + 2rem)); opacity: 0; transition: transform .32s cubic-bezier(.4,0,.6,1), opacity .25s ease; }
-        .luxury-toast.shake { animation: shake .4s cubic-bezier(.36,.07,.19,.97); }
+        .luxury-toast.in {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        .luxury-toast.out {
+          transform: translateX(calc(100% + 2rem));
+          opacity: 0;
+          transition:
+            transform 0.32s cubic-bezier(0.4, 0, 0.6, 1),
+            opacity 0.25s ease;
+        }
+        .luxury-toast.shake {
+          animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
         @keyframes shake {
-          10%, 90% { transform: translateX(-3px); }
-          20%, 80% { transform: translateX(4px); }
-          30%, 50%, 70% { transform: translateX(-4px); }
-          40%, 60% { transform: translateX(4px); }
+          10%,
+          90% {
+            transform: translateX(-3px);
+          }
+          20%,
+          80% {
+            transform: translateX(4px);
+          }
+          30%,
+          50%,
+          70% {
+            transform: translateX(-4px);
+          }
+          40%,
+          60% {
+            transform: translateX(4px);
+          }
         }
         .toast-line {
           position: absolute;
@@ -181,62 +255,87 @@ export function Toast({ message, type, actions, onClose }: ToastProps) {
           height: 2px;
           transform: scaleX(0);
           transform-origin: left;
-          transition: transform .55s .15s cubic-bezier(.22,.68,0,1.1);
+          transition: transform 0.55s 0.15s cubic-bezier(0.22, 0.68, 0, 1.1);
         }
-        .luxury-toast.in .toast-line { transform: scaleX(1); }
+        .luxury-toast.in .toast-line {
+          transform: scaleX(1);
+        }
         .toast-ic {
-          width: 28px;
-          height: 28px;
+          width: 1.75rem;
+          height: 1.75rem;
           border-radius: 50%;
           display: flex;
           align-items: center;
-          justifyContent: center;
+          justify-content: center;
           flex-shrink: 0;
-          margin-top: 1px;
+          margin-top: 0.0625rem;
           transform: scale(0) rotate(-90deg);
-          transition: transform .38s .08s cubic-bezier(.34,1.56,.64,1);
+          transition: transform 0.38s 0.08s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .luxury-toast.in .toast-ic { transform: scale(1) rotate(0deg); }
+        .luxury-toast.in .toast-ic {
+          transform: scale(1) rotate(0deg);
+        }
         .toast-title {
-          font-size: 13px;
+          font-size: 0.8125rem;
           font-weight: 500;
-          color: #F0EBE3;
-          margin-bottom: 3px;
+          color: #f0ebe3;
+          margin-bottom: 0.1875rem;
           line-height: 1.3;
           opacity: 0;
           transform: translateY(4px);
-          transition: opacity .3s .18s, transform .3s .18s ease;
+          transition:
+            opacity 0.3s 0.18s,
+            transform 0.3s 0.18s ease;
         }
-        .luxury-toast.in .toast-title { opacity: 1; transform: translateY(0); }
+        .luxury-toast.in .toast-title {
+          opacity: 1;
+          transform: translateY(0);
+        }
         .toast-msg {
-          font-size: 12px;
-          color: rgba(240,235,227,.5);
+          font-size: 0.75rem;
+          color: rgba(240, 235, 227, 0.5);
           line-height: 1.5;
           opacity: 0;
           transform: translateY(4px);
-          transition: opacity .3s .25s, transform .3s .25s ease;
+          transition:
+            opacity 0.3s 0.25s,
+            transform 0.3s 0.25s ease;
         }
-        .luxury-toast.in .toast-msg { opacity: 1; transform: translateY(0); }
+        .luxury-toast.in .toast-msg {
+          opacity: 1;
+          transform: translateY(0);
+        }
         .toast-x {
           background: none;
           border: none;
-          color: rgba(240,235,227,.2);
+          color: rgba(240, 235, 227, 0.2);
           cursor: pointer;
           padding: 0;
           line-height: 1;
           flex-shrink: 0;
-          transition: color .15s, transform .15s;
+          transition:
+            color 0.15s,
+            transform 0.15s;
           margin-left: auto;
           margin-top: 1px;
           opacity: 0;
-          transform: scale(.7);
-          transition: opacity .25s .3s, transform .25s .3s ease, color .15s;
+          transform: scale(0.7);
+          transition:
+            opacity 0.25s 0.3s,
+            transform 0.25s 0.3s ease,
+            color 0.15s;
           display: flex;
           align-items: center;
-          justifyContent: center;
+          justify-content: center;
         }
-        .luxury-toast.in .toast-x { opacity: 1; transform: scale(1); }
-        .toast-x:hover { color: rgba(240,235,227,.65); transform: scale(1.15) !important; }
+        .luxury-toast.in .toast-x {
+          opacity: 1;
+          transform: scale(1);
+        }
+        .toast-x:hover {
+          color: rgba(240, 235, 227, 0.65);
+          transform: scale(1.15) !important;
+        }
         .toast-prog {
           position: absolute;
           bottom: 0;
@@ -248,42 +347,54 @@ export function Toast({ message, type, actions, onClose }: ToastProps) {
           animation: progress 5s linear forwards;
         }
         @keyframes progress {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
+          from {
+            transform: scaleX(0);
+          }
+          to {
+            transform: scaleX(1);
+          }
         }
 
         /* ─── Toast actions row ──────────────────────────────────── */
         .toast-actions {
           display: flex;
-          gap: 6px;
-          margin-top: 8px;
+          gap: 0.375rem;
+          margin-top: 0.5rem;
           opacity: 0;
           transform: translateY(4px);
-          transition: opacity .3s .32s, transform .3s .32s ease;
+          transition:
+            opacity 0.3s 0.32s,
+            transform 0.3s 0.32s ease;
         }
-        .luxury-toast.in .toast-actions { opacity: 1; transform: translateY(0); }
+        .luxury-toast.in .toast-actions {
+          opacity: 1;
+          transform: translateY(0);
+        }
 
         .toast-action {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 11px;
+          font-family: var(--body);
+          font-size: 0.6875rem;
           font-weight: 500;
-          padding: 5px 10px;
-          border-radius: 4px;
+          padding: 0.3125rem 0.625rem;
+          border-radius: 0.25rem;
           cursor: pointer;
-          transition: background 0.15s, color 0.15s, border-color 0.15s;
+          transition:
+            background 0.15s,
+            color 0.15s,
+            border-color 0.15s;
           line-height: 1.3;
           letter-spacing: 0.02em;
           white-space: nowrap;
         }
 
         .toast-action-primary {
-          background: #C9A84C;
-          color: #1A1714;
-          border: 1px solid #C9A84C;
+          background: #c9a84c;
+          color: #1a1714;
+          border: 1px solid #c9a84c;
         }
         .toast-action-primary:hover {
-          background: #D4B860;
-          border-color: #D4B860;
+          background: #d4b860;
+          border-color: #d4b860;
         }
 
         .toast-action-ghost {
@@ -292,41 +403,46 @@ export function Toast({ message, type, actions, onClose }: ToastProps) {
           border: 1px solid rgba(240, 235, 227, 0.18);
         }
         .toast-action-ghost:hover {
-          color: #F0EBE3;
+          color: #f0ebe3;
           border-color: rgba(240, 235, 227, 0.4);
         }
       `}</style>
     </div>
-  )
+  );
 }
 
 interface ToastContainerProps {
-  toasts: Array<{ id: string; message: string; type: 'success' | 'error' | 'info' | 'warning'; actions?: ToastAction[] }>
-  removeToast: (id: string) => void
+  toasts: Array<{
+    id: string;
+    message: string;
+    type: "success" | "error" | "info" | "warning";
+    actions?: ToastAction[];
+  }>;
+  removeToast: (id: string) => void;
 }
 
 export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
-  if (!mounted) return null
+  if (!mounted) return null;
 
   return createPortal(
-    <div 
+    <div
       aria-live="polite"
       aria-atomic="true"
-      style={{ 
-        position: 'fixed', 
-        top: '12px', 
-        right: '12px', 
+      style={{
+        position: "fixed",
+        top: "12px",
+        right: "12px",
         zIndex: 99999,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        pointerEvents: 'none',
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        pointerEvents: "none",
       }}
     >
       {toasts.map((toast) => (
@@ -339,19 +455,19 @@ export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
         />
       ))}
     </div>,
-    document.body
-  )
+    document.body,
+  );
 }
 
 type ToastEntry = {
-  id: string
-  message: string
-  type: 'success' | 'error' | 'info' | 'warning'
-  actions?: ToastAction[]
-}
+  id: string;
+  message: string;
+  type: "success" | "error" | "info" | "warning";
+  actions?: ToastAction[];
+};
 
 export function useToast() {
-  const [toasts, setToasts] = useState<ToastEntry[]>([])
+  const [toasts, setToasts] = useState<ToastEntry[]>([]);
 
   /**
    * Ajoute un toast.
@@ -362,16 +478,16 @@ export function useToast() {
    */
   const addToast = (
     message: string,
-    type: 'success' | 'error' | 'info' | 'warning' = 'info',
+    type: "success" | "error" | "info" | "warning" = "info",
     actions?: ToastAction[],
   ) => {
-    const id = Date.now().toString() + Math.random().toString(36).slice(2, 6)
-    setToasts((prev) => [...prev, { id, message, type, actions }])
-  }
+    const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
+    setToasts((prev) => [...prev, { id, message, type, actions }]);
+  };
 
   const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
-  return { toasts, addToast, removeToast }
+  return { toasts, addToast, removeToast };
 }

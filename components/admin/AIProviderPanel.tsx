@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Panneau d'administration pour basculer entre les providers IA
@@ -11,99 +11,115 @@
  * clé API du provider cible n'est pas définie côté serveur (gardé-fou).
  */
 
-import { useEffect, useState } from 'react'
-import { CheckCircle2, AlertCircle, Loader2, Bot, Sparkles, Key } from 'lucide-react'
-import { getAIProviderStatus, setAIProvider } from '@/actions/ai-correction'
+import { useEffect, useState } from "react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Bot,
+  Sparkles,
+  Key,
+} from "lucide-react";
+import { getAIProviderStatus, setAIProvider } from "@/actions/ai-correction";
 
 interface ProviderStatusUI {
-  id: 'claude' | 'perplexity' | 'openai' | 'openrouter'
-  label: string
-  isConfigured: boolean
-  isActive: boolean
-  model: string
-  envVarName: string
+  id: "claude" | "perplexity" | "openai" | "openrouter";
+  label: string;
+  isConfigured: boolean;
+  isActive: boolean;
+  model: string;
+  envVarName: string;
 }
 
 const PROVIDER_META: Record<
-  ProviderStatusUI['id'],
+  ProviderStatusUI["id"],
   { description: string; icon: typeof Bot; helpUrl: string }
 > = {
   claude: {
     description:
-      'Anthropic — raisonnement scientifique avancé, supporte les sorties JSON strictes et le caching prompt.',
+      "Anthropic — raisonnement scientifique avancé, supporte les sorties JSON strictes et le caching prompt.",
     icon: Bot,
-    helpUrl: 'https://console.anthropic.com/',
+    helpUrl: "https://console.anthropic.com/",
   },
   perplexity: {
     description:
-      'Perplexity Sonar — fonctionne dès le tier gratuit / Pro, recherche web désactivée pour les sujets d\'examen.',
+      "Perplexity Sonar — fonctionne dès le tier gratuit / Pro, recherche web désactivée pour les sujets d'examen.",
     icon: Sparkles,
-    helpUrl: 'https://www.perplexity.ai/settings/api',
+    helpUrl: "https://www.perplexity.ai/settings/api",
   },
   openai: {
     description:
-      'OpenAI GPT — bon équilibre qualité/coût avec Structured Outputs via Responses API.',
+      "OpenAI GPT — bon équilibre qualité/coût avec Structured Outputs via Responses API.",
     icon: Bot,
-    helpUrl: 'https://platform.openai.com/api-keys',
+    helpUrl: "https://platform.openai.com/api-keys",
   },
   openrouter: {
     description:
-      'OpenRouter — agrégateur de modèles gratuits et payants. Modèles gratuits disponibles : z-ai/glm-4.5-air:free, nvidia/nemotron-3-super-120b-a12b:free, etc.',
+      "OpenRouter — agrégateur de modèles gratuits et payants. Modèles gratuits disponibles : z-ai/glm-4.5-air:free, nvidia/nemotron-3-super-120b-a12b:free, etc.",
     icon: Sparkles,
-    helpUrl: 'https://openrouter.ai/settings/keys',
+    helpUrl: "https://openrouter.ai/settings/keys",
   },
-}
+};
 
 interface Props {
-  onChange?: () => void
+  onChange?: () => void;
 }
 
 export function AIProviderPanel({ onChange }: Props) {
-  const [providers, setProviders] = useState<ProviderStatusUI[] | null>(null)
-  const [activeId, setActiveId] = useState<string>('')
-  const [loading, setLoading] = useState(true)
-  const [pendingId, setPendingId] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{ type: 'ok' | 'err'; msg: string } | null>(null)
+  const [providers, setProviders] = useState<ProviderStatusUI[] | null>(null);
+  const [activeId, setActiveId] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{
+    type: "ok" | "err";
+    msg: string;
+  } | null>(null);
 
   async function reload() {
-    setLoading(true)
-    setFeedback(null)
+    setLoading(true);
+    setFeedback(null);
     try {
-      const res = await getAIProviderStatus()
+      const res = await getAIProviderStatus();
       if (!res.success) {
-        setFeedback({ type: 'err', msg: res.error })
-        return
+        setFeedback({ type: "err", msg: res.error });
+        return;
       }
-      setProviders(res.data.providers as ProviderStatusUI[])
-      setActiveId(res.data.activeId)
+      setProviders(res.data.providers as ProviderStatusUI[]);
+      setActiveId(res.data.activeId);
     } catch (err) {
-      setFeedback({ type: 'err', msg: err instanceof Error ? err.message : 'Erreur' })
+      setFeedback({
+        type: "err",
+        msg: err instanceof Error ? err.message : "Erreur",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    void reload()
-  }, [])
+    void reload();
+  }, []);
 
-  async function handleSelect(id: ProviderStatusUI['id']) {
-    if (id === activeId || pendingId) return
-    setPendingId(id)
-    setFeedback(null)
+  async function handleSelect(id: ProviderStatusUI["id"]) {
+    if (id === activeId || pendingId) return;
+    setPendingId(id);
+    setFeedback(null);
     try {
-      const res = await setAIProvider(id)
+      const res = await setAIProvider(id);
       if (!res.success) {
-        setFeedback({ type: 'err', msg: res.error })
-        return
+        setFeedback({ type: "err", msg: res.error });
+        return;
       }
-      setActiveId(id)
-      setFeedback({ type: 'ok', msg: `Provider IA actif : ${id}.` })
-      onChange?.()
+      setActiveId(id);
+      setFeedback({ type: "ok", msg: `Provider IA actif : ${id}.` });
+      onChange?.();
     } catch (err) {
-      setFeedback({ type: 'err', msg: err instanceof Error ? err.message : 'Erreur' })
+      setFeedback({
+        type: "err",
+        msg: err instanceof Error ? err.message : "Erreur",
+      });
     } finally {
-      setPendingId(null)
+      setPendingId(null);
     }
   }
 
@@ -113,7 +129,8 @@ export function AIProviderPanel({ onChange }: Props) {
         <div>
           <h3>Provider IA actif</h3>
           <p>
-            Choisissez le fournisseur utilisé pour les corrections IA. Les clés API sont lues depuis
+            Choisissez le fournisseur utilisé pour les corrections IA. Les clés
+            API sont lues depuis
             <code> .env.local</code> — jamais stockées en base.
           </p>
         </div>
@@ -121,8 +138,14 @@ export function AIProviderPanel({ onChange }: Props) {
       </div>
 
       {feedback && (
-        <div className={`ai-provider-feedback ai-provider-feedback-${feedback.type}`}>
-          {feedback.type === 'ok' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+        <div
+          className={`ai-provider-feedback ai-provider-feedback-${feedback.type}`}
+        >
+          {feedback.type === "ok" ? (
+            <CheckCircle2 size={14} />
+          ) : (
+            <AlertCircle size={14} />
+          )}
           <span>{feedback.msg}</span>
         </div>
       )}
@@ -130,15 +153,15 @@ export function AIProviderPanel({ onChange }: Props) {
       {providers && (
         <ul className="ai-provider-list">
           {providers.map((p) => {
-            const meta = PROVIDER_META[p.id]
-            const Icon = meta.icon
-            const isActive = p.id === activeId
-            const disabled = !p.isConfigured && !isActive
+            const meta = PROVIDER_META[p.id];
+            const Icon = meta.icon;
+            const isActive = p.id === activeId;
+            const disabled = !p.isConfigured && !isActive;
             return (
               <li
                 key={p.id}
-                className={`ai-provider-card ${isActive ? 'ai-provider-card-active' : ''} ${
-                  disabled ? 'ai-provider-card-disabled' : ''
+                className={`ai-provider-card ${isActive ? "ai-provider-card-active" : ""} ${
+                  disabled ? "ai-provider-card-disabled" : ""
                 }`}
               >
                 <button
@@ -149,7 +172,9 @@ export function AIProviderPanel({ onChange }: Props) {
                   aria-pressed={isActive}
                 >
                   <span className="ai-provider-radio" aria-hidden="true">
-                    {isActive ? <span className="ai-provider-radio-dot" /> : null}
+                    {isActive ? (
+                      <span className="ai-provider-radio-dot" />
+                    ) : null}
                   </span>
                   <span className="ai-provider-icon">
                     <Icon size={20} />
@@ -157,7 +182,9 @@ export function AIProviderPanel({ onChange }: Props) {
                   <span className="ai-provider-info">
                     <span className="ai-provider-name">
                       {p.label}
-                      {isActive && <span className="ai-provider-badge">Actif</span>}
+                      {isActive && (
+                        <span className="ai-provider-badge">Actif</span>
+                      )}
                     </span>
                     <span className="ai-provider-desc">{meta.description}</span>
                     <span className="ai-provider-meta">
@@ -167,12 +194,12 @@ export function AIProviderPanel({ onChange }: Props) {
                       </span>
                       <span
                         className={`ai-provider-pill ai-provider-pill-${
-                          p.isConfigured ? 'ok' : 'missing'
+                          p.isConfigured ? "ok" : "missing"
                         }`}
                       >
                         <Key size={10} />
                         <code>{p.envVarName}</code>
-                        {p.isConfigured ? ' configurée' : ' manquante'}
+                        {p.isConfigured ? " configurée" : " manquante"}
                       </span>
                     </span>
                   </span>
@@ -188,21 +215,26 @@ export function AIProviderPanel({ onChange }: Props) {
                   </a>
                 )}
                 {pendingId === p.id && (
-                  <Loader2 size={16} className="ai-provider-spin ai-provider-pending" />
+                  <Loader2
+                    size={16}
+                    className="ai-provider-spin ai-provider-pending"
+                  />
                 )}
               </li>
-            )
+            );
           })}
         </ul>
       )}
 
       <p className="ai-provider-hint">
-        💡 Les modèles ainsi que les tarifs (<code>ai.price.submission</code>,{' '}
-        <code>ai.price.direct</code>, <code>ai.claude.model</code>, <code>ai.perplexity.model</code>,{' '}
-        <code>ai.openai.model</code>, <code>ai.openrouter.model</code>,{' '}
-        <code>ai.effort</code>) restent éditables dans l'onglet <strong>Paramètres</strong>{' '}
-        (catégorie <em>IA</em>). Modèles gratuits OpenRouter :{''}
-        <code>z-ai/glm-4.5-air:free</code>, <code>nvidia/nemotron-3-super-120b-a12b:free</code>.
+        💡 Les modèles ainsi que les tarifs (<code>ai.price.submission</code>,{" "}
+        <code>ai.price.direct</code>, <code>ai.claude.model</code>,{" "}
+        <code>ai.perplexity.model</code>, <code>ai.openai.model</code>,{" "}
+        <code>ai.openrouter.model</code>, <code>ai.effort</code>) restent
+        éditables dans l'onglet <strong>Paramètres</strong> (catégorie{" "}
+        <em>IA</em>). Modèles gratuits OpenRouter :{""}
+        <code>z-ai/glm-4.5-air:free</code>,{" "}
+        <code>nvidia/nemotron-3-super-120b-a12b:free</code>.
       </p>
 
       <style jsx>{`
@@ -210,7 +242,11 @@ export function AIProviderPanel({ onChange }: Props) {
           padding: 1.5rem;
           border-radius: 12px;
           border: 1px solid var(--gold-line, rgba(201, 168, 76, 0.3));
-          background: linear-gradient(180deg, rgba(201, 168, 76, 0.04), transparent 80%);
+          background: linear-gradient(
+            180deg,
+            rgba(201, 168, 76, 0.04),
+            transparent 80%
+          );
           color: var(--text-1, #fff);
         }
         .ai-provider-panel-head {
@@ -252,12 +288,12 @@ export function AIProviderPanel({ onChange }: Props) {
         }
         .ai-provider-feedback-ok {
           background: rgba(110, 170, 140, 0.1);
-          color: #6eaa8c;
+          color: var(--sage-hi);
           border: 1px solid rgba(110, 170, 140, 0.35);
         }
         .ai-provider-feedback-err {
           background: rgba(224, 85, 117, 0.1);
-          color: #e05575;
+          color: var(--ruby-hi);
           border: 1px solid rgba(224, 85, 117, 0.35);
         }
         .ai-provider-list {
@@ -273,13 +309,16 @@ export function AIProviderPanel({ onChange }: Props) {
           border-radius: 12px;
           border: 1px solid var(--border-1, rgba(255, 255, 255, 0.08));
           background: var(--card, rgba(255, 255, 255, 0.02));
-          transition: border-color 0.18s, background 0.18s, transform 0.18s;
+          transition:
+            border-color 0.18s,
+            background 0.18s,
+            transform 0.18s;
         }
         .ai-provider-card:hover {
           border-color: var(--gold-line, rgba(201, 168, 76, 0.5));
         }
         .ai-provider-card-active {
-          border-color: var(--gold, #c9a84c) !important;
+          border-color: var(--gold) !important;
           background: rgba(201, 168, 76, 0.06);
         }
         .ai-provider-card-disabled {
@@ -312,20 +351,20 @@ export function AIProviderPanel({ onChange }: Props) {
           justify-content: center;
         }
         .ai-provider-card-active .ai-provider-radio {
-          border-color: var(--gold, #c9a84c);
+          border-color: var(--gold);
         }
         .ai-provider-radio-dot {
           width: 9px;
           height: 9px;
           border-radius: 50%;
-          background: var(--gold, #c9a84c);
+          background: var(--gold);
         }
         .ai-provider-icon {
           width: 38px;
           height: 38px;
           border-radius: 9px;
           background: var(--gold-dim, rgba(201, 168, 76, 0.15));
-          color: var(--gold, #c9a84c);
+          color: var(--gold);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -349,7 +388,7 @@ export function AIProviderPanel({ onChange }: Props) {
           font-weight: 700;
           padding: 0.1rem 0.45rem;
           border-radius: 999px;
-          background: var(--gold, #c9a84c);
+          background: var(--gold);
           color: #0c0c0e;
         }
         .ai-provider-desc {
@@ -388,21 +427,25 @@ export function AIProviderPanel({ onChange }: Props) {
         .ai-provider-pill-ok {
           background: rgba(110, 170, 140, 0.1);
           border-color: rgba(110, 170, 140, 0.35);
-          color: #6eaa8c;
+          color: var(--sage-hi);
         }
-        .ai-provider-pill-ok code { color: #6eaa8c; }
+        .ai-provider-pill-ok code {
+          color: var(--sage-hi);
+        }
         .ai-provider-pill-missing {
           background: rgba(224, 85, 117, 0.08);
           border-color: rgba(224, 85, 117, 0.35);
-          color: #e05575;
+          color: var(--ruby-hi);
         }
-        .ai-provider-pill-missing code { color: #e05575; }
+        .ai-provider-pill-missing code {
+          color: var(--ruby-hi);
+        }
         .ai-provider-help {
           position: absolute;
           right: 1rem;
           top: 1rem;
           font-size: 0.75rem;
-          color: var(--gold, #c9a84c);
+          color: var(--gold);
           text-decoration: none;
           padding: 0.3rem 0.6rem;
           border: 1px solid var(--gold-line, rgba(201, 168, 76, 0.4));
@@ -419,7 +462,7 @@ export function AIProviderPanel({ onChange }: Props) {
         }
         .ai-provider-spin {
           animation: ai-provider-spin 0.9s linear infinite;
-          color: var(--gold, #c9a84c);
+          color: var(--gold);
         }
         @keyframes ai-provider-spin {
           to {
@@ -445,5 +488,5 @@ export function AIProviderPanel({ onChange }: Props) {
         }
       `}</style>
     </div>
-  )
+  );
 }
