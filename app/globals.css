@@ -18,6 +18,7 @@
 
   /* === GOLD PALETTE === */
   --gold: #a8782a;
+  --gold-text: #8b6914; /* Doré plus sombre pour le contraste du texte sur fond clair (WCAG AA) */
   --gold-hi: #c9a84c;
   --gold-lo: #d4a855;
   --gold-dim: rgba(168, 120, 42, 0.08);
@@ -169,6 +170,7 @@
   --glass: rgba(20, 18, 16, 0.72);
 
   --gold: #c9a84c;
+  --gold-text: #c9a84c; /* Garde le doré standard en mode sombre */
   --gold-hi: #e8c96a;
   --gold-lo: #8a6e2a;
   --gold-dim: rgba(201, 168, 76, 0.08);
@@ -505,7 +507,7 @@ html.modal-open .modal-content {
 .u-truncate   { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Colors */
-.u-text-gold  { color: var(--gold); }
+.u-text-gold  { color: var(--gold-text); }
 .u-text-muted { color: var(--text-3); }
 .u-text-body  { color: var(--text-2); }
 

@@ -1037,12 +1037,24 @@
 /* Très petit mobile ≤ 375px (iPhone SE, etc.) */
 @media (max-width: 375px) {
   .hero-inner { padding: 4.75rem .85rem 2rem; }
-  .hero-title { font-size: 2rem; }
-  .hero-stat .num { font-size: 1.25rem; }
+  .hero-title { font-size: 1.85rem; } /* Réduit pour éviter l'enroulement moche du texte */
+  
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    text-align: center;
+  }
+  .hero-stat:last-child {
+    grid-column: span 2; /* Évite que l'année s'enroule */
+  }
+  .hero-stat .num { font-size: 1.3rem; }
+  .hero-stat .lbl { font-size: 0.62rem; }
 
   .btn-primary, .btn-secondary {
-    padding: .75rem 1.25rem;
-    font-size: .82rem;
+    padding: 0.85rem 1.5rem;
+    font-size: 0.85rem;
+    min-height: 44px; /* Touch target minimum WCAG */
   }
 
   .feat-card { padding: 1rem; }
@@ -1694,6 +1706,7 @@
    AI DEMO INTERACTIVE — Auto-play animation
 ═══════════════════════════════════════════════ */
 .ai-demo-interactive {
+  width: 100%;
   background: var(--card);
   border: 1px solid var(--b1);
   border-radius: var(--r-lg);
