@@ -15,6 +15,7 @@ import {
 } from "@/components/catalogue";
 import { purchaseCurrentUserSubject } from "@/actions/user";
 import { SubjectRenderer } from "@/components/sujet/SubjectRenderer";
+import { Confetti } from "@/components/ui/Confetti";
 import "./catalogue.css";
 
 // Types d'examens disponibles
@@ -45,6 +46,7 @@ function CatalogueContent() {
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [currentSubject, setCurrentSubject] = useState<any | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [purchaseConfetti, setPurchaseConfetti] = useState(false);
   const [selectedExamType, setSelectedExamType] = useState<string | undefined>(
     undefined,
   );
@@ -128,7 +130,7 @@ function CatalogueContent() {
   // (pas sur le contenu du modal). onPointerDown est immunisé aux ghost clicks mobiles.
   const handleOverlayPointerDown = (
     e: React.PointerEvent<HTMLDivElement>,
-    closeFn: () => void
+    closeFn: () => void,
   ) => {
     if (e.target === e.currentTarget) closeFn();
   };
@@ -145,6 +147,7 @@ function CatalogueContent() {
           `${currentSubject.title} est maintenant débloqué !`,
         );
         setBuyModalOpen(false);
+        setPurchaseConfetti(true);
         router.push(`/sujet/${currentSubject.id}`);
       } else {
         showToast(
@@ -182,20 +185,20 @@ function CatalogueContent() {
     const html = document.documentElement;
 
     if (anyModalOpen) {
-      html.classList.add('modal-open');
+      html.classList.add("modal-open");
       const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
+        if (e.key === "Escape") {
           setPreviewModalOpen(false);
           setBuyModalOpen(false);
         }
       };
-      document.addEventListener('keydown', handleEsc);
+      document.addEventListener("keydown", handleEsc);
       return () => {
-        html.classList.remove('modal-open');
-        document.removeEventListener('keydown', handleEsc);
+        html.classList.remove("modal-open");
+        document.removeEventListener("keydown", handleEsc);
       };
     } else {
-      html.classList.remove('modal-open');
+      html.classList.remove("modal-open");
     }
   }, [previewModalOpen, buyModalOpen]);
 
@@ -253,10 +256,18 @@ function CatalogueContent() {
     <>
       <LuxuryCursor />
 
+      {/* Purchase Confetti */}
+      {purchaseConfetti && (
+        <Confetti trigger={purchaseConfetti} type="purchase" />
+      )}
+
       {/* MAIN CONTENT */}
       <div className={`page-layout ${guestMode ? "guest-mode" : ""}`}>
         {/* MAIN AREA */}
-        <main id="main-content" className={`main-area ${guestMode ? "guest-mode" : ""}`}>
+        <main
+          id="main-content"
+          className={`main-area ${guestMode ? "guest-mode" : ""}`}
+        >
           <div className="main-content-wrapper">
             {/* Page Title */}
             <h1 className="serif">
@@ -377,12 +388,17 @@ function CatalogueContent() {
       {previewModalOpen && currentSubject && (
         <div
           className="catalogue-modal-overlay"
-          onPointerDown={(e) => handleOverlayPointerDown(e, () => setPreviewModalOpen(false))}
+          onPointerDown={(e) =>
+            handleOverlayPointerDown(e, () => setPreviewModalOpen(false))
+          }
           role="dialog"
           aria-modal="true"
           aria-labelledby="preview-modal-title"
         >
-          <div className="catalogue-modal-content" onPointerDown={(e) => e.stopPropagation()}>
+          <div
+            className="catalogue-modal-content"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <button
               className="catalogue-modal-close"
               onClick={() => setPreviewModalOpen(false)}
@@ -390,10 +406,14 @@ function CatalogueContent() {
             >
               ×
             </button>
-            <h2 id="preview-modal-title" className="catalogue-modal-title">{currentSubject.title}</h2>
+            <h2 id="preview-modal-title" className="catalogue-modal-title">
+              {currentSubject.title}
+            </h2>
             <div className="catalogue-modal-preview catalogue-modal-preview-rich">
               <div className="preview-meta preview-meta-top">
-                <span>{currentSubject.examType} · {currentSubject.subject}</span>
+                <span>
+                  {currentSubject.examType} · {currentSubject.subject}
+                </span>
                 <span>{currentSubject.year}</span>
                 <span>{currentSubject.pages || 1} page(s)</span>
               </div>
@@ -402,14 +422,19 @@ function CatalogueContent() {
                   content={currentSubject.content}
                   lockAfter={currentSubject.isUnlocked ? undefined : 2}
                   lockOverlay={
-                    <p className="preview-lock-hint">Achetez ce sujet pour accéder au contenu complet.</p>
+                    <p className="preview-lock-hint">
+                      Achetez ce sujet pour accéder au contenu complet.
+                    </p>
                   }
                 />
               </div>
             </div>
             <button
               className="catalogue-btn-buy"
-              onClick={() => { setPreviewModalOpen(false); openBuyModal(currentSubject); }}
+              onClick={() => {
+                setPreviewModalOpen(false);
+                openBuyModal(currentSubject);
+              }}
             >
               Acheter pour {currentSubject.price} Ar
             </button>
@@ -421,12 +446,17 @@ function CatalogueContent() {
       {buyModalOpen && currentSubject && (
         <div
           className="catalogue-modal-overlay"
-          onPointerDown={(e) => handleOverlayPointerDown(e, () => setBuyModalOpen(false))}
+          onPointerDown={(e) =>
+            handleOverlayPointerDown(e, () => setBuyModalOpen(false))
+          }
           role="dialog"
           aria-modal="true"
           aria-labelledby="buy-modal-title"
         >
-          <div className="catalogue-modal-content" onPointerDown={(e) => e.stopPropagation()}>
+          <div
+            className="catalogue-modal-content"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <button
               className="catalogue-modal-close"
               onClick={() => setBuyModalOpen(false)}
@@ -434,9 +464,13 @@ function CatalogueContent() {
             >
               ×
             </button>
-            <h2 id="buy-modal-title" className="catalogue-modal-title">Confirmer l'achat</h2>
+            <h2 id="buy-modal-title" className="catalogue-modal-title">
+              Confirmer l'achat
+            </h2>
             <div className="catalogue-modal-buy-info">
-              <p className="catalogue-modal-buy-heading">{currentSubject.title}</p>
+              <p className="catalogue-modal-buy-heading">
+                {currentSubject.title}
+              </p>
               <div className="catalogue-modal-buy-row">
                 <span>Prix du sujet</span>
                 <strong>{currentSubject.price} Ar</strong>

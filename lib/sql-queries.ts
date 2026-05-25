@@ -1,195 +1,227 @@
-import { query } from '@/lib/db'
+import { query } from "@/lib/db";
 
 function quoteIdentifier(identifier: string): string {
-  return `"${identifier.replace(/"/g, '""')}"`
+  return `"${identifier.replace(/"/g, '""')}"`;
 }
 
 function buildInsertParts(data: Record<string, unknown>) {
-  const keys = Object.keys(data)
-  const fields = keys.map(quoteIdentifier).join(', ')
-  const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ')
-  const values = Object.values(data)
-  return { fields, placeholders, values }
+  const keys = Object.keys(data);
+  const fields = keys.map(quoteIdentifier).join(", ");
+  const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
+  const values = Object.values(data);
+  return { fields, placeholders, values };
 }
 
 export interface User {
-  id: string
-  email: string
-  prenom: string
-  nom?: string
-  role: string
-  balanceAr: number  // Solde en Ariary (remplace credits)
-  phone?: string
-  phoneVerified: boolean
-  schoolLevel?: string
-  emailVerified: boolean
-  userType?: string
-  customUserType?: string
-  etablissement?: string
-  educationLevel?: string
-  gradeLevel?: string
-  filiere?: string
-  region?: string
-  district?: string
-  bio?: string
-  matieresPreferees?: string[]
-  objectifsEtude?: string[]
-  profilePublic?: boolean
-  showEmail?: boolean
-  showPhone?: boolean
-  showEtablissement?: boolean
-  notifCorrections?: boolean
-  notifSujets?: boolean
-  notifPromos?: boolean
-  notifRappels?: boolean
-  referralCode?: string
-  referredByUserId?: string
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  email: string;
+  prenom: string;
+  nom?: string;
+  role: string;
+  balanceAr: number; // Solde en Ariary (remplace credits)
+  phone?: string;
+  phoneVerified: boolean;
+  schoolLevel?: string;
+  emailVerified: boolean;
+  userType?: string;
+  customUserType?: string;
+  etablissement?: string;
+  educationLevel?: string;
+  gradeLevel?: string;
+  filiere?: string;
+  region?: string;
+  district?: string;
+  bio?: string;
+  matieresPreferees?: string[];
+  objectifsEtude?: string[];
+  profilePublic?: boolean;
+  showEmail?: boolean;
+  showPhone?: boolean;
+  showEtablissement?: boolean;
+  notifCorrections?: boolean;
+  notifSujets?: boolean;
+  notifPromos?: boolean;
+  notifRappels?: boolean;
+  referralCode?: string;
+  referredByUserId?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Subject {
-  id: string
-  titre: string
-  type: string
-  matiere: string
-  annee: string
-  serie?: string
-  description?: string
-  pages: number
-  prix: number  // Prix en Ariary (remplace credits)
-  difficulte: string
-  langue: string
-  format: string
-  badge: string
-  glyph: string
-  featured: boolean
-  rating: number
-  reviewsCount: number
-  hasCorrectionIa: boolean
-  hasCorrectionProf: boolean
-  authorId: string
-  createdAt: Date
+  id: string;
+  titre: string;
+  type: string;
+  matiere: string;
+  annee: string;
+  serie?: string;
+  description?: string;
+  pages: number;
+  prix: number; // Prix en Ariary (remplace credits)
+  difficulte: string;
+  langue: string;
+  format: string;
+  badge: string;
+  glyph: string;
+  featured: boolean;
+  rating: number;
+  reviewsCount: number;
+  hasCorrectionIa: boolean;
+  hasCorrectionProf: boolean;
+  authorId: string;
+  createdAt: Date;
 }
 
 export interface Purchase {
-  id: string
-  userId: string
-  subjectId?: string
-  amountAr: number  // Montant en Ariary (remplace creditsAmount)
-  paymentMethod?: string
-  status: string
-  createdAt: Date
+  id: string;
+  userId: string;
+  subjectId?: string;
+  amountAr: number; // Montant en Ariary (remplace creditsAmount)
+  paymentMethod?: string;
+  status: string;
+  createdAt: Date;
 }
 
 export interface Transaction {
-  id: string
-  userId: string
-  amountAr: number  // Montant en Ariary
-  type: 'EARN' | 'SPEND' | 'RECHARGE' | 'WITHDRAWAL' | 'REFUND'
-  description?: string
-  paymentMethod?: string
-  stripeSessionId?: string
-  status: 'PENDING' | 'COMPLETED' | 'FAILED'
-  createdAt: Date
+  id: string;
+  userId: string;
+  amountAr: number; // Montant en Ariary
+  type: "EARN" | "SPEND" | "RECHARGE" | "WITHDRAWAL" | "REFUND";
+  description?: string;
+  paymentMethod?: string;
+  stripeSessionId?: string;
+  status: "PENDING" | "COMPLETED" | "FAILED";
+  createdAt: Date;
 }
 
 // @deprecated Utiliser Transaction (renommé de CreditTransaction)
-export type CreditTransaction = Transaction
+export type CreditTransaction = Transaction;
+
+export interface DailyActivity {
+  id: string;
+  userId: string;
+  date: string;
+  type:
+    | "LOGIN"
+    | "SUBJECT_PURCHASE"
+    | "SUBJECT_VIEW"
+    | "EXAM_STARTED"
+    | "EXAM_COMPLETED"
+    | "SUBMISSION_CREATED";
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  weekDays: { date: string; count: number }[];
+  todayDone: boolean;
+}
 
 // User queries
 export async function getUserById(id: string): Promise<User | null> {
-  const result = await query('SELECT * FROM "User" WHERE id = $1', [id])
-  return result.rows[0] || null
+  const result = await query('SELECT * FROM "User" WHERE id = $1', [id]);
+  return result.rows[0] || null;
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const result = await query('SELECT * FROM "User" WHERE email = $1', [email])
-  return result.rows[0] || null
+  const result = await query('SELECT * FROM "User" WHERE email = $1', [email]);
+  return result.rows[0] || null;
 }
 
-export async function updateUserBalanceAr(userId: string, balanceAr: number): Promise<void> {
-  await query('UPDATE "User" SET "balanceAr" = $1, "updatedAt" = NOW() WHERE id = $2', [balanceAr, userId])
+export async function updateUserBalanceAr(
+  userId: string,
+  balanceAr: number,
+): Promise<void> {
+  await query(
+    'UPDATE "User" SET "balanceAr" = $1, "updatedAt" = NOW() WHERE id = $2',
+    [balanceAr, userId],
+  );
 }
-
 
 export async function createUser(userData: Partial<User>): Promise<User> {
-  const { fields, placeholders, values } = buildInsertParts(userData as Record<string, unknown>)
-  
+  const { fields, placeholders, values } = buildInsertParts(
+    userData as Record<string, unknown>,
+  );
+
   const result = await query(
     `INSERT INTO "User" (${fields}) VALUES (${placeholders}) RETURNING *`,
-    values
-  )
-  return result.rows[0]
+    values,
+  );
+  return result.rows[0];
 }
 
 // Subject queries
 interface SubjectFilters {
-  search?: string
-  types?: string[]
-  matiere?: string
-  minRating?: number
-  maxPrice?: number
-  sortBy?: 'rating' | 'price_asc' | 'price_desc'
-  limit?: number
-  page?: number
+  search?: string;
+  types?: string[];
+  matiere?: string;
+  minRating?: number;
+  maxPrice?: number;
+  sortBy?: "rating" | "price_asc" | "price_desc";
+  limit?: number;
+  page?: number;
 }
 
 interface SubjectQueryResult {
-  subjects: unknown[]
-  total: number
-  totalPages: number
-  currentPage: number
+  subjects: unknown[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
 }
 
-export async function getSubjects(filters: SubjectFilters = {}, userId?: string): Promise<SubjectQueryResult> {
-  let whereClause = 'WHERE 1=1'
-  const params: unknown[] = []
-  let paramIndex = 1
+export async function getSubjects(
+  filters: SubjectFilters = {},
+  userId?: string,
+): Promise<SubjectQueryResult> {
+  let whereClause = "WHERE 1=1";
+  const params: unknown[] = [];
+  let paramIndex = 1;
 
   // Build WHERE clause based on filters
   if (filters.search) {
-    whereClause += ` AND (titre ILIKE $${paramIndex} OR matiere ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`
-    params.push(`%${filters.search}%`)
-    paramIndex++
+    whereClause += ` AND (titre ILIKE $${paramIndex} OR matiere ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+    params.push(`%${filters.search}%`);
+    paramIndex++;
   }
 
   if (filters.types && filters.types.length > 0) {
-    whereClause += ` AND type = ANY($${paramIndex})`
-    params.push(filters.types)
-    paramIndex++
+    whereClause += ` AND type = ANY($${paramIndex})`;
+    params.push(filters.types);
+    paramIndex++;
   }
 
   if (filters.matiere) {
-    whereClause += ` AND matiere = $${paramIndex}`
-    params.push(filters.matiere)
-    paramIndex++
+    whereClause += ` AND matiere = $${paramIndex}`;
+    params.push(filters.matiere);
+    paramIndex++;
   }
 
   if (filters.minRating) {
-    whereClause += ` AND rating >= $${paramIndex}`
-    params.push(filters.minRating)
-    paramIndex++
+    whereClause += ` AND rating >= $${paramIndex}`;
+    params.push(filters.minRating);
+    paramIndex++;
   }
 
   if (filters.maxPrice !== undefined) {
-    whereClause += ` AND prix <= $${paramIndex}`
-    params.push(filters.maxPrice)
-    paramIndex++
+    whereClause += ` AND prix <= $${paramIndex}`;
+    params.push(filters.maxPrice);
+    paramIndex++;
   }
 
   // Ordering
-  let orderBy = 'ORDER BY featured DESC, "createdAt" DESC'
-  if (filters.sortBy === 'rating') orderBy = 'ORDER BY rating DESC'
-  if (filters.sortBy === 'price_asc') orderBy = 'ORDER BY prix ASC'
-  if (filters.sortBy === 'price_desc') orderBy = 'ORDER BY prix DESC'
+  let orderBy = 'ORDER BY featured DESC, "createdAt" DESC';
+  if (filters.sortBy === "rating") orderBy = "ORDER BY rating DESC";
+  if (filters.sortBy === "price_asc") orderBy = "ORDER BY prix ASC";
+  if (filters.sortBy === "price_desc") orderBy = "ORDER BY prix DESC";
 
   // Pagination
-  const limit = filters.limit || 9
-  const offset = ((filters.page || 1) - 1) * limit
+  const limit = filters.limit || 9;
+  const offset = ((filters.page || 1) - 1) * limit;
 
   const queryText = `
-    SELECT 
+    SELECT
       s.*,
       CASE WHEN p.id IS NOT NULL THEN true ELSE false END as "isUnlocked"
     FROM "Subject" s
@@ -197,33 +229,34 @@ export async function getSubjects(filters: SubjectFilters = {}, userId?: string)
     ${whereClause}
     ${orderBy}
     LIMIT $${paramIndex + 1} OFFSET $${paramIndex + 2}
-  `
+  `;
 
-  params.push(userId || null, limit, offset)
+  params.push(userId || null, limit, offset);
 
-  const result = await query(queryText, params)
-  
+  const result = await query(queryText, params);
+
   // Get total count
   const countQuery = `
-    SELECT COUNT(*) as total 
-    FROM "Subject" s 
+    SELECT COUNT(*) as total
+    FROM "Subject" s
     ${whereClause}
-  `
-  const countParams = params.slice(0, -2) // Remove limit and offset
-  const countResult = await query(countQuery, countParams)
-  const total = parseInt(countResult.rows[0].total)
+  `;
+  const countParams = params.slice(0, -2); // Remove limit and offset
+  const countResult = await query(countQuery, countParams);
+  const total = parseInt(countResult.rows[0].total);
 
   return {
     subjects: result.rows,
     total,
     totalPages: Math.ceil(total / limit),
-    currentPage: filters.page || 1
-  }
+    currentPage: filters.page || 1,
+  };
 }
 
 export async function getSubjectById(id: string, userId?: string) {
-  const queryText = userId ? `
-    SELECT 
+  const queryText = userId
+    ? `
+    SELECT
       s.*,
       u.prenom || ' ' || COALESCE(u.nom, '') as "authorName",
       CASE WHEN p.id IS NOT NULL THEN true ELSE false END as "isUnlocked"
@@ -231,99 +264,117 @@ export async function getSubjectById(id: string, userId?: string) {
     LEFT JOIN "User" u ON s."authorId" = u.id
     LEFT JOIN "Purchase" p ON s.id = p."subjectId" AND p."userId" = $2 AND p.status = 'COMPLETED'
     WHERE s.id = $1
-  ` : `
-    SELECT 
+  `
+    : `
+    SELECT
       s.*,
       u.prenom || ' ' || COALESCE(u.nom, '') as "authorName"
     FROM "Subject" s
     LEFT JOIN "User" u ON s."authorId" = u.id
     WHERE s.id = $1
-  `
+  `;
 
-  const params = userId ? [id, userId] : [id]
-  const result = await query(queryText, params)
-  return result.rows[0] || null
+  const params = userId ? [id, userId] : [id];
+  const result = await query(queryText, params);
+  return result.rows[0] || null;
 }
 
 // Purchase queries
-export async function createPurchase(purchaseData: Partial<Purchase>): Promise<Purchase> {
-  const { fields, placeholders, values } = buildInsertParts(purchaseData as Record<string, unknown>)
-  
+export async function createPurchase(
+  purchaseData: Partial<Purchase>,
+): Promise<Purchase> {
+  const { fields, placeholders, values } = buildInsertParts(
+    purchaseData as Record<string, unknown>,
+  );
+
   const result = await query(
     `INSERT INTO "Purchase" (${fields}) VALUES (${placeholders}) RETURNING *`,
-    values
-  )
-  return result.rows[0]
+    values,
+  );
+  return result.rows[0];
 }
 
-export async function findExistingPurchase(userId: string, subjectId: string): Promise<Purchase | null> {
+export async function findExistingPurchase(
+  userId: string,
+  subjectId: string,
+): Promise<Purchase | null> {
   const result = await query(
     'SELECT * FROM "Purchase" WHERE "userId" = $1 AND "subjectId" = $2 AND status = $3',
-    [userId, subjectId, 'COMPLETED']
-  )
-  return result.rows[0] || null
+    [userId, subjectId, "COMPLETED"],
+  );
+  return result.rows[0] || null;
 }
 
 // Credit transaction queries
-export async function createCreditTransaction(transactionData: Partial<CreditTransaction>): Promise<CreditTransaction> {
-  const { fields, placeholders, values } = buildInsertParts(transactionData as Record<string, unknown>)
-  
+export async function createCreditTransaction(
+  transactionData: Partial<CreditTransaction>,
+): Promise<CreditTransaction> {
+  const { fields, placeholders, values } = buildInsertParts(
+    transactionData as Record<string, unknown>,
+  );
+
   const result = await query(
     `INSERT INTO "CreditTransaction" (${fields}) VALUES (${placeholders}) RETURNING *`,
-    values
-  )
-  return result.rows[0]
+    values,
+  );
+  return result.rows[0];
 }
 
 // Email verification
-export async function createEmailVerification(email: string, token: string, expiresAt: Date) {
+export async function createEmailVerification(
+  email: string,
+  token: string,
+  expiresAt: Date,
+) {
   await query(
     'INSERT INTO "EmailVerification" (id, email, token, "expiresAt") VALUES ($1, $2, $3, $4)',
-    [crypto.randomUUID(), email, token, expiresAt]
-  )
+    [crypto.randomUUID(), email, token, expiresAt],
+  );
 }
 
 export async function findValidEmailVerification(token: string) {
   const result = await query(
     'SELECT * FROM "EmailVerification" WHERE token = $1 AND used = false AND "expiresAt" > NOW()',
-    [token]
-  )
-  return result.rows[0] || null
+    [token],
+  );
+  return result.rows[0] || null;
 }
 
 export async function markEmailAsVerified(userId: string) {
   await query(
     'UPDATE "User" SET "emailVerified" = true, "updatedAt" = NOW() WHERE id = $1',
-    [userId]
-  )
+    [userId],
+  );
 }
 
 export async function markEmailVerificationAsUsed(token: string) {
-  await query(
-    'UPDATE "EmailVerification" SET used = true WHERE token = $1',
-    [token]
-  )
+  await query('UPDATE "EmailVerification" SET used = true WHERE token = $1', [
+    token,
+  ]);
 }
 
 // Password reset
-export async function createPasswordReset(email: string, token: string, expiresAt: Date) {
+export async function createPasswordReset(
+  email: string,
+  token: string,
+  expiresAt: Date,
+) {
   await query(
     'INSERT INTO "PasswordReset" (id, email, token, "expiresAt") VALUES ($1, $2, $3, $4)',
-    [crypto.randomUUID(), email, token, expiresAt]
-  )
+    [crypto.randomUUID(), email, token, expiresAt],
+  );
 }
 
 export async function findValidPasswordReset(token: string) {
   const result = await query(
     'SELECT * FROM "PasswordReset" WHERE token = $1 AND used = false AND "expiresAt" > NOW()',
-    [token]
-  )
-  return result.rows[0] || null
+    [token],
+  );
+  return result.rows[0] || null;
 }
 
 export async function markPasswordResetAsUsed(token: string) {
-  await query(
-    'UPDATE "PasswordReset" SET used = true WHERE token = $1',
-    [token]
-  )
+  await query('UPDATE "PasswordReset" SET used = true WHERE token = $1', [
+    token,
+  ]);
 }

@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowUpRight,
   CalendarClock,
@@ -15,101 +15,119 @@ import {
   GraduationCap,
   Gem,
   Clock,
-} from 'lucide-react'
-import { useAuth } from '@/lib/hooks/useAuth'
-import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { LuxuryFooter } from '@/components/layout/LuxuryFooter'
-import { DashboardPageSkeleton } from '@/components/ui/PageSkeletons'
-import { getRandomQuote, type MotivationalQuote } from '@/lib/constants/motivationalQuotes'
-import { getDashboardData, type UpcomingExam, type WeeklyProgress } from '@/actions/user'
-import './dashboard.css'
+} from "lucide-react";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
+import { LuxuryFooter } from "@/components/layout/LuxuryFooter";
+import { DashboardPageSkeleton } from "@/components/ui/PageSkeletons";
+import {
+  getRandomQuote,
+  type MotivationalQuote,
+} from "@/lib/constants/motivationalQuotes";
+import {
+  getDashboardData,
+  type UpcomingExam,
+  type WeeklyProgress,
+  recordDailyActivityAction,
+} from "@/actions/user";
+import { StreakWidget } from "@/components/dashboard/StreakWidget";
+import { GuidedTour } from "@/components/dashboard/GuidedTour";
+import "./dashboard.css";
 
 interface DashboardCardProps {
-  icon: LucideIcon
-  label: string
-  value: string | number
-  subtitle: string
-  route?: string
-  color: 'gold' | 'blue' | 'green' | 'ruby'
+  icon: LucideIcon;
+  label: string;
+  value: string | number;
+  subtitle: string;
+  route?: string;
+  color: "gold" | "blue" | "green" | "ruby";
 }
 
 function getDaysRemaining(dateISO: string) {
-  const today = new Date()
-  const examDate = new Date(dateISO)
-  today.setHours(0, 0, 0, 0)
-  examDate.setHours(0, 0, 0, 0)
-  const diffMs = examDate.getTime() - today.getTime()
-  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+  const today = new Date();
+  const examDate = new Date(dateISO);
+  today.setHours(0, 0, 0, 0);
+  examDate.setHours(0, 0, 0, 0);
+  const diffMs = examDate.getTime() - today.getTime();
+  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const { userId, appUser, loading: authLoading } = useAuth()
-  const [currentDate, setCurrentDate] = useState('')
-  const [currentTime, setCurrentTime] = useState('')
+  const router = useRouter();
+  const { userId, appUser, loading: authLoading } = useAuth();
+  const [currentDate, setCurrentDate] = useState("");
+  const [currentTime, setCurrentTime] = useState("");
 
   // Set page title
   useEffect(() => {
-    document.title = "Mah.AI — Tableau de bord"
-  }, [])
-  const [greeting, setGreeting] = useState('')
-  const [motivationalQuote, setMotivationalQuote] = useState<MotivationalQuote | null>(null)
-  const [upcomingExams, setUpcomingExams] = useState<UpcomingExam[]>([])
-  const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress[]>([])
-  const [dashboardLoading, setDashboardLoading] = useState(true)
+    document.title = "Mah.AI — Tableau de bord";
+  }, []);
+  const [greeting, setGreeting] = useState("");
+  const [motivationalQuote, setMotivationalQuote] =
+    useState<MotivationalQuote | null>(null);
+  const [upcomingExams, setUpcomingExams] = useState<UpcomingExam[]>([]);
+  const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress[]>([]);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
 
   useEffect(() => {
-    const now = new Date()
+    const now = new Date();
     setCurrentDate(
-      now.toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    )
+      now.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    );
     setCurrentTime(
-      now.toLocaleTimeString('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    )
+      now.toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    );
 
-    const hour = now.getHours()
+    const hour = now.getHours();
     if (hour >= 5 && hour < 12) {
-      setGreeting('Bonjour')
+      setGreeting("Bonjour");
     } else if (hour >= 12 && hour < 18) {
-      setGreeting('Bon après-midi')
+      setGreeting("Bon après-midi");
     } else {
-      setGreeting('Bonsoir')
+      setGreeting("Bonsoir");
     }
 
-    setMotivationalQuote(getRandomQuote())
-  }, [])
+    setMotivationalQuote(getRandomQuote());
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !userId) {
-      router.push('/auth/login')
+      router.push("/auth/login");
     }
-  }, [authLoading, userId, router])
+  }, [authLoading, userId, router]);
 
   useEffect(() => {
     async function loadDashboardData() {
       if (userId) {
-        setDashboardLoading(true)
+        setDashboardLoading(true);
         try {
-          const data = await getDashboardData()
-          setUpcomingExams(data.upcomingExams)
-          setWeeklyProgress(data.weeklyProgress)
+          const data = await getDashboardData();
+          setUpcomingExams(data.upcomingExams);
+          setWeeklyProgress(data.weeklyProgress);
         } catch (error) {
-          console.error('Erreur chargement dashboard:', error)
+          console.error("Erreur chargement dashboard:", error);
         } finally {
-          setDashboardLoading(false)
+          setDashboardLoading(false);
         }
       }
     }
-    loadDashboardData()
-  }, [userId])
+    loadDashboardData();
+  }, [userId]);
+
+  // Enregistre l'activité quotidienne (streak)
+  useEffect(() => {
+    if (userId) {
+      recordDailyActivityAction("LOGIN");
+    }
+  }, [userId]);
 
   const profileFields = appUser
     ? [
@@ -120,34 +138,42 @@ export default function DashboardPage() {
         appUser.region,
         appUser.district,
       ]
-    : []
+    : [];
   const profileCompletion = profileFields.length
-    ? Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100)
-    : 0
+    ? Math.round(
+        (profileFields.filter(Boolean).length / profileFields.length) * 100,
+      )
+    : 0;
 
-  const completedSessions = weeklyProgress.filter((entry) => entry.solved > 0).length
-  const totalWeeklySolved = weeklyProgress.reduce((sum, entry) => sum + entry.solved, 0)
-  const nearestExamDays = upcomingExams.length > 0 ? getDaysRemaining(upcomingExams[0].date) : 0
+  const completedSessions = weeklyProgress.filter(
+    (entry) => entry.solved > 0,
+  ).length;
+  const totalWeeklySolved = weeklyProgress.reduce(
+    (sum, entry) => sum + entry.solved,
+    0,
+  );
+  const nearestExamDays =
+    upcomingExams.length > 0 ? getDaysRemaining(upcomingExams[0].date) : 0;
 
-  const studyPart = Math.max(20, 45 - completedSessions * 2)
-  const exercisePart = Math.min(45, 24 + completedSessions * 2)
-  const mockExamPart = 100 - studyPart - exercisePart
+  const studyPart = Math.max(20, 45 - completedSessions * 2);
+  const exercisePart = Math.min(45, 24 + completedSessions * 2);
+  const mockExamPart = 100 - studyPart - exercisePart;
 
   const prepDistribution = [
-    { label: 'Lecture sujets', value: studyPart, color: 'var(--gold)' },
-    { label: 'Exercices', value: exercisePart, color: 'var(--sage)' },
-    { label: 'Examens blancs', value: mockExamPart, color: 'var(--blue)' },
-  ]
+    { label: "Lecture sujets", value: studyPart, color: "var(--gold)" },
+    { label: "Exercices", value: exercisePart, color: "var(--sage)" },
+    { label: "Examens blancs", value: mockExamPart, color: "var(--blue)" },
+  ];
 
   const pieGradient = `conic-gradient(${prepDistribution
     .map((segment, index) => {
       const start = prepDistribution
         .slice(0, index)
-        .reduce((sum, current) => sum + current.value, 0)
-      const end = start + segment.value
-      return `${segment.color} ${start}% ${end}%`
+        .reduce((sum, current) => sum + current.value, 0);
+      const end = start + segment.value;
+      return `${segment.color} ${start}% ${end}%`;
     })
-    .join(', ')})`
+    .join(", ")})`;
 
   if (authLoading || !userId || dashboardLoading) {
     return (
@@ -155,43 +181,43 @@ export default function DashboardPage() {
         <LuxuryCursor />
         <DashboardPageSkeleton />
       </>
-    )
+    );
   }
 
   const cards: DashboardCardProps[] = [
     {
       icon: Wallet,
-      label: 'Solde Ariary',
+      label: "Solde Ariary",
       value: `${(appUser?.balanceAr ?? 0).toLocaleString()} Ar`,
-      subtitle: 'Utilisable pour débloquer des sujets',
-      route: '/recharge',
-      color: 'gold',
+      subtitle: "Utilisable pour débloquer des sujets",
+      route: "/recharge",
+      color: "gold",
     },
     {
       icon: UserRound,
-      label: 'Profil',
+      label: "Profil",
       value: `${profileCompletion}%`,
-      subtitle: 'Complétion des informations personnelles',
-      route: '/profil',
-      color: 'blue',
+      subtitle: "Complétion des informations personnelles",
+      route: "/profil",
+      color: "blue",
     },
     {
       icon: CalendarClock,
-      label: 'Examens planifiés',
+      label: "Examens planifiés",
       value: upcomingExams.length,
       subtitle: `Prochaine échéance dans ${nearestExamDays} jour(s)`,
       // Lien vers /examens désactivé — fonctionnalité à implémenter ultérieurement.
-      color: 'ruby',
+      color: "ruby",
     },
     {
       icon: Target,
-      label: 'Sessions cette semaine',
+      label: "Sessions cette semaine",
       value: totalWeeklySolved,
       subtitle: `${completedSessions}/7 jours actifs`,
-      route: '/catalogue',
-      color: 'green',
+      route: "/catalogue",
+      color: "green",
     },
-  ]
+  ];
 
   return (
     <>
@@ -206,21 +232,25 @@ export default function DashboardPage() {
                   <span className="hero-icon">✦</span>
                   <div>
                     <h1 className="hero-title">
-                      {greeting}, <em>{appUser?.pseudo || appUser?.prenom || 'Utilisateur'}</em>
+                      {greeting},{" "}
+                      <em>
+                        {appUser?.pseudo || appUser?.prenom || "Utilisateur"}
+                      </em>
                     </h1>
                     <p className="hero-subtitle">
-                      Retrouvez ici vos indicateurs clés, votre planning d'épreuves et vos prochains objectifs de progression.
+                      Retrouvez ici vos indicateurs clés, votre planning
+                      d'épreuves et vos prochains objectifs de progression.
                     </p>
                     <p
                       className="hero-time"
                       style={{
-                        fontFamily: 'var(--mono)',
-                        fontSize: '0.65rem',
-                        color: 'var(--text-3)',
-                        marginTop: '0.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
+                        fontFamily: "var(--mono)",
+                        fontSize: "0.65rem",
+                        color: "var(--text-3)",
+                        marginTop: "0.5rem",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
                       }}
                     >
                       <Clock size={14} />
@@ -230,21 +260,34 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="hero-meta">
-                  <span className="hero-meta-item"><Calendar size={14} /> {currentDate}</span>
-                  <span className="hero-meta-item"><GraduationCap size={14} /> {appUser?.role || 'Compte étudiant'}</span>
-                  <span className="hero-meta-item"><Gem size={14} /> {(appUser?.balanceAr ?? 0).toLocaleString()} Ar</span>
+                  <span className="hero-meta-item">
+                    <Calendar size={14} /> {currentDate}
+                  </span>
+                  <span className="hero-meta-item">
+                    <GraduationCap size={14} />{" "}
+                    {appUser?.role || "Compte étudiant"}
+                  </span>
+                  <span className="hero-meta-item">
+                    <Gem size={14} />{" "}
+                    {(appUser?.balanceAr ?? 0).toLocaleString()} Ar
+                  </span>
                 </div>
               </div>
 
               {motivationalQuote && (
                 <div className="hero-quote-card">
-                  <div className="hero-quote-icon"><MessageSquare size={20} /></div>
+                  <div className="hero-quote-icon">
+                    <MessageSquare size={20} />
+                  </div>
                   <div className="hero-quote-content">
-                    <p className="hero-quote-text">"{motivationalQuote.text}"</p>
+                    <p className="hero-quote-text">
+                      "{motivationalQuote.text}"
+                    </p>
                     {(motivationalQuote.author || motivationalQuote.source) && (
                       <p className="hero-quote-author">
                         {motivationalQuote.author}
-                        {motivationalQuote.source && ` — ${motivationalQuote.source}`}
+                        {motivationalQuote.source &&
+                          ` — ${motivationalQuote.source}`}
                       </p>
                     )}
                   </div>
@@ -265,10 +308,15 @@ export default function DashboardPage() {
             <div className="analytics-grid">
               <article className="dashboard-card">
                 <div className="section-header">
-                  <h2 className="section-title">Répartition <em>Préparation</em></h2>
+                  <h2 className="section-title">
+                    Répartition <em>Préparation</em>
+                  </h2>
                 </div>
                 <div className="pie-wrap">
-                  <div className="pie-chart" style={{ background: pieGradient }}>
+                  <div
+                    className="pie-chart"
+                    style={{ background: pieGradient }}
+                  >
                     <div className="pie-center">
                       <span>{totalWeeklySolved}</span>
                       <small>sessions</small>
@@ -277,7 +325,10 @@ export default function DashboardPage() {
                   <div className="pie-legend">
                     {prepDistribution.map((segment) => (
                       <div key={segment.label} className="pie-legend-item">
-                        <span className="pie-dot" style={{ background: segment.color }} />
+                        <span
+                          className="pie-dot"
+                          style={{ background: segment.color }}
+                        />
                         <span>{segment.label}</span>
                         <strong>{segment.value}%</strong>
                       </div>
@@ -288,27 +339,31 @@ export default function DashboardPage() {
 
               <article className="dashboard-card">
                 <div className="section-header">
-                  <h2 className="section-title">Progression <em>Hebdomadaire</em></h2>
+                  <h2 className="section-title">
+                    Progression <em>Hebdomadaire</em>
+                  </h2>
                 </div>
                 <div className="bars-chart">
                   {weeklyProgress.length === 0 ? (
-                    <div className="empty-chart">Aucune activité cette semaine</div>
+                    <div className="empty-chart">
+                      Aucune activité cette semaine
+                    </div>
                   ) : (
                     weeklyProgress.map((entry, idx) => (
-                    <div className="bar-item" key={entry.day}>
-                      <div className="bar-track">
-                        <div
-                          className="bar-fill"
-                          style={{
-                            height: `${Math.max(12, entry.solved * 18)}%`,
-                            animationDelay: `${idx * 70}ms`,
-                          }}
-                        />
+                      <div className="bar-item" key={entry.day}>
+                        <div className="bar-track">
+                          <div
+                            className="bar-fill"
+                            style={{
+                              height: `${Math.max(12, entry.solved * 18)}%`,
+                              animationDelay: `${idx * 70}ms`,
+                            }}
+                          />
+                        </div>
+                        <span className="bar-value">{entry.solved}</span>
+                        <span className="bar-label">{entry.day}</span>
                       </div>
-                      <span className="bar-value">{entry.solved}</span>
-                      <span className="bar-label">{entry.day}</span>
-                    </div>
-                  ))
+                    ))
                   )}
                 </div>
               </article>
@@ -317,46 +372,58 @@ export default function DashboardPage() {
 
           <section className="dashboard-section">
             <div className="section-header">
-              <h2 className="section-title">Planning <em>Examens</em></h2>
+              <h2 className="section-title">
+                Planning <em>Examens</em>
+              </h2>
             </div>
             <div className="planning-grid">
               {upcomingExams.length === 0 ? (
                 <div className="planning-empty">
                   <p>Aucun examen blanc programmé</p>
                   {/* Lien « Créer un examen blanc » désactivé — fonctionnalité à implémenter ultérieurement. */}
-                  <span className="planning-cta planning-cta-disabled" aria-disabled="true">Bientôt disponible</span>
+                  <span
+                    className="planning-cta planning-cta-disabled"
+                    aria-disabled="true"
+                  >
+                    Bientôt disponible
+                  </span>
                 </div>
               ) : (
                 upcomingExams.map((exam) => (
-                <article key={exam.id} className="planning-card">
-                  <div className="planning-top">
-                    <div>
-                      <h3>{exam.title}</h3>
-                      <p>
-                        {new Date(exam.date).toLocaleDateString('fr-FR', {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric',
-                        })}
-                      </p>
+                  <article key={exam.id} className="planning-card">
+                    <div className="planning-top">
+                      <div>
+                        <h3>{exam.title}</h3>
+                        <p>
+                          {new Date(exam.date).toLocaleDateString("fr-FR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <span className="planning-days">
+                        J-{getDaysRemaining(exam.date)}
+                      </span>
                     </div>
-                    <span className="planning-days">J-{getDaysRemaining(exam.date)}</span>
-                  </div>
-                  <div className="planning-meta">
-                    <span>{exam.slot}</span>
-                    <span>{exam.center}</span>
-                  </div>
-                  <div className="planning-readiness">
-                    <div className="planning-readiness-head">
-                      <span>Niveau de préparation</span>
-                      <strong>{exam.readiness}%</strong>
+                    <div className="planning-meta">
+                      <span>{exam.slot}</span>
+                      <span>{exam.center}</span>
                     </div>
-                    <div className="planning-readiness-track">
-                      <div className="planning-readiness-fill" style={{ width: `${exam.readiness}%` }} />
+                    <div className="planning-readiness">
+                      <div className="planning-readiness-head">
+                        <span>Niveau de préparation</span>
+                        <strong>{exam.readiness}%</strong>
+                      </div>
+                      <div className="planning-readiness-track">
+                        <div
+                          className="planning-readiness-fill"
+                          style={{ width: `${exam.readiness}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))
+                  </article>
+                ))
               )}
             </div>
           </section>
@@ -364,35 +431,61 @@ export default function DashboardPage() {
           <div className="lower-grid">
             <section className="dashboard-section">
               <div className="section-header">
-                <h2 className="section-title">Actions <em>Rapides</em></h2>
+                <h2 className="section-title">
+                  Actions <em>Rapides</em>
+                </h2>
               </div>
               <div className="activity-list">
-                <div className="activity-item" onClick={() => router.push('/catalogue')}>
+                <div
+                  className="activity-item"
+                  onClick={() => router.push("/catalogue")}
+                >
                   <div className="ai-dot correction"></div>
                   <div className="ai-content">
                     <div className="ai-title">Explorer le catalogue</div>
-                    <div className="ai-sub">Parcourez les sujets disponibles et trouvez rapidement ceux qui correspondent à votre niveau.</div>
+                    <div className="ai-sub">
+                      Parcourez les sujets disponibles et trouvez rapidement
+                      ceux qui correspondent à votre niveau.
+                    </div>
                   </div>
                 </div>
-                <div className="activity-item" onClick={() => router.push('/profil')}>
+                <div
+                  className="activity-item"
+                  onClick={() => router.push("/profil")}
+                >
                   <div className="ai-dot purchase"></div>
                   <div className="ai-content">
                     <div className="ai-title">Mettre à jour mon profil</div>
-                    <div className="ai-sub">Ajoutez vos informations personnelles et académiques pour personnaliser votre expérience.</div>
+                    <div className="ai-sub">
+                      Ajoutez vos informations personnelles et académiques pour
+                      personnaliser votre expérience.
+                    </div>
                   </div>
                 </div>
-                <div className="activity-item" onClick={() => router.push('/recharge')}>
+                <div
+                  className="activity-item"
+                  onClick={() => router.push("/recharge")}
+                >
                   <div className="ai-dot credit"></div>
                   <div className="ai-content">
                     <div className="ai-title">Recharger mon solde</div>
-                    <div className="ai-sub">Ajoutez des Ar à votre compte pour débloquer vos prochains sujets en toute simplicité.</div>
+                    <div className="ai-sub">
+                      Ajoutez des Ar à votre compte pour débloquer vos prochains
+                      sujets en toute simplicité.
+                    </div>
                   </div>
                 </div>
-                <div className="activity-item" onClick={() => router.push('/parrainage')}>
+                <div
+                  className="activity-item"
+                  onClick={() => router.push("/parrainage")}
+                >
                   <div className="ai-dot free"></div>
                   <div className="ai-content">
                     <div className="ai-title">Inviter mes amis</div>
-                    <div className="ai-sub">Partagez votre code de parrainage et gagnez des Ar bonus quand vos filleuls deviennent actifs.</div>
+                    <div className="ai-sub">
+                      Partagez votre code de parrainage et gagnez des Ar bonus
+                      quand vos filleuls deviennent actifs.
+                    </div>
                   </div>
                 </div>
                 {/* Action « Démarrer un examen blanc » désactivée — lien vers /examens
@@ -410,44 +503,69 @@ export default function DashboardPage() {
 
             <section className="dashboard-section">
               <div className="section-header">
-                <h2 className="section-title">Profil <em>À Finaliser</em></h2>
+                <h2 className="section-title">
+                  Streak <em>Quotidien</em>
+                </h2>
               </div>
-              <div className="streak-card" style={{ cursor: 'default' }}>
-                <div className="streak-title">Votre progression</div>
-                <div className="streak-num">{profileCompletion}%</div>
-                <div className="streak-unit">profil complété</div>
-                <p
-                  style={{
-                    marginTop: '1rem',
-                    fontSize: '0.78rem',
-                    color: 'var(--text-3)',
-                    lineHeight: 1.6,
-                    maxWidth: '26rem',
-                  }}
-                >
-                  Compléter votre profil améliore la personnalisation de vos recommandations, de votre parcours et de vos futures recherches.
-                </p>
-              </div>
-              <div className="illustration-card" aria-hidden="true">
-                <div className="illustration-orb orb-a" />
-                <div className="illustration-orb orb-b" />
-                <div className="illustration-book" />
-                <div className="illustration-pen" />
-              </div>
+              <StreakWidget />
             </section>
+
+            {profileCompletion < 100 && (
+              <section className="dashboard-section">
+                <div className="section-header">
+                  <h2 className="section-title">
+                    Profil <em>À Finaliser</em>
+                  </h2>
+                </div>
+                <div className="streak-card" style={{ cursor: "default" }}>
+                  <div className="streak-title">Votre progression</div>
+                  <div className="streak-num">{profileCompletion}%</div>
+                  <div className="streak-unit">profil complété</div>
+                  <p
+                    style={{
+                      marginTop: "1rem",
+                      fontSize: "0.78rem",
+                      color: "var(--text-3)",
+                      lineHeight: 1.6,
+                      maxWidth: "26rem",
+                    }}
+                  >
+                    Compléter votre profil améliore la personnalisation de vos
+                    recommandations, de votre parcours et de vos futures
+                    recherches.
+                  </p>
+                </div>
+              </section>
+            )}
           </div>
 
-          {!(appUser?.role && ['CONTRIBUTEUR', 'PROFESSEUR', 'ADMIN', 'VALIDATEUR', 'VERIFICATEUR'].includes(appUser.role)) && (
+          {!(
+            appUser?.role &&
+            [
+              "CONTRIBUTEUR",
+              "PROFESSEUR",
+              "ADMIN",
+              "VALIDATEUR",
+              "VERIFICATEUR",
+            ].includes(appUser.role)
+          ) && (
             <section className="contributor-cta-section">
               <div className="contributor-cta-card">
                 <div className="contributor-cta-text">
                   <p className="contributor-kicker">Programme contributeur</p>
-                  <h2>Vous maîtrisez une matière ? Partagez vos sujets et gagnez des revenus.</h2>
+                  <h2>
+                    Vous maîtrisez une matière ? Partagez vos sujets et gagnez
+                    des revenus.
+                  </h2>
                   <p>
-                    Publiez vos épreuves, accompagnez les élèves et développez votre visibilité académique sur Mah.AI.
+                    Publiez vos épreuves, accompagnez les élèves et développez
+                    votre visibilité académique sur Mah.AI.
                   </p>
                 </div>
-                <Link href="/devenir-contributeur" className="contributor-cta-link">
+                <Link
+                  href="/devenir-contributeur"
+                  className="contributor-cta-link"
+                >
                   Devenir contributeur
                   <ArrowUpRight size={16} />
                 </Link>
@@ -455,17 +573,41 @@ export default function DashboardPage() {
             </section>
           )}
 
-          {(appUser?.role === 'CONTRIBUTEUR' || appUser?.role === 'PROFESSEUR' || appUser?.role === 'ADMIN' || appUser?.role === 'VALIDATEUR') && (
+          {(appUser?.role === "CONTRIBUTEUR" ||
+            appUser?.role === "PROFESSEUR" ||
+            appUser?.role === "ADMIN" ||
+            appUser?.role === "VALIDATEUR") && (
             <section className="contributor-cta-section">
-              <div className="contributor-cta-card" style={{ background: 'linear-gradient(135deg, var(--gold-dim), var(--card))', borderColor: 'var(--gold-line)' }}>
+              <div
+                className="contributor-cta-card"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--gold-dim), var(--card))",
+                  borderColor: "var(--gold-line)",
+                }}
+              >
                 <div className="contributor-cta-text">
-                  <p className="contributor-kicker" style={{ color: 'var(--gold)' }}>Dashboard <em>Contributeur</em></p>
-                  <h2>Vous êtes déjà contributeur {appUser?.role === 'ADMIN' ? 'Admin' : 'Or'}, continuez d'améliorer l'éducation !</h2>
+                  <p
+                    className="contributor-kicker"
+                    style={{ color: "var(--gold)" }}
+                  >
+                    Dashboard <em>Contributeur</em>
+                  </p>
+                  <h2>
+                    Vous êtes déjà contributeur{" "}
+                    {appUser?.role === "ADMIN" ? "Admin" : "Or"}, continuez
+                    d'améliorer l'éducation !
+                  </h2>
                   <p>
-                    Partagez de nouveaux sujets, gérez vos publications et suivez l'impact de vos contributions sur la réussite des élèves.
+                    Partagez de nouveaux sujets, gérez vos publications et
+                    suivez l'impact de vos contributions sur la réussite des
+                    élèves.
                   </p>
                 </div>
-                <Link href="/contributeur/sujets" className="contributor-cta-link">
+                <Link
+                  href="/contributeur/sujets"
+                  className="contributor-cta-link"
+                >
                   Gérer mes sujets
                   <ArrowUpRight size={16} />
                 </Link>
@@ -475,24 +617,36 @@ export default function DashboardPage() {
         </div>
       </main>
 
+      <GuidedTour />
       <LuxuryFooter />
     </>
-  )
+  );
 }
 
-function DashboardCard({ icon, label, value, subtitle, route, color }: DashboardCardProps) {
-  const router = useRouter()
-  const Icon = icon
+function DashboardCard({
+  icon,
+  label,
+  value,
+  subtitle,
+  route,
+  color,
+}: DashboardCardProps) {
+  const router = useRouter();
+  const Icon = icon;
 
   return (
     <div
       className={`stat-card stat-card-${color}`}
-      onClick={() => { if (route) router.push(route) }}
+      onClick={() => {
+        if (route) router.push(route);
+      }}
     >
       <div className="sc-label">{label}</div>
       <div className="sc-value">{value}</div>
       <div className="sc-subtitle">{subtitle}</div>
-      <div className="sc-icon"><Icon size={18} /></div>
+      <div className="sc-icon">
+        <Icon size={18} />
+      </div>
     </div>
-  )
+  );
 }

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { UserNotifications } from "./UserNotifications";
+import { NotificationToast } from "@/components/ui/NotificationToast";
 import { logoutUser } from "@/actions/auth";
 import { ThemeToggleButton } from "./ThemeToggleButton";
 import styles from "./LuxuryNavbar.module.css";
@@ -158,6 +159,7 @@ export function LuxuryNavbar() {
         <div className={styles.rightActions}>
           {/* NOTIFICATIONS */}
           {userId && <UserNotifications />}
+          {userId && <NotificationToast />}
 
           {/* AVATAR & DROPDOWN */}
           {userId ? (

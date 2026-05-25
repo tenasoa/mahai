@@ -1,0 +1,54 @@
+/* === StreakWidget — classes additionnelles === */
+
+/* Conteneur principal du header streak */
+.streak-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+/* Record (meilleur streak) */
+.streak-best {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text-3);
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Label du jour dans la grille */
+.streak-day-label {
+  pointer-events: none;
+}
+
+/* Message d'encouragement sous la grille */
+.streak-hint {
+  font-family: var(--body);
+  font-size: 0.75rem;
+  color: var(--text-3);
+  margin-top: 1rem;
+  line-height: 1.5;
+}
+
+.streak-hint-done {
+  color: var(--sage);
+}
+
+.streak-hint-pending {
+  color: var(--gold);
+}
+
+/* Skeleton pulsé */
+.skeleton-pulse {
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

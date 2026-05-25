@@ -1,5 +1,5 @@
-import { query } from '@/lib/db'
-import crypto from 'crypto'
+import { query } from "@/lib/db";
+import crypto from "crypto";
 
 /**
  * Types de notification reconnus dans toute l'application.
@@ -7,24 +7,24 @@ import crypto from 'crypto'
  * `Notification` (migration 20260425_notifications_unified.sql).
  */
 export type NotificationType =
-  | 'SUBMISSION_PENDING'
-  | 'SUBMISSION_PUBLISHED'
-  | 'SUBMISSION_REJECTED'
-  | 'REVISION_REQUESTED'
-  | 'WITHDRAWAL_REQUESTED'
-  | 'WITHDRAWAL_APPROVED'
-  | 'WITHDRAWAL_REJECTED'
-  | 'APPLICATION_APPROVED'
-  | 'APPLICATION_REJECTED'
-  | 'SYSTEM'
+  | "SUBMISSION_PENDING"
+  | "SUBMISSION_PUBLISHED"
+  | "SUBMISSION_REJECTED"
+  | "REVISION_REQUESTED"
+  | "WITHDRAWAL_REQUESTED"
+  | "WITHDRAWAL_APPROVED"
+  | "WITHDRAWAL_REJECTED"
+  | "APPLICATION_APPROVED"
+  | "APPLICATION_REJECTED"
+  | "SYSTEM";
 
 export interface CreateNotificationInput {
-  userId: string
-  type: NotificationType
-  title: string
-  body?: string | null
-  link?: string | null
-  metadata?: Record<string, unknown>
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body?: string | null;
+  link?: string | null;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -32,9 +32,11 @@ export interface CreateNotificationInput {
  * Best-effort : si la table n'existe pas encore (migration non passée),
  * on log et on continue plutôt que de bloquer le flux métier.
  */
-export async function notify(input: CreateNotificationInput): Promise<{ id: string } | null> {
+export async function notify(
+  input: CreateNotificationInput,
+): Promise<{ id: string } | null> {
   try {
-    const id = crypto.randomUUID()
+    const id = crypto.randomUUID();
     await query(
       `INSERT INTO "Notification"
          (id, "userId", type, title, body, link, metadata)
@@ -47,31 +49,85 @@ export async function notify(input: CreateNotificationInput): Promise<{ id: stri
         input.body ?? null,
         input.link ?? null,
         JSON.stringify(input.metadata ?? {}),
-      ]
-    )
-    return { id }
+      ],
+    );
+    return { id };
   } catch (error) {
-    console.warn('notify() insert failed (non-bloquant):', error)
-    return null
+    console.warn("notify() insert failed (non-bloquant):", error);
+    return null;
+  }
+}
+
+/**
+ * Envoie une notification de jalon de streak (3, 7, 14, 30, 60, 100 jours).
+ * Best-effort : silencieux si le jalon n'est pas reconnu ou si l'insert échoue.
+ */
+export async function notifyStreakMilestone(
+  userId: string,
+  streakDays: number,
+) {
+  const messages: Record<number, { title: string; body: string }> = {
+    3: {
+      title: "🔥 3 jours de streak !",
+      body: "Tu commences à prendre le rythme. Continue comme ça !",
+    },
+    7: {
+      title: "🌟 Une semaine de streak !",
+      body: "7 jours consécutifs, tu es sur la bonne voie pour réussir.",
+    },
+    14: {
+      title: "💪 2 semaines de streak !",
+      body: "Ta discipline impressionne. Les résultats suivent !",
+    },
+    30: {
+      title: "🏆 30 jours de streak !",
+      body: "Un mois complet. Tu fais partie des étudiants les plus réguliers.",
+    },
+    60: {
+      title: "👑 60 jours de streak !",
+      body: "Deux mois de travail acharné. Rien ne peut t'arrêter.",
+    },
+    100: {
+      title: "🎯 100 jours de streak !",
+      body: "Tu es dans le top 1% des étudiants les plus assidus. Légendaire !",
+    },
+  };
+
+  const message = messages[streakDays];
+  if (!message) return;
+
+  try {
+    await notify({
+      userId,
+      type: "SYSTEM",
+      title: message.title,
+      body: message.body,
+      link: "/dashboard",
+      metadata: { streakDays, category: "streak" },
+    });
+  } catch (error) {
+    console.error("Erreur notification streak:", error);
   }
 }
 
 /**
  * Notifie tous les administrateurs (ex: nouvelle soumission contributeur).
  */
-export async function notifyAdmins(input: Omit<CreateNotificationInput, 'userId'>): Promise<number> {
+export async function notifyAdmins(
+  input: Omit<CreateNotificationInput, "userId">,
+): Promise<number> {
   try {
     const admins = await query(
-      `SELECT id FROM "User" WHERE UPPER(role) IN ('ADMIN', 'VALIDATEUR', 'VERIFICATEUR')`
-    )
-    let count = 0
+      `SELECT id FROM "User" WHERE UPPER(role) IN ('ADMIN', 'VALIDATEUR', 'VERIFICATEUR')`,
+    );
+    let count = 0;
     for (const row of admins.rows) {
-      const res = await notify({ ...input, userId: row.id })
-      if (res) count++
+      const res = await notify({ ...input, userId: row.id });
+      if (res) count++;
     }
-    return count
+    return count;
   } catch (error) {
-    console.warn('notifyAdmins() failed (non-bloquant):', error)
-    return 0
+    console.warn("notifyAdmins() failed (non-bloquant):", error);
+    return 0;
   }
 }
