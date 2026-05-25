@@ -7,7 +7,8 @@ import { db } from "@/lib/db-client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSystemSetting } from "@/lib/settings";
 import { logger } from "@/lib/logger";
-import { notifyStreakMilestone } from "@/lib/notifications";
+import { notify, notifyStreakMilestone } from "@/lib/notifications";
+import { getBadgeById } from "@/lib/badges";
 
 export interface UpcomingExam {
   id: string;
@@ -469,4 +470,164 @@ export async function notifyStreakMilestoneAction(streakDays: number) {
     // Best-effort : ne pas bloquer l'UI
     console.error("notifyStreakMilestoneAction error:", error);
   }
+}
+
+/**
+ * Vérifie les conditions d'obtention des badges et les décerne si nécessaire.
+ * Appelé depuis le dashboard pour afficher les nouveaux badges gagnés.
+ */
+export async function checkAndAwardBadgesAction(): Promise<{
+  newBadges: string[];
+  allBadgeIds: string[];
+}> {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return { newBadges: [], allBadgeIds: [] };
+
+  const newBadges: string[] = [];
+
+  try {
+    // Récupère les badges déjà gagnés
+    const earnedBadges = await db.badges.getUserBadges(userId);
+
+    // Compte les sujets achetés
+    const purchaseResult = await query(
+      `SELECT COUNT(*)::int as c FROM "Purchase" WHERE "userId" = $1 AND status = 'COMPLETED'`,
+      [userId],
+    );
+    const purchases = purchaseResult.rows[0]?.c ?? 0;
+
+    // Compte les corrections IA
+    const correctionResult = await query(
+      `SELECT COUNT(*)::int as c FROM "AICorrection" WHERE "userId" = $1`,
+      [userId],
+    );
+    const corrections = correctionResult.rows[0]?.c ?? 0;
+
+    // Vérifie le profil complet (6 champs clés)
+    const profileResult = await query(
+      `SELECT "nomComplet", "prenom", "pseudo", "educationLevel", phone, region
+       FROM "User" WHERE id = $1`,
+      [userId],
+    );
+    const profile = profileResult.rows[0];
+    const profileComplete = profile
+      ? Object.values(profile).every((v) => v !== null && v !== "")
+      : false;
+
+    // Compte les filleuls actifs (parrainage)
+    const referralResult = await query(
+      `SELECT COUNT(*)::int as c FROM "UserReferral" WHERE "referrerUserId" = $1 AND status = 'COMPLETED'`,
+      [userId],
+    );
+    const referrals = referralResult.rows[0]?.c ?? 0;
+
+    // Vérifie si l'utilisateur a déjà fait une recharge
+    const rechargeResult = await query(
+      `SELECT COUNT(*)::int as c FROM "Transaction" WHERE "userId" = $1 AND type = 'RECHARGE'`,
+      [userId],
+    );
+    const recharges = rechargeResult.rows[0]?.c ?? 0;
+
+    // Vérifie chaque badge
+    const checks: [string, boolean][] = [
+      ["first_step", purchases >= 1],
+      ["ai_explorer", corrections >= 1],
+      ["profile_complete", profileComplete],
+      ["subjects_5", purchases >= 5],
+      ["subjects_10", purchases >= 10],
+      ["subjects_25", purchases >= 25],
+      ["corrections_5", corrections >= 5],
+      ["corrections_15", corrections >= 15],
+      ["referral_1", referrals >= 1],
+      ["referral_3", referrals >= 3],
+      ["referral_10", referrals >= 10],
+      ["recharge_first", recharges >= 1],
+    ];
+
+    for (const [badgeId, condition] of checks) {
+      if (condition && !earnedBadges.includes(badgeId)) {
+        const { isNew } = await db.badges.award(userId, badgeId);
+        if (isNew) {
+          newBadges.push(badgeId);
+          // Envoie une notification
+          const badge = getBadgeById(badgeId);
+          if (badge) {
+            notify({
+              userId,
+              type: "SYSTEM",
+              title: `🏅 Badge débloqué : ${badge.name}`,
+              body: badge.description,
+              link: "/dashboard",
+              metadata: { badgeId, category: "badge" },
+            }).catch(() => {
+              // Silencieux : la notif a échoué mais le badge est bien attribué
+            });
+          }
+        }
+      }
+    }
+
+    // Vérification des badges de streak (nécessite les données de streak)
+    const streakResult = await query(
+      `SELECT DISTINCT date
+       FROM "DailyActivity"
+       WHERE "userId" = $1
+         AND date >= CURRENT_DATE - INTERVAL '365 days'
+       ORDER BY date DESC`,
+      [userId],
+    );
+    const activityDates = new Set<string>();
+    for (const row of streakResult.rows) {
+      const d = new Date(row.date);
+      activityDates.add(d.toISOString().split("T")[0]);
+    }
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const todayDone = activityDates.has(todayStr);
+    let currentStreak = 0;
+    if (todayDone) {
+      currentStreak = 1;
+      const cursor = new Date(today);
+      cursor.setDate(cursor.getDate() - 1);
+      while (activityDates.has(cursor.toISOString().split("T")[0])) {
+        currentStreak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+    }
+
+    const streakBadges = [
+      { id: "streak_3", days: 3 },
+      { id: "streak_7", days: 7 },
+      { id: "streak_14", days: 14 },
+      { id: "streak_30", days: 30 },
+      { id: "streak_60", days: 60 },
+      { id: "streak_100", days: 100 },
+    ];
+    for (const { id, days } of streakBadges) {
+      if (currentStreak >= days && !earnedBadges.includes(id)) {
+        const { isNew } = await db.badges.award(userId, id);
+        if (isNew) {
+          newBadges.push(id);
+          const badge = getBadgeById(id);
+          if (badge) {
+            notify({
+              userId,
+              type: "SYSTEM",
+              title: `🏅 Badge débloqué : ${badge.name}`,
+              body: badge.description,
+              link: "/dashboard",
+              metadata: { badgeId: id, category: "badge" },
+            }).catch(() => {});
+          }
+        }
+      }
+    }
+  } catch (error) {
+    logger.apiError("checkAndAwardBadges", error);
+  }
+
+  // Récupère tous les badges (y compris les anciens) pour le front
+  const allBadgeIds = await db.badges.getUserBadges(userId);
+
+  return { newBadges, allBadgeIds };
 }

@@ -379,6 +379,39 @@ export const db = {
     },
   },
 
+  badges: {
+    async award(
+      userId: string,
+      badgeId: string,
+    ): Promise<{ id: string; isNew: boolean }> {
+      const id = crypto.randomUUID();
+      const result = await query(
+        `INSERT INTO "UserBadge" ("id", "userId", "badgeId")
+         VALUES ($1, $2, $3)
+         ON CONFLICT ("userId", "badgeId") DO NOTHING
+         RETURNING "id"`,
+        [id, userId, badgeId],
+      );
+      return { id, isNew: (result.rowCount ?? 0) > 0 };
+    },
+
+    async getUserBadges(userId: string): Promise<string[]> {
+      const result = await query(
+        `SELECT "badgeId" FROM "UserBadge" WHERE "userId" = $1 ORDER BY "earnedAt" DESC`,
+        [userId],
+      );
+      return result.rows.map((r: any) => r.badgeId);
+    },
+
+    async getBadgeCount(userId: string): Promise<number> {
+      const result = await query(
+        `SELECT COUNT(*)::int as count FROM "UserBadge" WHERE "userId" = $1`,
+        [userId],
+      );
+      return result.rows[0]?.count ?? 0;
+    },
+  },
+
   dailyActivity: {
     async record(
       userId: string,

@@ -862,6 +862,15 @@ body {
     gap: 1.5rem;
 }
 
+/* ═══════ BADGES FULL ROW ═══════ */
+.badges-full-row {
+    margin-top: 1.5rem;
+}
+
+.badges-full-row .section-header {
+    margin-bottom: 0.75rem;
+}
+
 /* Activity List */
 .activity-list {
     display: flex;

@@ -31,6 +31,7 @@ import {
   recordDailyActivityAction,
 } from "@/actions/user";
 import { StreakWidget } from "@/components/dashboard/StreakWidget";
+import { BadgesWidget } from "@/components/dashboard/BadgesWidget";
 import { GuidedTour } from "@/components/dashboard/GuidedTour";
 import "./dashboard.css";
 
@@ -537,6 +538,15 @@ export default function DashboardPage() {
                 </div>
               </section>
             )}
+          </div>
+
+          <div className="badges-full-row">
+            <div className="section-header">
+              <h2 className="section-title">
+                Badges <em>& Succès</em>
+              </h2>
+            </div>
+            <BadgesWidget />
           </div>
 
           {!(
