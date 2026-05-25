@@ -337,36 +337,10 @@ export default function DashboardPage() {
                 </div>
               </article>
 
-              <article className="dashboard-card">
-                <div className="section-header">
-                  <h2 className="section-title">
-                    Progression <em>Hebdomadaire</em>
-                  </h2>
-                </div>
-                <div className="bars-chart">
-                  {weeklyProgress.length === 0 ? (
-                    <div className="empty-chart">
-                      Aucune activité cette semaine
-                    </div>
-                  ) : (
-                    weeklyProgress.map((entry, idx) => (
-                      <div className="bar-item" key={entry.day}>
-                        <div className="bar-track">
-                          <div
-                            className="bar-fill"
-                            style={{
-                              height: `${Math.max(12, entry.solved * 18)}%`,
-                              animationDelay: `${idx * 70}ms`,
-                            }}
-                          />
-                        </div>
-                        <span className="bar-value">{entry.solved}</span>
-                        <span className="bar-label">{entry.day}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </article>
+              <StreakWidget
+                weeklyProgress={weeklyProgress}
+                totalSolved={totalWeeklySolved}
+              />
             </div>
           </section>
 
@@ -499,15 +473,6 @@ export default function DashboardPage() {
                 </div>
                 */}
               </div>
-            </section>
-
-            <section className="dashboard-section">
-              <div className="section-header">
-                <h2 className="section-title">
-                  Streak <em>Quotidien</em>
-                </h2>
-              </div>
-              <StreakWidget />
             </section>
 
             {profileCompletion < 100 && (
