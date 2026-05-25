@@ -1,29 +1,29 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/hooks/useAuth'
-import { createClient } from '@/lib/supabase/client'
-import { Bell, X, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
+import { Bell, X, ChevronRight } from "lucide-react";
 import {
   markAllNotificationsAsReadAction,
   markNotificationAsReadAction,
   dismissNotificationAction,
-  getUserNotificationsAction
-} from '@/actions/profile'
+  getUserNotificationsAction,
+} from "@/actions/profile";
 
 interface Notification {
-  id: string
-  type: string
-  title: string
-  body: string
-  createdAt: string
-  read: boolean
-  score?: number
-  maxScore?: number
-  link?: string | null
-  linkText?: string
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  read: boolean;
+  score?: number;
+  maxScore?: number;
+  link?: string | null;
+  linkText?: string;
 }
 
 interface UserNotificationsProps {
@@ -31,91 +31,108 @@ interface UserNotificationsProps {
    * - 'down-left' (défaut) : s'ouvre en bas à droite du bouton, aligné à droite (navbar)
    * - 'up-right' : s'ouvre vers le haut à gauche du bouton, aligné à gauche (sidebar footer)
    */
-  direction?: 'down-left' | 'up-right'
+  direction?: "down-left" | "up-right";
 }
 
-export function UserNotifications({ direction = 'down-left' }: UserNotificationsProps) {
-  const router = useRouter()
-  const { userId, appUser } = useAuth()
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(0)
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+export function UserNotifications({
+  direction = "down-left",
+}: UserNotificationsProps) {
+  const router = useRouter();
+  const { userId, appUser } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Écouter les notifications en temps réel — deux sources :
   //  1. Transaction (recharges, achats — système Ariary)
   //  2. Notification (révisions, validations, etc.)
   useEffect(() => {
-    if (!userId) return
+    if (!userId) return;
 
-    const supabase = createClient()
+    const supabase = createClient();
 
     const txChannel = supabase
-      .channel('user-tx-notifications-dropdown')
+      .channel("user-tx-notifications-dropdown")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'Transaction',
-          filter: `userId=eq.${userId}`
+          event: "INSERT",
+          schema: "public",
+          table: "Transaction",
+          filter: `userId=eq.${userId}`,
         },
         (payload) => {
-          const amountAr = Math.abs(Number(payload.new.amountAr || 0))
+          const amountAr = Math.abs(Number(payload.new.amountAr || 0));
           const newNotif: Notification = {
             id: `tx:${payload.new.id}`,
-            type: payload.new.type === 'RECHARGE' ? 'credit' : 'alert',
-            title: payload.new.type === 'RECHARGE' ? 'Recharge créditée' : 'Transaction mise à jour',
-            body: `${amountAr} Ar ${payload.new.status === 'COMPLETED' ? 'validés' : 'en attente'}`,
+            type: payload.new.type === "RECHARGE" ? "credit" : "alert",
+            title:
+              payload.new.type === "RECHARGE"
+                ? "Recharge créditée"
+                : "Transaction mise à jour",
+            body: `${amountAr} Ar ${payload.new.status === "COMPLETED" ? "validés" : "en attente"}`,
             createdAt: payload.new.createdAt,
             read: payload.new.isRead || false,
-            link: '/recharge'
-          }
-          setNotifications(prev => [newNotif, ...prev])
+            link: "/recharge",
+          };
+          setNotifications((prev) => [newNotif, ...prev]);
           if (!payload.new.isRead) {
-            setNotificationCount(prev => prev + 1)
+            setNotificationCount((prev) => prev + 1);
           }
-        }
+        },
       )
-      .subscribe()
+      .subscribe();
 
     const notifChannel = supabase
-      .channel('user-app-notifications-dropdown')
+      .channel("user-app-notifications-dropdown")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'Notification',
-          filter: `userId=eq.${userId}`
+          event: "INSERT",
+          schema: "public",
+          table: "Notification",
+          filter: `userId=eq.${userId}`,
         },
         (payload) => {
-          const row = payload.new as any
+          const row = payload.new as any;
           const newNotif: Notification = {
             id: `notif:${row.id}`,
-            type: String(row.type || 'SYSTEM'),
-            title: row.title || 'Notification',
-            body: row.body || '',
+            type: String(row.type || "SYSTEM"),
+            title: row.title || "Notification",
+            body: row.body || "",
             createdAt: row.createdAt,
             read: Boolean(row.isRead),
             link: row.link || null,
-          }
-          setNotifications(prev => [newNotif, ...prev])
-          if (!row.isRead) setNotificationCount(prev => prev + 1)
-        }
+          };
+          setNotifications((prev) => [newNotif, ...prev]);
+          if (!row.isRead) setNotificationCount((prev) => prev + 1);
+
+          // Dispatch un event pour le toast in-app (NotificationToast)
+          window.dispatchEvent(
+            new CustomEvent("new-notification", {
+              detail: {
+                id: newNotif.id,
+                title: newNotif.title,
+                body: newNotif.body,
+                link: newNotif.link,
+              },
+            }),
+          );
+        },
       )
-      .subscribe()
+      .subscribe();
 
     // Charger les notifications réelles depuis la base
-    loadRealNotifications()
+    loadRealNotifications();
 
     return () => {
-      supabase.removeChannel(txChannel)
-      supabase.removeChannel(notifChannel)
-    }
-  }, [userId])
+      supabase.removeChannel(txChannel);
+      supabase.removeChannel(notifChannel);
+    };
+  }, [userId]);
 
   // Gestion du clic dehors pour fermer le dropdown
   useEffect(() => {
@@ -127,175 +144,183 @@ export function UserNotifications({ direction = 'down-left' }: UserNotifications
         buttonRef.current &&
         !buttonRef.current.contains(event.target as Node)
       ) {
-        setDropdownOpen(false)
+        setDropdownOpen(false);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [dropdownOpen])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   const loadRealNotifications = async () => {
     try {
-      const result = await getUserNotificationsAction()
+      const result = await getUserNotificationsAction();
 
       if (result.success && result.data) {
-        const realNotifications: Notification[] = result.data.slice(0, 10).map((n: any) => ({
-          id: n.id,
-          type: n.type,
-          title: n.title,
-          body: n.body,
-          createdAt: n.createdAt,
-          read: Boolean(n.read),
-          link: n.link,
-        }))
-        setNotifications(realNotifications)
-        setNotificationCount(realNotifications.filter(n => !n.read).length)
+        const realNotifications: Notification[] = result.data
+          .slice(0, 10)
+          .map((n: any) => ({
+            id: n.id,
+            type: n.type,
+            title: n.title,
+            body: n.body,
+            createdAt: n.createdAt,
+            read: Boolean(n.read),
+            link: n.link,
+          }));
+        setNotifications(realNotifications);
+        setNotificationCount(realNotifications.filter((n) => !n.read).length);
       }
     } catch (error) {
-      console.error('Erreur chargement notifications:', error)
+      console.error("Erreur chargement notifications:", error);
     }
-  }
+  };
 
-  const resetNotificationCount = () => setNotificationCount(0)
+  const resetNotificationCount = () => setNotificationCount(0);
 
   const markAllAsRead = async () => {
-    if (isLoading) return
-    setIsLoading(true)
-    
+    if (isLoading) return;
+    setIsLoading(true);
+
     try {
-      const result = await markAllNotificationsAsReadAction()
-      
+      const result = await markAllNotificationsAsReadAction();
+
       if (result.success) {
         // Mettre à jour l'état local immédiatement
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-        setNotificationCount(0)
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        setNotificationCount(0);
       }
     } catch (error) {
-      console.error('Erreur markAllAsRead:', error)
+      console.error("Erreur markAllAsRead:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const dismissNotification = async (id: string) => {
-    if (isLoading) return
-    setIsLoading(true)
-    
+    if (isLoading) return;
+    setIsLoading(true);
+
     try {
-      const result = await dismissNotificationAction(id)
-      
+      const result = await dismissNotificationAction(id);
+
       if (result.success) {
         // Mettre à jour l'état local immédiatement
-        setNotifications(prev => prev.filter(n => n.id !== id))
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
         if (notificationCount > 0) {
-          setNotificationCount(prev => Math.max(0, prev - 1))
+          setNotificationCount((prev) => Math.max(0, prev - 1));
         }
       }
     } catch (error) {
-      console.error('Erreur dismissNotification:', error)
+      console.error("Erreur dismissNotification:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const categorize = (type: string): 'credit' | 'sujet' | 'alert' | 'system' => {
+  const categorize = (
+    type: string,
+  ): "credit" | "sujet" | "alert" | "system" => {
     switch (type) {
-      case 'credit':
-      case 'RECHARGE':
-        return 'credit'
-      case 'sujet':
-      case 'SUBMISSION_PUBLISHED':
-      case 'SUBMISSION_PENDING':
-      case 'REVISION_REQUESTED':
-      case 'APPLICATION_APPROVED':
-      case 'WITHDRAWAL_APPROVED':
-        return 'sujet'
-      case 'alert':
-      case 'SUBMISSION_REJECTED':
-      case 'WITHDRAWAL_REJECTED':
-      case 'WITHDRAWAL_REQUESTED':
-      case 'APPLICATION_REJECTED':
-        return 'alert'
+      case "credit":
+      case "RECHARGE":
+        return "credit";
+      case "sujet":
+      case "SUBMISSION_PUBLISHED":
+      case "SUBMISSION_PENDING":
+      case "REVISION_REQUESTED":
+      case "APPLICATION_APPROVED":
+      case "WITHDRAWAL_APPROVED":
+        return "sujet";
+      case "alert":
+      case "SUBMISSION_REJECTED":
+      case "WITHDRAWAL_REJECTED":
+      case "WITHDRAWAL_REQUESTED":
+      case "APPLICATION_REJECTED":
+        return "alert";
       default:
-        return 'system'
+        return "system";
     }
-  }
+  };
 
   const getNotificationIcon = (type: string) => {
     switch (categorize(type)) {
-      case 'credit': return '✦'
-      case 'sujet':  return '📚'
-      case 'alert':  return '⚠'
-      default:       return '🔔'
+      case "credit":
+        return "✦";
+      case "sujet":
+        return "📚";
+      case "alert":
+        return "⚠";
+      default:
+        return "🔔";
     }
-  }
+  };
 
   const getTimeAgo = (dateInput: unknown) => {
-    if (!dateInput) return 'Date inconnue'
+    if (!dateInput) return "Date inconnue";
 
-    let date: Date
+    let date: Date;
 
     if (dateInput instanceof Date) {
       // pg driver ou Next.js RSC peut passer un objet Date directement
-      date = dateInput
+      date = dateInput;
     } else {
-      const str = String(dateInput).trim()
+      const str = String(dateInput).trim();
       // PostgreSQL envoie parfois "2024-01-15 09:00:00+00" (espace au lieu de T)
-      const iso = str.replace(' ', 'T')
+      const iso = str.replace(" ", "T");
       // Détecter si un indicateur de fuseau horaire est déjà présent
       // Accepte : Z, +HH:MM, -HH:MM, +HHMM, -HHMM, +HH, -HH
-      const hasTimezone = iso.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(iso)
-      const utcStr = hasTimezone ? iso : iso + 'Z'
-      date = new Date(utcStr)
+      const hasTimezone = iso.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(iso);
+      const utcStr = hasTimezone ? iso : iso + "Z";
+      date = new Date(utcStr);
     }
 
-    if (isNaN(date.getTime())) return 'Date inconnue'
+    if (isNaN(date.getTime())) return "Date inconnue";
 
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    if (diff < 0) return `À l'instant`
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    if (diff < 0) return `À l'instant`;
 
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
 
-    if (minutes < 1) return `À l'instant`
-    if (minutes < 60) return `Il y a ${minutes} min`
-    if (hours < 24) return `Il y a ${hours}h`
-    return `Il y a ${Math.floor(hours / 24)}j`
-  }
+    if (minutes < 1) return `À l'instant`;
+    if (minutes < 60) return `Il y a ${minutes} min`;
+    if (hours < 24) return `Il y a ${hours}h`;
+    return `Il y a ${Math.floor(hours / 24)}j`;
+  };
 
-  if (!userId) return null
+  if (!userId) return null;
 
   return (
-    <div style={{ position: 'relative', display: 'inline-flex' }}>
+    <div style={{ position: "relative", display: "inline-flex" }}>
       {/* Bouton Bell dans la navbar */}
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
         ref={buttonRef}
         style={{
-          position: 'relative',
-          width: '36px',
-          height: '36px',
-          background: 'var(--card)',
-          border: '1px solid var(--b1)',
-          borderRadius: 'var(--r)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--text-3)',
-          cursor: 'pointer',
-          transition: 'all 0.2s'
+          position: "relative",
+          width: "36px",
+          height: "36px",
+          background: "var(--card)",
+          border: "1px solid var(--b1)",
+          borderRadius: "var(--r)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "var(--text-3)",
+          cursor: "pointer",
+          transition: "all 0.2s",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'var(--gold-line)'
-          e.currentTarget.style.color = 'var(--gold)'
+          e.currentTarget.style.borderColor = "var(--gold-line)";
+          e.currentTarget.style.color = "var(--gold)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'var(--b1)'
-          e.currentTarget.style.color = 'var(--text-3)'
+          e.currentTarget.style.borderColor = "var(--b1)";
+          e.currentTarget.style.color = "var(--text-3)";
         }}
         aria-label="Notifications"
         aria-expanded={dropdownOpen}
@@ -303,24 +328,26 @@ export function UserNotifications({ direction = 'down-left' }: UserNotifications
       >
         <Bell size={18} />
         {notificationCount > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '-4px',
-            right: '-4px',
-            minWidth: '18px',
-            height: '18px',
-            padding: '0 5px',
-            background: 'linear-gradient(135deg, var(--ruby), #E04060)',
-            color: '#fff',
-            fontFamily: 'var(--mono)',
-            fontSize: '0.55rem',
-            fontWeight: 700,
-            borderRadius: '9px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            animation: 'badgePulse 2s ease-in-out infinite'
-          }}>
+          <span
+            style={{
+              position: "absolute",
+              top: "-4px",
+              right: "-4px",
+              minWidth: "18px",
+              height: "18px",
+              padding: "0 5px",
+              background: "linear-gradient(135deg, var(--ruby), #E04060)",
+              color: "#fff",
+              fontFamily: "var(--mono)",
+              fontSize: "0.55rem",
+              fontWeight: 700,
+              borderRadius: "9px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "badgePulse 2s ease-in-out infinite",
+            }}
+          >
             {notificationCount}
           </span>
         )}
@@ -331,253 +358,343 @@ export function UserNotifications({ direction = 'down-left' }: UserNotifications
         <div
           ref={dropdownRef}
           style={{
-            position: 'absolute',
-            ...(direction === 'up-right'
-              ? { left: '0', bottom: 'calc(100% + 0.5rem)' }
-              : { right: '0', top: 'calc(100% + 0.5rem)' }),
-            width: '340px',
-            maxWidth: '94vw',
-            maxHeight: '500px',
-            overflowY: 'auto',
-            background: 'var(--card)',
-            border: '1px solid var(--b1)',
-            borderRadius: 'var(--r-lg)',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+            position: "absolute",
+            ...(direction === "up-right"
+              ? { left: "0", bottom: "calc(100% + 0.5rem)" }
+              : { right: "0", top: "calc(100% + 0.5rem)" }),
+            width: "340px",
+            maxWidth: "94vw",
+            maxHeight: "500px",
+            overflowY: "auto",
+            background: "var(--card)",
+            border: "1px solid var(--b1)",
+            borderRadius: "var(--r-lg)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
             zIndex: 999,
-            animation: 'fadeIn 0.2s ease'
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: '1rem 1.25rem',
-              borderBottom: '1px solid var(--b1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Bell size={18} style={{ color: 'var(--gold)' }} />
-                <span style={{ fontFamily: 'var(--display)', fontSize: '1rem', color: 'var(--text)' }}>Notifications</span>
-                {notificationCount > 0 && (
-                  <span style={{
-                    background: 'var(--ruby)',
-                    color: '#fff',
-                    fontFamily: 'var(--mono)',
-                    fontSize: '0.62rem',
-                    padding: '0.12rem 0.55rem',
-                    borderRadius: '10px'
-                  }}>
-                    {notificationCount}
-                  </span>
-                )}
-              </div>
+            animation: "fadeIn 0.2s ease",
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              padding: "1rem 1.25rem",
+              borderBottom: "1px solid var(--b1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <Bell size={18} style={{ color: "var(--gold)" }} />
+              <span
+                style={{
+                  fontFamily: "var(--display)",
+                  fontSize: "1rem",
+                  color: "var(--text)",
+                }}
+              >
+                Notifications
+              </span>
               {notificationCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
+                <span
                   style={{
-                    fontFamily: 'var(--mono)',
-                    fontSize: '0.6rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    color: 'var(--gold)',
-                    background: 'none',
-                    border: '1px solid var(--gold-line)',
-                    borderRadius: '2px',
-                    padding: '0.28rem 0.75rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    background: "var(--ruby)",
+                    color: "#fff",
+                    fontFamily: "var(--mono)",
+                    fontSize: "0.62rem",
+                    padding: "0.12rem 0.55rem",
+                    borderRadius: "10px",
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gold-dim)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                 >
-                  Tout marquer lu
-                </button>
+                  {notificationCount}
+                </span>
               )}
             </div>
+            {notificationCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                style={{
+                  fontFamily: "var(--mono)",
+                  fontSize: "0.6rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "var(--gold)",
+                  background: "none",
+                  border: "1px solid var(--gold-line)",
+                  borderRadius: "2px",
+                  padding: "0.28rem 0.75rem",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "var(--gold-dim)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "none")
+                }
+              >
+                Tout marquer lu
+              </button>
+            )}
+          </div>
 
-            {/* Notifications list */}
-            <div>
-              {notifications.length === 0 ? (
-                <div style={{ padding: '3rem 2rem', textAlign: 'center', opacity: 0.6 }}>
-                  <Bell size={48} style={{ color: 'var(--text-3)', marginBottom: '1rem' }} />
-                  <div style={{ fontFamily: 'var(--display)', fontSize: '1.2rem', color: 'var(--text)', marginBottom: '0.5rem' }}>
-                    Aucune notification
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-3)' }}>
-                    Vos notifications apparaîtront ici
-                  </div>
+          {/* Notifications list */}
+          <div>
+            {notifications.length === 0 ? (
+              <div
+                style={{
+                  padding: "3rem 2rem",
+                  textAlign: "center",
+                  opacity: 0.6,
+                }}
+              >
+                <Bell
+                  size={48}
+                  style={{ color: "var(--text-3)", marginBottom: "1rem" }}
+                />
+                <div
+                  style={{
+                    fontFamily: "var(--display)",
+                    fontSize: "1.2rem",
+                    color: "var(--text)",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Aucune notification
                 </div>
-              ) : (
-                notifications.slice(0, 5).map((notif) => (
-                  <div
-                    key={notif.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '0.9rem',
-                      padding: '0.9rem 1.25rem',
-                      borderBottom: '1px solid var(--b3)',
-                      background: !notif.read ? 'var(--surface)' : 'transparent',
-                      transition: 'all 0.2s',
-                      cursor: 'pointer',
-                      position: 'relative'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--card-hover)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = !notif.read ? 'var(--surface)' : 'transparent'}
-                    onClick={() => {
-                      setDropdownOpen(false)
-                      markNotificationAsReadAction(notif.id).catch(() => {})
-                      if (notif.link) {
-                        router.push(notif.link)
-                      }
-                    }}
-                  >
-                    {!notif.read && (
-                      <div style={{
-                        position: 'absolute',
+                <div style={{ fontSize: "0.82rem", color: "var(--text-3)" }}>
+                  Vos notifications apparaîtront ici
+                </div>
+              </div>
+            ) : (
+              notifications.slice(0, 5).map((notif) => (
+                <div
+                  key={notif.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "0.9rem",
+                    padding: "0.9rem 1.25rem",
+                    borderBottom: "1px solid var(--b3)",
+                    background: !notif.read ? "var(--surface)" : "transparent",
+                    transition: "all 0.2s",
+                    cursor: "pointer",
+                    position: "relative",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "var(--card-hover)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = !notif.read
+                      ? "var(--surface)"
+                      : "transparent")
+                  }
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    markNotificationAsReadAction(notif.id).catch(() => {});
+                    if (notif.link) {
+                      router.push(notif.link);
+                    }
+                  }}
+                >
+                  {!notif.read && (
+                    <div
+                      style={{
+                        position: "absolute",
                         left: 0,
                         top: 0,
                         bottom: 0,
-                        width: '3px',
-                        background: 'var(--gold)'
-                      }} />
-                    )}
-                    
-                    {/* Icon */}
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.1rem',
+                        width: "3px",
+                        background: "var(--gold)",
+                      }}
+                    />
+                  )}
+
+                  {/* Icon */}
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.1rem",
                       flexShrink: 0,
-                      border: '1px solid',
-                      background: categorize(notif.type) === 'credit' ? 'var(--gold-dim)' : categorize(notif.type) === 'sujet' ? 'var(--amber-dim)' : categorize(notif.type) === 'alert' ? 'var(--ruby-dim)' : 'var(--b2)',
-                      borderColor: categorize(notif.type) === 'credit' ? 'var(--gold-line)' : categorize(notif.type) === 'sujet' ? 'var(--amber-line)' : categorize(notif.type) === 'alert' ? 'var(--ruby-line)' : 'var(--b1)'
-                    }}>
-                      {getNotificationIcon(notif.type)}
-                    </div>
-
-                    {/* Content */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: '0.85rem',
-                        fontWeight: !notif.read ? 600 : 500,
-                        color: !notif.read ? 'var(--text)' : 'var(--text-2)',
-                        marginBottom: '0.25rem',
-                        lineHeight: 1.4
-                      }}>
-                        {notif.title}
-                      </div>
-                      <div style={{
-                        fontSize: '0.78rem',
-                        color: 'var(--text-3)',
-                        lineHeight: 1.6,
-                        marginBottom: '0.5rem'
-                      }}>
-                        {notif.body}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                        <span style={{
-                          fontFamily: 'var(--mono)',
-                          fontSize: '0.58rem',
-                          color: 'var(--text-4)'
-                        }}>
-                          {getTimeAgo(notif.createdAt)}
-                        </span>
-                        {notif.score && (
-                          <span style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                            background: 'var(--sage-dim)',
-                            border: '1px solid var(--sage-line)',
-                            borderRadius: 'var(--r)',
-                            padding: '0.2rem 0.6rem',
-                            fontFamily: 'var(--mono)',
-                            fontSize: '0.65rem',
-                            color: '#8ECAAC'
-                          }}>
-                            ✦ {notif.score} / {notif.maxScore}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Dismiss */}
-                    <button
-                      aria-label="Ignorer cette notification"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        dismissNotification(notif.id)
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--text-4)',
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                        padding: '0.25rem',
-                        transition: 'color 0.2s',
-                        flexShrink: 0
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-2)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-4)'}
-                    >
-                      <X size={14} aria-hidden="true" />
-                    </button>
+                      border: "1px solid",
+                      background:
+                        categorize(notif.type) === "credit"
+                          ? "var(--gold-dim)"
+                          : categorize(notif.type) === "sujet"
+                            ? "var(--amber-dim)"
+                            : categorize(notif.type) === "alert"
+                              ? "var(--ruby-dim)"
+                              : "var(--b2)",
+                      borderColor:
+                        categorize(notif.type) === "credit"
+                          ? "var(--gold-line)"
+                          : categorize(notif.type) === "sujet"
+                            ? "var(--amber-line)"
+                            : categorize(notif.type) === "alert"
+                              ? "var(--ruby-line)"
+                              : "var(--b1)",
+                    }}
+                  >
+                    {getNotificationIcon(notif.type)}
                   </div>
-                ))
-              )}
-            </div>
 
-            {/* Footer - Voir tout */}
-            <Link
-              href="/notifications"
-              onClick={() => setDropdownOpen(false)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                padding: '0.85rem 1.25rem',
-                background: 'var(--surface)',
-                borderTop: '1px solid var(--b1)',
-                fontFamily: 'var(--mono)',
-                fontSize: '0.62rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: 'var(--gold)',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--gold-dim)'
-                e.currentTarget.style.gap = '0.75rem'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--surface)'
-                e.currentTarget.style.gap = '0.5rem'
-              }}
-            >
-              Tout voir
-              <ChevronRight size={14} />
-            </Link>
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        fontWeight: !notif.read ? 600 : 500,
+                        color: !notif.read ? "var(--text)" : "var(--text-2)",
+                        marginBottom: "0.25rem",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {notif.title}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.78rem",
+                        color: "var(--text-3)",
+                        lineHeight: 1.6,
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      {notif.body}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.65rem",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "var(--mono)",
+                          fontSize: "0.58rem",
+                          color: "var(--text-4)",
+                        }}
+                      >
+                        {getTimeAgo(notif.createdAt)}
+                      </span>
+                      {notif.score && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.4rem",
+                            background: "var(--sage-dim)",
+                            border: "1px solid var(--sage-line)",
+                            borderRadius: "var(--r)",
+                            padding: "0.2rem 0.6rem",
+                            fontFamily: "var(--mono)",
+                            fontSize: "0.65rem",
+                            color: "#8ECAAC",
+                          }}
+                        >
+                          ✦ {notif.score} / {notif.maxScore}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dismiss */}
+                  <button
+                    aria-label="Ignorer cette notification"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dismissNotification(notif.id);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--text-4)",
+                      cursor: "pointer",
+                      fontSize: "0.75rem",
+                      padding: "0.25rem",
+                      transition: "color 0.2s",
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "var(--text-2)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "var(--text-4)")
+                    }
+                  >
+                    <X size={14} aria-hidden="true" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
+
+          {/* Footer - Voir tout */}
+          <Link
+            href="/notifications"
+            onClick={() => setDropdownOpen(false)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              padding: "0.85rem 1.25rem",
+              background: "var(--surface)",
+              borderTop: "1px solid var(--b1)",
+              fontFamily: "var(--mono)",
+              fontSize: "0.62rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: "var(--gold)",
+              textDecoration: "none",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--gold-dim)";
+              e.currentTarget.style.gap = "0.75rem";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--surface)";
+              e.currentTarget.style.gap = "0.5rem";
+            }}
+          >
+            Tout voir
+            <ChevronRight size={14} />
+          </Link>
+        </div>
       )}
 
       <style jsx global>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-8px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         @keyframes badgePulse {
-          0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(155, 35, 53, 0.4); }
-          50% { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(155, 35, 53, 0); }
+          0%,
+          100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(155, 35, 53, 0.4);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 4px rgba(155, 35, 53, 0);
+          }
         }
       `}</style>
     </div>
-  )
+  );
 }

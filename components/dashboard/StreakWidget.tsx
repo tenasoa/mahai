@@ -1,15 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Flame } from "lucide-react";
-import { getStreakDataAction, type StreakData } from "@/actions/user";
+import {
+  getStreakDataAction,
+  notifyStreakMilestoneAction,
+  type StreakData,
+} from "@/actions/user";
 import { Confetti } from "@/components/ui/Confetti";
 import { useConfettiTrigger } from "@/lib/hooks/useConfettiTrigger";
 import "./streak-widget.css";
 
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
+
 export function StreakWidget() {
   const [data, setData] = useState<StreakData | null>(null);
   const [loading, setLoading] = useState(true);
+  const notifiedRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     getStreakDataAction().then((d) => {
@@ -18,7 +25,18 @@ export function StreakWidget() {
     });
   }, []);
 
-  const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
+  // Notifier le serveur quand un milestone de streak est atteint
+  useEffect(() => {
+    if (!data) return;
+    const streak = data.currentStreak;
+    if (
+      STREAK_MILESTONES.includes(streak) &&
+      !notifiedRef.current.has(streak)
+    ) {
+      notifiedRef.current.add(streak);
+      notifyStreakMilestoneAction(streak);
+    }
+  }, [data]);
   const reachedMilestone =
     data && STREAK_MILESTONES.includes(data.currentStreak);
   const { trigger: showConfetti } = useConfettiTrigger(!!reachedMilestone, {

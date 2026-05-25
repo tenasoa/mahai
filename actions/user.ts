@@ -7,6 +7,7 @@ import { db } from "@/lib/db-client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSystemSetting } from "@/lib/settings";
 import { logger } from "@/lib/logger";
+import { notifyStreakMilestone } from "@/lib/notifications";
 
 export interface UpcomingExam {
   id: string;
@@ -452,5 +453,20 @@ export async function recordDailyActivityAction(
   } catch (error) {
     logger.apiError("recordDailyActivity", error);
     return { success: false, error: "Erreur serveur" };
+  }
+}
+
+/**
+ * Server action appelée par le StreakWidget quand un milestone est atteint.
+ * Vérifie l'authentification puis délègue à notifyStreakMilestone().
+ */
+export async function notifyStreakMilestoneAction(streakDays: number) {
+  try {
+    const userId = await getAuthenticatedUserId();
+    if (!userId) return;
+    await notifyStreakMilestone(userId, streakDays);
+  } catch (error) {
+    // Best-effort : ne pas bloquer l'UI
+    console.error("notifyStreakMilestoneAction error:", error);
   }
 }
