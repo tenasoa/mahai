@@ -22,6 +22,7 @@ export function AdminModal({
   children,
   actions,
   size = "md",
+  describedby,
 }: AdminModalProps) {
   useEffect(() => {
     if (isOpen) {
