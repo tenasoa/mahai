@@ -1,25 +1,27 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string
+  className?: string;
 }
 
 export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
+      aria-busy="true"
+      aria-label="Chargement..."
       className={cn(
         "animate-pulse rounded-md bg-[color:var(--surface)] border border-[color:var(--gold-line)]",
         "after:content-[''] after:block after:h-full after:w-full",
         "after:bg-gradient-to-r after:from-transparent after:via-[color:var(--gold-dim)] after:to-transparent",
         "after:translate-x-[-100%] after:animate-[shimmer_2s_infinite]",
         "overflow-hidden relative",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 export function SkeletonCard() {
@@ -35,5 +37,5 @@ export function SkeletonCard() {
         <Skeleton className="h-6 w-16" />
       </div>
     </div>
-  )
+  );
 }

@@ -1,78 +1,103 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/hooks/useAuth'
-import { createClient } from '@/lib/supabase/client'
-import { LuxuryCursor } from '@/components/layout/LuxuryCursor'
-import { Bell, Check, X, Zap, CreditCard, BookOpen, Settings, AlertTriangle, Sparkles, Library, AlertCircle, Star } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
+import { LuxuryCursor } from "@/components/layout/LuxuryCursor";
+import {
+  Bell,
+  Check,
+  X,
+  Zap,
+  CreditCard,
+  BookOpen,
+  Settings,
+  AlertTriangle,
+  Sparkles,
+  Library,
+  AlertCircle,
+  Star,
+} from "lucide-react";
 import {
   markAllNotificationsAsReadAction,
   dismissNotificationAction,
-  getUserNotificationsAction
-} from '@/actions/profile'
+  getUserNotificationsAction,
+} from "@/actions/profile";
 
 interface Notification {
-  id: string
-  type: string
-  title: string
-  body: string
-  createdAt: string
-  read: boolean
-  score?: number
-  maxScore?: number
-  link?: string | null
-  linkText?: string
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  read: boolean;
+  score?: number;
+  maxScore?: number;
+  link?: string | null;
+  linkText?: string;
 }
 
 export default function NotificationsPage() {
-  const router = useRouter()
-  const { userId, appUser, loading } = useAuth()
-  const [activeTab, setActiveTab] = useState('all')
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const router = useRouter();
+  const { userId, appUser, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState("all");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
     if (!loading && !userId) {
-      router.push('/auth/login')
+      router.push("/auth/login");
     }
-  }, [userId, loading, router])
+  }, [userId, loading, router]);
 
   useEffect(() => {
-    loadRealNotifications()
-  }, [])
+    loadRealNotifications();
+  }, []);
 
   // Realtime : recharger la liste à toute nouvelle notification ou
   // transaction concernant l'utilisateur connecté.
   useEffect(() => {
-    if (!userId) return
-    const supabase = createClient()
-    const refresh = () => loadRealNotifications()
+    if (!userId) return;
+    const supabase = createClient();
+    const refresh = () => loadRealNotifications();
 
     const txChannel = supabase
       .channel(`notifs-page-tx-${userId}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'Transaction', filter: `userId=eq.${userId}` },
-        refresh
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "Transaction",
+          filter: `userId=eq.${userId}`,
+        },
+        refresh,
       )
-      .subscribe()
+      .subscribe();
 
     const notifChannel = supabase
       .channel(`notifs-page-notif-${userId}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'Notification', filter: `userId=eq.${userId}` },
-        refresh
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "Notification",
+          filter: `userId=eq.${userId}`,
+        },
+        refresh,
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(txChannel)
-      supabase.removeChannel(notifChannel)
-    }
-  }, [userId])
+      supabase.removeChannel(txChannel);
+      supabase.removeChannel(notifChannel);
+    };
+  }, [userId]);
 
   const loadRealNotifications = async () => {
     try {
-      const result = await getUserNotificationsAction()
+      const result = await getUserNotificationsAction();
 
       if (result.success && result.data) {
         const realNotifications: Notification[] = result.data.map((n: any) => ({
@@ -83,145 +108,155 @@ export default function NotificationsPage() {
           createdAt: n.createdAt,
           read: Boolean(n.read),
           link: n.link,
-        }))
-        setNotifications(realNotifications)
+        }));
+        setNotifications(realNotifications);
       }
     } catch (error) {
-      console.error('Erreur chargement notifications:', error)
+      console.error("Erreur chargement notifications:", error);
     }
-  }
+  };
 
   const markAllAsRead = async () => {
-    const result = await markAllNotificationsAsReadAction()
-    
+    const result = await markAllNotificationsAsReadAction();
+
     if (result.success) {
       // Recharger les notifications pour avoir l'état à jour
-      await loadRealNotifications()
+      await loadRealNotifications();
     }
-  }
+  };
 
   const dismissNotification = async (id: string) => {
-    const result = await dismissNotificationAction(id)
-    
+    const result = await dismissNotificationAction(id);
+
     if (result.success) {
       // Recharger les notifications pour avoir l'état à jour
-      await loadRealNotifications()
+      await loadRealNotifications();
     }
-  }
+  };
 
   // Catégorise un type brut (enum Notification ou type tx) en une famille
   // utilisée pour les onglets et l'icône.
-  const categorize = (type: string): 'credit' | 'sujet' | 'alert' | 'system' => {
+  const categorize = (
+    type: string,
+  ): "credit" | "sujet" | "alert" | "system" => {
     switch (type) {
-      case 'credit':
-      case 'RECHARGE':
-        return 'credit'
-      case 'sujet':
-      case 'SUBMISSION_PUBLISHED':
-      case 'SUBMISSION_PENDING':
-      case 'REVISION_REQUESTED':
-      case 'APPLICATION_APPROVED':
-      case 'WITHDRAWAL_APPROVED':
-        return 'sujet'
-      case 'alert':
-      case 'SUBMISSION_REJECTED':
-      case 'WITHDRAWAL_REJECTED':
-      case 'WITHDRAWAL_REQUESTED':
-      case 'APPLICATION_REJECTED':
-        return 'alert'
+      case "credit":
+      case "RECHARGE":
+        return "credit";
+      case "sujet":
+      case "SUBMISSION_PUBLISHED":
+      case "SUBMISSION_PENDING":
+      case "REVISION_REQUESTED":
+      case "APPLICATION_APPROVED":
+      case "WITHDRAWAL_APPROVED":
+        return "sujet";
+      case "alert":
+      case "SUBMISSION_REJECTED":
+      case "WITHDRAWAL_REJECTED":
+      case "WITHDRAWAL_REQUESTED":
+      case "APPLICATION_REJECTED":
+        return "alert";
       default:
-        return 'system'
+        return "system";
     }
-  }
+  };
 
   // Libellé français court pour l'étiquette (« notif-tag »).
   const tagLabel = (type: string): string => {
     switch (categorize(type)) {
-      case 'credit': return 'Crédit'
-      case 'sujet':  return 'Sujet'
-      case 'alert':  return 'Alerte'
-      default:       return 'Système'
+      case "credit":
+        return "Crédit";
+      case "sujet":
+        return "Sujet";
+      case "alert":
+        return "Alerte";
+      default:
+        return "Système";
     }
-  }
+  };
 
   const getNotificationIcon = (type: string) => {
-    const cat = categorize(type)
+    const cat = categorize(type);
     switch (cat) {
-      case 'credit': return { icon: <Sparkles size={16} />, class: 'ni-credit' }
-      case 'sujet':  return { icon: <Library size={16} />, class: 'ni-sujet' }
-      case 'alert':  return { icon: <AlertCircle size={16} />, class: 'ni-alert' }
-      default:       return { icon: <Bell size={16} />, class: 'ni-system' }
+      case "credit":
+        return { icon: <Sparkles size={16} />, class: "ni-credit" };
+      case "sujet":
+        return { icon: <Library size={16} />, class: "ni-sujet" };
+      case "alert":
+        return { icon: <AlertCircle size={16} />, class: "ni-alert" };
+      default:
+        return { icon: <Bell size={16} />, class: "ni-system" };
     }
-  }
+  };
 
   const getTimeAgo = (dateInput: unknown) => {
-    if (!dateInput) return 'Date inconnue'
+    if (!dateInput) return "Date inconnue";
 
-    let date: Date
+    let date: Date;
 
     if (dateInput instanceof Date) {
-      date = dateInput
+      date = dateInput;
     } else {
-      const str = String(dateInput).trim()
+      const str = String(dateInput).trim();
       // PostgreSQL envoie parfois "2024-01-15 09:00:00+00" (espace au lieu de T)
-      const iso = str.replace(' ', 'T')
+      const iso = str.replace(" ", "T");
       // Détecter si un indicateur de fuseau horaire est déjà présent
-      const hasTimezone = iso.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(iso)
-      const utcStr = hasTimezone ? iso : iso + 'Z'
-      date = new Date(utcStr)
+      const hasTimezone = iso.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(iso);
+      const utcStr = hasTimezone ? iso : iso + "Z";
+      date = new Date(utcStr);
     }
 
-    if (isNaN(date.getTime())) return 'Date inconnue'
+    if (isNaN(date.getTime())) return "Date inconnue";
 
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    if (diff < 0) return `À l'instant`
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    if (diff < 0) return `À l'instant`;
 
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
 
-    if (minutes < 1) return `À l'instant`
-    if (minutes < 60) return `Il y a ${minutes} min`
-    if (hours < 24) return `Il y a ${hours}h`
-    if (hours < 24 * 7) return `Il y a ${Math.floor(hours / 24)}j`
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-  }
+    if (minutes < 1) return `À l'instant`;
+    if (minutes < 60) return `Il y a ${minutes} min`;
+    if (hours < 24) return `Il y a ${hours}h`;
+    if (hours < 24 * 7) return `Il y a ${Math.floor(hours / 24)}j`;
+    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  };
 
   const filterNotifications = (type: string) => {
-    if (type === 'all') return notifications
-    return notifications.filter(n => categorize(n.type) === type)
-  }
+    if (type === "all") return notifications;
+    return notifications.filter((n) => categorize(n.type) === type);
+  };
 
   const groupByTime = (notifs: Notification[]) => {
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60000)
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60000);
 
     const groups: { label: string; notifs: Notification[] }[] = [
-      { label: 'Aujourd\'hui', notifs: [] },
-      { label: 'Cette semaine', notifs: [] },
-      { label: 'Plus ancien', notifs: [] }
-    ]
+      { label: "Aujourd'hui", notifs: [] },
+      { label: "Cette semaine", notifs: [] },
+      { label: "Plus ancien", notifs: [] },
+    ];
 
-    notifs.forEach(notif => {
-      const notifDate = new Date(notif.createdAt)
+    notifs.forEach((notif) => {
+      const notifDate = new Date(notif.createdAt);
       if (notifDate >= today) {
-        groups[0].notifs.push(notif)
+        groups[0].notifs.push(notif);
       } else if (notifDate >= weekAgo) {
-        groups[1].notifs.push(notif)
+        groups[1].notifs.push(notif);
       } else {
-        groups[2].notifs.push(notif)
+        groups[2].notifs.push(notif);
       }
-    })
+    });
 
-    return groups.filter(g => g.notifs.length > 0)
-  }
+    return groups.filter((g) => g.notifs.length > 0);
+  };
 
-  const unreadCount = notifications.filter(n => !n.read).length
-  const filteredNotifs = filterNotifications(activeTab)
-  const groupedNotifs = groupByTime(filteredNotifs)
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const filteredNotifs = filterNotifications(activeTab);
+  const groupedNotifs = groupByTime(filteredNotifs);
 
-  if (loading || !userId) return null
+  if (loading || !userId) return null;
 
   return (
     <div className="notifications-page">
@@ -242,7 +277,7 @@ export default function NotificationsPage() {
           <div className="header-actions">
             {unreadCount > 0 && (
               <button className="btn-mark-all" onClick={markAllAsRead}>
-                <Check size={14} style={{ marginRight: '0.35rem' }} />
+                <Check size={14} style={{ marginRight: "0.35rem" }} />
                 Tout marquer lu
               </button>
             )}
@@ -252,36 +287,38 @@ export default function NotificationsPage() {
         {/* Settings toggle */}
         <div className="settings-row">
           <span className="sr-text">🔔 Notifications push activées</span>
-          <button 
+          <button
             className="toggle"
-            onClick={(e) => e.currentTarget.classList.toggle('off')}
+            onClick={(e) => e.currentTarget.classList.toggle("off")}
           />
         </div>
 
         {/* Tabs */}
         <div className="tabs">
-          <button 
-            className={`tab ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
+          <button
+            className={`tab ${activeTab === "all" ? "active" : ""}`}
+            onClick={() => setActiveTab("all")}
           >
             Toutes
-            {unreadCount > 0 && <span className="tab-count">{unreadCount}</span>}
+            {unreadCount > 0 && (
+              <span className="tab-count">{unreadCount}</span>
+            )}
           </button>
-          <button 
-            className={`tab ${activeTab === 'credit' ? 'active' : ''}`}
-            onClick={() => setActiveTab('credit')}
+          <button
+            className={`tab ${activeTab === "credit" ? "active" : ""}`}
+            onClick={() => setActiveTab("credit")}
           >
             Crédits
           </button>
-          <button 
-            className={`tab ${activeTab === 'sujet' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sujet')}
+          <button
+            className={`tab ${activeTab === "sujet" ? "active" : ""}`}
+            onClick={() => setActiveTab("sujet")}
           >
             Sujets
           </button>
-          <button 
-            className={`tab ${activeTab === 'alert' ? 'active' : ''}`}
-            onClick={() => setActiveTab('alert')}
+          <button
+            className={`tab ${activeTab === "alert" ? "active" : ""}`}
+            onClick={() => setActiveTab("alert")}
           >
             Alertes
           </button>
@@ -298,18 +335,18 @@ export default function NotificationsPage() {
           groupedNotifs.map((group, groupIndex) => (
             <div key={groupIndex} className="notif-group">
               <div className="notif-group-label">{group.label}</div>
-              
+
               {group.notifs.map((notif) => {
-                const { icon, class: iconClass } = getNotificationIcon(notif.type)
+                const { icon, class: iconClass } = getNotificationIcon(
+                  notif.type,
+                );
                 return (
                   <div
                     key={notif.id}
-                    className={`notif-item ${!notif.read ? 'unread' : 'read'}`}
+                    className={`notif-item ${!notif.read ? "unread" : "read"}`}
                     id={`n${notif.id}`}
                   >
-                    <div className={`notif-icon ${iconClass}`}>
-                      {icon}
-                    </div>
+                    <div className={`notif-icon ${iconClass}`}>{icon}</div>
                     <div className="notif-content">
                       <div className="notif-title">{notif.title}</div>
                       <div className="notif-body">
@@ -321,28 +358,32 @@ export default function NotificationsPage() {
                         )}
                       </div>
                       <div className="notif-meta">
-                        <span className="notif-time">{getTimeAgo(notif.createdAt)}</span>
-                        <span className="notif-tag">{tagLabel(notif.type)}</span>
+                        <span className="notif-time">
+                          {getTimeAgo(notif.createdAt)}
+                        </span>
+                        <span className="notif-tag">
+                          {tagLabel(notif.type)}
+                        </span>
                       </div>
                       {notif.link && (
-                        <div style={{ marginTop: '0.5rem' }}>
-                          <span 
+                        <div style={{ marginTop: "0.5rem" }}>
+                          <span
                             className="notif-cta"
                             onClick={() => router.push(notif.link!)}
                           >
-                            {notif.linkText || 'Voir le détail'} →
+                            {notif.linkText || "Voir le détail"} →
                           </span>
                         </div>
                       )}
                     </div>
-                    <button 
+                    <button
                       className="notif-dismiss"
                       onClick={() => dismissNotification(notif.id)}
                     >
                       <X size={14} />
                     </button>
                   </div>
-                )
+                );
               })}
             </div>
           ))
@@ -358,7 +399,7 @@ export default function NotificationsPage() {
         }
 
         .credits-page::before {
-          content: '';
+          content: "";
           position: fixed;
           inset: 0;
           z-index: 0;
@@ -383,7 +424,8 @@ export default function NotificationsPage() {
           gap: 0.85rem;
         }
 
-        .page-title-wrap {}
+        .page-title-wrap {
+        }
 
         .page-eyebrow {
           font-family: var(--mono);
@@ -398,7 +440,7 @@ export default function NotificationsPage() {
         }
 
         .page-eyebrow::before {
-          content: '';
+          content: "";
           width: 18px;
           height: 1px;
           background: var(--gold);
@@ -422,7 +464,7 @@ export default function NotificationsPage() {
           font-family: var(--mono);
           font-size: 0.62rem;
           background: var(--ruby);
-          color: #fff;
+          color: var(--card);
           border-radius: 10px;
           padding: 0.12rem 0.55rem;
           vertical-align: middle;
@@ -487,15 +529,17 @@ export default function NotificationsPage() {
         }
 
         .toggle::after {
-          content: '';
+          content: "";
           position: absolute;
           width: 16px;
           height: 16px;
           border-radius: 50%;
-          background: #fff;
+          background: var(--card);
           top: 3px;
           right: 3px;
-          transition: right 0.2s, transform 0.2s;
+          transition:
+            right 0.2s,
+            transform 0.2s;
         }
 
         .toggle.off {
@@ -575,7 +619,7 @@ export default function NotificationsPage() {
         }
 
         .notif-group-label::before {
-          content: '';
+          content: "";
           width: 14px;
           height: 1px;
           background: var(--text-4);
@@ -600,7 +644,7 @@ export default function NotificationsPage() {
         }
 
         .notif-item.unread::before {
-          content: '';
+          content: "";
           position: absolute;
           left: 0;
           top: 0;
@@ -759,7 +803,7 @@ export default function NotificationsPage() {
           padding: 0.2rem 0.6rem;
           font-family: var(--mono);
           font-size: 0.65rem;
-          color: #8ECAAC;
+          color: var(--sage-hi);
           margin-top: 0.35rem;
         }
 
@@ -792,12 +836,12 @@ export default function NotificationsPage() {
             flex-direction: column;
             align-items: flex-start;
           }
-          
+
           .tabs {
             overflow-x: auto;
           }
         }
       `}</style>
     </div>
-  )
+  );
 }
