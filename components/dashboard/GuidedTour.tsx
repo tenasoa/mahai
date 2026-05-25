@@ -1,174 +1,207 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react'
+import { useState, useEffect, useCallback } from "react";
+import { X, ChevronRight, ChevronLeft, Check } from "lucide-react";
 
 interface TourStep {
-  target: string // CSS selector du composant cible
-  title: string
-  description: string
-  position: 'bottom' | 'top' | 'left' | 'right'
+  target: string; // CSS selector du composant cible
+  title: string;
+  description: string;
+  position: "bottom" | "top" | "left" | "right";
 }
 
 const TOUR_STEPS: TourStep[] = [
   {
-    target: '.hero-card',
-    title: 'Bienvenue sur ton tableau de bord ! 👋',
+    target: ".hero-card",
+    title: "Bienvenue sur ton tableau de bord ! 👋",
     description:
-      'Ici tu retrouves tes stats, ton solde, et ta progression. Tout ce dont tu as besoin pour réussir tes examens.',
-    position: 'bottom',
+      "Ici tu retrouves tes stats, ton solde, et ta progression. Tout ce dont tu as besoin pour réussir tes examens.",
+    position: "bottom",
   },
   {
-    target: '.streak-card',
-    title: '🔥 Construis ton streak',
+    target: ".streak-card",
+    title: "🔥 Construis ton streak",
     description:
-      'Reviens chaque jour pour maintenir ta série. Plus ton streak est long, plus tu progresses vite !',
-    position: 'left',
+      "Reviens chaque jour pour maintenir ta série. Plus ton streak est long, plus tu progresses vite !",
+    position: "left",
   },
   {
-    target: '.activity-list',
+    target: ".activity-list",
     title: "🚀 Passe à l'action",
     description:
-      'Explore le catalogue, recharge ton compte, ou invite tes amis. Commence par acheter ton premier sujet !',
-    position: 'right',
+      "Explore le catalogue, recharge ton compte, ou invite tes amis. Commence par acheter ton premier sujet !",
+    position: "right",
   },
   {
-    target: '.stat-card-gold',
-    title: '💰 Ton solde en Ariary',
+    target: ".stat-card-gold",
+    title: "💰 Ton solde en Ariary",
     description:
-      'Recharge ton compte avec MVola, Orange ou Airtel pour débloquer des sujets et corrections IA.',
-    position: 'bottom',
+      "Recharge ton compte avec MVola, Orange ou Airtel pour débloquer des sujets et corrections IA.",
+    position: "bottom",
   },
-]
+];
 
-const TOUR_STORAGE_KEY = 'mahai-guided-tour-completed'
+const TOUR_STORAGE_KEY = "mahai-guided-tour-completed";
 
 export function GuidedTour() {
-  const [isVisible, setIsVisible] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
+  const [isVisible, setIsVisible] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
 
   useEffect(() => {
     // Vérifie si le tour a déjà été complété
-    const completed = localStorage.getItem(TOUR_STORAGE_KEY)
+    const completed = localStorage.getItem(TOUR_STORAGE_KEY);
     if (!completed) {
       // Petit délai pour laisser le dashboard se rendre
-      const timer = setTimeout(() => setIsVisible(true), 1000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setIsVisible(true), 1000);
+      return () => clearTimeout(timer);
     }
-  }, [])
+  }, []);
 
   const removeHighlights = useCallback(() => {
-    document.querySelectorAll('.tour-highlight').forEach((el) => {
-      el.classList.remove('tour-highlight')
-    })
-  }, [])
+    document.querySelectorAll(".tour-highlight").forEach((el) => {
+      el.classList.remove("tour-highlight");
+    });
+  }, []);
 
   const positionTooltip = useCallback(
     (stepIndex: number) => {
-      const step = TOUR_STEPS[stepIndex]
-      const targetEl = document.querySelector(step.target)
-      if (!targetEl) return
+      const step = TOUR_STEPS[stepIndex];
+      const targetEl = document.querySelector(step.target);
+      if (!targetEl) {
+        console.warn(`[GuidedTour] Cible introuvable: "${step.target}"`);
+        return;
+      }
 
-      const targetRect = targetEl.getBoundingClientRect()
-      const tooltipWidth = 320
-      const gap = 16
-      const viewportMargin = 16
+      const targetRect = targetEl.getBoundingClientRect();
+      const tooltipWidth = 320;
+      const tooltipHeight = 180; // hauteur estimée avec padding + titre + desc + actions
+      const gap = 16;
+      const margin = 16;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
 
-      let style: React.CSSProperties = {}
+      const clampX = (x: number) =>
+        Math.max(margin, Math.min(x, vw - tooltipWidth - margin));
+      const clampY = (y: number) =>
+        Math.max(margin, Math.min(y, vh - tooltipHeight - margin));
 
-      const clampLeft = (desiredLeft: number) =>
-        Math.max(
-          viewportMargin,
-          Math.min(
-            desiredLeft,
-            window.innerWidth - tooltipWidth - viewportMargin,
-          ),
-        )
+      // Essaie la position préférée, puis fallback en sens horaire
+      const positions = [step.position];
+      if (step.position === "left") positions.push("top", "right", "bottom");
+      else if (step.position === "right")
+        positions.push("bottom", "left", "top");
+      else if (step.position === "top")
+        positions.push("right", "left", "bottom");
+      else positions.push("right", "top", "left"); // bottom → right → top → left
 
-      switch (step.position) {
-        case 'bottom':
-          style = {
-            top: targetRect.bottom + gap,
-            left: clampLeft(
-              targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-            ),
-          }
-          break
-        case 'top':
-          style = {
-            top: targetRect.top - gap - 160, // hauteur estimée du tooltip
-            left: clampLeft(
-              targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-            ),
-          }
-          break
-        case 'left': {
-          const top =
-            targetRect.top + targetRect.height / 2 - 80
-          let left = targetRect.left - tooltipWidth - gap
-          if (left < viewportMargin) {
-            // fallback à droite
-            left = targetRect.right + gap
-          }
-          style = { top, left }
-          break
+      let style: React.CSSProperties | null = null;
+
+      for (const pos of positions) {
+        let top = 0,
+          left = 0;
+        switch (pos) {
+          case "bottom":
+            top = targetRect.bottom + gap;
+            left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
+            break;
+          case "top":
+            top = targetRect.top - tooltipHeight - gap;
+            left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
+            break;
+          case "left":
+            top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
+            left = targetRect.left - tooltipWidth - gap;
+            break;
+          case "right":
+            top = targetRect.top + targetRect.height / 2 - tooltipHeight / 2;
+            left = targetRect.right + gap;
+            break;
         }
-        case 'right': {
-          const top =
-            targetRect.top + targetRect.height / 2 - 80
-          let left = targetRect.right + gap
-          if (left + tooltipWidth > window.innerWidth - viewportMargin) {
-            // fallback à gauche
-            left = targetRect.left - tooltipWidth - gap
-          }
-          style = { top, left }
-          break
+        const clampedLeft = clampX(left);
+        const clampedTop = clampY(top);
+        // Accepte si le clamp ne déplace pas trop (< 50% de la taille du tooltip)
+        if (
+          Math.abs(clampedLeft - left) < tooltipWidth * 0.5 &&
+          Math.abs(clampedTop - top) < tooltipHeight * 0.5
+        ) {
+          style = { top: clampedTop, left: clampedLeft };
+          break;
         }
       }
 
-      setTooltipStyle(style)
+      // Fallback ultime : centré en bas
+      if (!style) {
+        style = {
+          top: clampY(vh - tooltipHeight - margin),
+          left: clampX(vw / 2 - tooltipWidth / 2),
+        };
+      }
+
+      setTooltipStyle(style);
+
+      // Scroll vers la cible si elle n'est pas visible
+      if (targetRect.bottom > vh - 100 || targetRect.top < 100) {
+        targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Re-positionne après le scroll
+        setTimeout(() => {
+          const newRect = targetEl.getBoundingClientRect();
+          const newTop =
+            step.position === "bottom"
+              ? newRect.bottom + gap
+              : step.position === "top"
+                ? newRect.top - tooltipHeight - gap
+                : newRect.top + newRect.height / 2 - tooltipHeight / 2;
+          const newLeft =
+            step.position === "left"
+              ? newRect.left - tooltipWidth - gap
+              : step.position === "right"
+                ? newRect.right + gap
+                : newRect.left + newRect.width / 2 - tooltipWidth / 2;
+          setTooltipStyle({ top: clampY(newTop), left: clampX(newLeft) });
+        }, 400);
+      }
 
       // Highlight l'élément cible
-      removeHighlights()
-      targetEl.classList.add('tour-highlight')
+      removeHighlights();
+      targetEl.classList.add("tour-highlight");
     },
     [removeHighlights],
-  )
+  );
 
   useEffect(() => {
     if (isVisible) {
-      positionTooltip(currentStep)
-      const onResize = () => positionTooltip(currentStep)
-      window.addEventListener('resize', onResize)
-      return () => window.removeEventListener('resize', onResize)
+      positionTooltip(currentStep);
+      const onResize = () => positionTooltip(currentStep);
+      window.addEventListener("resize", onResize);
+      return () => window.removeEventListener("resize", onResize);
     }
-  }, [isVisible, currentStep, positionTooltip])
+  }, [isVisible, currentStep, positionTooltip]);
 
   const nextStep = () => {
     if (currentStep < TOUR_STEPS.length - 1) {
-      setCurrentStep((s) => s + 1)
+      setCurrentStep((s) => s + 1);
     } else {
-      completeTour()
+      completeTour();
     }
-  }
+  };
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep((s) => s - 1)
+      setCurrentStep((s) => s - 1);
     }
-  }
+  };
 
   const completeTour = () => {
-    setIsVisible(false)
-    localStorage.setItem(TOUR_STORAGE_KEY, 'true')
-    removeHighlights()
-  }
+    setIsVisible(false);
+    localStorage.setItem(TOUR_STORAGE_KEY, "true");
+    removeHighlights();
+  };
 
-  if (!isVisible) return null
+  if (!isVisible) return null;
 
-  const step = TOUR_STEPS[currentStep]
-  const isLast = currentStep === TOUR_STEPS.length - 1
+  const step = TOUR_STEPS[currentStep];
+  const isLast = currentStep === TOUR_STEPS.length - 1;
 
   return (
     <>
@@ -179,7 +212,7 @@ export function GuidedTour() {
       <div
         className="tour-tooltip"
         style={{
-          position: 'fixed',
+          position: "fixed",
           zIndex: 1002,
           width: 320,
           ...tooltipStyle,
@@ -197,7 +230,7 @@ export function GuidedTour() {
           {TOUR_STEPS.map((_, i) => (
             <span
               key={i}
-              className={`tour-dot ${i === currentStep ? 'active' : ''} ${i < currentStep ? 'done' : ''}`}
+              className={`tour-dot ${i === currentStep ? "active" : ""} ${i < currentStep ? "done" : ""}`}
             />
           ))}
         </div>
@@ -248,7 +281,8 @@ export function GuidedTour() {
         :global(.tour-highlight) {
           position: relative;
           z-index: 1001 !important;
-          box-shadow: 0 0 0 4px var(--gold),
+          box-shadow:
+            0 0 0 4px var(--gold),
             0 0 30px rgba(201, 168, 76, 0.4) !important;
           border-radius: var(--r-lg) !important;
           transition: box-shadow 0.3s ease;
@@ -259,7 +293,9 @@ export function GuidedTour() {
           border: 1px solid var(--gold-line);
           border-radius: var(--r-lg);
           padding: 1.5rem;
-          box-shadow: var(--shadow-lg), 0 0 40px rgba(201, 168, 76, 0.15);
+          box-shadow:
+            var(--shadow-lg),
+            0 0 40px rgba(201, 168, 76, 0.15);
           animation: tourSlideUp 0.3s ease;
         }
 
@@ -372,5 +408,5 @@ export function GuidedTour() {
         }
       `}</style>
     </>
-  )
+  );
 }
