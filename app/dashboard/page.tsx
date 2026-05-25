@@ -31,6 +31,7 @@ import {
   recordDailyActivityAction,
 } from "@/actions/user";
 import { StreakWidget } from "@/components/dashboard/StreakWidget";
+import { GuidedTour } from "@/components/dashboard/GuidedTour";
 import "./dashboard.css";
 
 interface DashboardCardProps {
@@ -616,6 +617,7 @@ export default function DashboardPage() {
         </div>
       </main>
 
+      <GuidedTour />
       <LuxuryFooter />
     </>
   );
