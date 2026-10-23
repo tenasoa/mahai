@@ -27,6 +27,8 @@ export default [
       'migrations/**',
       'migrations_manual/**',
       'tsconfig.tsbuildinfo',
+      // Skills tiers vendus pour Claude Code (voir .claude/skills/VENDORED.md)
+      '.claude/**',
     ],
   },
 ]

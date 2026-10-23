@@ -48,7 +48,11 @@ out.txt
 *.swp
 *.swo
 *.tmp
-.claude/
+# Claude Code : on versionne les skills et la config partagée du projet,
+# les réglages personnels (settings.local.json, etc.) restent locaux.
+.claude/*
+!.claude/skills/
+!.claude/settings.json
 .agents/
 .augment/
 .junie/
