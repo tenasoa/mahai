@@ -1,97 +1,126 @@
 # Migration Supabase + Vercel → Cloudflare
 
-> Statut : **proposition, à valider**. Rédigé le 23/10/2026.
-> Objectif : quitter Supabase (auth, base, storage), Vercel (hébergement, Blob) et Upstash (Redis), tout regrouper chez Cloudflare.
+> Statut : **validé le 23/10/2026**. Choix du propriétaire : base **D1**, authentification
+> **Better Auth**, refonte visuelle en **direction A** (voir `DESIGN.md`).
+> Objectif : quitter Supabase (auth, base, storage), Vercel (hébergement, Blob) et Upstash (Redis),
+> tout regrouper chez Cloudflare.
 
 ## 1. Ce que Cloudflare fournit, et ce qu'il ne fournit pas
 
-| Besoin Mah.AI | Aujourd'hui | Chez Cloudflare | Remarque |
+| Besoin Mah.AI | Aujourd'hui | Cible Cloudflare | Remarque |
 |---|---|---|---|
-| Hébergement Next.js | Vercel | **Workers** + adaptateur **OpenNext** (`@opennextjs/cloudflare`) | Next.js 16.4 supporté ; plancher de sécurité 16.3.8. |
-| Base Postgres | Supabase Postgres | **Hyperdrive** + Postgres **PlanetScale** créé et facturé depuis le dashboard Cloudflare | ⚠️ Cloudflare n'héberge pas Postgres lui-même : c'est PlanetScale (≈ 5 $/mois le nœud). |
-| Base SQLite | — | **D1** | Ne convient pas comme base principale ici (voir §2). Utile pour du petit stockage en bord de réseau. |
-| Fichiers (images, PDF) | Vercel Blob + Supabase Storage | **R2** | Sortie (egress) gratuite. API compatible S3. |
-| Cache / rate-limit | Upstash Redis | **KV** + binding **Rate Limiting** (ou Durable Objects) | `lib/rate-limit.ts` à réécrire. |
-| Authentification | Supabase Auth | ❌ pas d'auth grand public chez Cloudflare | → **Better Auth** (open source, tourne sur Workers, stocke dans notre Postgres). Cloudflare Access sert à protéger des outils internes, pas des élèves. |
-| Emails transactionnels | SMTP Supabase / Resend | **Email Service** (envoi depuis un Worker) | En **bêta publique** (avril 2026), plan Workers Paid. Garder Resend en secours au début. |
-| IA | Claude, OpenAI, OpenRouter, Perplexity | **Workers AI** : 10 000 neurones/jour gratuits, puis 0,011 $ / 1 000 neurones | Modèles ouverts (gpt-oss-120b, Llama 4 Scout, Qwen, Mistral…). Qualité à valider sur les maths : à ajouter comme provider, pas forcément à la place des autres. |
-| Temps réel (notifications live) | — | **Durable Objects** + WebSockets (API Hibernation) | « Cloudflare Realtime » est autre chose : de l'audio/vidéo WebRTC. |
-| Tâches longues (corrections IA) | appel synchrone | **Queues** + **Workflows** | Évite les timeouts sur les grosses copies. |
-| PDF des sujets | `@react-pdf/renderer` + MathJax côté serveur | **Browser Rendering** (Chrome headless) en option | Risque : poids du bundle et temps CPU sur Workers. À tester en premier. |
-| Monitoring | Sentry (`@sentry/nextjs`) | Sentry fonctionne sur Workers | + logs Workers intégrés. |
+| Hébergement Next.js | Vercel | **Workers** + adaptateur **OpenNext** (`@opennextjs/cloudflare`) | Exige Next.js ≥ 16.4.1 : fait (16.4.3). |
+| Base de données | Supabase Postgres | **D1** (SQLite managé) | Réécriture des requêtes : voir §2. |
+| Fichiers (images, PDF) | Vercel Blob + Supabase Storage | **R2** | Sortie (egress) gratuite. |
+| Cache Next.js (ISR) | Vercel | **R2** (`NEXT_INC_CACHE_R2_BUCKET`) | Déjà configuré dans `wrangler.jsonc`. |
+| Cache / rate-limit | Upstash Redis | **KV** + binding **Rate Limiting** | `lib/rate-limit.ts` à réécrire. |
+| Authentification | Supabase Auth | **Better Auth** | Bibliothèque gratuite (MIT), sans palier payant ; stocke ses tables dans D1. |
+| Emails transactionnels | SMTP Supabase / Resend | **Email Service** (envoi depuis un Worker) | En **bêta publique** depuis avril 2026, plan Workers Paid. Resend en secours. |
+| IA | Claude, OpenAI, OpenRouter, Perplexity | + **Workers AI** (10 000 neurones/jour gratuits) | Nouveau provider dans `lib/ai/providers/`, à comparer sur de vraies copies. |
+| Temps réel | — | **Durable Objects** + WebSockets (API Hibernation) | « Cloudflare Realtime » = audio/vidéo WebRTC, autre usage. |
+| Tâches longues | appel synchrone | **Queues** / **Workflows** | Corrections IA longues. |
+| PDF des sujets | `@react-pdf/renderer` + MathJax | à valider sur Workers, **Browser Rendering** en repli | Voir phase 1. |
 
-**Coût de base** : plan Workers Paid (5 $/mois, requis pour un bundle Next.js de cette taille, l'Email Service et des limites CPU confortables) + Postgres PlanetScale (à partir de ≈ 5 $/mois).
+**Coût de base** : plan Workers Paid, 5 $/mois. D1, R2, KV et Queues ont des quotas inclus largement
+suffisants au démarrage.
 
-## 2. Pourquoi Postgres (Hyperdrive) et pas D1 pour la base principale
+## 2. D1 : ce que ça implique
 
-Inventaire du code au 23/10/2026 :
+Inventaire au 23/10/2026 : **335 appels SQL** écrits pour Postgres, 22 migrations dans
+`supabase/migrations/` et 30 dans `migrations_manual/`.
 
-- **335 appels SQL** (`query()` et la couche `db-client`), écrits pour Postgres : `ILIKE` (21), casts `::jsonb` / `::int` / `::date` (≈ 40), `ON CONFLICT`, transactions `BEGIN/COMMIT`, enums, `NOW()`.
-- 22 migrations dans `supabase/migrations/` + 30 dans `migrations_manual/`.
+| Postgres aujourd'hui | En D1 (SQLite) |
+|---|---|
+| `BEGIN … COMMIT` via `transaction()` | **Pas de transaction interactive.** Atomicité par `db.batch([...])` : toutes les requêtes du lot passent ou aucune. Un lot ne peut pas réutiliser le résultat d'une requête précédente : on écrit des requêtes conditionnelles. |
+| `ILIKE` (21 usages) | `LIKE` n'ignore la casse que pour l'ASCII : les accents français posent problème. On stocke une colonne normalisée (minuscules, sans accents) pour la recherche. |
+| `jsonb`, `::jsonb` | Colonne `TEXT` + fonctions `json_extract`, `json_each`. |
+| Enums Postgres | `TEXT` + contrainte `CHECK (col IN (...))`. |
+| `uuid`, `gen_random_uuid()` | `TEXT` + `crypto.randomUUID()` côté application (déjà le cas dans plusieurs actions). |
+| `NOW()`, `timestamptz` | `TEXT` ISO 8601 (`datetime('now')`) ou entier epoch, une seule convention pour tout le schéma. |
+| Casts `::int`, `::date`, `::text` | `CAST(... AS ...)` ou suppression (typage dynamique SQLite). |
+| Connexion `pg` (`DATABASE_URL`, `DIRECT_URL`) | Binding `env.DB`, accès via `getCloudflareContext()`. Plus de pool ni de distinction 5432/6543. |
 
-D1 = SQLite : pas de `ILIKE`, pas de `jsonb`, pas d'enums, types différents. Migrer vers D1 = réécrire et retester toutes les requêtes et migrations.
-Avec Hyperdrive + Postgres, le driver `pg` actuel reste : seule la connexion change dans `lib/db.ts`. Les transactions sont supportées par Hyperdrive, donc la séparation actuelle `pool` / `txPool` (`DATABASE_URL` / `DIRECT_URL`) disparaît.
+**Exemple : achat d'un sujet (débit du solde + achat), en un lot atomique.**
 
-**Recommandation : Postgres PlanetScale via Hyperdrive.** D1 reste disponible plus tard pour des données en bord de réseau (cache de catalogue, compteurs) si le besoin se présente.
+```ts
+await env.DB.batch([
+  env.DB.prepare(`UPDATE "User" SET "balanceAr" = "balanceAr" - ?1
+                  WHERE id = ?2 AND "balanceAr" >= ?1`).bind(prix, userId),
+  // n'insère que si la ligne précédente a vraiment débité le solde
+  env.DB.prepare(`INSERT INTO "Purchase" (id, "userId", "subjectId", "amountAr")
+                  SELECT ?1, ?2, ?3, ?4 WHERE changes() = 1`).bind(id, userId, subjectId, prix),
+])
+```
 
-## 3. Ce qui touche Supabase dans le code
+Ce motif est à valider par un test sur D1 local avant d'être généralisé aux paiements, recharges et
+retraits.
 
-- **39 fichiers** importent `@/lib/supabase/*` ou `@supabase/*`.
-- Auth : `getUser` (22), `getSession` (9), `signInWithPassword`, `signUp`, `verifyOtp`, `resetPasswordForEmail`, `updateUser`, `exchangeCodeForSession`, `auth.admin`, `onAuthStateChange`.
-- Requêtes via le client Supabase (au lieu de `pg`) : `Subject`, `User`, `BlogPost`, `BlogComment`, `SystemSetting`, `profiles`, `testimonials`, `images` → à repasser sur `query()`.
-- Storage : 2 usages (`storage.from`), plus `@vercel/blob` dans 2 fichiers.
-- `proxy.ts` : entièrement construit sur la session Supabase (cookies `sb-*`).
+**Recommandation : passer par Drizzle ORM** (`drizzle-orm/d1`). Puisque toutes les requêtes sont de
+toute façon réécrites, autant les réécrire typées. Drizzle génère les migrations D1
+(`wrangler d1 migrations`), ce qui remplace les trois dossiers appliqués à la main. Better Auth s'y
+branche directement (adaptateur Drizzle). La couche `lib/db-client.ts` (forme Prisma) disparaît.
+
+## 3. Better Auth à la place de Supabase Auth
+
+- **Gratuit** : bibliothèque open source sous licence MIT. L'équipe vend une infrastructure
+  optionnelle à part, dont nous n'avons pas besoin.
+- **Stockage** : ses tables (`user`, `session`, `account`, `verification`) vivent dans D1 et sont
+  reliées à `"User".id` (on garde les mêmes identifiants).
+- **Comptes existants sans nouveau mot de passe** : Supabase stocke des hash bcrypt
+  (`auth.users.encrypted_password`). Better Auth accepte une fonction de vérification personnalisée :
+  on vérifie en bcrypt les anciens hash, puis on re-hache avec l'algorithme par défaut à la première
+  connexion réussie.
+- **À réécrire** : `proxy.ts` (cookie de session Better Auth, mêmes règles : routes protégées,
+  vérification d'email, onboarding, contrôle ADMIN), `actions/auth.ts`, `lib/supabase/*` →
+  `lib/auth/*`, les 39 fichiers qui importent Supabase.
+- **Emails** : vérification et mot de passe oublié via Cloudflare Email Service, Resend en secours.
 
 ## 4. Plan en phases
 
-Chaque phase est livrable seule, avec retour arrière possible. On ne coupe Supabase qu'à la fin.
+Chaque phase est livrable seule, avec retour arrière possible. Supabase n'est coupé qu'à la fin.
 
-### Phase 0 — Préparer (½ jour)
-- Compte Cloudflare en plan Workers Paid, domaine géré par Cloudflare (DNS).
-- `wrangler` + `@opennextjs/cloudflare` en devDependencies, `wrangler.jsonc`, `open-next.config.ts`.
-- Secrets (`wrangler secret put`) : clés IA, Sentry, et pour l'instant les clés Supabase.
+### Phase 1 — Héberger sur Workers, toujours avec Supabase
+- ✅ Next.js 16.4.3, dépendances à jour, 0 vulnérabilité (`pnpm audit`).
+- ✅ OpenNext + Wrangler : `wrangler.jsonc`, `open-next.config.ts`, scripts `cf:build`,
+  `cf:preview`, `cf:deploy`, `cf:typegen`.
+- À valider : build OpenNext, taille du Worker, génération PDF, `pg` en `nodejs_compat`.
+- Prérequis côté compte (propriétaire) : plan Workers Paid, bucket R2 `mahai-opennext-cache`,
+  secrets (`wrangler secret put …`).
+- ✅ Critère de sortie : préproduction sur Workers fonctionnelle ; Vercel reste en production.
 
-### Phase 1 — Héberger sur Workers, toujours avec Supabase (2–3 jours)
-- Monter Next.js en ≥ 16.4 (corrige aussi les failles critiques relevées dans l'audit).
-- Build OpenNext, déploiement sur un domaine de préproduction.
-- Points à risque à valider ici : génération PDF (`@react-pdf/renderer`, `mathjax-full`), `pg` en `nodejs_compat`, taille du bundle, `bodySizeLimit` des Server Actions.
-- ✅ Critère de sortie : toutes les pages et actions fonctionnent sur Workers, Vercel reste en production.
+### Phase 2 — Fichiers vers R2
+- Bucket `mahai-assets`, remplacer `@vercel/blob` et `supabase.storage`, copier l'existant et
+  réécrire les URLs en base.
 
-### Phase 2 — Fichiers vers R2 (1 jour)
-- Bucket R2 `mahai-assets` (+ domaine public ou URLs signées).
-- Remplacer `@vercel/blob` (`app/api/editor/upload-image`) et `supabase.storage` (avatars, images) par R2.
-- Script de copie des fichiers existants, puis réécriture des URLs en base.
+### Phase 3 — Schéma D1 + réécriture des requêtes (la plus longue)
+- Schéma Drizzle à partir du schéma Postgres actuel, première migration D1.
+- Réécriture des 335 requêtes, module par module : catalogue/sujets → achats/solde → recharges →
+  contributeurs/retraits → admin → blog/notifications/parrainage. Tests d'intégration sur D1 local
+  pour chaque module, en priorité ceux qui touchent à l'argent.
+- Export Postgres → transformation (types, JSON, dates) → import `wrangler d1 execute`.
+- ✅ Critère : toutes les pages lisent et écrivent dans D1 en préproduction ; Postgres gardé en
+  lecture seule 2 semaines.
 
-### Phase 3 — Base vers Postgres PlanetScale + Hyperdrive (2 jours)
-- Créer la base depuis le dashboard Cloudflare, `pg_dump` (schéma `public`) → restauration.
-- `lib/db.ts` : un seul pool branché sur `env.HYPERDRIVE.connectionString`.
-- Repasser les ≈ 10 appels `supabase.from(...)` sur `query()`.
-- Mettre en place **un seul** dossier de migrations, suivi en base (fin des 3 dossiers appliqués à la main).
-- ✅ Critère : bascule en lecture/écriture sur la nouvelle base, ancienne base gardée en lecture seule pendant 2 semaines.
+### Phase 4 — Better Auth
+- Tables Better Auth, migration des comptes (hash bcrypt), réécriture de `proxy.ts` et des actions
+  d'auth, emails.
+- ✅ Critère : inscription, connexion, vérification d'email, mot de passe oublié, déconnexion et
+  accès admin testés de bout en bout avec Playwright.
 
-### Phase 4 — Auth : Supabase Auth → Better Auth (4–5 jours, la plus délicate)
-- Tables Better Auth dans Postgres, liées à `"User".id` (on garde les mêmes UUID).
-- **Migration des comptes sans forcer de nouveau mot de passe** : Supabase stocke des hash bcrypt (`auth.users.encrypted_password`), Better Auth accepte une fonction de vérification personnalisée → les élèves gardent leur mot de passe.
-- Réécrire `proxy.ts` (cookies de session Better Auth, mêmes règles : routes protégées, vérification email, onboarding, revalidation ADMIN), `actions/auth.ts`, `lib/supabase/*` → `lib/auth/*`.
-- Emails (vérification, mot de passe oublié) via Cloudflare Email Service, Resend en secours.
-- ✅ Critère : inscription, connexion, vérification email, mot de passe oublié, déconnexion, accès admin testés de bout en bout (Playwright).
+### Phase 5 — Ce que Cloudflare apporte en plus
+- Provider Workers AI, Queues pour les corrections longues, Durable Objects pour les notifications
+  en direct, rate limiting natif, Cron Triggers.
 
-### Phase 5 — Ce que Cloudflare apporte en plus (au fil de l'eau)
-- **Workers AI** comme nouveau provider dans `lib/ai/providers/` (la factory existe déjà) : d'abord pour les tâches légères et le mode « corrigé complet » mis en cache, comparé à Claude/OpenRouter sur un jeu de copies réelles avant d'en faire le défaut.
-- **Queues** pour les corrections IA longues, avec notification à la fin.
-- **Durable Objects** pour les notifications en direct (recharge validée, correction prête, nouveau sujet).
-- Rate limiting via le binding natif au lieu d'Upstash.
-- **Cron Triggers** pour les tâches planifiées (rappels de série d'étude, nettoyage).
+### Phase 6 — Couper
+- Retirer `@supabase/*`, `pg`, `@vercel/blob`, `@upstash/redis` et leurs variables ; fermer Supabase,
+  Vercel et Upstash après sauvegarde.
 
-### Phase 6 — Couper (½ jour)
-- Retirer `@supabase/*`, `@vercel/blob`, `@upstash/redis`, les variables d'environnement associées.
-- Fermer les projets Supabase, Vercel et Upstash une fois les sauvegardes faites.
+**Estimation : 4 à 5 semaines** pour une personne (phase 5 non comprise). La réécriture vers D1
+ajoute environ deux semaines par rapport à une migration vers Postgres.
 
-**Total estimé : 2 à 3 semaines de travail** pour une personne, phase 5 non comprise.
+## 5. Refonte visuelle (en parallèle)
 
-## 5. Décisions à prendre
-
-1. Base principale : **Postgres PlanetScale via Hyperdrive** (recommandé) ou réécriture vers D1 ?
-2. Auth : **Better Auth** (recommandé) ou un service tiers (Clerk…) ?
-3. Emails : Cloudflare Email Service (bêta) dès le départ, ou Resend d'abord ?
-4. Ordre avec la refonte du design : faire la phase 1 (hébergement + montée Next.js) **avant** la refonte, puis mener design et phases 2–4 en parallèle.
+- Direction A « La copie corrigée », décrite dans `DESIGN.md` (format Google DESIGN.md, validé par
+  `npx @google/design.md lint`).
+- Les maquettes de toutes les pages servent de référence ; les pages sont refaites au fil des phases
+  3 et 4, quand leurs données passent sur D1, pour ne toucher chaque écran qu'une fois.
