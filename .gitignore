@@ -53,6 +53,8 @@ out.txt
 .claude/*
 !.claude/skills/
 !.claude/settings.json
+# Dossier de travail du skill design-taste-frontend (fiches, captures)
+.taste-skill/
 .agents/
 .augment/
 .junie/
