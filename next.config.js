@@ -1,6 +1,7 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { withSentryConfig } from '@sentry/nextjs'
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -15,6 +16,10 @@ const nextConfig = {
   // serveur ; sans ceci, Vercel ne les inclut pas dans le bundle serverless.
   outputFileTracingIncludes: {
     '/api/subjects/[id]/pdf': ['./public/fonts/**'],
+    // Sur Cloudflare Workers, `pg` charge la variante « workerd » de pg-cloudflare
+    // (dist/index.js) que le traçage Node de Next ne copie pas (il ne garde que
+    // dist/empty.js). Nécessaire tant que la base reste sur Postgres (avant D1).
+    '/**': ['./node_modules/.pnpm/pg-cloudflare@*/node_modules/pg-cloudflare/**'],
   },
   experimental: {
     serverActions: {
@@ -86,3 +91,6 @@ export default withSentryConfig(nextConfig, {
     },
   },
 })
+
+// Expose les bindings Cloudflare (R2, D1, KV…) à `next dev` via getCloudflareContext()
+initOpenNextCloudflareForDev()

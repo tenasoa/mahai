@@ -8,6 +8,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv --include-runtime=false cloudflare-env.d.ts",
     "lint": "eslint .",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -55,6 +59,7 @@
     "mathjax-full": "^3.2.2",
     "next": "16.4.3",
     "pg": "^8.13.1",
+    "pg-cloudflare": "^1.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
@@ -69,6 +74,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@next/env": "^16.4.3",
+    "@opennextjs/cloudflare": "1.20.13",
     "@tailwindcss/typography": "^0.5.19",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^14.2.0",
@@ -91,7 +97,8 @@
     "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8.5.10",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "wrangler": "^4.152.0"
   },
   "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8",
   "pnpm": {

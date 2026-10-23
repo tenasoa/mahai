@@ -1,0 +1,36 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	// Worker qui sert l'app Next.js, construit par OpenNext (pnpm cf:build)
+	"main": ".open-next/worker.js",
+	"name": "mahai",
+	"compatibility_date": "2026-10-20",
+	// nodejs_compat : nécessaire pour pg, crypto, Buffer… côté serveur
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// Auto-référence utilisée par le cache OpenNext ; doit porter le nom du worker
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "mahai"
+		}
+	],
+	"r2_buckets": [
+		{
+			// Cache incrémental Next.js (ISR / fetch cache).
+			// Créer le bucket avant le premier déploiement :
+			//   pnpm wrangler r2 bucket create mahai-opennext-cache
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "mahai-opennext-cache"
+		}
+	],
+	"images": {
+		// Optimisation des images next/image via Cloudflare Images
+		"binding": "IMAGES"
+	},
+	"observability": {
+		"enabled": true
+	}
+}
