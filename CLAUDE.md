@@ -39,7 +39,7 @@ There is **no `prisma` script** — the app moved off Prisma to raw SQL via `pg`
 - Supabase handles auth (`@supabase/ssr`). Clients live in `lib/supabase/{client,server,admin}.ts`.
 - The middleware file is **`proxy.ts` at the project root**, not `middleware.ts`. It exports `proxy()` + `config` and enforces: login redirect for `protectedRoutes`, email verification gate via `mahai-email-verified` cookie, onboarding gate via `mahai-onboarding-pending` cookie. Editing auth flow = editing `proxy.ts`.
 - Server actions live in `actions/` (flat: `auth.ts`, `profile.ts`, `examen.ts`, …) and `actions/admin/`. `app/contributeur/actions.ts` is co-located with its route.
-- Next config sets `experimental.serverActions.bodySizeLimit: '2mb'` — uploads above that must use Vercel Blob (`@vercel/blob`) directly.
+- Next config sets `experimental.serverActions.bodySizeLimit: '2mb'` — larger uploads go through a route handler (e.g. `app/api/editor/upload-image`) instead of a server action.
 
 ### App structure (role-based)
 
@@ -79,5 +79,5 @@ app/
 
 - Next.js **16** (App Router, Turbopack), React 19, TypeScript strict.
 - ESLint flat config (`eslint.config.mjs`) disables `@typescript-eslint/no-explicit-any` and several `react-hooks` rules — don't reintroduce them as blockers.
-- Assets/images: Vercel Blob (`@vercel/blob`). Storage bucket for user images is created in `migrations_manual/021_create_storage_bucket_images.sql`.
+- User files (avatars, editor and blog images) live in Cloudflare R2 through `lib/storage.ts` (`putFile`/`getFile`/`deleteFile`/`publicUrl`): R2 binding `FILES` on Workers, R2 S3 API (`R2_*` env vars) elsewhere. Validate uploads with `readImageUpload()` (checks the file's bytes, raster images only). Files are served from `R2_PUBLIC_URL`, or by `app/files/[...key]/route.ts` when it is unset. Old Vercel Blob / Supabase Storage URLs are copied by `scripts/migrate-files-to-r2.mjs`.
 - Env validation in `lib/env.ts` via Zod: requires `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`. `SUPABASE_SERVICE_ROLE_KEY` is optional but needed for admin-side Supabase calls.

@@ -24,6 +24,14 @@ next-env.d.ts
 *.tsbuildinfo
 
 # ==========================================
+# Cloudflare (OpenNext / Wrangler)
+# ==========================================
+.open-next/
+.wrangler/
+.dev.vars
+.dev.vars.*
+
+# ==========================================
 # Vercel
 # ==========================================
 .vercel/
@@ -48,7 +56,13 @@ out.txt
 *.swp
 *.swo
 *.tmp
-.claude/
+# Claude Code : on versionne les skills et la config partagée du projet,
+# les réglages personnels (settings.local.json, etc.) restent locaux.
+.claude/*
+!.claude/skills/
+!.claude/settings.json
+# Dossier de travail du skill design-taste-frontend (fiches, captures)
+.taste-skill/
 .agents/
 .augment/
 .junie/
@@ -121,3 +135,6 @@ docs/plans/*.md
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Correspondances écrites par scripts/migrate-files-to-r2.mjs
+r2-migration-*.json

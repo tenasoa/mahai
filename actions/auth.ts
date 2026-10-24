@@ -112,7 +112,7 @@ export async function registerUser(formData: RegisterFormData, redirectTo?: stri
 
   if (!validation.success) {
     return {
-      error: validation.error.errors[0].message,
+      error: validation.error.issues[0].message,
     };
   }
 
@@ -241,7 +241,7 @@ export async function loginUser(formData: LoginFormData, redirectTo?: string) {
 
   if (!validation.success) {
     return {
-      error: validation.error.errors[0].message,
+      error: validation.error.issues[0].message,
     };
   }
 
@@ -349,7 +349,7 @@ export async function requestPasswordReset(formData: ForgotPasswordFormData) {
 
   if (!validation.success) {
     return {
-      error: validation.error.errors[0].message,
+      error: validation.error.issues[0].message,
     };
   }
 
@@ -419,7 +419,7 @@ export async function resetPassword(formData: ResetPasswordFormData) {
 
   if (!validation.success) {
     return {
-      error: validation.error.errors[0].message,
+      error: validation.error.issues[0].message,
     };
   }
 
