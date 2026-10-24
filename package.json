@@ -46,7 +46,7 @@
     "@tiptap/react": "^3.32.0",
     "@tiptap/starter-kit": "^3.32.0",
     "@upstash/redis": "^1.38.0",
-    "@vercel/blob": "^2.8.2",
+    "aws4fetch": "^1.0.20",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "framer-motion": "^12.36.0",

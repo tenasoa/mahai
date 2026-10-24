@@ -24,6 +24,12 @@
 			//   pnpm wrangler r2 bucket create mahai-opennext-cache
 			"binding": "NEXT_INC_CACHE_R2_BUCKET",
 			"bucket_name": "mahai-opennext-cache"
+		},
+		{
+			// Fichiers des utilisateurs : avatars, images de l'éditeur et du blog (lib/storage.ts).
+			//   pnpm wrangler r2 bucket create mahai-assets
+			"binding": "FILES",
+			"bucket_name": "mahai-assets"
 		}
 	],
 	"images": {

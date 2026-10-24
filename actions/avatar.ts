@@ -1,24 +1,32 @@
 'use server'
 
-import { put, del, list } from '@vercel/blob'
-import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import crypto from 'crypto'
 import { revalidatePath } from 'next/cache'
+import { query } from '@/lib/db'
 import { logger } from '@/lib/logger'
-import { requireAuth, requireAdmin, isAuthFailure } from '@/lib/auth-guards'
+import { requireAuth, isAuthFailure } from '@/lib/auth-guards'
+import { deleteFile, keyFromUrl, publicUrl, putFile, readImageUpload } from '@/lib/storage'
 
-const BLOB_FOLDER = 'avatars'
+const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
-// Obtenir le token d'accès pour Vercel Blob
-function getBlobToken(): string {
-  const token = process.env.BLOB_READ_WRITE_TOKEN
-  if (!token) {
-    throw new Error('BLOB_READ_WRITE_TOKEN n\'est pas configuré dans les variables d\'environnement')
+async function getCurrentPicture(userId: string): Promise<string | null> {
+  const result = await query('SELECT "profilePicture" FROM "User" WHERE id = $1 LIMIT 1', [userId])
+  return result.rows[0]?.profilePicture ?? null
+}
+
+// Suppression de l'ancien fichier : best-effort, le profil est déjà à jour.
+async function deletePreviousPicture(url: string | null) {
+  const key = keyFromUrl(url)
+  if (!key) return
+  try {
+    await deleteFile(key)
+  } catch (error) {
+    logger.apiError('avatar deletePrevious', error)
   }
-  return token
 }
 
 /**
- * Upload d'un avatar vers Vercel Blob
+ * Upload d'un avatar vers R2
  */
 export async function uploadAvatarAction(file: File) {
   try {
@@ -30,77 +38,52 @@ export async function uploadAvatarAction(file: File) {
     }
     const userId = auth.userId
 
-    const token = getBlobToken()
-
-    // Validation du fichier
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    const maxSize = 5 * 1024 * 1024 // 5MB
-
-    if (!allowedTypes.includes(file.type)) {
-      return { 
-        success: false, 
-        error: 'Type de fichier non supporté. Utilisez JPG, PNG, WebP ou GIF.' 
-      }
+    const upload = await readImageUpload(file, MAX_SIZE)
+    if (!upload.ok) {
+      return { success: false, error: upload.error }
     }
 
-    if (file.size > maxSize) {
-      return { 
-        success: false, 
-        error: 'Fichier trop volumineux (max 5MB)' 
-      }
-    }
+    // Nom unique à chaque envoi : les URLs sont mises en cache sans expiration.
+    const key = `avatars/${userId}/${crypto.randomUUID()}.${upload.extension}`
+    await putFile(key, upload.data, upload.contentType)
+    const url = publicUrl(key)
 
-    // Générer un nom de fichier unique
-    const fileExt = file.name.split('.').pop() || 'jpg'
-    const fileName = `${BLOB_FOLDER}/${userId}/avatar.${fileExt}`
-
-    // Upload vers Vercel Blob
-    const data = await put(fileName, file, {
-      access: 'public',
-      token,
-      contentType: file.type,
-      allowOverwrite: true, // Permet de remplacer l'ancien avatar
-    })
-
-    // Mettre à jour le profil utilisateur dans Supabase
-    const supabase = await createSupabaseAdminClient()
-    const { error: updateError } = await supabase
-      .from('User')
-      .update({
-        profilePicture: data.url,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('id', userId)
-
-    if (updateError) {
+    const previous = await getCurrentPicture(userId)
+    try {
+      await query('UPDATE "User" SET "profilePicture" = $1, "updatedAt" = $2 WHERE id = $3', [
+        url,
+        new Date().toISOString(),
+        userId,
+      ])
+    } catch (updateError) {
       logger.apiError('avatar updateProfile', updateError)
-      // Supprimer le fichier uploadé
-      await del(data.url, { token })
-      return { 
-        success: false, 
-        error: 'Erreur lors de la mise à jour du profil' 
+      await deleteFile(key).catch(() => {})
+      return {
+        success: false,
+        error: 'Erreur lors de la mise à jour du profil',
       }
     }
+    await deletePreviousPicture(previous)
 
     revalidatePath('/profil')
     revalidatePath('/dashboard')
 
-    return { 
-      success: true, 
-      url: data.url,
-      message: 'Avatar mis à jour avec succès' 
+    return {
+      success: true,
+      url,
+      message: 'Avatar mis à jour avec succès',
     }
   } catch (error) {
     logger.apiError('avatar upload', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur lors de l\'upload' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur lors de l\'upload',
     }
   }
 }
 
 /**
- * Supprimer un avatar de Vercel Blob
+ * Supprimer l'avatar de l'utilisateur connecté
  */
 export async function deleteAvatarAction() {
   try {
@@ -111,81 +94,33 @@ export async function deleteAvatarAction() {
     }
     const userId = auth.userId
 
-    const token = getBlobToken()
-
-    // Récupérer l'URL actuelle de l'avatar
-    const supabase = await createSupabaseAdminClient()
-    const { data: userData } = await supabase
-      .from('User')
-      .select('profilePicture')
-      .eq('id', userId)
-      .single()
-
-    if (userData?.profilePicture) {
-      // Supprimer de Vercel Blob
-      await del(userData.profilePicture, { token })
-    }
-
-    // Mettre à jour le profil
-    const { error: updateError } = await supabase
-      .from('User')
-      .update({
-        profilePicture: null,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('id', userId)
-
-    if (updateError) {
+    const previous = await getCurrentPicture(userId)
+    try {
+      await query('UPDATE "User" SET "profilePicture" = NULL, "updatedAt" = $1 WHERE id = $2', [
+        new Date().toISOString(),
+        userId,
+      ])
+    } catch (updateError) {
       logger.apiError('avatar updateProfile', updateError)
-      return { 
-        success: false, 
-        error: 'Erreur lors de la suppression de l\'avatar' 
+      return {
+        success: false,
+        error: 'Erreur lors de la suppression de l\'avatar',
       }
     }
+    await deletePreviousPicture(previous)
 
     revalidatePath('/profil')
     revalidatePath('/dashboard')
 
-    return { 
-      success: true, 
-      message: 'Avatar supprimé avec succès' 
+    return {
+      success: true,
+      message: 'Avatar supprimé avec succès',
     }
   } catch (error) {
     logger.apiError('avatar delete', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erreur lors de la suppression' 
-    }
-  }
-}
-
-/**
- * Lister tous les avatars (pour admin)
- */
-export async function listAvatarsAction() {
-  try {
-    // Réservé aux administrateurs : énumère tous les avatars du stockage.
-    const guard = await requireAdmin()
-    if (isAuthFailure(guard)) {
-      return { success: false, error: guard.error }
-    }
-
-    const token = getBlobToken()
-    
-    const data = await list({
-      prefix: `${BLOB_FOLDER}/`,
-      token,
-    })
-
-    return {
-      success: true,
-      blobs: data.blobs
-    }
-  } catch (error) {
-    logger.apiError('avatar list', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Erreur lors de la liste'
+      error: error instanceof Error ? error.message : 'Erreur lors de la suppression',
     }
   }
 }

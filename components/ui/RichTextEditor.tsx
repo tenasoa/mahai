@@ -19,7 +19,6 @@ import {
   ExternalLink,
   Plus,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 interface RichTextEditorProps {
   value: string;
@@ -61,7 +60,6 @@ export function RichTextEditor({
   });
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClient();
 
   const [activeStates, setActiveStates] = useState({
     bold: false,
@@ -122,21 +120,16 @@ export function RichTextEditor({
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `blog-content/${fileName}`;
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error);
 
-      const { error: uploadError, data } = await supabase.storage
-        .from("images")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("images").getPublicUrl(filePath);
-
-      const imgHtml = `<img src="${publicUrl}" alt="Blog Image" class="rounded-xl my-4 max-w-full" />`;
+      const imgHtml = `<img src="${data.url}" alt="Blog Image" class="rounded-xl my-4 max-w-full" />`;
       execCommand("insertHTML", imgHtml);
       setImageModal({ open: false, url: "", file: null });
     } catch (error) {

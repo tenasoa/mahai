@@ -89,8 +89,18 @@ Chaque phase est livrable seule, avec retour arrière possible. Supabase n'est c
 - ✅ Critère de sortie : préproduction sur Workers fonctionnelle ; Vercel reste en production.
 
 ### Phase 2 — Fichiers vers R2
-- Bucket `mahai-assets`, remplacer `@vercel/blob` et `supabase.storage`, copier l'existant et
-  réécrire les URLs en base.
+- ✅ `lib/storage.ts` : binding R2 `FILES` sur Workers, API S3 de R2 ailleurs (Vercel reste en
+  production jusqu'à la bascule). Avatars, images de l'éditeur et du blog passent par R2 ;
+  `@vercel/blob` et les appels `supabase.storage` sont retirés.
+- ✅ Les images sont vérifiées sur leur contenu (JPG, PNG, WebP, GIF) et servies par
+  `R2_PUBLIC_URL` ou, à défaut, par la route `/files/…`.
+- ✅ `scripts/migrate-files-to-r2.mjs` : inventaire, copie et réécriture des anciennes URLs dans
+  toutes les colonnes texte et JSON, avec retour arrière.
+- Côté compte (propriétaire) : bucket `mahai-assets` (`pnpm wrangler r2 bucket create
+  mahai-assets`), domaine public du bucket (`R2_PUBLIC_URL`), jeton R2 « Object Read & Write »
+  limité au bucket et variables `R2_*` sur Vercel, puis le script (inventaire, puis `--apply`).
+- Critère de sortie : plus aucune URL `vercel-storage.com` ni `supabase.co/storage` en base
+  (l'inventaire du script n'en trouve plus).
 
 ### Phase 3 — Schéma D1 + réécriture des requêtes (la plus longue)
 - Schéma Drizzle à partir du schéma Postgres actuel, première migration D1.

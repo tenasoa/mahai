@@ -1,20 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { put } from '@vercel/blob'
 import { query } from '@/lib/db'
 import { requireRole, isAuthFailure } from '@/lib/auth-guards'
+import { deleteFile, keyFromUrl, publicUrl, putFile, readImageUpload } from '@/lib/storage'
 import crypto from 'crypto'
 
-// SVG volontairement exclu : un SVG peut embarquer du <script> et, servi
-// depuis un domaine public (Vercel Blob), provoquer un XSS s'il est ouvert
-// directement. Seuls les formats raster sont acceptés.
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+// SVG volontairement exclu : un SVG peut embarquer du <script> et provoquer
+// un XSS s'il est ouvert directement. Seuls les formats raster sont acceptés,
+// vérifiés sur le contenu du fichier (readImageUpload).
 const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
-
-function getBlobToken(): string {
-  const token = process.env.BLOB_READ_WRITE_TOKEN
-  if (!token) throw new Error('BLOB_READ_WRITE_TOKEN non configuré')
-  return token
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,32 +28,19 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Validation ──────────────────────────────────────────────────
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: `Type non supporté. Formats acceptés : JPG, PNG, WebP, GIF, SVG.` },
-        { status: 400 }
-      )
+    const upload = await readImageUpload(file, MAX_SIZE)
+    if (!upload.ok) {
+      return NextResponse.json({ error: upload.error }, { status: 400 })
     }
 
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: `Fichier trop volumineux (max 10 Mo, reçu ${(file.size / 1024 / 1024).toFixed(1)} Mo)` },
-        { status: 400 }
-      )
-    }
-
-    // ── Upload vers Vercel Blob ──────────────────────────────────────
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const uniqueName = `${crypto.randomUUID()}.${ext}`
-    const blobPath = submissionId
+    // ── Upload vers R2 ──────────────────────────────────────────────
+    const uniqueName = `${crypto.randomUUID()}.${upload.extension}`
+    const key = submissionId
       ? `editor-images/${userId}/${submissionId}/${uniqueName}`
       : `editor-images/${userId}/unsaved/${uniqueName}`
 
-    const blob = await put(blobPath, file, {
-      access: 'public',
-      token: getBlobToken(),
-      contentType: file.type,
-    })
+    await putFile(key, upload.data, upload.contentType)
+    const url = publicUrl(key)
 
     // ── Log dans SubjectImage (best-effort) ─────────────────────────
     if (submissionId) {
@@ -73,9 +53,9 @@ export async function POST(req: NextRequest) {
             crypto.randomUUID(),
             submissionId,
             userId,
-            blob.url,
+            url,
             file.name,
-            file.type,
+            upload.contentType,
             file.size,
           ]
         )
@@ -87,11 +67,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
-      pathname: blob.pathname,
+      url,
+      pathname: key,
       filename: file.name,
       size: file.size,
-      mimeType: file.type,
+      mimeType: upload.contentType,
     })
   } catch (error) {
     console.error('upload-image error:', error)
@@ -102,7 +82,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Méthode DELETE — supprimer une image Vercel Blob
+// Méthode DELETE — supprimer une image de R2
 export async function DELETE(req: NextRequest) {
   try {
     const guard = await requireRole(['CONTRIBUTEUR', 'ADMIN', 'PROFESSEUR'])
@@ -113,12 +93,19 @@ export async function DELETE(req: NextRequest) {
     const { url } = await req.json() as { url?: string }
     if (!url) return NextResponse.json({ error: 'URL manquante' }, { status: 400 })
 
+    // Seules les images de l'éditeur stockées sur R2 se suppriment ici
+    // (pas les anciennes URLs Vercel Blob, ni les avatars ou le blog).
+    const key = keyFromUrl(url)
+    if (!key || !key.startsWith('editor-images/')) {
+      return NextResponse.json({ error: 'URL non gérée' }, { status: 400 })
+    }
+
     // ── Contrôle de propriété (anti-IDOR) ───────────────────────────
     // Les images sont stockées sous `editor-images/{userId}/...`. On
-    // n'autorise la suppression que si l'URL appartient à l'utilisateur,
+    // n'autorise la suppression que si la clé appartient à l'utilisateur,
     // ou si une ligne SubjectImage le désigne comme auteur, ou s'il est
     // ADMIN. Sinon un utilisateur pourrait supprimer les images d'autrui.
-    let isOwner = url.includes(`editor-images/${guard.userId}/`)
+    let isOwner = key.startsWith(`editor-images/${guard.userId}/`)
     if (!isOwner && guard.role !== 'ADMIN') {
       try {
         const owned = await query(
@@ -132,8 +119,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
     }
 
-    const { del } = await import('@vercel/blob')
-    await del(url, { token: getBlobToken() })
+    await deleteFile(key)
 
     // Supprimer de SubjectImage si existant
     try {

@@ -135,3 +135,6 @@ docs/plans/*.md
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Correspondances écrites par scripts/migrate-files-to-r2.mjs
+r2-migration-*.json
