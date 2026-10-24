@@ -1,7 +1,7 @@
 'use client'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { registerSchema, type RegisterFormData } from '@/lib/validations/auth'
+import { registerSchema, type RegisterFormData, type RegisterFormInput } from '@/lib/validations/auth'
 import { registerUser } from '@/actions/auth'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -34,7 +34,7 @@ export function RegisterForm() {
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterFormData>({
+  } = useForm<RegisterFormInput, unknown, RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       prenom: '',

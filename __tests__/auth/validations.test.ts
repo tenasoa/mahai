@@ -28,7 +28,7 @@ describe("registerSchema", () => {
     const result = registerSchema.safeParse({ ...validData, email: "pas-un-email" });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.errors[0].path).toContain("email");
+      expect(result.error.issues[0].path).toContain("email");
     }
   });
 
@@ -40,7 +40,7 @@ describe("registerSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.errors[0].path).toContain("password");
+      expect(result.error.issues[0].path).toContain("password");
     }
   });
 
@@ -51,7 +51,7 @@ describe("registerSchema", () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.errors[0].path).toContain("confirmPassword");
+      expect(result.error.issues[0].path).toContain("confirmPassword");
     }
   });
 
@@ -59,7 +59,7 @@ describe("registerSchema", () => {
     const result = registerSchema.safeParse({ ...validData, prenom: "" });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.errors[0].path).toContain("prenom");
+      expect(result.error.issues[0].path).toContain("prenom");
     }
   });
 

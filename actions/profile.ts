@@ -116,7 +116,7 @@ export async function updateCurrentUserProfileAction(data: UpdateProfileData) {
       return {
         success: false,
         error: "Données invalides",
-        details: error.errors.map((issue) => ({
+        details: error.issues.map((issue) => ({
           field: issue.path.join("."),
           message: issue.message,
         })),
@@ -353,7 +353,7 @@ export async function requestPasswordChangeCodeAction(data: unknown) {
     if (error instanceof z.ZodError)
       return {
         success: false,
-        error: error.errors[0]?.message || "Validation échouée",
+        error: error.issues[0]?.message || "Validation échouée",
       };
     logger.authError("requestPasswordChangeCodeAction", error);
     return { success: false, error: "Erreur lors de l'envoi du code" };
@@ -406,7 +406,7 @@ export async function changeUserPasswordAction(data: unknown) {
     if (error instanceof z.ZodError)
       return {
         success: false,
-        error: error.errors[0]?.message || "Validation échouée",
+        error: error.issues[0]?.message || "Validation échouée",
       };
     logger.authError("changeUserPasswordAction", error);
     return { success: false, error: "Erreur serveur" };
