@@ -32,6 +32,17 @@
 			"bucket_name": "mahai-assets"
 		}
 	],
+	"d1_databases": [
+		{
+			// Base principale (remplace Postgres en phase 3). Créer la base puis reporter son id ici :
+			//   pnpm wrangler d1 create mahai
+			"binding": "DB",
+			"database_name": "mahai",
+			"database_id": "00000000-0000-0000-0000-000000000000",
+			// Migrations générées par drizzle-kit (pnpm db:generate)
+			"migrations_dir": "drizzle"
+		}
+	],
 	"images": {
 		// Optimisation des images next/image via Cloudflare Images
 		"binding": "IMAGES"

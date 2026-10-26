@@ -3,6 +3,7 @@
 interface __BaseEnv_CloudflareEnv {
 	NEXT_INC_CACHE_R2_BUCKET: R2Bucket;
 	FILES: R2Bucket;
+	DB: D1Database;
 	IMAGES: ImagesBinding;
 	ASSETS: Fetcher;
 	WORKER_SELF_REFERENCE: Fetcher /* mahai */;

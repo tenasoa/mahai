@@ -103,7 +103,8 @@ Chaque phase est livrable seule, avec retour arrière possible. Supabase n'est c
   (l'inventaire du script n'en trouve plus).
 
 ### Phase 3 — Schéma D1 + réécriture des requêtes (la plus longue)
-- Schéma Drizzle à partir du schéma Postgres actuel, première migration D1.
+- ✅ Schéma Drizzle à partir du schéma Postgres reconstruit (`db/schema.ts`), première migration D1
+  (`drizzle/`), binding `DB`, accès `lib/d1.ts`. Détail et inventaire : `2026-10-26-phase3-d1.md`.
 - Réécriture des 335 requêtes, module par module : catalogue/sujets → achats/solde → recharges →
   contributeurs/retraits → admin → blog/notifications/parrainage. Tests d'intégration sur D1 local
   pour chaque module, en priorité ceux qui touchent à l'argent.

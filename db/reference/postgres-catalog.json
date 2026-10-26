@@ -1,0 +1,5041 @@
+{
+ "columns": [
+  {
+   "t": "AICorrection",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "(gen_random_uuid())::text",
+   "pos": 1
+  },
+  {
+   "t": "AICorrection",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "AICorrection",
+   "c": "subjectId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "AICorrection",
+   "c": "mode",
+   "type": "character varying",
+   "udt": "varchar",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "AICorrection",
+   "c": "userAnswers",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": "'{}'::jsonb",
+   "pos": 5
+  },
+  {
+   "t": "AICorrection",
+   "c": "aiResult",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "AICorrection",
+   "c": "costAr",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 7
+  },
+  {
+   "t": "AICorrection",
+   "c": "model",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "AICorrection",
+   "c": "tokensIn",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": null,
+   "pos": 9
+  },
+  {
+   "t": "AICorrection",
+   "c": "tokensOut",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": null,
+   "pos": 10
+  },
+  {
+   "t": "AICorrection",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 11
+  },
+  {
+   "t": "AICorrection",
+   "c": "cachedFromPoolId",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": true,
+   "def": null,
+   "pos": 12
+  },
+  {
+   "t": "AdminAuditLog",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "(gen_random_uuid())::text",
+   "pos": 1
+  },
+  {
+   "t": "AdminAuditLog",
+   "c": "adminId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "AdminAuditLog",
+   "c": "action",
+   "type": "character varying",
+   "udt": "varchar",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "AdminAuditLog",
+   "c": "targetType",
+   "type": "character varying",
+   "udt": "varchar",
+   "null": true,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "AdminAuditLog",
+   "c": "targetId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "AdminAuditLog",
+   "c": "details",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": "'{}'::jsonb",
+   "pos": 6
+  },
+  {
+   "t": "AdminAuditLog",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 7
+  },
+  {
+   "t": "BlogCategory",
+   "c": "id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": "gen_random_uuid()",
+   "pos": 1
+  },
+  {
+   "t": "BlogCategory",
+   "c": "name",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "BlogCategory",
+   "c": "slug",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "BlogCategory",
+   "c": "description",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "BlogCategory",
+   "c": "color",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": "'#gold'::text",
+   "pos": 5
+  },
+  {
+   "t": "BlogCategory",
+   "c": "sort_order",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": "0",
+   "pos": 6
+  },
+  {
+   "t": "BlogCategory",
+   "c": "is_active",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 7
+  },
+  {
+   "t": "BlogCategory",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 8
+  },
+  {
+   "t": "BlogComment",
+   "c": "id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": "gen_random_uuid()",
+   "pos": 1
+  },
+  {
+   "t": "BlogComment",
+   "c": "post_id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "BlogComment",
+   "c": "user_id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "BlogComment",
+   "c": "user_name",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "BlogComment",
+   "c": "content",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "BlogComment",
+   "c": "parent_id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "BlogComment",
+   "c": "is_approved",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 7
+  },
+  {
+   "t": "BlogComment",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 8
+  },
+  {
+   "t": "BlogComment",
+   "c": "updatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 9
+  },
+  {
+   "t": "BlogPost",
+   "c": "id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": "gen_random_uuid()",
+   "pos": 1
+  },
+  {
+   "t": "BlogPost",
+   "c": "title",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "BlogPost",
+   "c": "slug",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "BlogPost",
+   "c": "excerpt",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "BlogPost",
+   "c": "content",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "BlogPost",
+   "c": "category",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'general'::text",
+   "pos": 6
+  },
+  {
+   "t": "BlogPost",
+   "c": "author_id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "BlogPost",
+   "c": "author_name",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "BlogPost",
+   "c": "cover_image",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 9
+  },
+  {
+   "t": "BlogPost",
+   "c": "read_time",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": "5",
+   "pos": 10
+  },
+  {
+   "t": "BlogPost",
+   "c": "is_published",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 11
+  },
+  {
+   "t": "BlogPost",
+   "c": "is_featured",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 12
+  },
+  {
+   "t": "BlogPost",
+   "c": "views",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": "0",
+   "pos": 13
+  },
+  {
+   "t": "BlogPost",
+   "c": "published_at",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 14
+  },
+  {
+   "t": "BlogPost",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 15
+  },
+  {
+   "t": "BlogPost",
+   "c": "updatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 16
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "(gen_random_uuid())::text",
+   "pos": 1
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "fullName",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "phone",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "subjects",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "educationLevel",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "teachingExperience",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "motivation",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "availability",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 9
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "portfolioUrl",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 10
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "sampleLesson",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 11
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "status",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'PENDING'::text",
+   "pos": 12
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "adminNotes",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 13
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "reviewedBy",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 14
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "reviewedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": true,
+   "def": null,
+   "pos": 15
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 16
+  },
+  {
+   "t": "ContributorApplication",
+   "c": "updatedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 17
+  },
+  {
+   "t": "CreditPack",
+   "c": "id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": "gen_random_uuid()",
+   "pos": 1
+  },
+  {
+   "t": "CreditPack",
+   "c": "name",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "CreditPack",
+   "c": "credits",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "CreditPack",
+   "c": "arAmount",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "CreditPack",
+   "c": "bonus",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": "0",
+   "pos": 5
+  },
+  {
+   "t": "CreditPack",
+   "c": "isPopular",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 6
+  },
+  {
+   "t": "CreditPack",
+   "c": "isActive",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 7
+  },
+  {
+   "t": "CreditPack",
+   "c": "sortOrder",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": "0",
+   "pos": 8
+  },
+  {
+   "t": "CreditPack",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 9
+  },
+  {
+   "t": "CreditPack",
+   "c": "updatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 10
+  },
+  {
+   "t": "CreditPack",
+   "c": "bonusAr",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 12
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "amount",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "type",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "description",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "paymentMethod",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "transactionId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "status",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'PENDING'::text",
+   "pos": 8
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 9
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "metadata",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": true,
+   "def": "'{}'::jsonb",
+   "pos": 10
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "phoneNumber",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 11
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "senderCode",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 12
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "creditsCount",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": "0",
+   "pos": 13
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "rejectionReason",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 14
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "validatedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": true,
+   "def": null,
+   "pos": 15
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "validatedBy",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 16
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "isRead",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 17
+  },
+  {
+   "t": "CreditTransaction",
+   "c": "isDismissed",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 18
+  },
+  {
+   "t": "DailyActivity",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "(gen_random_uuid())::text",
+   "pos": 1
+  },
+  {
+   "t": "DailyActivity",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "DailyActivity",
+   "c": "date",
+   "type": "date",
+   "udt": "date",
+   "null": false,
+   "def": "CURRENT_DATE",
+   "pos": 3
+  },
+  {
+   "t": "DailyActivity",
+   "c": "type",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'LOGIN'::text",
+   "pos": 4
+  },
+  {
+   "t": "DailyActivity",
+   "c": "metadata",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "DailyActivity",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 6
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": "gen_random_uuid()",
+   "pos": 1
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "subjectId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "content",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "generatedByUserId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "timesServed",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 5
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "model",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "tokensIn",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": "0",
+   "pos": 7
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "tokensOut",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": "0",
+   "pos": 8
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 9
+  },
+  {
+   "t": "DirectCorrectionSeen",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "DirectCorrectionSeen",
+   "c": "poolId",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "DirectCorrectionSeen",
+   "c": "seenAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 3
+  },
+  {
+   "t": "EmailVerification",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "EmailVerification",
+   "c": "email",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "EmailVerification",
+   "c": "token",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "EmailVerification",
+   "c": "expiresAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "EmailVerification",
+   "c": "used",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 5
+  },
+  {
+   "t": "EmailVerification",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 6
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "titre",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "typeExamen",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "matiere",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "annee",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "dureeSecondes",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "startedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": true,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "submittedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": true,
+   "def": null,
+   "pos": 9
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "score",
+   "type": "double precision",
+   "udt": "float8",
+   "null": true,
+   "def": null,
+   "pos": 10
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "scoreMax",
+   "type": "double precision",
+   "udt": "float8",
+   "null": true,
+   "def": null,
+   "pos": 11
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "percentile",
+   "type": "double precision",
+   "udt": "float8",
+   "null": true,
+   "def": null,
+   "pos": 12
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "status",
+   "type": "USER-DEFINED",
+   "udt": "ExamenStatus",
+   "null": false,
+   "def": "'NOT_STARTED'::\"ExamenStatus\"",
+   "pos": 13
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 14
+  },
+  {
+   "t": "ExamenBlanc",
+   "c": "subjectId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 15
+  },
+  {
+   "t": "MerchantPhone",
+   "c": "id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": "gen_random_uuid()",
+   "pos": 1
+  },
+  {
+   "t": "MerchantPhone",
+   "c": "operator",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "MerchantPhone",
+   "c": "phone",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "MerchantPhone",
+   "c": "label",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "MerchantPhone",
+   "c": "isActive",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 5
+  },
+  {
+   "t": "MerchantPhone",
+   "c": "isDefault",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 6
+  },
+  {
+   "t": "MerchantPhone",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 7
+  },
+  {
+   "t": "MerchantPhone",
+   "c": "updatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 8
+  },
+  {
+   "t": "Notification",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "Notification",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "Notification",
+   "c": "type",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "Notification",
+   "c": "title",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "Notification",
+   "c": "body",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "Notification",
+   "c": "link",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "Notification",
+   "c": "metadata",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": "'{}'::jsonb",
+   "pos": 7
+  },
+  {
+   "t": "Notification",
+   "c": "isRead",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 8
+  },
+  {
+   "t": "Notification",
+   "c": "isDismissed",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 9
+  },
+  {
+   "t": "Notification",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 10
+  },
+  {
+   "t": "Notification",
+   "c": "readAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 11
+  },
+  {
+   "t": "PasswordReset",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "PasswordReset",
+   "c": "email",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "PasswordReset",
+   "c": "token",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "PasswordReset",
+   "c": "expiresAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "PasswordReset",
+   "c": "used",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 5
+  },
+  {
+   "t": "PasswordReset",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 6
+  },
+  {
+   "t": "Purchase",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "Purchase",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "Purchase",
+   "c": "subjectId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "Purchase",
+   "c": "paymentMethod",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "Purchase",
+   "c": "status",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'PENDING'::text",
+   "pos": 7
+  },
+  {
+   "t": "Purchase",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 8
+  },
+  {
+   "t": "Purchase",
+   "c": "amountAr",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 9
+  },
+  {
+   "t": "QuestionExamen",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "QuestionExamen",
+   "c": "examenId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "QuestionExamen",
+   "c": "numero",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "QuestionExamen",
+   "c": "texte",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "QuestionExamen",
+   "c": "type",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'réponse'::text",
+   "pos": 5
+  },
+  {
+   "t": "QuestionExamen",
+   "c": "options",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "QuestionExamen",
+   "c": "points",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "5",
+   "pos": 7
+  },
+  {
+   "t": "QuestionExamen",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 8
+  },
+  {
+   "t": "ReferralCommission",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "ReferralCommission",
+   "c": "referrerId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "ReferralCommission",
+   "c": "referredId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "ReferralCommission",
+   "c": "arAmount",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 4
+  },
+  {
+   "t": "ReferralCommission",
+   "c": "status",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": "'PENDING'::text",
+   "pos": 5
+  },
+  {
+   "t": "ReferralCommission",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": true,
+   "def": "now()",
+   "pos": 6
+  },
+  {
+   "t": "ReferralCommission",
+   "c": "updatedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": true,
+   "def": "now()",
+   "pos": 7
+  },
+  {
+   "t": "Subject",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "Subject",
+   "c": "titre",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "Subject",
+   "c": "type",
+   "type": "USER-DEFINED",
+   "udt": "ExamenType",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "Subject",
+   "c": "matiere",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "Subject",
+   "c": "annee",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "Subject",
+   "c": "serie",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "Subject",
+   "c": "description",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "Subject",
+   "c": "pages",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "Subject",
+   "c": "difficulte",
+   "type": "USER-DEFINED",
+   "udt": "Difficulte",
+   "null": false,
+   "def": "'MOYEN'::\"Difficulte\"",
+   "pos": 10
+  },
+  {
+   "t": "Subject",
+   "c": "langue",
+   "type": "USER-DEFINED",
+   "udt": "Langue",
+   "null": false,
+   "def": "'FRANCAIS'::\"Langue\"",
+   "pos": 11
+  },
+  {
+   "t": "Subject",
+   "c": "format",
+   "type": "USER-DEFINED",
+   "udt": "Format",
+   "null": false,
+   "def": "'PDF'::\"Format\"",
+   "pos": 12
+  },
+  {
+   "t": "Subject",
+   "c": "badge",
+   "type": "USER-DEFINED",
+   "udt": "Badge",
+   "null": false,
+   "def": "'AI'::\"Badge\"",
+   "pos": 13
+  },
+  {
+   "t": "Subject",
+   "c": "glyph",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'∑'::text",
+   "pos": 14
+  },
+  {
+   "t": "Subject",
+   "c": "featured",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 15
+  },
+  {
+   "t": "Subject",
+   "c": "rating",
+   "type": "double precision",
+   "udt": "float8",
+   "null": false,
+   "def": "0",
+   "pos": 16
+  },
+  {
+   "t": "Subject",
+   "c": "reviewsCount",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 17
+  },
+  {
+   "t": "Subject",
+   "c": "hasCorrectionIa",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 18
+  },
+  {
+   "t": "Subject",
+   "c": "hasCorrectionProf",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 19
+  },
+  {
+   "t": "Subject",
+   "c": "authorId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 20
+  },
+  {
+   "t": "Subject",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 21
+  },
+  {
+   "t": "Subject",
+   "c": "status",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'PUBLISHED'::text",
+   "pos": 22
+  },
+  {
+   "t": "Subject",
+   "c": "downloadCount",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 23
+  },
+  {
+   "t": "Subject",
+   "c": "duree",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 28
+  },
+  {
+   "t": "Subject",
+   "c": "coefficient",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": null,
+   "pos": 29
+  },
+  {
+   "t": "Subject",
+   "c": "filiere",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 30
+  },
+  {
+   "t": "Subject",
+   "c": "niveau",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 31
+  },
+  {
+   "t": "Subject",
+   "c": "examType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 32
+  },
+  {
+   "t": "Subject",
+   "c": "anneeScolaire",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 33
+  },
+  {
+   "t": "Subject",
+   "c": "dateOfficielle",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 34
+  },
+  {
+   "t": "Subject",
+   "c": "bepcOption",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 35
+  },
+  {
+   "t": "Subject",
+   "c": "baccType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 36
+  },
+  {
+   "t": "Subject",
+   "c": "concoursType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 37
+  },
+  {
+   "t": "Subject",
+   "c": "etablissement",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 38
+  },
+  {
+   "t": "Subject",
+   "c": "semestre",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 39
+  },
+  {
+   "t": "Subject",
+   "c": "customMeta",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": "'[]'::jsonb",
+   "pos": 40
+  },
+  {
+   "t": "Subject",
+   "c": "submissionId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 41
+  },
+  {
+   "t": "Subject",
+   "c": "content",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": true,
+   "def": null,
+   "pos": 42
+  },
+  {
+   "t": "Subject",
+   "c": "contentType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 43
+  },
+  {
+   "t": "Subject",
+   "c": "tags",
+   "type": "ARRAY",
+   "udt": "_text",
+   "null": false,
+   "def": "'{}'::text[]",
+   "pos": 44
+  },
+  {
+   "t": "Subject",
+   "c": "prixMode",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 45
+  },
+  {
+   "t": "Subject",
+   "c": "visibilite",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 46
+  },
+  {
+   "t": "Subject",
+   "c": "reviewerId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 47
+  },
+  {
+   "t": "Subject",
+   "c": "publishedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 48
+  },
+  {
+   "t": "Subject",
+   "c": "prix",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 49
+  },
+  {
+   "t": "SubjectDownload",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "(gen_random_uuid())::text",
+   "pos": 1
+  },
+  {
+   "t": "SubjectDownload",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "SubjectDownload",
+   "c": "subjectId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "SubjectDownload",
+   "c": "watermarkCode",
+   "type": "character varying",
+   "udt": "varchar",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "SubjectDownload",
+   "c": "ipAddress",
+   "type": "character varying",
+   "udt": "varchar",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "SubjectDownload",
+   "c": "userAgent",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "SubjectDownload",
+   "c": "downloadedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 7
+  },
+  {
+   "t": "SubjectImage",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "(gen_random_uuid())::text",
+   "pos": 1
+  },
+  {
+   "t": "SubjectImage",
+   "c": "submissionId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "SubjectImage",
+   "c": "authorId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "SubjectImage",
+   "c": "url",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "SubjectImage",
+   "c": "filename",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "SubjectImage",
+   "c": "mimeType",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'image/jpeg'::text",
+   "pos": 6
+  },
+  {
+   "t": "SubjectImage",
+   "c": "size",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 7
+  },
+  {
+   "t": "SubjectImage",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 8
+  },
+  {
+   "t": "SubjectLog",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "SubjectLog",
+   "c": "subjectId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "SubjectLog",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "SubjectLog",
+   "c": "action",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "SubjectLog",
+   "c": "oldStatus",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "SubjectLog",
+   "c": "newStatus",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "SubjectLog",
+   "c": "notes",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "SubjectLog",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 8
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "title",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "''::text",
+   "pos": 2
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "matiere",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "''::text",
+   "pos": 3
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "niveau",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "''::text",
+   "pos": 4
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "serie",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "annee",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "duree",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "coefficient",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "contentType",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'sujet_seul'::text",
+   "pos": 9
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "content",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": "'{}'::jsonb",
+   "pos": 10
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "tags",
+   "type": "ARRAY",
+   "udt": "_text",
+   "null": false,
+   "def": "'{}'::text[]",
+   "pos": 11
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "prix",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 12
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "prixMode",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'forfait'::text",
+   "pos": 13
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "visibilite",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'public'::text",
+   "pos": 14
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "status",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'DRAFT'::text",
+   "pos": 15
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "examType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 16
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "bepcOption",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 17
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "baccType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 18
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "concoursType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 19
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "etablissement",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 20
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "semestre",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 21
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "filiere",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 22
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "anneeScolaire",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 23
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "dateOfficielle",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 24
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "customMeta",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": "'[]'::jsonb",
+   "pos": 25
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "authorId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 26
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 27
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "updatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 28
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "notes",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 29
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "reviewerId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 30
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "validatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 31
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "reviewedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 32
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "pages",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": null,
+   "pos": 37
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "difficulte",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 38
+  },
+  {
+   "t": "SubjectSubmission",
+   "c": "description",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 39
+  },
+  {
+   "t": "SystemSetting",
+   "c": "id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": "gen_random_uuid()",
+   "pos": 1
+  },
+  {
+   "t": "SystemSetting",
+   "c": "key",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "SystemSetting",
+   "c": "value",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "SystemSetting",
+   "c": "type",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'string'::text",
+   "pos": 4
+  },
+  {
+   "t": "SystemSetting",
+   "c": "label",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "SystemSetting",
+   "c": "description",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "SystemSetting",
+   "c": "category",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'general'::text",
+   "pos": 7
+  },
+  {
+   "t": "SystemSetting",
+   "c": "isEditable",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 8
+  },
+  {
+   "t": "SystemSetting",
+   "c": "updatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 9
+  },
+  {
+   "t": "Transaction",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "Transaction",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "Transaction",
+   "c": "amountAr",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "Transaction",
+   "c": "type",
+   "type": "character varying",
+   "udt": "varchar",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "Transaction",
+   "c": "status",
+   "type": "character varying",
+   "udt": "varchar",
+   "null": false,
+   "def": "'PENDING'::character varying",
+   "pos": 5
+  },
+  {
+   "t": "Transaction",
+   "c": "description",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 6
+  },
+  {
+   "t": "Transaction",
+   "c": "phoneNumber",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "Transaction",
+   "c": "paymentMethod",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "Transaction",
+   "c": "senderCode",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 9
+  },
+  {
+   "t": "Transaction",
+   "c": "validatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 10
+  },
+  {
+   "t": "Transaction",
+   "c": "validatedBy",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 11
+  },
+  {
+   "t": "Transaction",
+   "c": "rejectionReason",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 12
+  },
+  {
+   "t": "Transaction",
+   "c": "metadata",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": true,
+   "def": "'{}'::jsonb",
+   "pos": 13
+  },
+  {
+   "t": "Transaction",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 14
+  },
+  {
+   "t": "Transaction",
+   "c": "isRead",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 15
+  },
+  {
+   "t": "Transaction",
+   "c": "isDismissed",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 16
+  },
+  {
+   "t": "User",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "User",
+   "c": "email",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "User",
+   "c": "password",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "User",
+   "c": "prenom",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "User",
+   "c": "nom",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "User",
+   "c": "role",
+   "type": "USER-DEFINED",
+   "udt": "Role",
+   "null": false,
+   "def": "'ETUDIANT'::\"Role\"",
+   "pos": 6
+  },
+  {
+   "t": "User",
+   "c": "phone",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "User",
+   "c": "phoneVerified",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 9
+  },
+  {
+   "t": "User",
+   "c": "schoolLevel",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 10
+  },
+  {
+   "t": "User",
+   "c": "emailVerified",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 11
+  },
+  {
+   "t": "User",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 12
+  },
+  {
+   "t": "User",
+   "c": "updatedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": null,
+   "pos": 13
+  },
+  {
+   "t": "User",
+   "c": "userType",
+   "type": "USER-DEFINED",
+   "udt": "UserType",
+   "null": true,
+   "def": "'ETUDIANT'::\"UserType\"",
+   "pos": 14
+  },
+  {
+   "t": "User",
+   "c": "customUserType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 15
+  },
+  {
+   "t": "User",
+   "c": "etablissement",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 16
+  },
+  {
+   "t": "User",
+   "c": "educationLevel",
+   "type": "USER-DEFINED",
+   "udt": "EducationLevel",
+   "null": true,
+   "def": null,
+   "pos": 17
+  },
+  {
+   "t": "User",
+   "c": "gradeLevel",
+   "type": "USER-DEFINED",
+   "udt": "GradeLevel",
+   "null": true,
+   "def": null,
+   "pos": 18
+  },
+  {
+   "t": "User",
+   "c": "filiere",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 19
+  },
+  {
+   "t": "User",
+   "c": "age",
+   "type": "integer",
+   "udt": "int4",
+   "null": true,
+   "def": null,
+   "pos": 20
+  },
+  {
+   "t": "User",
+   "c": "dateNaissance",
+   "type": "date",
+   "udt": "date",
+   "null": true,
+   "def": null,
+   "pos": 21
+  },
+  {
+   "t": "User",
+   "c": "region",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 22
+  },
+  {
+   "t": "User",
+   "c": "district",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 23
+  },
+  {
+   "t": "User",
+   "c": "preferences",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": true,
+   "def": "'{}'::jsonb",
+   "pos": 24
+  },
+  {
+   "t": "User",
+   "c": "bio",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 25
+  },
+  {
+   "t": "User",
+   "c": "matieresPreferees",
+   "type": "ARRAY",
+   "udt": "_text",
+   "null": true,
+   "def": null,
+   "pos": 26
+  },
+  {
+   "t": "User",
+   "c": "objectifsEtude",
+   "type": "ARRAY",
+   "udt": "_text",
+   "null": true,
+   "def": null,
+   "pos": 27
+  },
+  {
+   "t": "User",
+   "c": "profilePublic",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 28
+  },
+  {
+   "t": "User",
+   "c": "showEmail",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 29
+  },
+  {
+   "t": "User",
+   "c": "showPhone",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 30
+  },
+  {
+   "t": "User",
+   "c": "showEtablissement",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 31
+  },
+  {
+   "t": "User",
+   "c": "notifCorrections",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 32
+  },
+  {
+   "t": "User",
+   "c": "notifSujets",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 33
+  },
+  {
+   "t": "User",
+   "c": "notifPromos",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 34
+  },
+  {
+   "t": "User",
+   "c": "notifRappels",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 35
+  },
+  {
+   "t": "User",
+   "c": "birthDate",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 36
+  },
+  {
+   "t": "User",
+   "c": "nomComplet",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 37
+  },
+  {
+   "t": "User",
+   "c": "pseudo",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 38
+  },
+  {
+   "t": "User",
+   "c": "profilePicture",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 39
+  },
+  {
+   "t": "User",
+   "c": "defaultOperator",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": "'MVOLA'::text",
+   "pos": 40
+  },
+  {
+   "t": "User",
+   "c": "securityTwoFactorEnabled",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 41
+  },
+  {
+   "t": "User",
+   "c": "securityLoginAlertEnabled",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "true",
+   "pos": 42
+  },
+  {
+   "t": "User",
+   "c": "securityUnknownDeviceBlock",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 43
+  },
+  {
+   "t": "User",
+   "c": "securityRecoveryEmailEnabled",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "true",
+   "pos": 44
+  },
+  {
+   "t": "User",
+   "c": "securitySessionTimeoutMinutes",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "120",
+   "pos": 45
+  },
+  {
+   "t": "User",
+   "c": "securitySettingsUpdatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 46
+  },
+  {
+   "t": "User",
+   "c": "referralCode",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 47
+  },
+  {
+   "t": "User",
+   "c": "referredByUserId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 49
+  },
+  {
+   "t": "User",
+   "c": "lyceeType",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 50
+  },
+  {
+   "t": "User",
+   "c": "balanceAr",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 51
+  },
+  {
+   "t": "UserPhone",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "(gen_random_uuid())::text",
+   "pos": 1
+  },
+  {
+   "t": "UserPhone",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "UserPhone",
+   "c": "phone",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "UserPhone",
+   "c": "provider",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "UserPhone",
+   "c": "label",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "UserPhone",
+   "c": "isDefault",
+   "type": "boolean",
+   "udt": "bool",
+   "null": false,
+   "def": "false",
+   "pos": 6
+  },
+  {
+   "t": "UserPhone",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 7
+  },
+  {
+   "t": "UserPhone",
+   "c": "updatedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 8
+  },
+  {
+   "t": "UserReferral",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "(gen_random_uuid())::text",
+   "pos": 1
+  },
+  {
+   "t": "UserReferral",
+   "c": "referrerUserId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "UserReferral",
+   "c": "referredUserId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "UserReferral",
+   "c": "status",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'PENDING'::text",
+   "pos": 4
+  },
+  {
+   "t": "UserReferral",
+   "c": "referrerBonusGrantedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "UserReferral",
+   "c": "referredBonusGrantedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "UserReferral",
+   "c": "activatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": null,
+   "pos": 9
+  },
+  {
+   "t": "UserReferral",
+   "c": "metadata",
+   "type": "jsonb",
+   "udt": "jsonb",
+   "null": false,
+   "def": "'{}'::jsonb",
+   "pos": 10
+  },
+  {
+   "t": "UserReferral",
+   "c": "createdAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 11
+  },
+  {
+   "t": "UserReferral",
+   "c": "updatedAt",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": false,
+   "def": "now()",
+   "pos": 12
+  },
+  {
+   "t": "UserReferral",
+   "c": "referrerBonusAr",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 13
+  },
+  {
+   "t": "UserReferral",
+   "c": "referredBonusAr",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": "0",
+   "pos": 14
+  },
+  {
+   "t": "Wishlist",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "Wishlist",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "Wishlist",
+   "c": "subjectId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "Wishlist",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 4
+  },
+  {
+   "t": "Withdrawal",
+   "c": "id",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 1
+  },
+  {
+   "t": "Withdrawal",
+   "c": "userId",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "Withdrawal",
+   "c": "amount",
+   "type": "integer",
+   "udt": "int4",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "Withdrawal",
+   "c": "phoneNumber",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "Withdrawal",
+   "c": "paymentMethod",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'MVOLA'::text",
+   "pos": 5
+  },
+  {
+   "t": "Withdrawal",
+   "c": "status",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": "'PENDING'::text",
+   "pos": 6
+  },
+  {
+   "t": "Withdrawal",
+   "c": "transactionId",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 7
+  },
+  {
+   "t": "Withdrawal",
+   "c": "rejectionReason",
+   "type": "text",
+   "udt": "text",
+   "null": true,
+   "def": null,
+   "pos": 8
+  },
+  {
+   "t": "Withdrawal",
+   "c": "processedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": true,
+   "def": null,
+   "pos": 9
+  },
+  {
+   "t": "Withdrawal",
+   "c": "createdAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 10
+  },
+  {
+   "t": "Withdrawal",
+   "c": "updatedAt",
+   "type": "timestamp without time zone",
+   "udt": "timestamp",
+   "null": false,
+   "def": "CURRENT_TIMESTAMP",
+   "pos": 11
+  },
+  {
+   "t": "testimonials",
+   "c": "id",
+   "type": "uuid",
+   "udt": "uuid",
+   "null": false,
+   "def": "gen_random_uuid()",
+   "pos": 1
+  },
+  {
+   "t": "testimonials",
+   "c": "name",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 2
+  },
+  {
+   "t": "testimonials",
+   "c": "role",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 3
+  },
+  {
+   "t": "testimonials",
+   "c": "quote",
+   "type": "text",
+   "udt": "text",
+   "null": false,
+   "def": null,
+   "pos": 4
+  },
+  {
+   "t": "testimonials",
+   "c": "avatar_initial",
+   "type": "character",
+   "udt": "bpchar",
+   "null": true,
+   "def": null,
+   "pos": 5
+  },
+  {
+   "t": "testimonials",
+   "c": "rating",
+   "type": "smallint",
+   "udt": "int2",
+   "null": true,
+   "def": "5",
+   "pos": 6
+  },
+  {
+   "t": "testimonials",
+   "c": "is_example",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 7
+  },
+  {
+   "t": "testimonials",
+   "c": "is_featured",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "false",
+   "pos": 8
+  },
+  {
+   "t": "testimonials",
+   "c": "is_published",
+   "type": "boolean",
+   "udt": "bool",
+   "null": true,
+   "def": "true",
+   "pos": 9
+  },
+  {
+   "t": "testimonials",
+   "c": "display_order",
+   "type": "smallint",
+   "udt": "int2",
+   "null": true,
+   "def": "0",
+   "pos": 10
+  },
+  {
+   "t": "testimonials",
+   "c": "created_at",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 11
+  },
+  {
+   "t": "testimonials",
+   "c": "updated_at",
+   "type": "timestamp with time zone",
+   "udt": "timestamptz",
+   "null": true,
+   "def": "now()",
+   "pos": 12
+  }
+ ],
+ "constraints": [
+  {
+   "t": "AICorrection",
+   "name": "AICorrection_cachedFromPoolId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"cachedFromPoolId\") REFERENCES \"DirectCorrectionPool\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "AICorrection",
+   "name": "AICorrection_mode_check",
+   "type": "c",
+   "def": "CHECK (((mode)::text = ANY ((ARRAY['SUBMISSION'::character varying, 'DIRECT'::character varying])::text[])))"
+  },
+  {
+   "t": "AICorrection",
+   "name": "AICorrection_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "AICorrection",
+   "name": "fk_ai_correction_subject",
+   "type": "f",
+   "def": "FOREIGN KEY (\"subjectId\") REFERENCES \"Subject\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "AICorrection",
+   "name": "fk_ai_correction_user",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "AdminAuditLog",
+   "name": "AdminAuditLog_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "AdminAuditLog",
+   "name": "fk_admin_audit_log_user",
+   "type": "f",
+   "def": "FOREIGN KEY (\"adminId\") REFERENCES \"User\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "BlogCategory",
+   "name": "BlogCategory_name_key",
+   "type": "u",
+   "def": "UNIQUE (name)"
+  },
+  {
+   "t": "BlogCategory",
+   "name": "BlogCategory_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "BlogCategory",
+   "name": "BlogCategory_slug_key",
+   "type": "u",
+   "def": "UNIQUE (slug)"
+  },
+  {
+   "t": "BlogComment",
+   "name": "BlogComment_parent_id_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (parent_id) REFERENCES \"BlogComment\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "BlogComment",
+   "name": "BlogComment_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "BlogComment",
+   "name": "BlogComment_post_id_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (post_id) REFERENCES \"BlogPost\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_slug_key",
+   "type": "u",
+   "def": "UNIQUE (slug)"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_reviewedBy_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"reviewedBy\") REFERENCES \"User\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_status_check",
+   "type": "c",
+   "def": "CHECK ((status = ANY (ARRAY['PENDING'::text, 'APPROVED'::text, 'REJECTED'::text])))"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_userId_key",
+   "type": "u",
+   "def": "UNIQUE (\"userId\")"
+  },
+  {
+   "t": "CreditPack",
+   "name": "CreditPack_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id)"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_validatedBy_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"validatedBy\") REFERENCES \"User\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "DailyActivity",
+   "name": "DailyActivity_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "DailyActivity",
+   "name": "fk_daily_activity_user",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "name": "DirectCorrectionPool_generatedByUserId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"generatedByUserId\") REFERENCES \"User\"(id)"
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "name": "DirectCorrectionPool_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "name": "DirectCorrectionPool_subjectId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"subjectId\") REFERENCES \"Subject\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "DirectCorrectionSeen",
+   "name": "DirectCorrectionSeen_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (\"userId\", \"poolId\")"
+  },
+  {
+   "t": "DirectCorrectionSeen",
+   "name": "DirectCorrectionSeen_poolId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"poolId\") REFERENCES \"DirectCorrectionPool\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "DirectCorrectionSeen",
+   "name": "DirectCorrectionSeen_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "EmailVerification",
+   "name": "EmailVerification_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "EmailVerification",
+   "name": "EmailVerification_token_key",
+   "type": "u",
+   "def": "UNIQUE (token)"
+  },
+  {
+   "t": "ExamenBlanc",
+   "name": "ExamenBlanc_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "ExamenBlanc",
+   "name": "ExamenBlanc_subjectId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"subjectId\") REFERENCES \"Subject\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "ExamenBlanc",
+   "name": "ExamenBlanc_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id)"
+  },
+  {
+   "t": "MerchantPhone",
+   "name": "MerchantPhone_operator_check",
+   "type": "c",
+   "def": "CHECK ((operator = ANY (ARRAY['mvola'::text, 'orange'::text, 'airtel'::text])))"
+  },
+  {
+   "t": "MerchantPhone",
+   "name": "MerchantPhone_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "Notification",
+   "name": "Notification_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "Notification",
+   "name": "Notification_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "PasswordReset",
+   "name": "PasswordReset_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "PasswordReset",
+   "name": "PasswordReset_token_key",
+   "type": "u",
+   "def": "UNIQUE (token)"
+  },
+  {
+   "t": "Purchase",
+   "name": "Purchase_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "Purchase",
+   "name": "Purchase_subjectId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"subjectId\") REFERENCES \"Subject\"(id)"
+  },
+  {
+   "t": "Purchase",
+   "name": "Purchase_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id)"
+  },
+  {
+   "t": "Purchase",
+   "name": "check_amount_ar_positive",
+   "type": "c",
+   "def": "CHECK ((\"amountAr\" >= 0))"
+  },
+  {
+   "t": "QuestionExamen",
+   "name": "QuestionExamen_examenId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"examenId\") REFERENCES \"ExamenBlanc\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "QuestionExamen",
+   "name": "QuestionExamen_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "ReferralCommission",
+   "name": "ReferralCommission_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "ReferralCommission",
+   "name": "ReferralCommission_referredId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"referredId\") REFERENCES \"User\"(id)"
+  },
+  {
+   "t": "ReferralCommission",
+   "name": "ReferralCommission_referrerId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"referrerId\") REFERENCES \"User\"(id)"
+  },
+  {
+   "t": "Subject",
+   "name": "Subject_authorId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"authorId\") REFERENCES \"User\"(id)"
+  },
+  {
+   "t": "Subject",
+   "name": "Subject_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "Subject",
+   "name": "Subject_reviewerId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"reviewerId\") REFERENCES \"User\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "Subject",
+   "name": "Subject_submissionId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"submissionId\") REFERENCES \"SubjectSubmission\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "Subject",
+   "name": "check_prix_positive",
+   "type": "c",
+   "def": "CHECK ((prix >= 0))"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "SubjectDownload_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "SubjectDownload_watermarkCode_key",
+   "type": "u",
+   "def": "UNIQUE (\"watermarkCode\")"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "fk_subject_download_subject",
+   "type": "f",
+   "def": "FOREIGN KEY (\"subjectId\") REFERENCES \"Subject\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "fk_subject_download_user",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "SubjectImage",
+   "name": "SubjectImage_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "SubjectImage",
+   "name": "SubjectImage_submissionId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"submissionId\") REFERENCES \"SubjectSubmission\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "SubjectImage",
+   "name": "SubjectImage_url_key",
+   "type": "u",
+   "def": "UNIQUE (url)"
+  },
+  {
+   "t": "SubjectLog",
+   "name": "SubjectLog_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "SubjectLog",
+   "name": "SubjectLog_subjectId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"subjectId\") REFERENCES \"Subject\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+  },
+  {
+   "t": "SubjectLog",
+   "name": "SubjectLog_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON UPDATE CASCADE ON DELETE CASCADE"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "SubjectSubmission_authorId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"authorId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "SubjectSubmission_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "SubjectSubmission_reviewerId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"reviewerId\") REFERENCES \"User\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "SystemSetting",
+   "name": "SystemSetting_key_key",
+   "type": "u",
+   "def": "UNIQUE (key)"
+  },
+  {
+   "t": "SystemSetting",
+   "name": "SystemSetting_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "SystemSetting",
+   "name": "SystemSetting_type_check",
+   "type": "c",
+   "def": "CHECK ((type = ANY (ARRAY['string'::text, 'number'::text, 'boolean'::text, 'json'::text])))"
+  },
+  {
+   "t": "Transaction",
+   "name": "Transaction_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "Transaction",
+   "name": "fk_transaction_user",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "User",
+   "name": "User_email_key",
+   "type": "u",
+   "def": "UNIQUE (email)"
+  },
+  {
+   "t": "User",
+   "name": "User_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "User",
+   "name": "User_referredByUserId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"referredByUserId\") REFERENCES \"User\"(id) ON DELETE SET NULL"
+  },
+  {
+   "t": "User",
+   "name": "User_securitySessionTimeoutMinutes_check",
+   "type": "c",
+   "def": "CHECK (((\"securitySessionTimeoutMinutes\" >= 15) AND (\"securitySessionTimeoutMinutes\" <= 1440)))"
+  },
+  {
+   "t": "User",
+   "name": "check_balance_ar_positive",
+   "type": "c",
+   "def": "CHECK ((\"balanceAr\" >= 0))"
+  },
+  {
+   "t": "User",
+   "name": "user_balance_ar_positive",
+   "type": "c",
+   "def": "CHECK ((\"balanceAr\" >= 0))"
+  },
+  {
+   "t": "UserPhone",
+   "name": "UserPhone_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "UserPhone",
+   "name": "UserPhone_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "UserPhone",
+   "name": "UserPhone_userId_phone_key",
+   "type": "u",
+   "def": "UNIQUE (\"userId\", phone)"
+  },
+  {
+   "t": "UserReferral",
+   "name": "UserReferral_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "UserReferral",
+   "name": "UserReferral_referredUserId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"referredUserId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "UserReferral",
+   "name": "UserReferral_referrerUserId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"referrerUserId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "UserReferral",
+   "name": "UserReferral_referrer_not_referred",
+   "type": "c",
+   "def": "CHECK ((\"referrerUserId\" <> \"referredUserId\"))"
+  },
+  {
+   "t": "UserReferral",
+   "name": "UserReferral_status_check",
+   "type": "c",
+   "def": "CHECK ((status = ANY (ARRAY['PENDING'::text, 'COMPLETED'::text, 'CANCELED'::text])))"
+  },
+  {
+   "t": "Wishlist",
+   "name": "Wishlist_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "Wishlist",
+   "name": "Wishlist_subjectId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"subjectId\") REFERENCES \"Subject\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "Wishlist",
+   "name": "Wishlist_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_userId_fkey",
+   "type": "f",
+   "def": "FOREIGN KEY (\"userId\") REFERENCES \"User\"(id) ON DELETE CASCADE"
+  },
+  {
+   "t": "testimonials",
+   "name": "testimonials_pkey",
+   "type": "p",
+   "def": "PRIMARY KEY (id)"
+  },
+  {
+   "t": "testimonials",
+   "name": "testimonials_rating_check",
+   "type": "c",
+   "def": "CHECK (((rating >= 1) AND (rating <= 5)))"
+  }
+ ],
+ "indexes": [
+  {
+   "t": "AICorrection",
+   "name": "AICorrection_pkey",
+   "def": "CREATE UNIQUE INDEX \"AICorrection_pkey\" ON public.\"AICorrection\" USING btree (id)"
+  },
+  {
+   "t": "AICorrection",
+   "name": "idx_ai_correction_subject",
+   "def": "CREATE INDEX idx_ai_correction_subject ON public.\"AICorrection\" USING btree (\"subjectId\", \"createdAt\" DESC)"
+  },
+  {
+   "t": "AICorrection",
+   "name": "idx_ai_correction_user",
+   "def": "CREATE INDEX idx_ai_correction_user ON public.\"AICorrection\" USING btree (\"userId\", \"createdAt\" DESC)"
+  },
+  {
+   "t": "AICorrection",
+   "name": "idx_ai_correction_user_subject_mode",
+   "def": "CREATE INDEX idx_ai_correction_user_subject_mode ON public.\"AICorrection\" USING btree (\"userId\", \"subjectId\", mode, \"createdAt\" DESC)"
+  },
+  {
+   "t": "AdminAuditLog",
+   "name": "AdminAuditLog_pkey",
+   "def": "CREATE UNIQUE INDEX \"AdminAuditLog_pkey\" ON public.\"AdminAuditLog\" USING btree (id)"
+  },
+  {
+   "t": "AdminAuditLog",
+   "name": "idx_admin_audit_action",
+   "def": "CREATE INDEX idx_admin_audit_action ON public.\"AdminAuditLog\" USING btree (action, \"createdAt\" DESC)"
+  },
+  {
+   "t": "AdminAuditLog",
+   "name": "idx_admin_audit_admin",
+   "def": "CREATE INDEX idx_admin_audit_admin ON public.\"AdminAuditLog\" USING btree (\"adminId\", \"createdAt\" DESC)"
+  },
+  {
+   "t": "AdminAuditLog",
+   "name": "idx_admin_audit_target",
+   "def": "CREATE INDEX idx_admin_audit_target ON public.\"AdminAuditLog\" USING btree (\"targetType\", \"targetId\", \"createdAt\" DESC)"
+  },
+  {
+   "t": "BlogCategory",
+   "name": "BlogCategory_name_key",
+   "def": "CREATE UNIQUE INDEX \"BlogCategory_name_key\" ON public.\"BlogCategory\" USING btree (name)"
+  },
+  {
+   "t": "BlogCategory",
+   "name": "BlogCategory_pkey",
+   "def": "CREATE UNIQUE INDEX \"BlogCategory_pkey\" ON public.\"BlogCategory\" USING btree (id)"
+  },
+  {
+   "t": "BlogCategory",
+   "name": "BlogCategory_slug_key",
+   "def": "CREATE UNIQUE INDEX \"BlogCategory_slug_key\" ON public.\"BlogCategory\" USING btree (slug)"
+  },
+  {
+   "t": "BlogComment",
+   "name": "BlogComment_pkey",
+   "def": "CREATE UNIQUE INDEX \"BlogComment_pkey\" ON public.\"BlogComment\" USING btree (id)"
+  },
+  {
+   "t": "BlogComment",
+   "name": "idx_blog_comment_approved",
+   "def": "CREATE INDEX idx_blog_comment_approved ON public.\"BlogComment\" USING btree (is_approved)"
+  },
+  {
+   "t": "BlogComment",
+   "name": "idx_blog_comment_parent",
+   "def": "CREATE INDEX idx_blog_comment_parent ON public.\"BlogComment\" USING btree (parent_id)"
+  },
+  {
+   "t": "BlogComment",
+   "name": "idx_blog_comment_post",
+   "def": "CREATE INDEX idx_blog_comment_post ON public.\"BlogComment\" USING btree (post_id)"
+  },
+  {
+   "t": "BlogComment",
+   "name": "idx_blog_comment_user",
+   "def": "CREATE INDEX idx_blog_comment_user ON public.\"BlogComment\" USING btree (user_id)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_author_id_idx",
+   "def": "CREATE INDEX \"BlogPost_author_id_idx\" ON public.\"BlogPost\" USING btree (author_id)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_category_idx",
+   "def": "CREATE INDEX \"BlogPost_category_idx\" ON public.\"BlogPost\" USING btree (category)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_is_featured_idx",
+   "def": "CREATE INDEX \"BlogPost_is_featured_idx\" ON public.\"BlogPost\" USING btree (is_featured)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_is_published_idx",
+   "def": "CREATE INDEX \"BlogPost_is_published_idx\" ON public.\"BlogPost\" USING btree (is_published)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_pkey",
+   "def": "CREATE UNIQUE INDEX \"BlogPost_pkey\" ON public.\"BlogPost\" USING btree (id)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_slug_idx",
+   "def": "CREATE INDEX \"BlogPost_slug_idx\" ON public.\"BlogPost\" USING btree (slug)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "BlogPost_slug_key",
+   "def": "CREATE UNIQUE INDEX \"BlogPost_slug_key\" ON public.\"BlogPost\" USING btree (slug)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "idx_blog_post_author",
+   "def": "CREATE INDEX idx_blog_post_author ON public.\"BlogPost\" USING btree (author_id)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "idx_blog_post_category",
+   "def": "CREATE INDEX idx_blog_post_category ON public.\"BlogPost\" USING btree (category)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "idx_blog_post_featured",
+   "def": "CREATE INDEX idx_blog_post_featured ON public.\"BlogPost\" USING btree (is_featured)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "idx_blog_post_published",
+   "def": "CREATE INDEX idx_blog_post_published ON public.\"BlogPost\" USING btree (is_published)"
+  },
+  {
+   "t": "BlogPost",
+   "name": "idx_blog_post_slug",
+   "def": "CREATE INDEX idx_blog_post_slug ON public.\"BlogPost\" USING btree (slug)"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_createdAt_idx",
+   "def": "CREATE INDEX \"ContributorApplication_createdAt_idx\" ON public.\"ContributorApplication\" USING btree (\"createdAt\" DESC)"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_pkey",
+   "def": "CREATE UNIQUE INDEX \"ContributorApplication_pkey\" ON public.\"ContributorApplication\" USING btree (id)"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_status_idx",
+   "def": "CREATE INDEX \"ContributorApplication_status_idx\" ON public.\"ContributorApplication\" USING btree (status)"
+  },
+  {
+   "t": "ContributorApplication",
+   "name": "ContributorApplication_userId_key",
+   "def": "CREATE UNIQUE INDEX \"ContributorApplication_userId_key\" ON public.\"ContributorApplication\" USING btree (\"userId\")"
+  },
+  {
+   "t": "CreditPack",
+   "name": "CreditPack_pkey",
+   "def": "CREATE UNIQUE INDEX \"CreditPack_pkey\" ON public.\"CreditPack\" USING btree (id)"
+  },
+  {
+   "t": "CreditPack",
+   "name": "idx_credit_pack_active",
+   "def": "CREATE INDEX idx_credit_pack_active ON public.\"CreditPack\" USING btree (\"isActive\")"
+  },
+  {
+   "t": "CreditPack",
+   "name": "idx_credit_pack_order",
+   "def": "CREATE INDEX idx_credit_pack_order ON public.\"CreditPack\" USING btree (\"sortOrder\")"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_pkey",
+   "def": "CREATE UNIQUE INDEX \"CreditTransaction_pkey\" ON public.\"CreditTransaction\" USING btree (id)"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_senderCode_idx",
+   "def": "CREATE INDEX \"CreditTransaction_senderCode_idx\" ON public.\"CreditTransaction\" USING btree (\"senderCode\")"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_status_idx",
+   "def": "CREATE INDEX \"CreditTransaction_status_idx\" ON public.\"CreditTransaction\" USING btree (status)"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_userId_idx",
+   "def": "CREATE INDEX \"CreditTransaction_userId_idx\" ON public.\"CreditTransaction\" USING btree (\"userId\")"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_userId_isDismissed_idx",
+   "def": "CREATE INDEX \"CreditTransaction_userId_isDismissed_idx\" ON public.\"CreditTransaction\" USING btree (\"userId\", \"isDismissed\")"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "CreditTransaction_userId_isRead_idx",
+   "def": "CREATE INDEX \"CreditTransaction_userId_isRead_idx\" ON public.\"CreditTransaction\" USING btree (\"userId\", \"isRead\")"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "idx_credit_transaction_created",
+   "def": "CREATE INDEX idx_credit_transaction_created ON public.\"CreditTransaction\" USING btree (\"createdAt\" DESC)"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "idx_credit_transaction_type",
+   "def": "CREATE INDEX idx_credit_transaction_type ON public.\"CreditTransaction\" USING btree (type)"
+  },
+  {
+   "t": "CreditTransaction",
+   "name": "idx_credit_transaction_user",
+   "def": "CREATE INDEX idx_credit_transaction_user ON public.\"CreditTransaction\" USING btree (\"userId\")"
+  },
+  {
+   "t": "DailyActivity",
+   "name": "DailyActivity_pkey",
+   "def": "CREATE UNIQUE INDEX \"DailyActivity_pkey\" ON public.\"DailyActivity\" USING btree (id)"
+  },
+  {
+   "t": "DailyActivity",
+   "name": "idx_daily_activity_user_date",
+   "def": "CREATE INDEX idx_daily_activity_user_date ON public.\"DailyActivity\" USING btree (\"userId\", date DESC)"
+  },
+  {
+   "t": "DailyActivity",
+   "name": "idx_daily_activity_user_date_type",
+   "def": "CREATE UNIQUE INDEX idx_daily_activity_user_date_type ON public.\"DailyActivity\" USING btree (\"userId\", date, type)"
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "name": "DirectCorrectionPool_pkey",
+   "def": "CREATE UNIQUE INDEX \"DirectCorrectionPool_pkey\" ON public.\"DirectCorrectionPool\" USING btree (id)"
+  },
+  {
+   "t": "DirectCorrectionPool",
+   "name": "DirectCorrectionPool_subjectId_idx",
+   "def": "CREATE INDEX \"DirectCorrectionPool_subjectId_idx\" ON public.\"DirectCorrectionPool\" USING btree (\"subjectId\")"
+  },
+  {
+   "t": "DirectCorrectionSeen",
+   "name": "DirectCorrectionSeen_pkey",
+   "def": "CREATE UNIQUE INDEX \"DirectCorrectionSeen_pkey\" ON public.\"DirectCorrectionSeen\" USING btree (\"userId\", \"poolId\")"
+  },
+  {
+   "t": "EmailVerification",
+   "name": "EmailVerification_pkey",
+   "def": "CREATE UNIQUE INDEX \"EmailVerification_pkey\" ON public.\"EmailVerification\" USING btree (id)"
+  },
+  {
+   "t": "EmailVerification",
+   "name": "EmailVerification_token_key",
+   "def": "CREATE UNIQUE INDEX \"EmailVerification_token_key\" ON public.\"EmailVerification\" USING btree (token)"
+  },
+  {
+   "t": "ExamenBlanc",
+   "name": "ExamenBlanc_pkey",
+   "def": "CREATE UNIQUE INDEX \"ExamenBlanc_pkey\" ON public.\"ExamenBlanc\" USING btree (id)"
+  },
+  {
+   "t": "ExamenBlanc",
+   "name": "ExamenBlanc_subjectId_idx",
+   "def": "CREATE INDEX \"ExamenBlanc_subjectId_idx\" ON public.\"ExamenBlanc\" USING btree (\"subjectId\")"
+  },
+  {
+   "t": "ExamenBlanc",
+   "name": "ExamenBlanc_userId_idx",
+   "def": "CREATE INDEX \"ExamenBlanc_userId_idx\" ON public.\"ExamenBlanc\" USING btree (\"userId\")"
+  },
+  {
+   "t": "MerchantPhone",
+   "name": "MerchantPhone_pkey",
+   "def": "CREATE UNIQUE INDEX \"MerchantPhone_pkey\" ON public.\"MerchantPhone\" USING btree (id)"
+  },
+  {
+   "t": "MerchantPhone",
+   "name": "idx_merchant_phone_active",
+   "def": "CREATE INDEX idx_merchant_phone_active ON public.\"MerchantPhone\" USING btree (\"isActive\")"
+  },
+  {
+   "t": "MerchantPhone",
+   "name": "idx_merchant_phone_default",
+   "def": "CREATE UNIQUE INDEX idx_merchant_phone_default ON public.\"MerchantPhone\" USING btree (operator) WHERE (\"isDefault\" = true)"
+  },
+  {
+   "t": "MerchantPhone",
+   "name": "idx_merchant_phone_operator",
+   "def": "CREATE INDEX idx_merchant_phone_operator ON public.\"MerchantPhone\" USING btree (operator)"
+  },
+  {
+   "t": "Notification",
+   "name": "Notification_pkey",
+   "def": "CREATE UNIQUE INDEX \"Notification_pkey\" ON public.\"Notification\" USING btree (id)"
+  },
+  {
+   "t": "Notification",
+   "name": "idx_notif_type",
+   "def": "CREATE INDEX idx_notif_type ON public.\"Notification\" USING btree (type, \"createdAt\" DESC)"
+  },
+  {
+   "t": "Notification",
+   "name": "idx_notif_user_dismissed",
+   "def": "CREATE INDEX idx_notif_user_dismissed ON public.\"Notification\" USING btree (\"userId\", \"isDismissed\", \"createdAt\" DESC)"
+  },
+  {
+   "t": "Notification",
+   "name": "idx_notif_user_unread",
+   "def": "CREATE INDEX idx_notif_user_unread ON public.\"Notification\" USING btree (\"userId\", \"isRead\") WHERE (\"isDismissed\" = false)"
+  },
+  {
+   "t": "PasswordReset",
+   "name": "PasswordReset_pkey",
+   "def": "CREATE UNIQUE INDEX \"PasswordReset_pkey\" ON public.\"PasswordReset\" USING btree (id)"
+  },
+  {
+   "t": "PasswordReset",
+   "name": "PasswordReset_token_key",
+   "def": "CREATE UNIQUE INDEX \"PasswordReset_token_key\" ON public.\"PasswordReset\" USING btree (token)"
+  },
+  {
+   "t": "Purchase",
+   "name": "Purchase_pkey",
+   "def": "CREATE UNIQUE INDEX \"Purchase_pkey\" ON public.\"Purchase\" USING btree (id)"
+  },
+  {
+   "t": "Purchase",
+   "name": "Purchase_subjectId_idx",
+   "def": "CREATE INDEX \"Purchase_subjectId_idx\" ON public.\"Purchase\" USING btree (\"subjectId\")"
+  },
+  {
+   "t": "Purchase",
+   "name": "Purchase_userId_idx",
+   "def": "CREATE INDEX \"Purchase_userId_idx\" ON public.\"Purchase\" USING btree (\"userId\")"
+  },
+  {
+   "t": "Purchase",
+   "name": "idx_purchase_amount_ar",
+   "def": "CREATE INDEX idx_purchase_amount_ar ON public.\"Purchase\" USING btree (\"amountAr\", \"createdAt\" DESC)"
+  },
+  {
+   "t": "QuestionExamen",
+   "name": "QuestionExamen_examenId_idx",
+   "def": "CREATE INDEX \"QuestionExamen_examenId_idx\" ON public.\"QuestionExamen\" USING btree (\"examenId\")"
+  },
+  {
+   "t": "QuestionExamen",
+   "name": "QuestionExamen_pkey",
+   "def": "CREATE UNIQUE INDEX \"QuestionExamen_pkey\" ON public.\"QuestionExamen\" USING btree (id)"
+  },
+  {
+   "t": "ReferralCommission",
+   "name": "ReferralCommission_pkey",
+   "def": "CREATE UNIQUE INDEX \"ReferralCommission_pkey\" ON public.\"ReferralCommission\" USING btree (id)"
+  },
+  {
+   "t": "Subject",
+   "name": "Subject_authorId_idx",
+   "def": "CREATE INDEX \"Subject_authorId_idx\" ON public.\"Subject\" USING btree (\"authorId\")"
+  },
+  {
+   "t": "Subject",
+   "name": "Subject_pkey",
+   "def": "CREATE UNIQUE INDEX \"Subject_pkey\" ON public.\"Subject\" USING btree (id)"
+  },
+  {
+   "t": "Subject",
+   "name": "idx_subject_examtype",
+   "def": "CREATE INDEX idx_subject_examtype ON public.\"Subject\" USING btree (\"examType\", \"anneeScolaire\")"
+  },
+  {
+   "t": "Subject",
+   "name": "idx_subject_submission_id",
+   "def": "CREATE INDEX idx_subject_submission_id ON public.\"Subject\" USING btree (\"submissionId\")"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "SubjectDownload_pkey",
+   "def": "CREATE UNIQUE INDEX \"SubjectDownload_pkey\" ON public.\"SubjectDownload\" USING btree (id)"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "SubjectDownload_watermarkCode_key",
+   "def": "CREATE UNIQUE INDEX \"SubjectDownload_watermarkCode_key\" ON public.\"SubjectDownload\" USING btree (\"watermarkCode\")"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "idx_subject_download_subject",
+   "def": "CREATE INDEX idx_subject_download_subject ON public.\"SubjectDownload\" USING btree (\"subjectId\", \"downloadedAt\" DESC)"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "idx_subject_download_user",
+   "def": "CREATE INDEX idx_subject_download_user ON public.\"SubjectDownload\" USING btree (\"userId\", \"downloadedAt\" DESC)"
+  },
+  {
+   "t": "SubjectDownload",
+   "name": "idx_subject_download_watermark",
+   "def": "CREATE INDEX idx_subject_download_watermark ON public.\"SubjectDownload\" USING btree (\"watermarkCode\")"
+  },
+  {
+   "t": "SubjectImage",
+   "name": "SubjectImage_pkey",
+   "def": "CREATE UNIQUE INDEX \"SubjectImage_pkey\" ON public.\"SubjectImage\" USING btree (id)"
+  },
+  {
+   "t": "SubjectImage",
+   "name": "SubjectImage_url_key",
+   "def": "CREATE UNIQUE INDEX \"SubjectImage_url_key\" ON public.\"SubjectImage\" USING btree (url)"
+  },
+  {
+   "t": "SubjectImage",
+   "name": "idx_subject_image_author",
+   "def": "CREATE INDEX idx_subject_image_author ON public.\"SubjectImage\" USING btree (\"authorId\")"
+  },
+  {
+   "t": "SubjectImage",
+   "name": "idx_subject_image_submission",
+   "def": "CREATE INDEX idx_subject_image_submission ON public.\"SubjectImage\" USING btree (\"submissionId\")"
+  },
+  {
+   "t": "SubjectLog",
+   "name": "SubjectLog_createdAt_idx",
+   "def": "CREATE INDEX \"SubjectLog_createdAt_idx\" ON public.\"SubjectLog\" USING btree (\"createdAt\")"
+  },
+  {
+   "t": "SubjectLog",
+   "name": "SubjectLog_pkey",
+   "def": "CREATE UNIQUE INDEX \"SubjectLog_pkey\" ON public.\"SubjectLog\" USING btree (id)"
+  },
+  {
+   "t": "SubjectLog",
+   "name": "SubjectLog_subjectId_idx",
+   "def": "CREATE INDEX \"SubjectLog_subjectId_idx\" ON public.\"SubjectLog\" USING btree (\"subjectId\")"
+  },
+  {
+   "t": "SubjectLog",
+   "name": "SubjectLog_userId_idx",
+   "def": "CREATE INDEX \"SubjectLog_userId_idx\" ON public.\"SubjectLog\" USING btree (\"userId\")"
+  },
+  {
+   "t": "SubjectLog",
+   "name": "idx_subjectlog_subjectid",
+   "def": "CREATE INDEX idx_subjectlog_subjectid ON public.\"SubjectLog\" USING btree (\"subjectId\")"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "SubjectSubmission_pkey",
+   "def": "CREATE UNIQUE INDEX \"SubjectSubmission_pkey\" ON public.\"SubjectSubmission\" USING btree (id)"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "idx_submission_author_revision",
+   "def": "CREATE INDEX idx_submission_author_revision ON public.\"SubjectSubmission\" USING btree (\"authorId\", status) WHERE (status = 'REVISION_REQUESTED'::text)"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "idx_submission_author_status",
+   "def": "CREATE INDEX idx_submission_author_status ON public.\"SubjectSubmission\" USING btree (\"authorId\", status, \"createdAt\" DESC)"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "idx_submission_matiere_niveau",
+   "def": "CREATE INDEX idx_submission_matiere_niveau ON public.\"SubjectSubmission\" USING btree (matiere, niveau)"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "idx_submission_status",
+   "def": "CREATE INDEX idx_submission_status ON public.\"SubjectSubmission\" USING btree (status, \"createdAt\" DESC)"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "idx_submission_status_reviewer",
+   "def": "CREATE INDEX idx_submission_status_reviewer ON public.\"SubjectSubmission\" USING btree (status, \"reviewerId\") WHERE (status = ANY (ARRAY['SUBMITTED'::text, 'VALIDATED'::text, 'REJECTED'::text]))"
+  },
+  {
+   "t": "SubjectSubmission",
+   "name": "idx_submission_validated_at",
+   "def": "CREATE INDEX idx_submission_validated_at ON public.\"SubjectSubmission\" USING btree (\"validatedAt\" DESC) WHERE (status = 'VALIDATED'::text)"
+  },
+  {
+   "t": "SystemSetting",
+   "name": "SystemSetting_key_key",
+   "def": "CREATE UNIQUE INDEX \"SystemSetting_key_key\" ON public.\"SystemSetting\" USING btree (key)"
+  },
+  {
+   "t": "SystemSetting",
+   "name": "SystemSetting_pkey",
+   "def": "CREATE UNIQUE INDEX \"SystemSetting_pkey\" ON public.\"SystemSetting\" USING btree (id)"
+  },
+  {
+   "t": "SystemSetting",
+   "name": "idx_system_setting_category",
+   "def": "CREATE INDEX idx_system_setting_category ON public.\"SystemSetting\" USING btree (category)"
+  },
+  {
+   "t": "SystemSetting",
+   "name": "idx_system_setting_key",
+   "def": "CREATE INDEX idx_system_setting_key ON public.\"SystemSetting\" USING btree (key)"
+  },
+  {
+   "t": "Transaction",
+   "name": "Transaction_pkey",
+   "def": "CREATE UNIQUE INDEX \"Transaction_pkey\" ON public.\"Transaction\" USING btree (id)"
+  },
+  {
+   "t": "Transaction",
+   "name": "Transaction_userId_isDismissed_idx",
+   "def": "CREATE INDEX \"Transaction_userId_isDismissed_idx\" ON public.\"Transaction\" USING btree (\"userId\", \"isDismissed\") WHERE (\"isDismissed\" = false)"
+  },
+  {
+   "t": "Transaction",
+   "name": "Transaction_userId_isRead_idx",
+   "def": "CREATE INDEX \"Transaction_userId_isRead_idx\" ON public.\"Transaction\" USING btree (\"userId\", \"isRead\") WHERE (\"isRead\" = false)"
+  },
+  {
+   "t": "Transaction",
+   "name": "idx_transaction_status_created",
+   "def": "CREATE INDEX idx_transaction_status_created ON public.\"Transaction\" USING btree (status, \"createdAt\" DESC)"
+  },
+  {
+   "t": "Transaction",
+   "name": "idx_transaction_type",
+   "def": "CREATE INDEX idx_transaction_type ON public.\"Transaction\" USING btree (type, \"createdAt\" DESC)"
+  },
+  {
+   "t": "Transaction",
+   "name": "idx_transaction_user_created",
+   "def": "CREATE INDEX idx_transaction_user_created ON public.\"Transaction\" USING btree (\"userId\", \"createdAt\" DESC)"
+  },
+  {
+   "t": "Transaction",
+   "name": "idx_transaction_user_unread",
+   "def": "CREATE INDEX idx_transaction_user_unread ON public.\"Transaction\" USING btree (\"userId\", \"isRead\") WHERE ((\"isRead\" = false) AND (\"isDismissed\" = false))"
+  },
+  {
+   "t": "User",
+   "name": "User_email_key",
+   "def": "CREATE UNIQUE INDEX \"User_email_key\" ON public.\"User\" USING btree (email)"
+  },
+  {
+   "t": "User",
+   "name": "User_pkey",
+   "def": "CREATE UNIQUE INDEX \"User_pkey\" ON public.\"User\" USING btree (id)"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_balance_ar",
+   "def": "CREATE INDEX idx_user_balance_ar ON public.\"User\" USING btree (\"balanceAr\") WHERE (\"balanceAr\" > 0)"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_birthdate",
+   "def": "CREATE INDEX idx_user_birthdate ON public.\"User\" USING btree (\"birthDate\")"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_educationLevel",
+   "def": "CREATE INDEX \"idx_user_educationLevel\" ON public.\"User\" USING btree (\"educationLevel\")"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_gradeLevel",
+   "def": "CREATE INDEX \"idx_user_gradeLevel\" ON public.\"User\" USING btree (\"gradeLevel\")"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_nom",
+   "def": "CREATE INDEX idx_user_nom ON public.\"User\" USING btree (nom)"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_prenom",
+   "def": "CREATE INDEX idx_user_prenom ON public.\"User\" USING btree (prenom)"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_profilepicture",
+   "def": "CREATE INDEX idx_user_profilepicture ON public.\"User\" USING btree (\"profilePicture\")"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_pseudo",
+   "def": "CREATE INDEX idx_user_pseudo ON public.\"User\" USING btree (pseudo)"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_referral_code_unique",
+   "def": "CREATE UNIQUE INDEX idx_user_referral_code_unique ON public.\"User\" USING btree (\"referralCode\") WHERE (\"referralCode\" IS NOT NULL)"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_referred_by",
+   "def": "CREATE INDEX idx_user_referred_by ON public.\"User\" USING btree (\"referredByUserId\")"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_region",
+   "def": "CREATE INDEX idx_user_region ON public.\"User\" USING btree (region)"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_security_2fa",
+   "def": "CREATE INDEX idx_user_security_2fa ON public.\"User\" USING btree (\"securityTwoFactorEnabled\")"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_security_settings_updated",
+   "def": "CREATE INDEX idx_user_security_settings_updated ON public.\"User\" USING btree (\"securitySettingsUpdatedAt\")"
+  },
+  {
+   "t": "User",
+   "name": "idx_user_userType",
+   "def": "CREATE INDEX \"idx_user_userType\" ON public.\"User\" USING btree (\"userType\")"
+  },
+  {
+   "t": "UserPhone",
+   "name": "UserPhone_pkey",
+   "def": "CREATE UNIQUE INDEX \"UserPhone_pkey\" ON public.\"UserPhone\" USING btree (id)"
+  },
+  {
+   "t": "UserPhone",
+   "name": "UserPhone_userId_idx",
+   "def": "CREATE INDEX \"UserPhone_userId_idx\" ON public.\"UserPhone\" USING btree (\"userId\")"
+  },
+  {
+   "t": "UserPhone",
+   "name": "UserPhone_userId_phone_key",
+   "def": "CREATE UNIQUE INDEX \"UserPhone_userId_phone_key\" ON public.\"UserPhone\" USING btree (\"userId\", phone)"
+  },
+  {
+   "t": "UserReferral",
+   "name": "UserReferral_pkey",
+   "def": "CREATE UNIQUE INDEX \"UserReferral_pkey\" ON public.\"UserReferral\" USING btree (id)"
+  },
+  {
+   "t": "UserReferral",
+   "name": "idx_user_referral_referred_unique",
+   "def": "CREATE UNIQUE INDEX idx_user_referral_referred_unique ON public.\"UserReferral\" USING btree (\"referredUserId\")"
+  },
+  {
+   "t": "UserReferral",
+   "name": "idx_user_referral_referrer",
+   "def": "CREATE INDEX idx_user_referral_referrer ON public.\"UserReferral\" USING btree (\"referrerUserId\", \"createdAt\" DESC)"
+  },
+  {
+   "t": "Wishlist",
+   "name": "Wishlist_pkey",
+   "def": "CREATE UNIQUE INDEX \"Wishlist_pkey\" ON public.\"Wishlist\" USING btree (id)"
+  },
+  {
+   "t": "Wishlist",
+   "name": "Wishlist_userId_subjectId_key",
+   "def": "CREATE UNIQUE INDEX \"Wishlist_userId_subjectId_key\" ON public.\"Wishlist\" USING btree (\"userId\", \"subjectId\")"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_createdAt_idx",
+   "def": "CREATE INDEX \"Withdrawal_createdAt_idx\" ON public.\"Withdrawal\" USING btree (\"createdAt\")"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_createdAt_month_idx",
+   "def": "CREATE INDEX \"Withdrawal_createdAt_month_idx\" ON public.\"Withdrawal\" USING btree (EXTRACT(month FROM \"createdAt\"), EXTRACT(year FROM \"createdAt\"))"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_paymentMethod_idx",
+   "def": "CREATE INDEX \"Withdrawal_paymentMethod_idx\" ON public.\"Withdrawal\" USING btree (\"paymentMethod\")"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_pkey",
+   "def": "CREATE UNIQUE INDEX \"Withdrawal_pkey\" ON public.\"Withdrawal\" USING btree (id)"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_status_createdAt_idx",
+   "def": "CREATE INDEX \"Withdrawal_status_createdAt_idx\" ON public.\"Withdrawal\" USING btree (status, \"createdAt\")"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_status_idx",
+   "def": "CREATE INDEX \"Withdrawal_status_idx\" ON public.\"Withdrawal\" USING btree (status)"
+  },
+  {
+   "t": "Withdrawal",
+   "name": "Withdrawal_userId_idx",
+   "def": "CREATE INDEX \"Withdrawal_userId_idx\" ON public.\"Withdrawal\" USING btree (\"userId\")"
+  },
+  {
+   "t": "testimonials",
+   "name": "idx_testimonials_landing",
+   "def": "CREATE INDEX idx_testimonials_landing ON public.testimonials USING btree (is_published, display_order) WHERE (is_published = true)"
+  },
+  {
+   "t": "testimonials",
+   "name": "testimonials_pkey",
+   "def": "CREATE UNIQUE INDEX testimonials_pkey ON public.testimonials USING btree (id)"
+  }
+ ],
+ "enums": {
+  "Role": [
+   "ETUDIANT",
+   "CONTRIBUTEUR",
+   "PROFESSEUR",
+   "VERIFICATEUR",
+   "VALIDATEUR",
+   "ADMIN"
+  ],
+  "ExamenType": [
+   "BAC",
+   "BEPC",
+   "CEPE",
+   "BACC",
+   "Concours",
+   "Etablissement",
+   "Autre"
+  ],
+  "Difficulte": [
+   "FACILE",
+   "MOYEN",
+   "DIFFICILE"
+  ],
+  "Langue": [
+   "FRANCAIS",
+   "MALGACHE"
+  ],
+  "Format": [
+   "PDF",
+   "INTERACTIF"
+  ],
+  "Badge": [
+   "GOLD",
+   "AI",
+   "FREE",
+   "INTER"
+  ],
+  "ExamenStatus": [
+   "NOT_STARTED",
+   "IN_PROGRESS",
+   "SUBMITTED",
+   "GRADED"
+  ],
+  "SubmissionStatus": [
+   "PENDING",
+   "UNDER_REVIEW",
+   "REJECTED",
+   "VALIDATED",
+   "PUBLISHED"
+  ],
+  "UserType": [
+   "ETUDIANT",
+   "PROFESSIONNEL",
+   "ENSEIGNANT",
+   "PARENT",
+   "AUTRE"
+  ],
+  "EducationLevel": [
+   "PRIMAIRE",
+   "COLLEGE",
+   "LYCEE",
+   "UNIVERSITE",
+   "FORMATION",
+   "FACULTE",
+   "INSTITUT"
+  ],
+  "GradeLevel": [
+   "11EME",
+   "10EME",
+   "9EME",
+   "8EME",
+   "7EME",
+   "6EME",
+   "5EME",
+   "4EME",
+   "3EME",
+   "SECONDE",
+   "PREMIERE",
+   "TERMINALE",
+   "L1",
+   "L2",
+   "L3",
+   "M1",
+   "M2",
+   "TECH_1",
+   "TECH_2",
+   "TECH_3"
+  ]
+ }
+}
