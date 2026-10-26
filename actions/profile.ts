@@ -37,26 +37,6 @@ async function getAuthenticatedContext(): Promise<AuthenticatedContext> {
   };
 }
 
-function extractProfileStoragePath(profilePicture: string | null | undefined) {
-  if (!profilePicture) {
-    return null;
-  }
-
-  try {
-    const url = new URL(profilePicture);
-    const marker = "/object/public/profiles/";
-    const index = url.pathname.indexOf(marker);
-
-    if (index === -1) {
-      return null;
-    }
-
-    return decodeURIComponent(url.pathname.slice(index + marker.length));
-  } catch {
-    return null;
-  }
-}
-
 async function getProfileByUserId(userId: string) {
   const result = await query('SELECT * FROM "User" WHERE id = $1 LIMIT 1', [
     userId,
@@ -136,7 +116,7 @@ export async function updateCurrentUserProfileAction(data: UpdateProfileData) {
       return {
         success: false,
         error: "Données invalides",
-        details: error.errors.map((issue) => ({
+        details: error.issues.map((issue) => ({
           field: issue.path.join("."),
           message: issue.message,
         })),
@@ -284,124 +264,6 @@ export async function updateCurrentUserSecuritySettingsAction(data: unknown) {
   }
 }
 
-export async function uploadCurrentUserProfilePictureAction(file: File) {
-  const context = await getAuthenticatedContext();
-
-  if ("error" in context) {
-    return { success: false, error: context.error };
-  }
-
-  try {
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-    const maxSize = 5 * 1024 * 1024;
-
-    if (!allowedTypes.includes(file.type)) {
-      return { success: false, error: "Type de fichier non supporté" };
-    }
-
-    if (file.size > maxSize) {
-      return { success: false, error: "Fichier trop volumineux (max 5MB)" };
-    }
-
-    const fileExt = file.name.split(".").pop() || "webp";
-    const fileName = `${context.userId}/profile.${fileExt}`;
-
-    const { error: uploadError } = await context.supabase.storage
-      .from("profiles")
-      .upload(fileName, file, {
-        upsert: true,
-        contentType: file.type,
-      });
-
-    if (uploadError) {
-      logger.apiError("profileImageUpload", uploadError);
-      return { success: false, error: "Erreur lors du téléchargement" };
-    }
-
-    const {
-      data: { publicUrl },
-    } = context.supabase.storage.from("profiles").getPublicUrl(fileName);
-
-    const updateResult = await query(
-      'UPDATE "User" SET "profilePicture" = $1, "updatedAt" = $2 WHERE id = $3 RETURNING *',
-      [publicUrl, new Date().toISOString(), context.userId],
-    );
-
-    const profile = updateResult.rows[0] ?? null;
-
-    if (!profile) {
-      return {
-        success: false,
-        error: "Erreur lors de la mise à jour du profil",
-      };
-    }
-
-    revalidatePath("/profil");
-    revalidatePath(`/profil/${context.userId}`);
-
-    return { success: true, data: profile };
-  } catch (error) {
-    logger.apiError("profile action", error);
-    return { success: false, error: "Erreur serveur" };
-  }
-}
-
-export async function deleteCurrentUserProfilePictureAction() {
-  const context = await getAuthenticatedContext();
-
-  if ("error" in context) {
-    return { success: false, error: context.error };
-  }
-
-  try {
-    const profileResult = await query(
-      'SELECT "profilePicture" FROM "User" WHERE id = $1 LIMIT 1',
-      [context.userId],
-    );
-    const profile = profileResult.rows[0] ?? null;
-
-    if (!profile) {
-      return {
-        success: false,
-        error: "Erreur lors de la récupération du profil",
-      };
-    }
-
-    const storagePath = extractProfileStoragePath(profile?.profilePicture);
-
-    if (storagePath) {
-      const { error: deleteError } = await context.supabase.storage
-        .from("profiles")
-        .remove([storagePath]);
-
-      if (deleteError) {
-        logger.apiError("profileImageDelete", deleteError);
-      }
-    }
-
-    const updateResult = await query(
-      'UPDATE "User" SET "profilePicture" = NULL, "updatedAt" = $1 WHERE id = $2 RETURNING *',
-      [new Date().toISOString(), context.userId],
-    );
-    const updatedProfile = updateResult.rows[0] ?? null;
-
-    if (!updatedProfile) {
-      return {
-        success: false,
-        error: "Erreur lors de la mise à jour du profil",
-      };
-    }
-
-    revalidatePath("/profil");
-    revalidatePath(`/profil/${context.userId}`);
-
-    return { success: true, data: updatedProfile };
-  } catch (error) {
-    logger.apiError("profile action", error);
-    return { success: false, error: "Erreur serveur" };
-  }
-}
-
 // Schema pour la demande de code de changement de mot de passe
 const requestPasswordCodeSchema = z
   .object({
@@ -491,7 +353,7 @@ export async function requestPasswordChangeCodeAction(data: unknown) {
     if (error instanceof z.ZodError)
       return {
         success: false,
-        error: error.errors[0]?.message || "Validation échouée",
+        error: error.issues[0]?.message || "Validation échouée",
       };
     logger.authError("requestPasswordChangeCodeAction", error);
     return { success: false, error: "Erreur lors de l'envoi du code" };
@@ -544,7 +406,7 @@ export async function changeUserPasswordAction(data: unknown) {
     if (error instanceof z.ZodError)
       return {
         success: false,
-        error: error.errors[0]?.message || "Validation échouée",
+        error: error.issues[0]?.message || "Validation échouée",
       };
     logger.authError("changeUserPasswordAction", error);
     return { success: false, error: "Erreur serveur" };

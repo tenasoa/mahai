@@ -11,23 +11,23 @@ import { REGISTER_ROLE_VALUES } from '@/lib/auth-flow'
 function strongPassword() {
   return z.string().superRefine((val, ctx) => {
     if (val.length < 8) {
-      ctx.addIssue({ code: z.ZodIssueCode.too_small, minimum: 8, type: 'string', inclusive: true, message: 'Le mot de passe doit contenir au moins 8 caractères' })
+      ctx.addIssue({ code: 'too_small', minimum: 8, origin: 'string', inclusive: true, input: val, message: 'Le mot de passe doit contenir au moins 8 caractères' })
       return
     }
     if (!/[A-Z]/.test(val)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le mot de passe doit contenir au moins une majuscule' })
+      ctx.addIssue({ code: 'custom', message: 'Le mot de passe doit contenir au moins une majuscule' })
       return
     }
     if (!/[a-z]/.test(val)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le mot de passe doit contenir au moins une minuscule' })
+      ctx.addIssue({ code: 'custom', message: 'Le mot de passe doit contenir au moins une minuscule' })
       return
     }
     if (!/[0-9]/.test(val)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le mot de passe doit contenir au moins un chiffre' })
+      ctx.addIssue({ code: 'custom', message: 'Le mot de passe doit contenir au moins un chiffre' })
       return
     }
     if (!/[^A-Za-z0-9]/.test(val)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Le mot de passe doit contenir au moins un caractère spécial' })
+      ctx.addIssue({ code: 'custom', message: 'Le mot de passe doit contenir au moins un caractère spécial' })
       return
     }
   })
@@ -75,6 +75,8 @@ export const registerSchema = z.object({
 })
 
 export type RegisterFormData = z.infer<typeof registerSchema>
+// Valeurs du formulaire avant le preprocess (établissement, code de parrainage)
+export type RegisterFormInput = z.input<typeof registerSchema>
 
 export const loginSchema = z.object({
   email: z

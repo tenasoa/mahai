@@ -1,7 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { query } from "@/lib/db";
-import { logger } from "@/lib/logger";
 
 const EMAIL_VERIFIED_COOKIE = "mahai-email-verified";
 const ONBOARDING_PENDING_COOKIE = "mahai-onboarding-pending";
@@ -22,11 +20,11 @@ const ADMIN_ROUTES = ["/admin"];
 
 const authRoutes = ["/auth/login", "/auth/register"];
 
-/**
- * Log de debug unifié via le logger structuré (évite console.log en dev).
- */
+// Le proxy tourne aussi sur Cloudflare Workers (OpenNext) : il ne doit importer
+// ni `pg` (@/lib/db) ni @/lib/logger (qui charge Sentry), sinon le middleware
+// plante au chargement dans workerd. Logs de debug via LOG_LEVEL=debug.
 function debugLog(message: string) {
-  logger.debug(message);
+  if (process.env.LOG_LEVEL === "debug") console.warn(message);
 }
 
 export async function proxy(request: NextRequest) {
@@ -104,12 +102,15 @@ export async function proxy(request: NextRequest) {
       );
     }
 
+    // Le rôle ADMIN est vérifié en base par app/admin/layout.tsx (requête SQL),
+    // qui englobe toutes les pages /admin. Ici on ne garde que la revalidation
+    // du jeton, faisable sans accès à la base.
+    //
     // Sécurité : pour les routes admin (et uniquement celles-ci, pour limiter
     // le surcoût réseau), on REVALIDE le JWT auprès de Supabase via getUser().
     // getSession() lit seulement le cookie local : un token révoqué (logout,
     // bannissement, session invalidée) y reste valide jusqu'à son expiration.
     // getUser() confirme côté serveur que la session est toujours active.
-    let adminUser = effectiveUser;
     try {
       const { data: { user: revalidatedUser }, error: revalidationError } =
         await supabase.auth.getUser();
@@ -119,36 +120,11 @@ export async function proxy(request: NextRequest) {
           new URL("/auth/login?redirect=" + encodeURIComponent(pathname), request.url)
         );
       }
-      adminUser = revalidatedUser;
     } catch (error) {
-      logger.error('[Admin Check] getUser() revalidation error', error instanceof Error ? error.message : String(error));
+      console.error('[Admin Check] getUser() revalidation error', error instanceof Error ? error.message : String(error));
       return NextResponse.redirect(
         new URL("/auth/login?redirect=" + encodeURIComponent(pathname), request.url)
       );
-    }
-
-    try {
-      // Utiliser pg directement (contourne les RLS Supabase)
-      const result = await query(
-        `SELECT role FROM "User" WHERE id = $1`,
-        [adminUser.id]
-      );
-
-      const role = result.rows[0]?.role;
-      debugLog(`[Admin Check] Role checked for ${adminUser.id}: ${role}`);
-
-      if (role !== "ADMIN") {
-        debugLog(`[Admin Check] Access denied for ${adminUser.id}, role: ${role}`);
-        return NextResponse.redirect(new URL("/", request.url));
-      }
-
-      debugLog(`[Admin Check] Access granted for ${adminUser.id}`);
-    } catch (error) {
-      // En cas d'erreur DB, refuser l'accès par sécurité. Une panne DB
-      // ne doit jamais ouvrir les routes admin. L'utilisateur est redirigé
-      // vers la landing page.
-      logger.error('[Admin Check] DB error during role verification', error instanceof Error ? error.message : String(error));
-      return NextResponse.redirect(new URL('/', request.url));
     }
   }
 

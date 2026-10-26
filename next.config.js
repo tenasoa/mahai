@@ -1,9 +1,14 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { withSentryConfig } from '@sentry/nextjs'
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Domaine public du bucket R2 des fichiers (lib/storage.ts). Sans lui, les fichiers
+// sont servis par la route /files/… de l'application, déjà couverte par 'self'.
+const filesUrl = process.env.R2_PUBLIC_URL ? new URL(process.env.R2_PUBLIC_URL) : null
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -15,6 +20,10 @@ const nextConfig = {
   // serveur ; sans ceci, Vercel ne les inclut pas dans le bundle serverless.
   outputFileTracingIncludes: {
     '/api/subjects/[id]/pdf': ['./public/fonts/**'],
+    // Sur Cloudflare Workers, `pg` charge la variante « workerd » de pg-cloudflare
+    // (dist/index.js) que le traçage Node de Next ne copie pas (il ne garde que
+    // dist/empty.js). Nécessaire tant que la base reste sur Postgres (avant D1).
+    '/**': ['./node_modules/.pnpm/pg-cloudflare@*/node_modules/pg-cloudflare/**'],
   },
   experimental: {
     serverActions: {
@@ -37,7 +46,8 @@ const nextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "worker-src blob:",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co https://*.public.blob.vercel-storage.com",
+              // supabase.co et vercel-storage.com : anciennes URLs, jusqu'à la copie vers R2
+              `img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co https://*.public.blob.vercel-storage.com${filesUrl ? ` ${filesUrl.origin}` : ''}`,
               "font-src 'self' data:",
               "connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://*.public.blob.vercel-storage.com",
               "frame-ancestors 'none'",
@@ -63,6 +73,7 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.public.blob.vercel-storage.com',
       },
+      ...(filesUrl ? [{ protocol: filesUrl.protocol.slice(0, -1), hostname: filesUrl.hostname }] : []),
     ],
   },
   // Silence turbopack workspace root warning
@@ -86,3 +97,6 @@ export default withSentryConfig(nextConfig, {
     },
   },
 })
+
+// Expose les bindings Cloudflare (R2, D1, KV…) à `next dev` via getCloudflareContext()
+initOpenNextCloudflareForDev()

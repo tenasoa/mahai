@@ -8,7 +8,7 @@ import { useState } from 'react'
 
 const roleSchema = z.object({
   role: z.enum(['ETUDIANT', 'CONTRIBUTEUR', 'PROFESSEUR'], {
-    required_error: 'Veuillez sélectionner un rôle',
+    error: 'Veuillez sélectionner un rôle',
   }),
   schoolLevel: z.string().optional(),
   acceptCGU: z.boolean().refine((val) => val === true, {
