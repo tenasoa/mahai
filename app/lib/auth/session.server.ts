@@ -18,6 +18,18 @@ export async function requireSession(request: Request) {
   return session;
 }
 
+/** Rôles qui peuvent gérer le catalogue. */
+const EDITEURS = new Set(["admin", "moderateur"]);
+
+/** Session d'un admin ou modérateur ; les autres voient une page introuvable. */
+export async function requireEditeur(request: Request) {
+  const session = await requireSession(request);
+  if (!EDITEURS.has(session.user.role ?? "")) {
+    throw new Response("Page introuvable", { status: 404 });
+  }
+  return session;
+}
+
 export { cheminSur } from "./redirection";
 
 const ENTETES_TRANSMIS = [

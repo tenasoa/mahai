@@ -23,6 +23,11 @@
   --color-physique: #ffae6b;
   --color-svt: #7ed99b;
   --color-histoire: #ffd84d;
+  /* Couleurs libres pour les autres matières (choisies dans l'admin) */
+  --color-violet: #b9a3ff;
+  --color-turquoise: #6fd6d0;
+  --color-sable: #e8c99a;
+  --color-citron: #d4e86a;
 
   /* États : toujours doublés d'une icône et d'un libellé */
   --color-juste: #7ed99b;
@@ -45,6 +50,221 @@ body {
 :focus-visible {
   outline: 3px solid var(--color-ink);
   outline-offset: 2px;
+}
+
+/* Énoncés et corrigés (HTML produit par app/lib/contenu/rendu.ts) */
+.contenu {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+.contenu > * + * {
+  margin-top: 0.9em;
+}
+.contenu h1,
+.contenu h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-top: 1.6em;
+}
+.contenu h3,
+.contenu h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 1.3em;
+}
+.contenu :first-child {
+  margin-top: 0;
+}
+.contenu ol,
+.contenu ul {
+  padding-left: 1.4em;
+}
+.contenu ol {
+  list-style: decimal;
+}
+.contenu ul {
+  list-style: disc;
+}
+.contenu li + li {
+  margin-top: 0.4em;
+}
+.contenu a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.contenu blockquote {
+  border-left: 4px solid var(--color-line);
+  padding-left: 1em;
+  color: var(--color-ink-2);
+}
+.contenu code {
+  background: var(--color-soft);
+  border-radius: 6px;
+  padding: 0.1em 0.35em;
+  font-size: 0.92em;
+}
+.contenu table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+.contenu th,
+.contenu td {
+  border: 1px solid var(--color-line);
+  padding: 0.4em 0.7em;
+  text-align: left;
+}
+.contenu .formule {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.2em 0;
+}
+.contenu .tex[data-bloc] {
+  display: block;
+  text-align: center;
+}
+
+.contenu sub,
+.contenu sup {
+  font-size: 0.72em;
+  line-height: 0;
+}
+.contenu .tableau {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.contenu .tableau table {
+  display: table;
+}
+
+/* Structure d'un sujet (lecture) : Exercice → Question → Sous-question */
+.contenu .exercice {
+  border-top: 2px solid var(--color-line);
+  padding-top: 1em;
+}
+.contenu .exercice > header h2 {
+  margin-top: 0;
+}
+.contenu .question {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 0.6em;
+  align-items: start;
+}
+.contenu .question > .numero {
+  font-weight: 700;
+  min-width: 1.4em;
+}
+.contenu .question > .corps > * + * {
+  margin-top: 0.6em;
+}
+
+/* Éditeur (admin) : mêmes styles que la lecture, plus les blocs manipulables */
+.editeur-sujet {
+  outline: none;
+  min-height: 14rem;
+  counter-reset: exercice question;
+}
+.editeur-sujet p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--color-muted);
+  pointer-events: none;
+}
+.editeur-sujet .bloc-exercice,
+.editeur-sujet .bloc-question {
+  border: 2px solid var(--color-line);
+  border-radius: 1.25rem;
+  padding: 0.25rem 0.75rem 0.75rem;
+}
+.editeur-sujet .bloc-exercice {
+  counter-increment: exercice;
+  border-color: var(--color-control);
+}
+.editeur-sujet .bloc-question {
+  counter-increment: question;
+  border-style: dashed;
+}
+.editeur-sujet .contenu-bloc {
+  counter-reset: question;
+}
+.editeur-sujet .contenu-bloc > div > * + * {
+  margin-top: 0.75em;
+}
+.editeur-sujet .entete-bloc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 -0.5rem 0.25rem;
+  user-select: none;
+}
+.editeur-sujet .titre-numero::before {
+  content: "Exercice " counter(exercice);
+}
+.editeur-sujet .question-numero::before {
+  content: counter(question) ".";
+}
+.editeur-sujet .bloc-question .bloc-question .question-numero::before {
+  content: counter(question, lower-alpha) ")";
+}
+.editeur-sujet .bloc-question .bloc-question .bloc-question .question-numero::before {
+  content: counter(question, lower-roman) ")";
+}
+.editeur-sujet .ProseMirror-selectednode > .bloc-exercice,
+.editeur-sujet .ProseMirror-selectednode > .bloc-question {
+  border-color: var(--color-ink);
+}
+.editeur-sujet [data-type="inline-math"],
+.editeur-sujet [data-type="block-math"] {
+  cursor: pointer;
+  border-radius: 6px;
+}
+.editeur-sujet [data-type="inline-math"]:hover,
+.editeur-sujet [data-type="block-math"]:hover {
+  background: var(--color-soft);
+}
+.editeur-sujet [data-type="block-math"] {
+  display: block;
+  text-align: center;
+  padding: 0.3em 0;
+  overflow-x: auto;
+}
+.editeur-sujet table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+.editeur-sujet .selectedCell {
+  background: var(--color-soft);
+}
+.champ-formule {
+  display: block;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+/* Impression / enregistrement en PDF : seulement le sujet */
+@media print {
+  .pas-imprime {
+    display: none !important;
+  }
+  body {
+    font-size: 11pt;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  details > summary {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

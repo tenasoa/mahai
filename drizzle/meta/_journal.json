@@ -15,6 +15,20 @@
       "when": 1795556800079,
       "tag": "0001_limitation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795561626140,
+      "tag": "0002_catalogue",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1795561627708,
+      "tag": "0003_listes_depart",
+      "breakpoints": true
     }
   ]
 }

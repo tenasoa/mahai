@@ -50,6 +50,18 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
 - Limitation des tentatives stockée en base (table `rate_limit`). Les formulaires appellent
   Better Auth via `appelerAuth()` (handler HTTP) et non `auth.api.*`, qui contourne la limite.
 
+## Catalogue et éditeur de sujets
+
+- Sujets : table `sujet` (énoncé et corrigé en **JSON TipTap**), séries et coefficients dans
+  `sujet_serie`. Accès dans `app/lib/catalogue/` ; formulaire vérifié par `lireFormulaireSujet`.
+- Tout document reçu passe par `nettoyerDocument` (`app/lib/document/nettoyer.ts`, liste blanche de
+  nœuds, marques et attributs) avant l'enregistrement. Ajouter un nœud = l'ajouter là, dans
+  `RenduDocument` (lecture élève, sans TipTap) et dans l'éditeur (`app/components/editeur/`).
+- Barème : `points` commun, ou `pointsSeries` (identifiant de série → points) quand il diffère.
+- Formules : KaTeX dessiné **côté navigateur** (trop coûteux en CPU pour un Worker), mhchem pour
+  `\ce{…}` ; saisie visuelle MathLive chargée seulement dans le dialogue de l'admin.
+- Admin sous `/admin` (rôles `admin` et `moderateur`, `requireEditeur`) ; les autres voient un 404.
+
 ## Architecture
 
 - **React Router 8** en mode framework, rendu serveur, sur **Cloudflare Workers** via

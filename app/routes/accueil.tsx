@@ -3,7 +3,14 @@ import { Link } from "react-router";
 import type { Route } from "./+types/accueil";
 import { ButtonLink } from "~/components/ui/Button";
 import { LiensLegaux } from "~/components/ui/LiensLegaux";
-import { MATIERES } from "~/lib/matieres";
+import { getDb } from "~/db/db.server";
+import { chargerListes } from "~/lib/catalogue/catalogue.server";
+import { TUILES } from "~/lib/couleurs";
+
+export async function loader() {
+  const { matieres } = await chargerListes(getDb());
+  return { matieres };
+}
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -22,7 +29,7 @@ const A_VENIR = [
   "Examens blancs chronométrés",
 ];
 
-export default function Accueil() {
+export default function Accueil({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <div className="flex flex-col gap-3">
@@ -40,13 +47,13 @@ export default function Accueil() {
           Choisis une matière
         </h2>
         <ul className="grid grid-cols-2 gap-2.5">
-          {MATIERES.map((m) => (
+          {loaderData.matieres.map((m) => (
             <li key={m.id}>
               <Link
                 to={`/sujets?matiere=${m.id}`}
-                className={`${m.tile} flex min-h-24 items-end rounded-tile p-4 text-base font-bold text-ink`}
+                className={`${TUILES[m.couleur]} flex min-h-24 items-end rounded-tile p-4 text-base font-bold text-ink`}
               >
-                {m.label}
+                {m.nom}
               </Link>
             </li>
           ))}
