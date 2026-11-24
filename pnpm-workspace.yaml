@@ -2,3 +2,6 @@ allowBuilds:
   esbuild: true
   workerd: true
   sharp: false
+
+# Refuse les paquets publiés depuis moins de 24 h (même règle en local et en CI).
+minimumReleaseAge: 1440
