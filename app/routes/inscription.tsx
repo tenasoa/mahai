@@ -4,6 +4,7 @@ import type { Route } from "./+types/inscription";
 import { Button } from "~/components/ui/Button";
 import { Field, FormError } from "~/components/ui/Field";
 import { GoogleButton, Separateur } from "~/components/ui/GoogleButton";
+import { LiensLegaux } from "~/components/ui/LiensLegaux";
 import { getAuth, googleActif } from "~/lib/auth/auth.server";
 import { lireErreur } from "~/lib/auth/erreurs";
 import {
@@ -135,6 +136,8 @@ export default function Inscription({
           Me connecter
         </Link>
       </p>
+
+      <LiensLegaux intro="En créant ton compte, tu acceptes les règles de Mah.ai :" />
     </>
   );
 }

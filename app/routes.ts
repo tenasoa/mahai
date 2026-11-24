@@ -15,6 +15,8 @@ export default [
   layout("routes/_auth.tsx", [
     route("connexion", "routes/connexion.tsx"),
     route("inscription", "routes/inscription.tsx"),
+    route("confidentialite", "routes/confidentialite.tsx"),
+    route("conditions", "routes/conditions.tsx"),
   ]),
   route("connexion/google", "routes/connexion.google.ts"),
   route("deconnexion", "routes/deconnexion.ts"),

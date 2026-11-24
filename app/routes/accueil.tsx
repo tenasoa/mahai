@@ -2,6 +2,7 @@ import { Link } from "react-router";
 
 import type { Route } from "./+types/accueil";
 import { ButtonLink } from "~/components/ui/Button";
+import { LiensLegaux } from "~/components/ui/LiensLegaux";
 import { MATIERES } from "~/lib/matieres";
 
 export function meta({}: Route.MetaArgs) {
@@ -83,6 +84,8 @@ export default function Accueil() {
           ))}
         </ul>
       </section>
+
+      <LiensLegaux />
     </>
   );
 }
