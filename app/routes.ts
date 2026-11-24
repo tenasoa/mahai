@@ -16,6 +16,7 @@ export default [
     route("connexion", "routes/connexion.tsx"),
     route("inscription", "routes/inscription.tsx"),
   ]),
+  route("connexion/google", "routes/connexion.google.ts"),
   route("deconnexion", "routes/deconnexion.ts"),
   route("api/auth/*", "routes/api.auth.$.ts"),
   route("api/sante", "routes/api.sante.ts"),

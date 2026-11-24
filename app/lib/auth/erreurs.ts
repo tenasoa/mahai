@@ -23,6 +23,24 @@ export function messageErreur(code: string | undefined, status?: number): string
   return MESSAGE_PAR_DEFAUT;
 }
 
+/** Erreurs renvoyées dans l'URL (`?error=`) au retour de Google. */
+const MESSAGES_OAUTH: Record<string, string> = {
+  access_denied: "Connexion Google annulée.",
+  unable_to_link_account:
+    "Un compte existe déjà avec cet email. Connecte-toi avec ton mot de passe.",
+  account_already_linked_to_different_user:
+    "Ce compte Google est déjà relié à un autre compte Mah.ai.",
+  email_not_found: "Google n'a pas transmis d'email. Utilise un autre compte.",
+  email_not_verified: "Ton email Google n'est pas vérifié.",
+};
+
+export function messageErreurOAuth(code: string | null): string | undefined {
+  if (!code) return undefined;
+  return (
+    MESSAGES_OAUTH[code] ?? "La connexion avec Google a échoué. Réessaie."
+  );
+}
+
 /** Lit le code d'erreur d'une réponse de Better Auth. */
 export async function lireErreur(reponse: Response): Promise<string> {
   let code: string | undefined;

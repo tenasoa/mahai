@@ -3,3 +3,6 @@ APP_ENV=development
 BETTER_AUTH_URL=http://localhost:5173
 # Générer une valeur aléatoire : node -e "console.log(crypto.randomBytes(32).toString('base64url'))"
 BETTER_AUTH_SECRET=remplacer-par-une-valeur-aleatoire
+# Facultatif, voir docs/google-oauth.md (sans ces deux lignes, pas de bouton Google)
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=

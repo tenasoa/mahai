@@ -3,7 +3,8 @@ import { data, Form, Link, redirect, useNavigation } from "react-router";
 import type { Route } from "./+types/inscription";
 import { Button } from "~/components/ui/Button";
 import { Field, FormError } from "~/components/ui/Field";
-import { getAuth } from "~/lib/auth/auth.server";
+import { GoogleButton, Separateur } from "~/components/ui/GoogleButton";
+import { getAuth, googleActif } from "~/lib/auth/auth.server";
 import { lireErreur } from "~/lib/auth/erreurs";
 import {
   cheminSur,
@@ -18,7 +19,7 @@ export function meta({}: Route.MetaArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const suite = new URL(request.url).searchParams.get("suite");
   if (await getSession(request)) throw redirect(cheminSur(suite));
-  return { suite: cheminSur(suite) };
+  return { suite: cheminSur(suite), google: googleActif() };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -79,6 +80,13 @@ export default function Inscription({
           appareils.
         </p>
       </div>
+
+      {loaderData.google ? (
+        <>
+          <GoogleButton suite={loaderData.suite} />
+          <Separateur />
+        </>
+      ) : null}
 
       <Form method="post" className="flex flex-col gap-4" noValidate>
         <input type="hidden" name="suite" value={loaderData.suite} />

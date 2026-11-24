@@ -3,5 +3,8 @@
 declare namespace Cloudflare {
   interface Env {
     BETTER_AUTH_SECRET: string;
+    /** Connexion Google : facultative, le bouton n'apparaît que si les deux sont posés. */
+    GOOGLE_CLIENT_ID?: string;
+    GOOGLE_CLIENT_SECRET?: string;
   }
 }

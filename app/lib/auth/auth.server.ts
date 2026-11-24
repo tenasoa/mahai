@@ -6,8 +6,22 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "~/db/schema";
 import { hashPassword, verifyPassword } from "./password";
 
+/** Vrai si les identifiants Google sont configurés pour cet environnement. */
+export function googleActif() {
+  return Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+}
+
 function creerAuth() {
   const db = drizzle(env.DB, { schema });
+  const socialProviders = googleActif()
+    ? {
+        google: {
+          clientId: env.GOOGLE_CLIENT_ID!,
+          clientSecret: env.GOOGLE_CLIENT_SECRET!,
+          prompt: "select_account" as const,
+        },
+      }
+    : {};
 
   return betterAuth({
     appName: "Mah.ai",
@@ -22,6 +36,15 @@ function creerAuth() {
       minPasswordLength: 8,
       maxPasswordLength: 128,
       password: { hash: hashPassword, verify: verifyPassword },
+    },
+    socialProviders,
+    account: {
+      accountLinking: {
+        // Un compte email non vérifié n'est jamais rattaché automatiquement à un compte Google
+        // (empêche de « préparer » un compte au nom de quelqu'un d'autre). Valeur par défaut,
+        // écrite ici pour qu'elle reste visible.
+        requireLocalEmailVerified: true,
+      },
     },
     user: {
       additionalFields: {

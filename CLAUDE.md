@@ -42,6 +42,8 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
 - Le rôle (`eleve`, `contributeur`, `etablissement`, `moderateur`, `admin`) n'est jamais modifiable
   par l'utilisateur ; une contrainte CHECK le protège aussi en base.
 - Secret `BETTER_AUTH_SECRET` : `.dev.vars` en local, `wrangler secret put` ailleurs.
+- Connexion Google facultative : active seulement si `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET`
+  sont posés (`googleActif()`). Mise en place : `docs/google-oauth.md`.
 
 ## Architecture
 

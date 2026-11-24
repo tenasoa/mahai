@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { lireErreur, MESSAGE_PAR_DEFAUT, messageErreur } from "./erreurs";
+import {
+  lireErreur,
+  MESSAGE_PAR_DEFAUT,
+  messageErreur,
+  messageErreurOAuth,
+} from "./erreurs";
 import { cheminSur } from "./redirection";
 
 describe("messages d'erreur", () => {
@@ -26,6 +31,18 @@ describe("messages d'erreur", () => {
     expect(await lireErreur(new Response("oups", { status: 500 }))).toBe(
       MESSAGE_PAR_DEFAUT,
     );
+  });
+});
+
+describe("erreurs au retour de Google", () => {
+  it("ne dit rien sans erreur", () => {
+    expect(messageErreurOAuth(null)).toBeUndefined();
+  });
+  it("explique un compte email déjà existant", () => {
+    expect(messageErreurOAuth("unable_to_link_account")).toMatch(/mot de passe/);
+  });
+  it("a un message par défaut", () => {
+    expect(messageErreurOAuth("inconnu")).toMatch(/Google/);
   });
 });
 
