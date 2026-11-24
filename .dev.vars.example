@@ -1,2 +1,5 @@
 # Copier vers .dev.vars (jamais commité) pour le développement local.
 APP_ENV=development
+BETTER_AUTH_URL=http://localhost:5173
+# Générer une valeur aléatoire : node -e "console.log(crypto.randomBytes(32).toString('base64url'))"
+BETTER_AUTH_SECRET=remplacer-par-une-valeur-aleatoire

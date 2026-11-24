@@ -12,5 +12,11 @@ export default [
     route("corriger", "routes/corriger.tsx"),
     route("profil", "routes/profil.tsx"),
   ]),
+  layout("routes/_auth.tsx", [
+    route("connexion", "routes/connexion.tsx"),
+    route("inscription", "routes/inscription.tsx"),
+  ]),
+  route("deconnexion", "routes/deconnexion.ts"),
+  route("api/auth/*", "routes/api.auth.$.ts"),
   route("api/sante", "routes/api.sante.ts"),
 ] satisfies RouteConfig;

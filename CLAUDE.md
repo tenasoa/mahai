@@ -12,11 +12,36 @@ Gestionnaire de paquets : **pnpm** (pas npm ni yarn).
 ```bash
 pnpm dev         # serveur de dev (Vite + runtime Workers local, bindings simulés)
 pnpm typecheck   # wrangler types + react-router typegen + tsc
+pnpm test        # tests unitaires (Vitest)
 pnpm build       # build de production
-pnpm run deploy  # build + wrangler deploy (pas `pnpm deploy`, commande interne de pnpm)
+pnpm run deploy  # build + wrangler deploy en production (pas `pnpm deploy`, commande interne de pnpm)
+pnpm run deploy:preprod  # build + déploiement sur mahai-preprod.tenasoa.workers.dev
+
+pnpm db:generate         # génère une migration SQL dans drizzle/ depuis app/db/schema.ts
+pnpm db:migrate:local    # applique les migrations à la base locale (.wrangler/)
+pnpm db:migrate:preprod  # … à la base D1 mahai-preprod
+pnpm db:migrate:prod     # … à la base D1 mahai (production)
 ```
 
 Sous Windows, lancer `wrangler` depuis PowerShell : c'est là que la connexion OAuth est lue.
+
+Environnements : la racine de `wrangler.jsonc` est la production, `env.preprod` la préprod.
+Toujours tester en préprod (migrations puis déploiement) avant la production.
+
+## Base de données et comptes
+
+- **D1** (SQLite) avec **Drizzle ORM**. Schéma dans `app/db/schema.ts` ; ne jamais modifier une
+  migration déjà appliquée, en générer une nouvelle.
+- **Better Auth** : configuration dans `app/lib/auth/auth.server.ts`, routes HTTP sous
+  `/api/auth/*`. Les écrans `connexion` / `inscription` appellent l'API côté serveur et recopient
+  les cookies (`redirectAvecCookies`).
+- Mots de passe hachés en PBKDF2-SHA256 natif (`app/lib/auth/password.ts`) : le scrypt par défaut
+  est trop coûteux en CPU pour un Worker.
+- `getSession(request)` / `requireSession(request)` dans `app/lib/auth/session.server.ts` pour
+  protéger une route.
+- Le rôle (`eleve`, `contributeur`, `etablissement`, `moderateur`, `admin`) n'est jamais modifiable
+  par l'utilisateur ; une contrainte CHECK le protège aussi en base.
+- Secret `BETTER_AUTH_SECRET` : `.dev.vars` en local, `wrangler secret put` ailleurs.
 
 ## Architecture
 

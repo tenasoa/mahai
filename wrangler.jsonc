@@ -2,8 +2,11 @@
  * Configuration du Worker Mah.ai.
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  *
- * Les ressources (D1, R2, KV, Workers AI, Queues, Durable Objects) seront ajoutées ici
- * au fil des étapes, avec un environnement de préproduction séparé.
+ * Racine = production (mahai.tenasoa.workers.dev).
+ * env.preprod = préproduction (mahai-preprod.tenasoa.workers.dev), avec sa propre base.
+ * En local, `pnpm dev` utilise une D1 locale (.wrangler/state) et les valeurs de .dev.vars.
+ *
+ * Secrets (jamais ici) : BETTER_AUTH_SECRET, via `wrangler secret put` (ajouter --env preprod).
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
@@ -11,12 +14,38 @@
 	"compatibility_date": "2026-11-23",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "./workers/app.ts",
-	// Valeur de production ; en local, .dev.vars la remplace (voir .dev.vars.example).
-	"vars": {
-		"APP_ENV": "production"
-	},
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+
+	"vars": {
+		"APP_ENV": "production",
+		"BETTER_AUTH_URL": "https://mahai.tenasoa.workers.dev"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "mahai",
+			"database_id": "ded14108-214b-493d-adc4-3b3c7d6fede3",
+			"migrations_dir": "drizzle"
+		}
+	],
+
+	"env": {
+		"preprod": {
+			"vars": {
+				"APP_ENV": "preprod",
+				"BETTER_AUTH_URL": "https://mahai-preprod.tenasoa.workers.dev"
+			},
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "mahai-preprod",
+					"database_id": "edef9e24-8503-4952-8bae-ec1d63a98e8c",
+					"migrations_dir": "drizzle"
+				}
+			]
+		}
+	}
 }
