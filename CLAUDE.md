@@ -13,7 +13,7 @@ Gestionnaire de paquets : **pnpm** (pas npm ni yarn).
 pnpm dev         # serveur de dev (Vite + runtime Workers local, bindings simulés)
 pnpm typecheck   # wrangler types + react-router typegen + tsc
 pnpm build       # build de production
-pnpm deploy      # build + wrangler deploy
+pnpm run deploy  # build + wrangler deploy (pas `pnpm deploy`, commande interne de pnpm)
 ```
 
 Sous Windows, lancer `wrangler` depuis PowerShell : c'est là que la connexion OAuth est lue.

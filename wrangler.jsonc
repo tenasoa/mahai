@@ -11,8 +11,9 @@
 	"compatibility_date": "2026-11-23",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "./workers/app.ts",
+	// Valeur de production ; en local, .dev.vars la remplace (voir .dev.vars.example).
 	"vars": {
-		"APP_ENV": "development"
+		"APP_ENV": "production"
 	},
 	"observability": {
 		"enabled": true

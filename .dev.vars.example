@@ -1,0 +1,2 @@
+# Copier vers .dev.vars (jamais commité) pour le développement local.
+APP_ENV=development
