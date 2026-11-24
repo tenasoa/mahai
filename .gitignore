@@ -1,123 +1,20 @@
-# ==========================================
-# Dépendances
-# ==========================================
-node_modules/
-
-# ==========================================
-# Variables d'environnement (SECRETS)
-# ==========================================
+.DS_Store
 .env
-.env.local
-.env.*
-!.env.example
-
-# ==========================================
-# Build Next.js
-# ==========================================
-.next/
-out/
-next-env.d.ts
-
-# ==========================================
-# TypeScript
-# ==========================================
+/node_modules/
 *.tsbuildinfo
 
-# ==========================================
-# Vercel
-# ==========================================
-.vercel/
+# React Router
+/.react-router/
+/build/
 
-# ==========================================
-# Git interne (ancien .git renommé)
-# ==========================================
-.git_disabled/
+# Cloudflare
+.mf
+.wrangler
+.dev.vars*
+worker-configuration.d.ts
 
-# ==========================================
-# Fichiers de test ad-hoc
-# ==========================================
-test-*.js
-test-*.ts
-out.txt
+# Vercel (ancien hébergement)
+.vercel
 
-# ==========================================
-# Config locale d'éditeur/IDE
-# ==========================================
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-.claude/
-.agents/
-.augment/
-.junie/
-.pi/
-.qwen/
-.trae/
-.windsurf/
-skills-lock.json
-
-# Binaires/outils locaux
-stripe.exe
-
-# Artefacts de dev locaux
-sujet.pdf
-mahai-markdown-pdf-solution.txt
-
-# Rapports générés localement
-lint-results.json
-lint_results.txt
-lint_results_utf8.txt
-
-# ==========================================
-# OS
-# ==========================================
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# ==========================================
-# Logs
-# ==========================================
-*.log
-
-# ==========================================
-# Python (si scripts utilitaires)
-# ==========================================
-__pycache__/
-*.pyc
-*.pyo
-.Python
-env/
-venv/
-.venv/
-
-# ==========================================
-# Coverage / Tests
-# ==========================================
-.coverage
-coverage/
-htmlcov/
-.pytest_cache/
-.mypy_cache/
-
-# ==========================================
-# Notes de session, rapports éphémères
-# ==========================================
-# Les rapports d'avancement (SPRINT, AUDIT, REPORT, PROGRESS, COMPLIANCE,
-# SUMMARY, FINAL_*) sont des notes éphémères de session — non versionnés.
-# Pour conserver une note durablement, la renommer sans ces préfixes.
-docs/SPRINT_*.md
-docs/AUDIT_*.md
-docs/*_REPORT.md
-docs/*_PROGRESS.md
-docs/*_COMPLIANCE_*.md
-docs/*_SUMMARY.md
-docs/FINAL_*.md
-docs/plans/*.md
-**/SPRINT_*.md
-**/AUDIT_*.md
-
-# Sentry Config File
-.env.sentry-build-plugin
+!.dev.vars.example
+!.env.example

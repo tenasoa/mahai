@@ -1,0 +1,57 @@
+@import "tailwindcss" source(".");
+
+/*
+ * Identité « Mosaïque » — voir DESIGN.md.
+ * Les couleurs de matières identifient, elles ne servent jamais de bouton.
+ * L'action principale est l'unique pastille sombre (ink) de l'écran.
+ */
+@theme {
+  --font-sans: "Lexend Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Neutres */
+  --color-ink: #17171c;
+  --color-ink-2: #3a3a45;
+  --color-muted: #55555f;
+  --color-control: #8c8c96;
+  --color-line: #e2e2e8;
+  --color-soft: #f4f4f6;
+  --color-surface: #ffffff;
+
+  /* Matières (fond de tuile, toujours avec texte ink) */
+  --color-maths: #8db8ff;
+  --color-francais: #ff9ec4;
+  --color-physique: #ffae6b;
+  --color-svt: #7ed99b;
+  --color-histoire: #ffd84d;
+
+  /* États : toujours doublés d'une icône et d'un libellé */
+  --color-juste: #7ed99b;
+  --color-a-revoir: #ffd84d;
+  --color-erreur: #ff9ec4;
+
+  --radius-tile: 20px;
+  --radius-card: 18px;
+  --radius-chip: 12px;
+}
+
+html,
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

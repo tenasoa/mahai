@@ -1,0 +1,21 @@
+/**
+ * Configuration du Worker Mah.ai.
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ *
+ * Les ressources (D1, R2, KV, Workers AI, Queues, Durable Objects) seront ajoutées ici
+ * au fil des étapes, avec un environnement de préproduction séparé.
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "mahai",
+	"compatibility_date": "2026-11-23",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "./workers/app.ts",
+	"vars": {
+		"APP_ENV": "development"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true
+}
