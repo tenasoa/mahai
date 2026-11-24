@@ -15,6 +15,8 @@ export default [
   layout("routes/_auth.tsx", [
     route("connexion", "routes/connexion.tsx"),
     route("inscription", "routes/inscription.tsx"),
+    route("mot-de-passe-oublie", "routes/mot-de-passe-oublie.tsx"),
+    route("nouveau-mot-de-passe", "routes/nouveau-mot-de-passe.tsx"),
     route("confidentialite", "routes/confidentialite.tsx"),
     route("conditions", "routes/conditions.tsx"),
   ]),

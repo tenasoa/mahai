@@ -5,9 +5,10 @@ import { Button } from "~/components/ui/Button";
 import { Field, FormError } from "~/components/ui/Field";
 import { GoogleButton, Separateur } from "~/components/ui/GoogleButton";
 import { LiensLegaux } from "~/components/ui/LiensLegaux";
-import { getAuth, googleActif } from "~/lib/auth/auth.server";
+import { googleActif } from "~/lib/auth/auth.server";
 import { lireErreur } from "~/lib/auth/erreurs";
 import {
+  appelerAuth,
   cheminSur,
   getSession,
   redirectAvecCookies,
@@ -50,10 +51,12 @@ export async function action({ request }: Route.ActionArgs) {
     );
   }
 
-  const reponse = await getAuth().api.signUpEmail({
-    body: { name, email, password },
-    headers: request.headers,
-    asResponse: true,
+  const reponse = await appelerAuth(request, "/sign-up/email", {
+    name,
+    email,
+    password,
+    // Page d'arrivée après le clic dans l'email de vérification.
+    callbackURL: "/profil?email=verifie",
   });
 
   if (!reponse.ok) {

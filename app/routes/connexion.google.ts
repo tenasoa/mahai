@@ -1,9 +1,9 @@
 import { data, redirect } from "react-router";
 
 import type { Route } from "./+types/connexion.google";
-import { getAuth, googleActif } from "~/lib/auth/auth.server";
+import { googleActif } from "~/lib/auth/auth.server";
 import { cheminSur } from "~/lib/auth/redirection";
-import { redirectAvecCookies } from "~/lib/auth/session.server";
+import { appelerAuth, redirectAvecCookies } from "~/lib/auth/session.server";
 
 /**
  * Démarre la connexion Google depuis un simple formulaire (marche sans JavaScript) :
@@ -16,16 +16,12 @@ export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
   const suite = cheminSur(String(form.get("suite") ?? ""));
 
-  const reponse = await getAuth().api.signInSocial({
-    body: {
-      provider: "google",
-      callbackURL: suite,
-      newUserCallbackURL: suite,
-      errorCallbackURL: "/connexion",
-      disableRedirect: true,
-    },
-    headers: request.headers,
-    asResponse: true,
+  const reponse = await appelerAuth(request, "/sign-in/social", {
+    provider: "google",
+    callbackURL: suite,
+    newUserCallbackURL: suite,
+    errorCallbackURL: "/connexion",
+    disableRedirect: true,
   });
 
   const corps = (await reponse.clone().json().catch(() => null)) as {

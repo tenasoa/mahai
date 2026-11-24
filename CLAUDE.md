@@ -44,6 +44,11 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
 - Secret `BETTER_AUTH_SECRET` : `.dev.vars` en local, `wrangler secret put` ailleurs.
 - Connexion Google facultative : active seulement si `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET`
   sont posés (`googleActif()`). Mise en place : `docs/google-oauth.md`.
+- Emails (mot de passe oublié, confirmation d'email) envoyés par l'API Gmail d'un compte dédié,
+  en arrière-plan (`envoyerEnFond`, `app/lib/email/`). Actifs seulement si les 4 secrets
+  `GMAIL_*` sont posés (`emailActif()`). Mise en place : `docs/gmail-envoi.md`.
+- Limitation des tentatives stockée en base (table `rate_limit`). Les formulaires appellent
+  Better Auth via `appelerAuth()` (handler HTTP) et non `auth.api.*`, qui contourne la limite.
 
 ## Architecture
 

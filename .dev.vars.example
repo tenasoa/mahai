@@ -6,3 +6,8 @@ BETTER_AUTH_SECRET=remplacer-par-une-valeur-aleatoire
 # Facultatif, voir docs/google-oauth.md (sans ces deux lignes, pas de bouton Google)
 # GOOGLE_CLIENT_ID=
 # GOOGLE_CLIENT_SECRET=
+# Facultatif, voir docs/gmail-envoi.md (sans ces lignes, pas d'envoi d'email)
+# GMAIL_CLIENT_ID=
+# GMAIL_CLIENT_SECRET=
+# GMAIL_REFRESH_TOKEN=
+# GMAIL_EXPEDITEUR=

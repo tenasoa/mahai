@@ -1,9 +1,11 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { env } from "cloudflare:workers";
+import { env, waitUntil } from "cloudflare:workers";
 import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "~/db/schema";
+import { emailActif, envoyerEnFond } from "~/lib/email/email.server";
+import { emailReinitialisation, emailVerification } from "~/lib/email/modeles";
 import { hashPassword, verifyPassword } from "./password";
 
 /** Vrai si les identifiants Google sont configurés pour cet environnement. */
@@ -23,6 +25,8 @@ function creerAuth() {
       }
     : {};
 
+  const emails = emailActif();
+
   return betterAuth({
     appName: "Mah.ai",
     baseURL: env.BETTER_AUTH_URL,
@@ -31,12 +35,27 @@ function creerAuth() {
     emailAndPassword: {
       enabled: true,
       autoSignIn: true,
-      // Pas encore d'envoi d'email (il faut un domaine) : vérification désactivée pour l'instant.
+      // La vérification d'email est proposée mais n'empêche pas de se connecter.
       requireEmailVerification: false,
       minPasswordLength: 8,
       maxPasswordLength: 128,
       password: { hash: hashPassword, verify: verifyPassword },
+      sendResetPassword: emails
+        ? async ({ user, url }) =>
+            envoyerEnFond(emailReinitialisation({ email: user.email, prenom: user.name }, url))
+        : undefined,
+      resetPasswordTokenExpiresIn: 60 * 60, // 1 heure
+      revokeSessionsOnPasswordReset: true,
     },
+    emailVerification: emails
+      ? {
+          sendVerificationEmail: async ({ user, url }) =>
+            envoyerEnFond(emailVerification({ email: user.email, prenom: user.name }, url)),
+          sendOnSignUp: true,
+          autoSignInAfterVerification: true,
+          expiresIn: 60 * 60 * 24, // 24 heures
+        }
+      : undefined,
     socialProviders,
     account: {
       accountLinking: {
@@ -62,9 +81,12 @@ function creerAuth() {
       expiresIn: 60 * 60 * 24 * 30, // 30 jours
       updateAge: 60 * 60 * 24, // prolongée au plus une fois par jour
     },
-    rateLimit: { enabled: true },
+    // Compteurs en base : partagés entre toutes les instances du Worker (en mémoire, chaque
+    // instance aurait les siens). Les formulaires passent par le handler HTTP pour en profiter.
+    rateLimit: { enabled: true, storage: "database" },
     advanced: {
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
+      backgroundTasks: { handler: waitUntil },
     },
     telemetry: { enabled: false },
   });

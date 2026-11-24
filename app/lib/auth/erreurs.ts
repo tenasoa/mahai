@@ -12,6 +12,8 @@ const MESSAGES: Record<string, string> = {
   PASSWORD_TOO_SHORT: "Le mot de passe doit faire au moins 8 caractères.",
   PASSWORD_TOO_LONG: "Le mot de passe est trop long (128 caractères maximum).",
   TOO_MANY_REQUESTS: "Trop de tentatives. Réessaie dans une minute.",
+  INVALID_TOKEN: "Ce lien a expiré ou a déjà servi. Demande un nouveau lien.",
+  TOKEN_EXPIRED: "Ce lien a expiré. Demande un nouveau lien.",
 };
 
 export const MESSAGE_PAR_DEFAUT =

@@ -2,11 +2,13 @@ import { data, Form, Link, redirect, useNavigation } from "react-router";
 
 import type { Route } from "./+types/connexion";
 import { Button } from "~/components/ui/Button";
-import { Field, FormError } from "~/components/ui/Field";
+import { Field, FormError, FormSucces } from "~/components/ui/Field";
 import { GoogleButton, Separateur } from "~/components/ui/GoogleButton";
-import { getAuth, googleActif } from "~/lib/auth/auth.server";
+import { googleActif } from "~/lib/auth/auth.server";
 import { lireErreur, messageErreurOAuth } from "~/lib/auth/erreurs";
+import { emailActif } from "~/lib/email/email.server";
 import {
+  appelerAuth,
   cheminSur,
   getSession,
   redirectAvecCookies,
@@ -23,6 +25,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   return {
     suite: cheminSur(suite),
     google: googleActif(),
+    motDePasseOublie: emailActif(),
+    reinitialise: params.has("reinitialise"),
     erreurGoogle: messageErreurOAuth(params.get("error")),
   };
 }
@@ -40,10 +44,10 @@ export async function action({ request }: Route.ActionArgs) {
     );
   }
 
-  const reponse = await getAuth().api.signInEmail({
-    body: { email, password, rememberMe: true },
-    headers: request.headers,
-    asResponse: true,
+  const reponse = await appelerAuth(request, "/sign-in/email", {
+    email,
+    password,
+    rememberMe: true,
   });
 
   if (!reponse.ok) {
@@ -70,6 +74,9 @@ export default function Connexion({
       </div>
 
       {!actionData?.erreur ? <FormError message={loaderData.erreurGoogle} /> : null}
+      {loaderData.reinitialise && !actionData?.erreur ? (
+        <FormSucces message="Mot de passe changé. Connecte-toi avec le nouveau." />
+      ) : null}
 
       {loaderData.google ? (
         <>
@@ -99,6 +106,14 @@ export default function Connexion({
           autoComplete="current-password"
           required
         />
+        {loaderData.motDePasseOublie ? (
+          <Link
+            to="/mot-de-passe-oublie"
+            className="-mt-1 self-end px-2 text-sm font-medium text-ink-2 underline underline-offset-4"
+          >
+            Mot de passe oublié ?
+          </Link>
+        ) : null}
         <Button type="submit" disabled={envoi} className="mt-2 min-h-14 w-full">
           {envoi ? "Connexion…" : "Me connecter"}
         </Button>

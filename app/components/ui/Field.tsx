@@ -42,3 +42,16 @@ export function FormError({ message }: { message?: string }) {
     </p>
   );
 }
+
+/** Message de confirmation de formulaire, annoncé aux lecteurs d'écran. */
+export function FormSucces({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p
+      role="status"
+      className="flex items-start gap-2 rounded-card bg-juste px-4 py-3 text-sm font-medium text-ink"
+    >
+      {message}
+    </p>
+  );
+}

@@ -20,6 +20,34 @@ export async function requireSession(request: Request) {
 
 export { cheminSur } from "./redirection";
 
+const ENTETES_TRANSMIS = [
+  "cookie",
+  "origin",
+  "user-agent",
+  "accept-language",
+  "cf-connecting-ip",
+];
+
+/**
+ * Appelle un point d'entrée de Better Auth en passant par son handler HTTP, comme le ferait le
+ * navigateur. Contrairement à `auth.api.*`, ce chemin applique la limitation des tentatives et
+ * la vérification d'origine.
+ */
+export function appelerAuth(request: Request, chemin: string, corps: unknown) {
+  const headers = new Headers({ "content-type": "application/json" });
+  for (const nom of ENTETES_TRANSMIS) {
+    const valeur = request.headers.get(nom);
+    if (valeur) headers.set(nom, valeur);
+  }
+  return getAuth().handler(
+    new Request(new URL(`/api/auth${chemin}`, request.url), {
+      method: "POST",
+      headers,
+      body: JSON.stringify(corps),
+    }),
+  );
+}
+
 /** Recopie les cookies posés par Better Auth sur une redirection. */
 export function redirectAvecCookies(vers: string, reponse: Response) {
   const headers = new Headers();
