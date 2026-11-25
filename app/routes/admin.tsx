@@ -33,6 +33,9 @@ export default function Admin() {
           <NavLink to="/admin/listes" className={lien}>
             Listes
           </NavLink>
+          <NavLink to="/admin/images" className={lien}>
+            Images
+          </NavLink>
         </nav>
       </header>
       <main className="mx-auto flex max-w-4xl flex-col gap-5 px-5 pt-2 pb-20">

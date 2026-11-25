@@ -29,6 +29,7 @@ export default [
     route("sujets/nouveau", "routes/admin.sujet.tsx", { id: "admin-sujet-nouveau" }),
     route("sujets/:id", "routes/admin.sujet.tsx", { id: "admin-sujet" }),
     route("listes", "routes/admin.listes.tsx"),
+    route("images", "routes/admin.images.tsx"),
   ]),
   route("connexion/google", "routes/connexion.google.ts"),
   route("deconnexion", "routes/deconnexion.ts"),

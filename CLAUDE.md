@@ -67,6 +67,8 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   réglé dans `/admin/listes` ; menu « / » et bouton « Insérer… » (`app/components/editeur/commandes.tsx`).
 - Images : bucket R2 `MEDIAS` (clés `m/<uuid>.<ext>`), envoi par `/admin/medias` (type vérifié par
   les premiers octets, 5 Mo max., compressées en WebP dans le navigateur), lecture par `/medias/*`.
+  `/admin/images` repère les images citées par aucun sujet (brouillons compris) et les supprime
+  (rôle admin, jamais celles envoyées depuis moins de 24 h) : `app/lib/medias/nettoyage*.ts`.
 - Bibliothèques lourdes (Mermaid, highlight.js, MathLive, Excalidraw, WaveDrom, SmilesDrawer) : seulement dans
   `charger.client.ts`, chargées à la demande. Ne rien exécuter au chargement d'un module partagé
   avec le serveur.
