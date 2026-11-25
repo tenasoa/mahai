@@ -192,6 +192,8 @@ export const matiere = sqliteTable(
     ordre: integer("ordre").notNull().default(0),
     /** Outils de l'éditeur proposés pour cette matière (app/lib/document/outils.ts) ; null = tous. */
     outils: text("outils", { mode: "json" }).$type<string[]>(),
+    /** Pictogramme dessiné sur la tuile (app/lib/pictogrammes.ts) ; null = couleur seule. */
+    icone: text("icone"),
   },
   (t) => [check("matiere_couleur_check", dansListe(t.couleur, COULEURS))],
 );

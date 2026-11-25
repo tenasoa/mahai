@@ -35,6 +35,7 @@ import { DialogueDiagramme, type DiagrammeEnCours } from "./DialogueDiagramme";
 import { DialogueGraphique, type GraphiqueEnCours } from "./DialogueGraphique";
 import { DialogueSchema, type SchemaEnCours, type SchemaEnregistre } from "./DialogueSchema";
 import { Chronogramme, KarnaughSujet, Schema } from "./electronique";
+import { ArbreSujet, EchiquierSujet } from "./genetique";
 import { GraphiqueSujet, MoleculeSujet, VariationsSujet } from "./sciences";
 import type { Graphique } from "~/lib/document/graphique";
 import { DialogueFormule, type FormuleEnCours } from "./DialogueFormule";
@@ -63,6 +64,7 @@ export function EditeurRiche({
   placeholder,
   series = [],
   outils = TOUS_LES_OUTILS,
+  surDocument,
 }: {
   name: string;
   initial: Noeud | null;
@@ -70,6 +72,8 @@ export function EditeurRiche({
   placeholder: string;
   series?: SerieEditeur[];
   outils?: OutilId[];
+  /** Appelé à chaque modification (plan et aperçu de l'éditeur sur ordinateur). */
+  surDocument?: (doc: Noeud | null) => void;
 }) {
   const [json, setJson] = useState(() => (initial ? JSON.stringify(initial) : ""));
   const [formule, setFormule] = useState<FormuleEnCours | null>(null);
@@ -84,6 +88,8 @@ export function EditeurRiche({
   // L'éditeur est créé une seule fois : il lit les valeurs courantes par des références.
   const outilsRef = useRef(outils);
   outilsRef.current = outils;
+  const surDocumentRef = useRef(surDocument);
+  surDocumentRef.current = surDocument;
   const menuRef = useRef({ menu, actif });
   menuRef.current = { menu, actif };
   const contexteRef = useRef<ContexteCommande | null>(null);
@@ -131,6 +137,8 @@ export function EditeurRiche({
       GraphiqueSujet.configure({ ouvrir: (attrs, pos) => setGraphique({ attrs, pos }) }),
       VariationsSujet,
       MoleculeSujet,
+      ArbreSujet,
+      EchiquierSujet,
       CommandeSlash.configure({
         commandes: (requete) => commandesDisponibles(outilsRef.current, requete),
         executer: (c) => {
@@ -164,7 +172,11 @@ export function EditeurRiche({
     editorProps: {
       attributes: { class: "contenu editeur-sujet", "aria-label": libelle, "aria-multiline": "true" },
     },
-    onUpdate: ({ editor }) => setJson(editor.isEmpty ? "" : JSON.stringify(editor.getJSON())),
+    onUpdate: ({ editor }) => {
+      const doc = editor.isEmpty ? null : (editor.getJSON() as Noeud);
+      setJson(doc ? JSON.stringify(doc) : "");
+      surDocumentRef.current?.(doc);
+    },
   });
 
   contexteRef.current = editor

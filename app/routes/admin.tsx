@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet, useMatches } from "react-router";
 
 import type { Route } from "./+types/admin";
 import { Logo } from "~/components/ui/Logo";
@@ -20,9 +20,13 @@ const lien = ({ isActive }: { isActive: boolean }) =>
 
 /** Espace de gestion du catalogue (admin et modérateurs). Plus large que l'application. */
 export default function Admin() {
+  const matches = useMatches();
+  // L'éditeur de sujet prend toute la largeur sur ordinateur (plan, éditeur, aperçu).
+  const large = Boolean((matches[matches.length - 1]?.handle as { large?: boolean } | undefined)?.large);
+  const largeur = large ? "max-w-4xl lg:max-w-[96rem] lg:px-8" : "max-w-4xl";
   return (
     <div className="min-h-dvh">
-      <header className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-2">
+      <header className={`mx-auto flex ${largeur} flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-2`}>
         <Link to="/" aria-label="Mah.ai, accueil">
           <Logo />
         </Link>
@@ -38,7 +42,7 @@ export default function Admin() {
           </NavLink>
         </nav>
       </header>
-      <main className="mx-auto flex max-w-4xl flex-col gap-5 px-5 pt-2 pb-20">
+      <main className={`mx-auto flex ${largeur} flex-col gap-5 px-5 pt-2 pb-20`}>
         <Outlet />
       </main>
     </div>

@@ -8,9 +8,11 @@ import {
   type ReactNodeViewProps,
 } from "@tiptap/react";
 
+import { ImageReperes, type Poignees } from "~/components/document/ImageReperes";
 import { dessinerDiagramme } from "~/lib/document/charger.client";
 import { creerColoration } from "~/lib/document/coloration";
 import { ENCADRES, LANGAGES, type GenreEncadre } from "~/lib/document/outils";
+import { MAX_REPERES, normaliserReperes, nouveauRepere, type Repere } from "~/lib/document/reperes";
 import { urlMedia } from "~/lib/medias/medias";
 import { Commandes, Poignee } from "./noeuds";
 
@@ -85,6 +87,8 @@ export function choisirEtInsererImage(editor: Editor, onErreur: (message: string
   input.click();
 }
 
+type Glisse = { i: number; quoi: "point" | "etiquette"; reperes: Repere[] };
+
 function VueImage(props: ReactNodeViewProps) {
   const { cle, alt, largeur, hauteur } = props.node.attrs as {
     cle: string;
@@ -92,6 +96,59 @@ function VueImage(props: ReactNodeViewProps) {
     largeur: number | null;
     hauteur: number | null;
   };
+  const reperes = normaliserReperes(props.node.attrs.reperes);
+  const [edition, setEdition] = useState(false);
+  const [glisse, setGlisse] = useState<Glisse | null>(null);
+  const glisseRef = useRef<Glisse | null>(null);
+  const boite = useRef<HTMLDivElement>(null);
+
+  const enregistrer = (liste: Repere[]) => props.updateAttributes({ reperes: normaliserReperes(liste) });
+  const majRepere = (i: number, partiel: Partial<Repere>) =>
+    enregistrer(reperes.map((r, k) => (k === i ? { ...r, ...partiel } : r)));
+
+  /** Position du pointeur en fraction de l'image. */
+  function position(e: { clientX: number; clientY: number }): [number, number] {
+    const r = boite.current!.getBoundingClientRect();
+    const borne = (v: number) => Math.min(1, Math.max(0, v));
+    return [borne((e.clientX - r.left) / r.width), borne((e.clientY - r.top) / r.height)];
+  }
+  const suivre = (g: Glisse | null) => {
+    glisseRef.current = g;
+    setGlisse(g);
+  };
+
+  const poignees: Poignees = {
+    surClic: (e) => {
+      if (e.button !== 0 || reperes.length >= MAX_REPERES) return;
+      e.preventDefault();
+      const [x, y] = position(e);
+      const liste = [...reperes, nouveauRepere(x, y, reperes)];
+      // Le nouveau repère suit le pointeur tant que le bouton reste enfoncé : on place l'étiquette.
+      boite.current?.setPointerCapture(e.pointerId);
+      suivre({ i: liste.length - 1, quoi: "etiquette", reperes: liste });
+    },
+    surPoignee: (e, i, quoi) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      boite.current?.setPointerCapture(e.pointerId);
+      suivre({ i, quoi, reperes });
+    },
+    surDeplacement: (e) => {
+      const g = glisseRef.current;
+      if (!g) return;
+      const [x, y] = position(e);
+      const partiel = g.quoi === "point" ? { x, y } : { tx: x, ty: y };
+      suivre({ ...g, reperes: g.reperes.map((r, k) => (k === g.i ? { ...r, ...partiel } : r)) });
+    },
+    surFin: () => {
+      const g = glisseRef.current;
+      if (!g) return;
+      suivre(null);
+      enregistrer(g.reperes);
+    },
+  };
+
   return (
     <NodeViewWrapper className="bloc-outil" data-drag-handle="">
       <div className="entete-bloc" contentEditable={false}>
@@ -105,17 +162,70 @@ function VueImage(props: ReactNodeViewProps) {
           aria-label="Description de l'image"
           className={`${champ} flex-1`}
         />
+        <button
+          type="button"
+          onClick={() => setEdition(!edition)}
+          aria-pressed={edition}
+          className="min-h-9 rounded-full bg-soft px-3 text-sm font-medium hover:bg-line"
+        >
+          Repères{reperes.length ? ` (${reperes.length})` : ""}
+        </button>
         <Commandes props={props} libelle="l'image" />
       </div>
-      <img
-        src={urlMedia(cle)}
-        alt={alt}
-        width={largeur ?? undefined}
-        height={hauteur ?? undefined}
-        className="mx-auto h-auto max-w-full"
-        contentEditable={false}
-        draggable={false}
-      />
+      <div contentEditable={false}>
+        {edition || reperes.length ? (
+          <ImageReperes
+            src={urlMedia(cle)}
+            alt={alt}
+            largeur={largeur ?? undefined}
+            hauteur={hauteur ?? undefined}
+            reperes={glisse?.reperes ?? reperes}
+            poignees={edition ? poignees : undefined}
+            conteneur={boite}
+          />
+        ) : (
+          <img
+            src={urlMedia(cle)}
+            alt={alt}
+            width={largeur ?? undefined}
+            height={hauteur ?? undefined}
+            className="mx-auto h-auto max-w-full"
+            draggable={false}
+          />
+        )}
+        {edition ? (
+          <div className="mt-2 flex flex-col gap-2" onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}>
+            <p className="text-xs text-muted">
+              Cliquez sur l'image pour poser un repère (gardez le bouton enfoncé pour placer son étiquette),
+              glissez un point ou une étiquette pour le déplacer. Un numéro dans l'énoncé, le nom dans le corrigé.
+            </p>
+            {reperes.length ? (
+              <ul className="liste-outil flex flex-wrap items-start gap-2">
+                {reperes.map((r, i) => (
+                  <li key={i} className="flex items-center gap-0.5 rounded-full bg-soft py-0.5 pr-0.5 pl-2">
+                    <input
+                      value={r.texte}
+                      onChange={(e) => majRepere(i, { texte: e.target.value })}
+                      aria-label={`Étiquette du repère ${i + 1}`}
+                      maxLength={40}
+                      className="h-8 w-28 min-w-0 rounded-lg border-2 border-line bg-surface px-1.5 text-sm focus:border-ink"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => enregistrer(reperes.filter((_, k) => k !== i))}
+                      aria-label={`Supprimer le repère ${i + 1}`}
+                      title="Supprimer"
+                      className="min-h-8 min-w-8 rounded-full text-sm text-muted hover:bg-line"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </NodeViewWrapper>
   );
 }
@@ -131,6 +241,7 @@ export const ImageSujet = Node.create({
       alt: { default: "" },
       largeur: { default: null },
       hauteur: { default: null },
+      reperes: { default: [] },
     };
   },
   parseHTML() {

@@ -35,4 +35,5 @@ export default [
   route("deconnexion", "routes/deconnexion.ts"),
   route("api/auth/*", "routes/api.auth.$.ts"),
   route("api/sante", "routes/api.sante.ts"),
+  route("api/apercu/:slug", "routes/api.apercu.$slug.ts"),
 ] satisfies RouteConfig;

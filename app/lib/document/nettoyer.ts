@@ -7,9 +7,11 @@
  * contributeurs pourront écrire des sujets.
  */
 
+import { normaliserArbre, normaliserEchiquier } from "./genetique";
 import { normaliserGraphique } from "./graphique";
 import { normaliserKarnaugh } from "./karnaugh";
 import { ENCADRES, IDS_LANGAGES } from "./outils";
+import { normaliserReperes } from "./reperes";
 import { normaliserVariations } from "./variations";
 
 export type Marque = { type: string; attrs?: Record<string, unknown> };
@@ -95,16 +97,18 @@ export const NOEUDS: Record<string, Regle> = {
   },
   /** Question (ou sous-question si elle est dans une question) avec son barème. */
   question: { attrs: bareme },
-  /** Image stockée dans R2 ; supprimée si la clé n'est pas celle d'un envoi. */
+  /** Image stockée dans R2 ; supprimée si la clé n'est pas celle d'un envoi. Repères facultatifs. */
   image: {
     attrs: (a) => {
       const cle = chaine(a?.cle, 80);
       if (!CLE_MEDIA.test(cle)) return null;
+      const reperes = normaliserReperes(a?.reperes);
       return {
         cle,
         alt: chaine(a?.alt, 300).trim(),
         largeur: entier(a?.largeur, 1, 8000) ?? null,
         hauteur: entier(a?.hauteur, 1, 8000) ?? null,
+        ...(reperes.length ? { reperes } : {}),
       };
     },
   },
@@ -151,6 +155,10 @@ export const NOEUDS: Record<string, Regle> = {
       return { smiles, nom: chaine(a?.nom, 200).trim(), carbones: a?.carbones === true };
     },
   },
+  /** Arbre généalogique (SVT). */
+  arbre: { attrs: (a) => normaliserArbre(a) },
+  /** Échiquier de croisement (SVT). */
+  echiquier: { attrs: (a) => normaliserEchiquier(a) },
 };
 
 const MARQUES: Record<string, Regle> = {
@@ -258,6 +266,8 @@ const BLOCS_SANS_TEXTE = new Set([
   "graphique",
   "variations",
   "molecule",
+  "arbre",
+  "echiquier",
 ]);
 
 /** Vrai si le document ne contient ni texte, ni formule, ni bloc (exercice, image, diagramme…). */
@@ -274,6 +284,10 @@ export function texteBrut(n: Noeud): string {
   if (n.type === "text") return n.text ?? "";
   if (n.type === "inlineMath" || n.type === "blockMath") return ` ${String(n.attrs?.latex ?? "")} `;
   if (n.type === "note") return ` ${String(n.attrs?.texte ?? "")} `;
+  if (n.type === "image" && Array.isArray(n.attrs?.reperes)) {
+    const etiquettes = (n.attrs.reperes as { texte?: string }[]).map((r) => r.texte ?? "").join(" ");
+    return ` ${String(n.attrs?.alt ?? "")} ${etiquettes} `;
+  }
   if (n.type === "image" || n.type === "schema" || n.type === "graphique") return ` ${String(n.attrs?.alt ?? "")} `;
   if (n.type === "molecule") return ` ${String(n.attrs?.nom ?? "")} `;
   if (n.type === "exercice") {

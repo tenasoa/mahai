@@ -7,8 +7,10 @@ import { COULEURS, type Couleur } from "~/db/schema";
 import { requireEditeur } from "~/lib/auth/session.server";
 import { chargerListes } from "~/lib/catalogue/catalogue.server";
 import { modifierListe } from "~/lib/catalogue/listes.server";
-import { NOMS_COULEURS, TUILES } from "~/lib/couleurs";
+import { NOMS_COULEURS } from "~/lib/couleurs";
 import { OUTILS, outilsActifs } from "~/lib/document/outils";
+import { Pictogramme, TuileMatiere } from "~/components/ui/Pictogramme";
+import { IDS_PICTOGRAMMES, PICTOGRAMMES, estPictogramme } from "~/lib/pictogrammes";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireEditeur(request);
@@ -35,6 +37,35 @@ function SelectCouleur({ valeur }: { valeur?: Couleur }) {
         </option>
       ))}
     </select>
+  );
+}
+
+/** Pictogramme dessiné sur la tuile de la matière (choix visuel, un seul). */
+function ChoixPictogramme({ valeur }: { valeur?: string | null }) {
+  return (
+    <details className="basis-full">
+      <summary className="cursor-pointer text-sm text-muted">
+        Pictogramme : {estPictogramme(valeur) ? PICTOGRAMMES[valeur] : "aucun"}
+      </summary>
+      <fieldset className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(3rem,1fr))] gap-1.5">
+        <legend className="sr-only">Pictogramme</legend>
+        <label className="flex size-12 cursor-pointer items-center justify-center rounded-xl border-2 border-line text-xs text-muted has-checked:border-ink has-checked:bg-soft has-focus-visible:outline-2">
+          <input type="radio" name="icone" value="" defaultChecked={!estPictogramme(valeur)} className="sr-only" />
+          Aucun
+        </label>
+        {IDS_PICTOGRAMMES.map((id) => (
+          <label
+            key={id}
+            title={PICTOGRAMMES[id]}
+            className="flex size-12 cursor-pointer items-center justify-center rounded-xl border-2 border-line has-checked:border-ink has-checked:bg-soft has-focus-visible:outline-2"
+          >
+            <input type="radio" name="icone" value={id} defaultChecked={valeur === id} className="sr-only" />
+            <Pictogramme id={id} taille={24} />
+            <span className="sr-only">{PICTOGRAMMES[id]}</span>
+          </label>
+        ))}
+      </fieldset>
+    </details>
   );
 }
 
@@ -74,6 +105,7 @@ function Ligne({
   nom,
   ordre,
   couleur,
+  icone = null,
   outils = null,
 }: {
   type: "examen" | "serie" | "matiere";
@@ -81,6 +113,7 @@ function Ligne({
   nom: string;
   ordre: number;
   couleur?: Couleur;
+  icone?: string | null;
   outils?: string[] | null;
 }) {
   return (
@@ -89,7 +122,7 @@ function Ligne({
         <input type="hidden" name="type" value={type} />
         <input type="hidden" name="id" value={id} />
         {couleur ? (
-          <span aria-hidden="true" className={`${TUILES[couleur]} size-8 shrink-0 rounded-[10px]`} />
+          <TuileMatiere couleur={couleur} icone={icone} taille={32} />
         ) : null}
         <input name="nom" defaultValue={nom} required maxLength={60} aria-label="Nom" className={`${champ} flex-1`} />
         <input
@@ -117,6 +150,7 @@ function Ligne({
         >
           Supprimer
         </button>
+        {type === "matiere" ? <ChoixPictogramme valeur={icone} /> : null}
         {type === "matiere" ? <ChoixOutils profil={outils} /> : null}
       </Form>
     </li>
@@ -142,6 +176,7 @@ function Ajout({ type, children }: { type: "examen" | "serie" | "matiere"; child
       <button type="submit" name="intention" value="ajouter" className={`${petit} border-2 border-ink font-bold`}>
         Ajouter
       </button>
+      {type === "matiere" ? <ChoixPictogramme /> : null}
       {type === "matiere" ? <ChoixOutils profil={null} /> : null}
     </Form>
   );
@@ -211,7 +246,7 @@ export default function AdminListes({ loaderData, actionData }: Route.ComponentP
         <h2 className="text-lg font-bold">Matières</h2>
         <ul className="divide-y-2 divide-line">
           {matieres.map((m, i) => (
-            <Ligne key={m.id} type="matiere" id={m.id} nom={m.nom} ordre={i + 1} couleur={m.couleur} outils={m.outils} />
+            <Ligne key={m.id} type="matiere" id={m.id} nom={m.nom} ordre={i + 1} couleur={m.couleur} icone={m.icone} outils={m.outils} />
           ))}
         </ul>
         <Ajout type="matiere" />

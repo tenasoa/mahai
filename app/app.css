@@ -556,6 +556,11 @@ dialog > .ML__keyboard {
   font-size: inherit;
 }
 
+/* Ancres du sommaire : sous la barre d'outils collée en haut (et le bandeau du mode examen) */
+[id^="enonce-"] {
+  scroll-margin-top: 9rem;
+}
+
 /* Impression / enregistrement en PDF : seulement le sujet */
 @media print {
   .pas-imprime {
@@ -788,4 +793,213 @@ table.variations .pointe {
 .molecule figcaption {
   font-size: 0.9em;
   color: var(--color-ink-2);
+}
+
+/* Arbre généalogique */
+.figure-arbre {
+  margin: 1em 0;
+}
+svg.arbre {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  overflow: visible;
+}
+.arbre .symbole {
+  fill: var(--color-surface);
+  stroke: var(--color-ink);
+  stroke-width: 1.6;
+}
+.arbre .contour {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.6;
+}
+.arbre .plein {
+  fill: var(--color-ink);
+}
+.arbre .symbole.plein {
+  stroke: var(--color-ink);
+}
+.arbre .trait {
+  stroke: var(--color-ink);
+  stroke-width: 1.4;
+}
+.arbre text {
+  fill: var(--color-ink);
+  text-anchor: middle;
+  font-size: 12px;
+}
+.arbre .generation {
+  text-anchor: start;
+  font-weight: 700;
+  font-size: 14px;
+}
+.arbre .nom {
+  fill: var(--color-ink-2);
+  font-size: 11px;
+}
+ul.legende-arbre {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4em 1.2em;
+  margin: 0.6em 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9em;
+  color: var(--color-ink-2);
+}
+ul.legende-arbre li {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0;
+}
+.legende-arbre svg {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Échiquier de croisement */
+.contenu table.echiquier,
+table.echiquier {
+  display: table;
+  width: auto;
+  border-collapse: collapse;
+  text-align: center;
+}
+table.echiquier th,
+table.echiquier td {
+  min-width: 4.5em;
+  border: 1px solid var(--color-ink);
+  padding: 0.4em 0.6em;
+  vertical-align: middle;
+  text-align: center;
+}
+table.echiquier th {
+  background: var(--color-soft);
+  font-weight: 700;
+}
+table.echiquier th.coin {
+  font-size: 0.8em;
+  font-weight: 400;
+  /* Diagonale : titre des colonnes en haut à droite, des lignes en bas à gauche. */
+  background:
+    linear-gradient(to top right, transparent calc(50% - 0.5px), var(--color-ink) 50%, transparent calc(50% + 0.5px)),
+    var(--color-soft);
+}
+table.echiquier .nom-colonnes,
+table.echiquier .nom-lignes {
+  display: block;
+  white-space: nowrap;
+}
+table.echiquier .nom-colonnes { text-align: right; padding-left: 1.5em; }
+table.echiquier .nom-lignes { text-align: left; padding-right: 1.5em; margin-top: 0.6em; }
+table.echiquier .gamete {
+  display: block;
+}
+table.echiquier .frequence {
+  display: block;
+  font-size: 0.8em;
+  font-weight: 400;
+  color: var(--color-ink-2);
+}
+.genotype {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.genotype .couple {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* Chromosomes homologues : double trait entre les deux allèles. */
+.genotype .homologue {
+  padding: 0 0.3em;
+  line-height: 1.25;
+}
+.genotype .homologue.haut {
+  border-bottom: 3px double currentColor;
+}
+table.echiquier .phenotype {
+  display: block;
+  margin-top: 0.2em;
+  font-size: 0.9em;
+  color: var(--color-ink-2);
+}
+
+/* Image avec repères */
+.image-reperes {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.image-reperes img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+.image-reperes svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.image-reperes line {
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+}
+.image-reperes .point-repere,
+.image-reperes .etiquette-repere {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+.image-reperes .point-repere {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-ink);
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
+.image-reperes .etiquette-repere {
+  min-width: 1.7em;
+  padding: 0.1em 0.45em;
+  border: 1.5px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+}
+.image-reperes.edition {
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+.image-reperes.edition .point-repere {
+  width: 12px;
+  height: 12px;
+  cursor: move;
+}
+.image-reperes.edition .etiquette-repere {
+  cursor: move;
+}
+
+/* Listes des blocs de l'éditeur (cartes, repères) : pas le style des listes du texte. */
+ul.liste-outil {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+ul.liste-outil li {
+  margin: 0;
 }

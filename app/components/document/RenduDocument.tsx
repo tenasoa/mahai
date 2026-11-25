@@ -4,7 +4,12 @@ import { chargerColoration, dessinerChronogramme, dessinerDiagramme } from "~/li
 import { normaliserKarnaugh } from "~/lib/document/karnaugh";
 import { normaliserGraphique } from "~/lib/document/graphique";
 import { normaliserVariations } from "~/lib/document/variations";
+import { normaliserArbre, normaliserEchiquier } from "~/lib/document/genetique";
+import { normaliserReperes } from "~/lib/document/reperes";
+import { ArbreGenealogique } from "./ArbreGenealogique";
+import { EchiquierCroisement } from "./EchiquierCroisement";
 import { GrilleKarnaugh } from "./GrilleKarnaugh";
+import { ImageReperes } from "./ImageReperes";
 import { Molecule } from "./Molecule";
 import { SvgGraphique } from "./SvgGraphique";
 import { TableauVariations } from "./TableauVariations";
@@ -13,6 +18,7 @@ import { ENCADRES, LANGAGES } from "~/lib/document/outils";
 import { urlMedia } from "~/lib/medias/medias";
 
 import { pointsPour, type Marque, type Noeud } from "~/lib/document/nettoyer";
+import { idExercice, idPartie, idQuestion } from "~/lib/document/plan";
 
 export type SerieAffichee = { id: string; nom: string };
 
@@ -92,15 +98,22 @@ type Contexte = {
   serie: string | null;
   series: SerieAffichee[];
   /** Partagé par tout le document : numéros des documents et notes de bas de page. */
-  compteurs: { documents: number; notes: string[]; prefixe: string };
+  compteurs: { documents: number; notes: string[]; prefixe: string; parties: number };
+  /** Préfixe des ancres du sommaire (« enonce ») ; aucune ancre sans lui. */
+  ancre: string | null;
+  /** Enfant direct du document (seuls ceux-là ont une ancre de partie). */
+  racine: boolean;
+  /** Exercice parent (« exercice-2 »), pour l'ancre de ses questions. */
+  chemin: string | null;
 };
 
 const texteDe = (n: Noeud): string =>
   n.type === "text" ? (n.text ?? "") : (n.content ?? []).map(texteDe).join("");
 
-function enfants(n: Noeud, ctx: Contexte): ReactNode {
+function enfants(n: Noeud, parent: Contexte): ReactNode {
   let indexQuestion = 0;
   let indexExercice = 0;
+  const ctx = parent.racine === (n.type === "doc") ? parent : { ...parent, racine: n.type === "doc" };
   return (n.content ?? []).map((e, i) => {
     let rendu: ReactNode;
     if (e.type === "question") {
@@ -125,7 +138,12 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
     case "heading": {
       const niveau = n.attrs?.level === 3 ? "h3" : n.attrs?.level === 4 ? "h4" : "h2";
       const Balise = niveau;
-      return <Balise>{enfants(n, ctx)}</Balise>;
+      // Même règle que planDocument : titres de niveau 2, non vides, au premier niveau.
+      const id =
+        ctx.ancre && ctx.racine && niveau === "h2" && texteDe(n).trim()
+          ? `${ctx.ancre}-${idPartie(++ctx.compteurs.parties)}`
+          : undefined;
+      return <Balise id={id}>{enfants(n, { ...ctx, racine: false })}</Balise>;
     }
     case "bulletList":
       return <ul>{enfants(n, ctx)}</ul>;
@@ -146,6 +164,18 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
     case "image": {
       const largeur = Number(n.attrs?.largeur) || undefined;
       const hauteur = Number(n.attrs?.hauteur) || undefined;
+      const reperes = normaliserReperes(n.attrs?.reperes);
+      if (reperes.length) {
+        return (
+          <ImageReperes
+            src={urlMedia(String(n.attrs?.cle))}
+            alt={String(n.attrs?.alt ?? "")}
+            largeur={largeur}
+            hauteur={hauteur}
+            reperes={reperes}
+          />
+        );
+      }
       return (
         <img
           src={urlMedia(String(n.attrs?.cle))}
@@ -255,6 +285,18 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
           carbones={n.attrs?.carbones === true}
         />
       );
+    case "arbre":
+      return (
+        <figure className="figure-arbre">
+          <ArbreGenealogique arbre={normaliserArbre(n.attrs)} />
+        </figure>
+      );
+    case "echiquier":
+      return (
+        <div className="tableau">
+          <EchiquierCroisement e={normaliserEchiquier(n.attrs)} />
+        </div>
+      );
     case "horizontalRule":
       return <hr />;
     case "hardBreak":
@@ -288,8 +330,9 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
       );
     case "exercice": {
       const titre = String(n.attrs?.titre ?? "");
+      const chemin = idExercice(index + 1);
       return (
-        <section className="exercice">
+        <section className="exercice" id={ctx.ancre ? `${ctx.ancre}-${chemin}` : undefined}>
           <header className="flex items-start justify-between gap-3">
             <h2>
               Exercice {index + 1}
@@ -297,18 +340,21 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
             </h2>
             <Points attrs={n.attrs} ctx={ctx} />
           </header>
-          {enfants(n, { ...ctx, profondeurQuestion: 0 })}
+          {enfants(n, { ...ctx, profondeurQuestion: 0, chemin })}
         </section>
       );
     }
     case "question":
       return (
-        <div className={`question profondeur-${ctx.profondeurQuestion}`}>
+        <div
+          className={`question profondeur-${ctx.profondeurQuestion}`}
+          id={ctx.ancre && ctx.profondeurQuestion === 0 && (ctx.racine || ctx.chemin) ? `${ctx.ancre}-${idQuestion(index + 1, ctx.chemin ?? undefined)}` : undefined}
+        >
           <span className="numero" aria-hidden="true">
             {numero(ctx.profondeurQuestion, index)}
           </span>
           <div className="corps">
-            {enfants(n, { ...ctx, profondeurQuestion: ctx.profondeurQuestion + 1 })}
+            {enfants(n, { ...ctx, profondeurQuestion: ctx.profondeurQuestion + 1, chemin: null })}
           </div>
           <Points attrs={n.attrs} ctx={ctx} />
         </div>
@@ -397,16 +443,19 @@ export function RenduDocument({
   serie = null,
   series = [],
   className = "",
+  ancre = null,
 }: {
   doc: Noeud;
   serie?: string | null;
   series?: SerieAffichee[];
   className?: string;
+  /** Préfixe des ancres du sommaire (voir `planDocument`). */
+  ancre?: string | null;
 }) {
   const prefixe = `n${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
-  const compteurs = { documents: 0, notes: [] as string[], prefixe };
+  const compteurs = { documents: 0, notes: [] as string[], prefixe, parties: 0 };
   // Rendu synchrone : les notes sont collectées pendant le parcours, puis listées à la fin.
-  const corps = noeud(doc, { profondeurQuestion: 0, serie, series, compteurs }, 0);
+  const corps = noeud(doc, { profondeurQuestion: 0, serie, series, compteurs, ancre, racine: false, chemin: null }, 0);
   return (
     <div className={`contenu ${className}`}>
       {corps}

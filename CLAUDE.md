@@ -63,7 +63,7 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
 - Admin sous `/admin` (rôles `admin` et `moderateur`, `requireEditeur`) ; les autres voient un 404.
 - Outils de l'éditeur (`app/lib/document/outils.ts`) : image, document numéroté, encadré, note,
   extrait, chimie, code, algorithme, diagramme, schéma, chronogramme, logique, graphique,
-  variations, molécule. Profil par matière (`matiere.outils`, `null` = tous)
+  variations, molécule, génétique. Profil par matière (`matiere.outils`, `null` = tous)
   réglé dans `/admin/listes` ; menu « / » et bouton « Insérer… » (`app/components/editeur/commandes.tsx`).
 - Images : bucket R2 `MEDIAS` (clés `m/<uuid>.<ext>`), envoi par `/admin/medias` (type vérifié par
   les premiers octets, 5 Mo max., compressées en WebP dans le navigateur), lecture par `/medias/*`.
@@ -81,6 +81,12 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   (`SvgGraphique`) ; les expressions passent par l'analyseur maison `expression.ts` (jamais
   `eval`). Tableaux de signes et de variations (`variations.ts`, textes en LaTeX). Molécules en
   SMILES dessinées dans le navigateur par SmilesDrawer (`dessinerMolecule`).
+- SVT (`app/components/editeur/genetique.tsx`, logique dans `app/lib/document/genetique.ts`) :
+  arbre généalogique (individus rangés par génération, unions « au suivant », parent repéré par
+  son indice dans la génération précédente ; SVG dessiné sur le serveur) et échiquier de
+  croisement (génotype déduit des gamètes, « A//a » = chromosomes homologues, « ; » sépare les
+  gènes). Repères sur une image (`reperes` du nœud `image`, coordonnées en fraction, bouton
+  « Repères ») pour les schémas à annoter.
 - Polices d'Excalidraw servies depuis `public/excalidraw/fonts` (copiées du paquet, sans la police
   chinoise de 13 Mo) : à recopier lors d'une mise à jour d'Excalidraw.
 
@@ -88,8 +94,18 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
 
 - **React Router 8** en mode framework, rendu serveur, sur **Cloudflare Workers** via
   `@cloudflare/vite-plugin`. Point d'entrée du Worker : `workers/app.ts`.
-- Routes déclarées dans `app/routes.ts`. `routes/_app.tsx` est la coquille (en-tête + navigation
-  du bas) ; les routes `api.*` sont des routes de ressource (JSON).
+- Routes déclarées dans `app/routes.ts`. `routes/_app.tsx` est la coquille : en-tête et navigation
+  du bas sur téléphone, barre latérale (`BarreLaterale`) dès 1024 px. Une route choisit sa largeur
+  sur ordinateur par `export const handle: MiseEnPage = { large, rail }` ; le mobile ne change pas
+  (les blocs propres à l'ordinateur sont en `hidden lg:…`). Les routes `api.*` sont des routes de
+  ressource (JSON), par exemple `api/apercu/:slug` pour l'aperçu du catalogue.
+- Plan d'un énoncé (`app/lib/document/plan.ts`) : sommaire de lecture, aperçu du catalogue et plan
+  de l'éditeur ; `RenduDocument` pose les mêmes ancres avec `ancre="enonce"`.
+- Préférences de lecture gardées dans le navigateur (`lireLocal` / `ecrireLocal`,
+  `app/lib/clavier.ts`) : corrigé à côté, mode examen en cours, notes personnelles, sujets
+  récents de la barre latérale (`app/lib/recents.ts`).
+- Matières : couleur et pictogramme (`matiere.icone`, liste fermée `app/lib/pictogrammes.ts`,
+  tracés dans `app/components/ui/Pictogramme.tsx`) ; `TuileMatiere` pour les petites tuiles.
 - Variables et bindings Cloudflare : `import { env } from "cloudflare:workers"`. Après toute
   modification de `wrangler.jsonc`, relancer `pnpm cf-typegen`.
 - Styles : Tailwind CSS 4, jetons dans `@theme` de `app/app.css`. Utiliser les jetons

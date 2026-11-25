@@ -4,7 +4,7 @@
  * Exercice → Question sont toujours disponibles.
  */
 export const OUTILS = [
-  { id: "image", nom: "Image", aide: "Photo, schéma scanné, carte" },
+  { id: "image", nom: "Image", aide: "Photo, schéma scanné, carte ; repères à annoter" },
   { id: "document", nom: "Document numéroté", aide: "« Document 1 » avec légende" },
   { id: "encadre", nom: "Encadré", aide: "On donne, Rappel, Définition…" },
   { id: "note", nom: "Note de bas de page", aide: "Numérotée automatiquement" },
@@ -19,6 +19,7 @@ export const OUTILS = [
   { id: "graphique", nom: "Graphique", aide: "Courbes, points, vecteurs dans un repère" },
   { id: "variations", nom: "Tableau de variations", aide: "Tableau de signes et de variations" },
   { id: "molecule", nom: "Molécule", aide: "Formule topologique (SMILES)" },
+  { id: "genetique", nom: "Génétique", aide: "Arbre généalogique, échiquier de croisement" },
 ] as const;
 
 export type OutilId = (typeof OUTILS)[number]["id"];

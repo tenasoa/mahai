@@ -6,7 +6,7 @@ import { EmptyState } from "~/components/ui/EmptyState";
 import { getDb } from "~/db/db.server";
 import { requireEditeur } from "~/lib/auth/session.server";
 import { chargerListes, sujetsAdmin } from "~/lib/catalogue/catalogue.server";
-import { TUILES } from "~/lib/couleurs";
+import { TuileMatiere } from "~/components/ui/Pictogramme";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireEditeur(request);
@@ -43,10 +43,7 @@ export default function AdminSujets({ loaderData }: Route.ComponentProps) {
                   to={`/admin/sujets/${s.id}`}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-soft"
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`${matiere ? TUILES[matiere.couleur] : "bg-soft"} size-8 shrink-0 rounded-[10px]`}
-                  />
+                  <TuileMatiere couleur={matiere?.couleur} icone={matiere?.icone} taille={32} />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-bold">{s.titre}</span>
                     <span className="text-sm text-muted">

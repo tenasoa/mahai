@@ -1,15 +1,16 @@
 /**
  * Accès au catalogue de sujets (lecture publique et gestion par l'admin).
  */
-import { and, asc, desc, eq, inArray, like, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, like, ne, sql, type SQL } from "drizzle-orm";
 
 import type { Db } from "~/db/db.server";
 import { examen, matiere, serie, sujet, sujetSerie, type Couleur } from "~/db/schema";
 import { slugifier } from "~/lib/contenu/texte";
 import { texteRecherche, type DonneesSujet, type Listes } from "./formulaire";
+import type { Tri } from "./tri";
 
 export type ListesCompletes = Omit<Listes, "matieres"> & {
-  matieres: { id: string; nom: string; couleur: Couleur; outils: string[] | null }[];
+  matieres: { id: string; nom: string; couleur: Couleur; outils: string[] | null; icone: string | null }[];
 };
 
 export async function chargerListes(db: Db): Promise<ListesCompletes> {
@@ -20,7 +21,7 @@ export async function chargerListes(db: Db): Promise<ListesCompletes> {
       .from(serie)
       .orderBy(asc(serie.ordre), asc(serie.nom)),
     db
-      .select({ id: matiere.id, nom: matiere.nom, couleur: matiere.couleur, outils: matiere.outils })
+      .select({ id: matiere.id, nom: matiere.nom, couleur: matiere.couleur, outils: matiere.outils, icone: matiere.icone })
       .from(matiere)
       .orderBy(asc(matiere.ordre), asc(matiere.nom)),
   ]);
@@ -31,12 +32,16 @@ export async function chargerListes(db: Db): Promise<ListesCompletes> {
 
 export const PAR_PAGE = 20;
 
+
 export type Filtres = {
   mots: string[];
   examenId?: string | null;
   matiereId?: string | null;
   serieId?: string | null;
   annee?: number | null;
+  /** Seulement les sujets avec corrigé. */
+  corrige?: boolean;
+  tri?: Tri;
   page: number;
 };
 
@@ -49,6 +54,35 @@ const resume = {
   annee: sujet.annee,
   session: sujet.session,
   dureeMinutes: sujet.dureeMinutes,
+  aCorrige: sql<number>`${sujet.corrige} is not null`.mapWith(Boolean),
+};
+
+type Facette = "examenId" | "matiereId" | "serieId" | "annee";
+
+/** Conditions de la recherche ; `sauf` ignore un filtre (compteurs de ce filtre). */
+function conditions(db: Db, f: Filtres, sauf?: Facette): SQL[] {
+  const c: SQL[] = [eq(sujet.statut, "publie")];
+  // Les mots ne contiennent que [a-z0-9] (normaliser) : pas de caractère spécial pour LIKE.
+  for (const mot of f.mots) c.push(like(sujet.recherche, `%${mot}%`));
+  if (f.examenId && sauf !== "examenId") c.push(eq(sujet.examenId, f.examenId));
+  if (f.matiereId && sauf !== "matiereId") c.push(eq(sujet.matiereId, f.matiereId));
+  if (f.annee && sauf !== "annee") c.push(eq(sujet.annee, f.annee));
+  if (f.corrige) c.push(isNotNull(sujet.corrige));
+  if (f.serieId && sauf !== "serieId") {
+    c.push(
+      inArray(
+        sujet.id,
+        db.select({ id: sujetSerie.sujetId }).from(sujetSerie).where(eq(sujetSerie.serieId, f.serieId)),
+      ),
+    );
+  }
+  return c;
+}
+
+const ORDRES: Record<Tri, SQL[]> = {
+  recent: [sql`${sujet.annee} is null`, desc(sujet.annee), desc(sujet.publieLe)],
+  matiere: [asc(sujet.matiereId), sql`${sujet.annee} is null`, desc(sujet.annee)],
+  duree: [sql`${sujet.dureeMinutes} is null`, asc(sujet.dureeMinutes), desc(sujet.annee)],
 };
 
 async function seriesDe(db: Db, ids: string[]) {
@@ -63,25 +97,11 @@ async function seriesDe(db: Db, ids: string[]) {
 }
 
 export async function chercherSujets(db: Db, f: Filtres) {
-  const conditions: SQL[] = [eq(sujet.statut, "publie")];
-  // Les mots ne contiennent que [a-z0-9] (normaliser) : pas de caractère spécial pour LIKE.
-  for (const mot of f.mots) conditions.push(like(sujet.recherche, `%${mot}%`));
-  if (f.examenId) conditions.push(eq(sujet.examenId, f.examenId));
-  if (f.matiereId) conditions.push(eq(sujet.matiereId, f.matiereId));
-  if (f.annee) conditions.push(eq(sujet.annee, f.annee));
-  if (f.serieId) {
-    conditions.push(
-      inArray(
-        sujet.id,
-        db.select({ id: sujetSerie.sujetId }).from(sujetSerie).where(eq(sujetSerie.serieId, f.serieId)),
-      ),
-    );
-  }
   const lignes = await db
     .select(resume)
     .from(sujet)
-    .where(and(...conditions))
-    .orderBy(sql`${sujet.annee} is null`, desc(sujet.annee), desc(sujet.publieLe))
+    .where(and(...conditions(db, f)))
+    .orderBy(...ORDRES[f.tri ?? "recent"])
     .limit(PAR_PAGE + 1)
     .offset(f.page * PAR_PAGE);
   const page = lignes.slice(0, PAR_PAGE);
@@ -90,6 +110,71 @@ export async function chercherSujets(db: Db, f: Filtres) {
     sujets: page.map((s) => ({ ...s, series: series.get(s.id) ?? [] })),
     suivante: lignes.length > PAR_PAGE,
   };
+}
+
+export type Compteurs = Record<string, number>;
+
+/**
+ * Nombre de sujets par valeur de chaque filtre, les autres filtres appliqués (le filtre compté
+ * est ignoré : on voit combien donnerait chaque choix). Plus le total de la recherche.
+ */
+export async function compterFacettes(db: Db, f: Filtres) {
+  const [examens, matieres, annees, series, [total]] = await db.batch([
+    db.select({ cle: sujet.examenId, n: count() }).from(sujet).where(and(...conditions(db, f, "examenId"))).groupBy(sujet.examenId),
+    db.select({ cle: sujet.matiereId, n: count() }).from(sujet).where(and(...conditions(db, f, "matiereId"))).groupBy(sujet.matiereId),
+    db.select({ cle: sujet.annee, n: count() }).from(sujet).where(and(...conditions(db, f, "annee"))).groupBy(sujet.annee),
+    db
+      .select({ cle: sujetSerie.serieId, n: count() })
+      .from(sujetSerie)
+      .innerJoin(sujet, eq(sujet.id, sujetSerie.sujetId))
+      .where(and(...conditions(db, f, "serieId")))
+      .groupBy(sujetSerie.serieId),
+    db.select({ n: count() }).from(sujet).where(and(...conditions(db, f))),
+  ]);
+  const enTable = (lignes: { cle: string | number | null; n: number }[]): Compteurs =>
+    Object.fromEntries(lignes.filter((l) => l.cle !== null).map((l) => [String(l.cle), l.n]));
+  return {
+    examens: enTable(examens),
+    matieres: enTable(matieres),
+    annees: enTable(annees),
+    series: enTable(series),
+    total: total?.n ?? 0,
+  };
+}
+
+/** Sujets et corrigés publiés, par examen et par matière (accueil). */
+export async function chiffresCatalogue(db: Db) {
+  const publie = eq(sujet.statut, "publie");
+  const corriges = sql<number>`sum(${sujet.corrige} is not null)`.mapWith(Number);
+  const [parExamen, parMatiere] = await db.batch([
+    db.select({ cle: sujet.examenId, sujets: count(), corriges }).from(sujet).where(publie).groupBy(sujet.examenId),
+    db.select({ cle: sujet.matiereId, sujets: count(), corriges }).from(sujet).where(publie).groupBy(sujet.matiereId),
+  ]);
+  const enTable = (lignes: { cle: string; sujets: number; corriges: number }[]) =>
+    Object.fromEntries(lignes.map((l) => [l.cle, { sujets: l.sujets, corriges: l.corriges }]));
+  return { parExamen: enTable(parExamen), parMatiere: enTable(parMatiere) };
+}
+
+/** Derniers sujets publiés (accueil). */
+export async function derniersSujets(db: Db, nombre = 6) {
+  const lignes = await db
+    .select(resume)
+    .from(sujet)
+    .where(eq(sujet.statut, "publie"))
+    .orderBy(desc(sujet.publieLe))
+    .limit(nombre);
+  const series = await seriesDe(db, lignes.map((s) => s.id));
+  return lignes.map((s) => ({ ...s, series: series.get(s.id) ?? [] }));
+}
+
+/** Autres sujets publiés de la même matière (et du même examen d'abord). */
+export async function sujetsVoisins(db: Db, s: { id: string; matiereId: string; examenId: string }, nombre = 4) {
+  return db
+    .select({ slug: sujet.slug, titre: sujet.titre, examenId: sujet.examenId, annee: sujet.annee })
+    .from(sujet)
+    .where(and(eq(sujet.statut, "publie"), eq(sujet.matiereId, s.matiereId), ne(sujet.id, s.id)))
+    .orderBy(sql`${sujet.examenId} = ${s.examenId} desc`, sql`${sujet.annee} is null`, desc(sujet.annee))
+    .limit(nombre);
 }
 
 /** Années pour lesquelles au moins un sujet est publié (filtre de recherche). */

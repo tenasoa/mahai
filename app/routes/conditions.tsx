@@ -1,8 +1,11 @@
 import { Link } from "react-router";
 
 import type { Route } from "./+types/conditions";
+import type { MiseEnPageAuth } from "./_auth";
 import { PageTexte } from "~/components/ui/PageTexte";
 import { SITE } from "~/lib/site";
+
+export const handle: MiseEnPageAuth = { lecture: true };
 
 export function meta({}: Route.MetaArgs) {
   return [

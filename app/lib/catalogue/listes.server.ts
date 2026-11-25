@@ -9,6 +9,7 @@ import type { Db } from "~/db/db.server";
 import { COULEURS, examen, matiere, serie, type Couleur } from "~/db/schema";
 import { slugifier } from "~/lib/contenu/texte";
 import { IDS_OUTILS } from "~/lib/document/outils";
+import { estPictogramme } from "~/lib/pictogrammes";
 
 export type TypeListe = "examen" | "serie" | "matiere";
 
@@ -33,6 +34,12 @@ const couleur = (f: FormData): Couleur | null => {
 const outils = (f: FormData): string[] | null => {
   const choisis = IDS_OUTILS.filter((id) => f.getAll("outils").includes(id));
   return choisis.length === IDS_OUTILS.length ? null : choisis;
+};
+
+/** Pictogramme choisi ; vide ou inconnu = aucun (la tuile garde sa couleur seule). */
+const icone = (f: FormData): string | null => {
+  const v = texte(f, "icone", 30);
+  return estPictogramme(v) ? v : null;
 };
 
 export type ResultatListe = { ok: true; message: string } | { ok: false; erreur: string };
@@ -60,7 +67,7 @@ export async function modifierListe(db: Db, f: FormData): Promise<ResultatListe>
         if (!c) return { ok: false, erreur: "Choisis une couleur." };
         await db
           .insert(matiere)
-          .values({ id: slugifier(nom), nom, couleur: c, ordre: ordre(f), outils: outils(f) });
+          .values({ id: slugifier(nom), nom, couleur: c, ordre: ordre(f), outils: outils(f), icone: icone(f) });
       }
       return { ok: true, message: `« ${nom} » ajouté.` };
     }
@@ -78,7 +85,7 @@ export async function modifierListe(db: Db, f: FormData): Promise<ResultatListe>
         if (!c) return { ok: false, erreur: "Choisis une couleur." };
         await db
           .update(matiere)
-          .set({ nom, couleur: c, ordre: ordre(f), outils: outils(f) })
+          .set({ nom, couleur: c, ordre: ordre(f), outils: outils(f), icone: icone(f) })
           .where(eq(matiere.id, id));
       }
       return { ok: true, message: "Modification enregistrée." };

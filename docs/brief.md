@@ -19,7 +19,7 @@ publient et vendent leurs contenus.
 | Paiement au départ | Mobile Money manuel (MVola, Orange Money, Airtel Money) : l'utilisateur saisit la référence, un admin valide. Agrégateur automatique branché plus tard sans refaire l'écran |
 | Connexion | Email + mot de passe, compte Google, numéro de téléphone (code SMS) |
 | Langue | Français uniquement (code prêt pour en ajouter d'autres plus tard) |
-| Appareils | Web installable (PWA), mobile d'abord, utilisable hors ligne |
+| Appareils | Web installable (PWA), mobile d'abord, utilisable hors ligne ; version ordinateur enrichie (≥ 1024 px) : sommaire, corrigé à côté, mode examen, filtres et aperçu |
 | Ton de la marque | Ludique et énergique |
 | Données existantes | Aucune reprise : base vide |
 

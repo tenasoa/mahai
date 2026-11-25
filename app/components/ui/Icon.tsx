@@ -25,6 +25,27 @@ const PATHS = {
   juste: <path d="M5 12l5 5 9-10" />,
   "a-revoir": <path d="M5 12h14" />,
   erreur: <path d="M6 6l12 12M18 6L6 18" />,
+  admin: (
+    <>
+      <rect x="4" y="4" width="7" height="7" rx="1.5" />
+      <rect x="13" y="4" width="7" height="7" rx="1.5" />
+      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+      <rect x="13" y="13" width="7" height="7" rx="1.5" />
+    </>
+  ),
+  colonnes: (
+    <>
+      <rect x="3" y="4" width="8" height="16" rx="2" />
+      <rect x="13" y="4" width="8" height="16" rx="2" />
+    </>
+  ),
+  chrono: (
+    <>
+      <circle cx="12" cy="13" r="8" />
+      <path d="M12 9v4l2 2M9 2h6" />
+    </>
+  ),
+  envoi: <path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />,
 } as const;
 
 export type IconName = keyof typeof PATHS;

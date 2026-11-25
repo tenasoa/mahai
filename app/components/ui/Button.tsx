@@ -35,7 +35,7 @@ export function Button({
   className = "",
   children,
   ...rest
-}: CommonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+}: CommonProps & React.ComponentProps<"button">) {
   return (
     <button className={`${BASE} ${VARIANTS[variant]} ${className}`} {...rest}>
       {children}

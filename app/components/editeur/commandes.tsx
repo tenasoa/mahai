@@ -6,6 +6,7 @@ import { normaliser } from "~/lib/contenu/texte";
 import type { OutilId } from "~/lib/document/outils";
 import { insererNote } from "./blocs";
 import { insererTableVerite } from "./electronique";
+import { ARBRE_DEFAUT, ECHIQUIER_DEFAUT } from "~/lib/document/genetique";
 import { VARIATIONS_DEFAUT, ligneSigne } from "~/lib/document/variations";
 import { insererExercice, insererQuestion, insererSousQuestion } from "./noeuds";
 
@@ -62,6 +63,8 @@ export const COMMANDES: Commande[] = [
   { id: "variations", titre: "Tableau de variations", aide: "Signe de f′ et variations de f", motsCles: "fonction derivee etude croissante", outil: "variations", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "variations", attrs: VARIATIONS_DEFAUT }).run() },
   { id: "signes", titre: "Tableau de signes", aide: "Signe d'une expression", motsCles: "signe inequation produit quotient", outil: "variations", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "variations", attrs: { nomX: "x", x: ["-\\infty", "", "+\\infty"], lignes: [ligneSigne(3, "f(x)")] } }).run() },
   { id: "molecule", titre: "Molécule", aide: "Formule topologique (SMILES)", motsCles: "chimie organique smiles topologique semi developpee", outil: "molecule", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "molecule", attrs: { smiles: "CCO", nom: "Éthanol", carbones: false } }).run() },
+  { id: "arbre", titre: "Arbre généalogique", aide: "Générations, unions, individus atteints", motsCles: "genetique pedigree famille heredite svt maladie", outil: "genetique", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "arbre", attrs: ARBRE_DEFAUT }).run() },
+  { id: "echiquier", titre: "Échiquier de croisement", aide: "Gamètes, génotypes et phénotypes", motsCles: "genetique croisement punnett gametes genotype phenotype svt dihybridisme", outil: "genetique", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "echiquier", attrs: ECHIQUIER_DEFAUT }).run() },
   { id: "table-verite", titre: "Table de vérité", aide: "Toutes les combinaisons des entrées", motsCles: "logique booleen combinatoire", outil: "logique", executer: ({ editor }) => insererTableVerite(editor) },
 ];
 

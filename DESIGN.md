@@ -48,8 +48,23 @@ pilule. Zones tactiles de 44 px minimum.
 
 ## Écrans
 
-- Mobile d'abord (360 × 800), colonne centrée de 576 px maximum au-delà.
+- Mobile d'abord (360 × 800), colonne centrée de 576 px maximum jusqu'à 1024 px.
+- Ordinateur (`lg`, 1024 px et plus) : barre latérale à la place de la navigation du bas (réduite
+  à un rail d'icônes pendant la lecture d'un sujet). Elle porte la navigation, les sujets récents
+  et le mode examen en cours, jamais une liste qui double un filtre de la page (les matières
+  sont des tuiles dans le catalogue), pages larges déclarées par
+  `export const handle = { large: true }`. L'ordinateur **ajoute** ce que le grand écran permet
+  (filtres avec compteurs, tableau et aperçu, sommaire, corrigé à côté, mode examen, raccourcis
+  clavier `/`, `↑ ↓`, `C`, `Ctrl S`) sans rien retirer au mobile, qui reste l'écran de référence.
 - Chaque écran prévoit ses états : chargement, vide (`EmptyState`), erreur, hors ligne.
 - Majuscule en début de phrase seulement, pas d'emoji, ton direct et encourageant.
 - Animations courtes et légères (une tuile qui se remplit quand on termine un sujet),
   désactivées si l'appareil demande moins de mouvement.
+
+## Pictogrammes des matières
+
+Chaque matière a un pictogramme au trait (24 × 24, trait de 2, sans remplissage), noir sur sa
+tuile de couleur : la couleur ne porte jamais seule l'information. Bibliothèque fermée dans
+`app/components/ui/Pictogramme.tsx` (identifiants dans `app/lib/pictogrammes.ts`), choix par
+matière dans `/admin/listes`. Toujours décoratif (`aria-hidden`) : le nom est écrit à côté.
+

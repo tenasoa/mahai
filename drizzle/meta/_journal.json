@@ -36,6 +36,13 @@
       "when": 1795563730156,
       "tag": "0004_outils_medias",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1795595462247,
+      "tag": "0005_pictogrammes",
+      "breakpoints": true
     }
   ]
 }
