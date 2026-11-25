@@ -124,7 +124,7 @@ function Ligne({
         {couleur ? (
           <TuileMatiere couleur={couleur} icone={icone} taille={32} />
         ) : null}
-        <input name="nom" defaultValue={nom} required maxLength={60} aria-label="Nom" className={`${champ} flex-1`} />
+        <input name="nom" defaultValue={nom} required maxLength={60} aria-label="Nom" className={`${champ} grow basis-32`} />
         <input
           name="ordre"
           type="number"
@@ -132,7 +132,7 @@ function Ligne({
           max={999}
           defaultValue={ordre}
           aria-label="Ordre d'affichage"
-          className={`${champ} w-20 text-center`}
+          className={`${champ} w-16 px-2 text-center`}
         />
         {type === "matiere" ? <SelectCouleur valeur={couleur} /> : null}
         <button type="submit" name="intention" value="modifier" className={`${petit} bg-soft hover:bg-line`}>
@@ -190,7 +190,7 @@ export default function AdminListes({ loaderData, actionData }: Route.ComponentP
     <>
       <div className="flex flex-col gap-2">
         <h1 className="text-[2rem] leading-none font-extrabold tracking-tight">Listes</h1>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted lg:max-w-3xl">
           Examens, séries et matières proposés dans les sujets. Un élément utilisé par un sujet ne peut
           pas être supprimé.
         </p>
@@ -204,53 +204,58 @@ export default function AdminListes({ loaderData, actionData }: Route.ComponentP
         )}
       </div>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-bold">Examens</h2>
-        <ul className="divide-y-2 divide-line">
-          {examens.map((e, i) => (
-            <Ligne key={e.id} type="examen" id={e.id} nom={e.nom} ordre={i + 1} />
-          ))}
-        </ul>
-        <Ajout type="examen" />
-      </section>
+      {/* Ordinateur : examens et séries à gauche, matières (pictogrammes, outils) à droite. */}
+      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-6">
+        <div className="flex flex-col gap-5 lg:gap-6">
+          <section className="flex flex-col gap-2 lg:rounded-card lg:border-2 lg:border-line lg:p-5">
+            <h2 className="text-lg font-bold">Examens</h2>
+            <ul className="divide-y-2 divide-line">
+              {examens.map((e, i) => (
+                <Ligne key={e.id} type="examen" id={e.id} nom={e.nom} ordre={i + 1} />
+              ))}
+            </ul>
+            <Ajout type="examen" />
+          </section>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-bold">Séries</h2>
-        {examens.map((e) => {
-          const liste = series.filter((s) => s.examenId === e.id);
-          if (liste.length === 0) return null;
-          return (
-            <div key={e.id}>
-              <h3 className="text-sm font-bold text-muted">{e.nom}</h3>
-              <ul className="divide-y-2 divide-line">
-                {liste.map((s, i) => (
-                  <Ligne key={s.id} type="serie" id={s.id} nom={s.nom} ordre={i + 1} />
+          <section className="flex flex-col gap-2 lg:rounded-card lg:border-2 lg:border-line lg:p-5">
+            <h2 className="text-lg font-bold">Séries</h2>
+            {examens.map((e) => {
+              const liste = series.filter((s) => s.examenId === e.id);
+              if (liste.length === 0) return null;
+              return (
+                <div key={e.id}>
+                  <h3 className="text-sm font-bold text-muted">{e.nom}</h3>
+                  <ul className="divide-y-2 divide-line">
+                    {liste.map((s, i) => (
+                      <Ligne key={s.id} type="serie" id={s.id} nom={s.nom} ordre={i + 1} />
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+            <Ajout type="serie">
+              <select name="examenId" required aria-label="Examen" className={`${champ} bg-surface`}>
+                <option value="">Examen…</option>
+                {examens.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.nom}
+                  </option>
                 ))}
-              </ul>
-            </div>
-          );
-        })}
-        <Ajout type="serie">
-          <select name="examenId" required aria-label="Examen" className={`${champ} bg-surface`}>
-            <option value="">Examen…</option>
-            {examens.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nom}
-              </option>
-            ))}
-          </select>
-        </Ajout>
-      </section>
+              </select>
+            </Ajout>
+          </section>
+        </div>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-bold">Matières</h2>
-        <ul className="divide-y-2 divide-line">
-          {matieres.map((m, i) => (
-            <Ligne key={m.id} type="matiere" id={m.id} nom={m.nom} ordre={i + 1} couleur={m.couleur} icone={m.icone} outils={m.outils} />
-          ))}
-        </ul>
-        <Ajout type="matiere" />
-      </section>
+        <section className="flex flex-col gap-2 lg:rounded-card lg:border-2 lg:border-line lg:p-5">
+          <h2 className="text-lg font-bold">Matières</h2>
+          <ul className="divide-y-2 divide-line">
+            {matieres.map((m, i) => (
+              <Ligne key={m.id} type="matiere" id={m.id} nom={m.nom} ordre={i + 1} couleur={m.couleur} icone={m.icone} outils={m.outils} />
+            ))}
+          </ul>
+          <Ajout type="matiere" />
+        </section>
+      </div>
     </>
   );
 }

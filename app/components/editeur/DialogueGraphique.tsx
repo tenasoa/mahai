@@ -95,8 +95,8 @@ const MODELES: { nom: string; g: Partial<Graphique> }[] = [
 
 const VIDE: Graphique = { ...GRAPHIQUE_DEFAUT, courbes: [], points: [], segments: [], cercles: [], asymptotes: [], aires: [] };
 
-const champ = "h-10 min-w-0 rounded-xl border-2 border-line bg-surface px-2 text-sm focus:border-ink";
-const petit = "min-h-9 rounded-full bg-soft px-3 text-sm font-medium hover:bg-line";
+export const champ = "h-10 min-w-0 rounded-xl border-2 border-line bg-surface px-2 text-sm focus:border-ink";
+export const petit = "min-h-9 rounded-full bg-soft px-3 text-sm font-medium hover:bg-line";
 
 const lire = (s: string): number | null | undefined => {
   if (s.trim() === "") return null;
@@ -106,7 +106,7 @@ const lire = (s: string): number | null | undefined => {
 const ecrire = (n: number | null) => (n === null ? "" : String(n).replace(".", ","));
 
 /** Champ numérique qui accepte la saisie en cours (« - », « 1, »). `vide` : la valeur peut être nulle. */
-function Nombre({
+export function Nombre({
   valeur,
   onChange,
   libelle,
@@ -141,7 +141,7 @@ function Nombre({
   );
 }
 
-function Section({ titre, children, ajouter }: { titre: string; children: ReactNode; ajouter?: () => void }) {
+export function Section({ titre, children, ajouter }: { titre: string; children: ReactNode; ajouter?: () => void }) {
   return (
     <fieldset className="flex flex-col gap-2 rounded-2xl border-2 border-line p-3">
       <legend className="px-1 text-sm font-bold">{titre}</legend>
@@ -155,7 +155,7 @@ function Section({ titre, children, ajouter }: { titre: string; children: ReactN
   );
 }
 
-function Supprimer({ onClick, quoi }: { onClick: () => void; quoi: string }) {
+export function Supprimer({ onClick, quoi }: { onClick: () => void; quoi: string }) {
   return (
     <button type="button" onClick={onClick} aria-label={`Supprimer ${quoi}`} title="Supprimer" className="min-h-9 min-w-9 rounded-full text-muted hover:bg-soft">
       ✕
@@ -163,7 +163,7 @@ function Supprimer({ onClick, quoi }: { onClick: () => void; quoi: string }) {
   );
 }
 
-const ligne = "flex flex-wrap items-center gap-1.5";
+export const ligne = "flex flex-wrap items-center gap-1.5";
 
 export function DialogueGraphique({
   graphique,

@@ -2,6 +2,10 @@ import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "re
 
 import { chargerColoration, dessinerChronogramme, dessinerDiagramme } from "~/lib/document/charger.client";
 import { normaliserKarnaugh } from "~/lib/document/karnaugh";
+import { normaliserCarte } from "~/lib/document/carte";
+import { normaliserFrise } from "~/lib/document/frise";
+import { normaliserFigure } from "~/lib/document/geometrie";
+import { normaliserStatistique } from "~/lib/document/statistique";
 import { normaliserGraphique } from "~/lib/document/graphique";
 import { normaliserVariations } from "~/lib/document/variations";
 import { normaliserArbre, normaliserEchiquier } from "~/lib/document/genetique";
@@ -11,6 +15,10 @@ import { EchiquierCroisement } from "./EchiquierCroisement";
 import { GrilleKarnaugh } from "./GrilleKarnaugh";
 import { ImageReperes } from "./ImageReperes";
 import { Molecule } from "./Molecule";
+import { SvgFigure } from "./SvgFigure";
+import { CarteDessin } from "./CarteDessin";
+import { SvgFrise } from "./SvgFrise";
+import { SvgStatistique } from "./SvgStatistique";
 import { SvgGraphique } from "./SvgGraphique";
 import { TableauVariations } from "./TableauVariations";
 import { Tex } from "./Tex";
@@ -269,6 +277,30 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
       return (
         <figure className="figure-graphique">
           <SvgGraphique g={normaliserGraphique(n.attrs)} />
+        </figure>
+      );
+    case "geometrie":
+      return (
+        <figure className="figure-geometrie">
+          <SvgFigure f={normaliserFigure(n.attrs)} />
+        </figure>
+      );
+    case "frise":
+      return (
+        <figure className="figure-frise">
+          <SvgFrise f={normaliserFrise(n.attrs)} />
+        </figure>
+      );
+    case "carte":
+      return (
+        <figure className="figure-carte">
+          <CarteDessin c={normaliserCarte(n.attrs)} />
+        </figure>
+      );
+    case "statistique":
+      return (
+        <figure className="figure-statistique">
+          <SvgStatistique s={normaliserStatistique(n.attrs)} />
         </figure>
       );
     case "variations":

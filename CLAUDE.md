@@ -61,9 +61,11 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
 - Formules : KaTeX dessiné **côté navigateur** (trop coûteux en CPU pour un Worker), mhchem pour
   `\ce{…}` ; saisie visuelle MathLive chargée seulement dans le dialogue de l'admin.
 - Admin sous `/admin` (rôles `admin` et `moderateur`, `requireEditeur`) ; les autres voient un 404.
+  Sur ordinateur, ses pages s'élargissent (tableau des sujets filtrable par URL, listes et images
+  en deux colonnes) ; l'éditeur de sujet prend toute la largeur (`handle.large`).
 - Outils de l'éditeur (`app/lib/document/outils.ts`) : image, document numéroté, encadré, note,
   extrait, chimie, code, algorithme, diagramme, schéma, chronogramme, logique, graphique,
-  variations, molécule, génétique. Profil par matière (`matiere.outils`, `null` = tous)
+  géométrie, variations, molécule, génétique, frise, statistique, carte. Profil par matière (`matiere.outils`, `null` = tous)
   réglé dans `/admin/listes` ; menu « / » et bouton « Insérer… » (`app/components/editeur/commandes.tsx`).
 - Images : bucket R2 `MEDIAS` (clés `m/<uuid>.<ext>`), envoi par `/admin/medias` (type vérifié par
   les premiers octets, 5 Mo max., compressées en WebP dans le navigateur), lecture par `/medias/*`.
@@ -81,6 +83,24 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   (`SvgGraphique`) ; les expressions passent par l'analyseur maison `expression.ts` (jamais
   `eval`). Tableaux de signes et de variations (`variations.ts`, textes en LaTeX). Molécules en
   SMILES dessinées dans le navigateur par SmilesDrawer (`dessinerMolecule`).
+- Géométrie (nœud `geometrie`, logique dans `app/lib/document/geometrie.ts`, dessin `SvgFigure`
+  sur le serveur, dialogue `DialogueFigure`) : points placés ou construits (milieu, projeté,
+  intersection, symétrique ; un point ne cite que des points définis avant lui), désignés par leur
+  nom (« A », « B1 », « A' ») ; segments, droites, demi-droites, vecteurs, polygones, cercles et
+  angles avec le codage (traits, arcs, angle droit). Le cadre suit la figure ; dans le dialogue,
+  on fait glisser un point et on double-clique pour en ajouter un.
+- Histoire-géo (`app/components/editeur/histoire.tsx`, dialogues sur le cadre commun
+  `DialogueDessin`) : frise chronologique (nœud `frise`, `app/lib/document/frise.ts`, dessin
+  `SvgFrise` ; périodes en bandes, événements rangés en lignes sans chevauchement, années avant
+  notre ère négatives) et diagramme statistique (nœud `statistique`,
+  `app/lib/document/statistique.ts`, dessin `SvgStatistique` : barres, courbe, secteurs, pyramide
+  des âges, ombrothermique avec P = 2T). Données saisies ou collées depuis un tableur ; les modèles
+  ne donnent que la structure (mois, tranches d'âge), jamais de valeurs. Carte à légender (nœud
+  `carte`, `app/lib/document/carte.ts`, dessin `CarteDessin`) : fond de carte envoyé dans R2 (ou
+  fond blanc), chaque ligne de la légende définit un figuré (zone, ligne, flèche, point ; titres
+  de parties) que l'on pose en cliquant sur la carte ; noms de lieux en HTML, coordonnées en
+  fraction du fond.
+- Insérer un bloc alors qu'un autre est sélectionné l'ajoute après lui, sans le remplacer.
 - SVT (`app/components/editeur/genetique.tsx`, logique dans `app/lib/document/genetique.ts`) :
   arbre généalogique (individus rangés par génération, unions « au suivant », parent repéré par
   son indice dans la génération précédente ; SVG dessiné sur le serveur) et échiquier de
@@ -103,7 +123,8 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   de l'éditeur ; `RenduDocument` pose les mêmes ancres avec `ancre="enonce"`.
 - Préférences de lecture gardées dans le navigateur (`lireLocal` / `ecrireLocal`,
   `app/lib/clavier.ts`) : corrigé à côté, mode examen en cours, notes personnelles, sujets
-  récents de la barre latérale (`app/lib/recents.ts`).
+  récents de la barre latérale (`app/lib/recents.ts`). Le profil les résume (« Sur cet appareil »)
+  et permet de les effacer.
 - Matières : couleur et pictogramme (`matiere.icone`, liste fermée `app/lib/pictogrammes.ts`,
   tracés dans `app/components/ui/Pictogramme.tsx`) ; `TuileMatiere` pour les petites tuiles.
 - Variables et bindings Cloudflare : `import { env } from "cloudflare:workers"`. Après toute

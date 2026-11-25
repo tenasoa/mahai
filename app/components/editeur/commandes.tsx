@@ -23,6 +23,10 @@ export type ContexteCommande = {
   ouvrirChronogramme: () => void;
   ouvrirSchema: () => void;
   ouvrirGraphique: () => void;
+  ouvrirFigure: () => void;
+  ouvrirFrise: () => void;
+  ouvrirStatistique: () => void;
+  ouvrirCarte: () => void;
 };
 
 export type Commande = {
@@ -60,6 +64,10 @@ export const COMMANDES: Commande[] = [
   { id: "chronogramme", titre: "Chronogramme", aide: "Signaux, horloge, bus (WaveDrom)", motsCles: "signal horloge timing bascule wavedrom logigramme", outil: "chronogramme", executer: ({ ouvrirChronogramme }) => ouvrirChronogramme() },
   { id: "karnaugh", titre: "Tableau de Karnaugh", aide: "2 à 4 variables", motsCles: "logique simplification booleen", outil: "logique", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "karnaugh", attrs: { variables: ["A", "B", "C"], sortie: "S", valeurs: "........" } }).run() },
   { id: "graphique", titre: "Graphique", aide: "Courbes, points, vecteurs dans un repère", motsCles: "courbe fonction repere plan coordonnees vecteur droite parabole", outil: "graphique", executer: ({ ouvrirGraphique }) => ouvrirGraphique() },
+  { id: "geometrie", titre: "Figure de géométrie", aide: "Triangle, cercle, constructions, codage", motsCles: "geometrie triangle cercle polygone angle droite segment milieu hauteur mediane thales pythagore parallelogramme", outil: "geometrie", executer: ({ ouvrirFigure }) => ouvrirFigure() },
+  { id: "frise", titre: "Frise chronologique", aide: "Périodes et événements datés", motsCles: "histoire chronologie dates periode evenement siecle", outil: "frise", executer: ({ ouvrirFrise }) => ouvrirFrise() },
+  { id: "statistique", titre: "Diagramme statistique", aide: "Barres, courbe, secteurs, pyramide, ombrothermique", motsCles: "geographie histogramme barres camembert secteurs pyramide ages population climat ombrothermique courbe evolution", outil: "statistique", executer: ({ ouvrirStatistique }) => ouvrirStatistique() },
+  { id: "carte", titre: "Carte à légender", aide: "Croquis : zones, flèches, lieux, légende", motsCles: "geographie croquis schema carte fond legende figure zone fleche flux ville port", outil: "carte", executer: ({ ouvrirCarte }) => ouvrirCarte() },
   { id: "variations", titre: "Tableau de variations", aide: "Signe de f′ et variations de f", motsCles: "fonction derivee etude croissante", outil: "variations", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "variations", attrs: VARIATIONS_DEFAUT }).run() },
   { id: "signes", titre: "Tableau de signes", aide: "Signe d'une expression", motsCles: "signe inequation produit quotient", outil: "variations", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "variations", attrs: { nomX: "x", x: ["-\\infty", "", "+\\infty"], lignes: [ligneSigne(3, "f(x)")] } }).run() },
   { id: "molecule", titre: "Molécule", aide: "Formule topologique (SMILES)", motsCles: "chimie organique smiles topologique semi developpee", outil: "molecule", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "molecule", attrs: { smiles: "CCO", nom: "Éthanol", carbones: false } }).run() },

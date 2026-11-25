@@ -7,11 +7,15 @@
  * contributeurs pourront écrire des sujets.
  */
 
+import { normaliserCarte, texteCarte } from "./carte";
 import { normaliserArbre, normaliserEchiquier } from "./genetique";
+import { normaliserFrise } from "./frise";
+import { normaliserFigure } from "./geometrie";
 import { normaliserGraphique } from "./graphique";
 import { normaliserKarnaugh } from "./karnaugh";
 import { ENCADRES, IDS_LANGAGES } from "./outils";
 import { normaliserReperes } from "./reperes";
+import { normaliserStatistique } from "./statistique";
 import { normaliserVariations } from "./variations";
 
 export type Marque = { type: string; attrs?: Record<string, unknown> };
@@ -145,6 +149,19 @@ export const NOEUDS: Record<string, Regle> = {
   karnaugh: { attrs: (a) => normaliserKarnaugh(a) },
   /** Graphique dans un repère (dessiné en SVG sur le serveur). */
   graphique: { attrs: (a) => normaliserGraphique(a) },
+  /** Figure de géométrie plane (dessinée en SVG sur le serveur). */
+  geometrie: { attrs: (a) => normaliserFigure(a) },
+  /** Frise chronologique (histoire). */
+  frise: { attrs: (a) => normaliserFrise(a) },
+  /** Diagramme statistique : barres, courbe, secteurs, pyramide des âges, ombrothermique. */
+  statistique: { attrs: (a) => normaliserStatistique(a) },
+  /** Carte à légender : fond de carte dans R2 (ou fond blanc), légende, figurés, noms de lieux. */
+  carte: {
+    attrs: (a) => {
+      const c = normaliserCarte(a);
+      return c.cle && !CLE_MEDIA.test(c.cle) ? { ...c, cle: null, largeur: 1000, hauteur: 750 } : c;
+    },
+  },
   /** Tableau de signes et de variations. */
   variations: { attrs: (a) => normaliserVariations(a) },
   /** Molécule en SMILES (dessinée dans le navigateur) ; supprimée si la formule est vide. */
@@ -264,6 +281,10 @@ const BLOCS_SANS_TEXTE = new Set([
   "chronogramme",
   "karnaugh",
   "graphique",
+  "geometrie",
+  "frise",
+  "statistique",
+  "carte",
   "variations",
   "molecule",
   "arbre",
@@ -288,7 +309,13 @@ export function texteBrut(n: Noeud): string {
     const etiquettes = (n.attrs.reperes as { texte?: string }[]).map((r) => r.texte ?? "").join(" ");
     return ` ${String(n.attrs?.alt ?? "")} ${etiquettes} `;
   }
-  if (n.type === "image" || n.type === "schema" || n.type === "graphique") return ` ${String(n.attrs?.alt ?? "")} `;
+  if (n.type === "image" || n.type === "schema" || n.type === "graphique" || n.type === "geometrie" || n.type === "statistique") return ` ${String(n.attrs?.alt ?? "")} `;
+  if (n.type === "frise") {
+    const f = n.attrs as { periodes?: { texte?: string }[]; evenements?: { date?: number; texte?: string }[]; alt?: string };
+    const textes = [...(f.periodes ?? []).map((p) => p.texte ?? ""), ...(f.evenements ?? []).map((e) => `${e.date ?? ""} ${e.texte ?? ""}`)];
+    return ` ${f.alt ?? ""} ${textes.join(" ")} `;
+  }
+  if (n.type === "carte") return ` ${texteCarte(normaliserCarte(n.attrs))} `;
   if (n.type === "molecule") return ` ${String(n.attrs?.nom ?? "")} `;
   if (n.type === "exercice") {
     const titre = String(n.attrs?.titre ?? "");

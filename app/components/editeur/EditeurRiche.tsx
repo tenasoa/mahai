@@ -32,11 +32,18 @@ import {
   type EtatMenu,
 } from "./commandes";
 import { DialogueDiagramme, type DiagrammeEnCours } from "./DialogueDiagramme";
+import { DialogueFigure, type FigureEnCours } from "./DialogueFigure";
+import { DialogueCarte, type CarteEnCours } from "./DialogueCarte";
+import { DialogueFrise, type FriseEnCours } from "./DialogueFrise";
+import { DialogueStatistique, type StatistiqueEnCours } from "./DialogueStatistique";
+import { CarteSujet, FriseSujet, StatistiqueSujet } from "./histoire";
 import { DialogueGraphique, type GraphiqueEnCours } from "./DialogueGraphique";
+import { GeometrieSujet } from "./geometrie";
 import { DialogueSchema, type SchemaEnCours, type SchemaEnregistre } from "./DialogueSchema";
 import { Chronogramme, KarnaughSujet, Schema } from "./electronique";
 import { ArbreSujet, EchiquierSujet } from "./genetique";
 import { GraphiqueSujet, MoleculeSujet, VariationsSujet } from "./sciences";
+import type { Figure } from "~/lib/document/geometrie";
 import type { Graphique } from "~/lib/document/graphique";
 import { DialogueFormule, type FormuleEnCours } from "./DialogueFormule";
 import {
@@ -80,6 +87,10 @@ export function EditeurRiche({
   const [diagramme, setDiagramme] = useState<DiagrammeEnCours | null>(null);
   const [schema, setSchema] = useState<SchemaEnCours | null>(null);
   const [graphique, setGraphique] = useState<GraphiqueEnCours | null>(null);
+  const [figure, setFigure] = useState<FigureEnCours | null>(null);
+  const [frise, setFrise] = useState<FriseEnCours | null>(null);
+  const [statistique, setStatistique] = useState<StatistiqueEnCours | null>(null);
+  const [carte, setCarte] = useState<CarteEnCours | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [menu, setMenu] = useState<EtatMenu | null>(null);
   const [actif, setActif] = useState(0);
@@ -135,6 +146,10 @@ export function EditeurRiche({
       Schema.configure({ ouvrir: (cle, pos) => setSchema({ cle, pos }) }),
       KarnaughSujet,
       GraphiqueSujet.configure({ ouvrir: (attrs, pos) => setGraphique({ attrs, pos }) }),
+      GeometrieSujet.configure({ ouvrir: (attrs, pos) => setFigure({ attrs, pos }) }),
+      FriseSujet.configure({ ouvrir: (attrs, pos) => setFrise({ attrs, pos }) }),
+      StatistiqueSujet.configure({ ouvrir: (attrs, pos) => setStatistique({ attrs, pos }) }),
+      CarteSujet.configure({ ouvrir: (attrs, pos) => setCarte({ attrs, pos }) }),
       VariationsSujet,
       MoleculeSujet,
       ArbreSujet,
@@ -191,11 +206,21 @@ export function EditeurRiche({
         ouvrirChronogramme: () => setDiagramme({ source: "", genre: "chronogramme" }),
         ouvrirSchema: () => setSchema({ cle: null }),
         ouvrirGraphique: () => setGraphique({ attrs: null }),
+        ouvrirFigure: () => setFigure({ attrs: null }),
+        ouvrirFrise: () => setFrise({ attrs: null }),
+        ouvrirStatistique: () => setStatistique({ attrs: null }),
+        ouvrirCarte: () => setCarte({ attrs: null }),
       }
     : null;
 
   function executer(c: Commande) {
     setPanneau(false);
+    // Un bloc est sélectionné (on vient de l'insérer ou de cliquer dessus) : on insère après lui,
+    // dans un paragraphe neuf, au lieu de le remplacer.
+    const sel = editor?.state.selection;
+    if (editor && sel && "node" in sel && sel.node) {
+      editor.chain().insertContentAt(sel.to, { type: "paragraph" }).setTextSelection(sel.to + 1).run();
+    }
     if (contexteRef.current) c.executer(contexteRef.current);
   }
 
@@ -277,6 +302,28 @@ export function EditeurRiche({
     setGraphique(null);
   }
 
+  /** Insère un bloc dessiné, ou remplace les attributs de celui qu'on modifiait. */
+  function poserBloc(type: string, attrs: object, pos: number | undefined) {
+    if (!editor) return;
+    if (pos === undefined) {
+      editor.chain().focus().insertContent({ type, attrs }).run();
+    } else {
+      editor
+        .chain()
+        .command(({ tr }) => {
+          if (tr.doc.nodeAt(pos)?.type.name === type) tr.setNodeMarkup(pos, undefined, attrs);
+          return true;
+        })
+        .run();
+    }
+  }
+
+  function validerFigure(f: Figure) {
+    if (!figure) return;
+    poserBloc("geometrie", f, figure.pos);
+    setFigure(null);
+  }
+
   // Ferme le panneau « Insérer » au clic à l'extérieur.
   const zonePanneau = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -343,6 +390,31 @@ export function EditeurRiche({
       <DialogueDiagramme diagramme={diagramme} onValider={validerDiagramme} onFermer={() => setDiagramme(null)} />
       <DialogueSchema schema={schema} onValider={validerSchema} onFermer={() => setSchema(null)} />
       <DialogueGraphique graphique={graphique} onValider={validerGraphique} onFermer={() => setGraphique(null)} />
+      <DialogueFigure figure={figure} onValider={validerFigure} onFermer={() => setFigure(null)} />
+      <DialogueFrise
+        frise={frise}
+        onValider={(f) => {
+          poserBloc("frise", f, frise?.pos);
+          setFrise(null);
+        }}
+        onFermer={() => setFrise(null)}
+      />
+      <DialogueStatistique
+        statistique={statistique}
+        onValider={(s) => {
+          poserBloc("statistique", s, statistique?.pos);
+          setStatistique(null);
+        }}
+        onFermer={() => setStatistique(null)}
+      />
+      <DialogueCarte
+        carte={carte}
+        onValider={(c) => {
+          poserBloc("carte", c, carte?.pos);
+          setCarte(null);
+        }}
+        onFermer={() => setCarte(null)}
+      />
     </SeriesEditeur.Provider>
   );
 }

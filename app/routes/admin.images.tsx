@@ -64,7 +64,7 @@ export default function AdminImages({ loaderData, actionData }: Route.ComponentP
     <>
       <div className="flex flex-col gap-2">
         <h1 className="text-[2rem] leading-none font-extrabold tracking-tight">Images</h1>
-        <p className="text-muted">
+        <p className="text-muted lg:max-w-3xl">
           Images et schémas envoyés pour les sujets. Une image n'est plus utilisée quand elle a été
           retirée d'un sujet ou que son sujet a été supprimé. Les brouillons comptent comme utilisés.
         </p>
@@ -72,74 +72,79 @@ export default function AdminImages({ loaderData, actionData }: Route.ComponentP
 
       <FormSucces message={actionData?.message} />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Chiffre valeur={utilises} libelle="utilisées par un sujet" />
-        <Chiffre valeur={nombre} libelle={nombre ? `inutilisées (${taille(tailleInutilises)})` : "inutilisées"} />
-        <Chiffre valeur={recents} libelle={`envoyées il y a moins de ${heures} h, gardées`} />
-      </div>
+      {/* Ordinateur : galerie à gauche ; chiffres et suppression dans la colonne de droite. */}
+      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr] lg:gap-x-8">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:col-start-2 lg:row-start-1 lg:grid-cols-1">
+          <Chiffre valeur={utilises} libelle="utilisées par un sujet" />
+          <Chiffre valeur={nombre} libelle={nombre ? `inutilisées (${taille(tailleInutilises)})` : "inutilisées"} />
+          <Chiffre valeur={recents} libelle={`envoyées il y a moins de ${heures} h, gardées`} />
+        </div>
 
-      {nombre === 0 ? (
-        <EmptyState title="Rien à nettoyer">
-          <p>Toutes les images envoyées depuis plus de {heures} heures sont utilisées par un sujet.</p>
-        </EmptyState>
-      ) : (
-        <>
-          <section aria-labelledby="titre-inutilisees" className="flex flex-col gap-3">
-            <h2 id="titre-inutilisees" className="text-lg font-extrabold">
-              Inutilisées
-              {nombre > apercu.length ? ` (${apercu.length} plus anciennes sur ${nombre})` : ""}
-            </h2>
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {apercu.map((f) => (
-                <li key={f.cle} className="flex flex-col gap-1 rounded-card border-2 border-line p-2 text-xs text-muted">
-                  {f.dansR2 ? (
-                    <img
-                      src={urlMedia(f.cle)}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="aspect-[4/3] w-full rounded-chip bg-soft object-contain"
-                    />
-                  ) : (
-                    <span className="flex aspect-[4/3] items-center justify-center rounded-chip bg-soft p-2 text-center">
-                      Fiche sans fichier (envoi interrompu)
+        {nombre === 0 ? (
+          <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1">
+            <EmptyState title="Rien à nettoyer">
+              <p>Toutes les images envoyées depuis plus de {heures} heures sont utilisées par un sujet.</p>
+            </EmptyState>
+          </div>
+        ) : (
+          <>
+            <section aria-labelledby="titre-inutilisees" className="flex flex-col gap-3 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+              <h2 id="titre-inutilisees" className="text-lg font-extrabold">
+                Inutilisées
+                {nombre > apercu.length ? ` (${apercu.length} plus anciennes sur ${nombre})` : ""}
+              </h2>
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-5">
+                {apercu.map((f) => (
+                  <li key={f.cle} className="flex flex-col gap-1 rounded-card border-2 border-line p-2 text-xs text-muted">
+                    {f.dansR2 ? (
+                      <img
+                        src={urlMedia(f.cle)}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="aspect-[4/3] w-full rounded-chip bg-soft object-contain"
+                      />
+                    ) : (
+                      <span className="flex aspect-[4/3] items-center justify-center rounded-chip bg-soft p-2 text-center">
+                        Fiche sans fichier (envoi interrompu)
+                      </span>
+                    )}
+                    <span>
+                      {date.format(new Date(f.creeLe))}
+                      {f.dansR2 ? ` · ${taille(f.taille)}` : ""}
                     </span>
-                  )}
-                  <span>
-                    {date.format(new Date(f.creeLe))}
-                    {f.dansR2 ? ` · ${taille(f.taille)}` : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-          {peutSupprimer ? (
-            <Form method="post" className="flex flex-col gap-2">
-              <p className="text-sm text-ink-2">
-                La suppression est définitive. Les images envoyées il y a moins de {heures} heures ne
-                sont jamais touchées.
-              </p>
-              <Button
-                type="submit"
-                name="intention"
-                value="supprimer"
-                disabled={envoi}
-                className="self-start"
-                onClick={(e) => {
-                  if (!window.confirm(`Supprimer définitivement ${nombre} image${nombre > 1 ? "s" : ""} inutilisée${nombre > 1 ? "s" : ""} ?`)) {
-                    e.preventDefault();
-                  }
-                }}
-              >
-                {envoi ? "Suppression…" : `Supprimer ${nombre} image${nombre > 1 ? "s" : ""} inutilisée${nombre > 1 ? "s" : ""}`}
-              </Button>
-            </Form>
-          ) : (
-            <p className="text-sm text-muted">Seul un administrateur peut supprimer ces images.</p>
-          )}
-        </>
-      )}
+            {peutSupprimer ? (
+              <Form method="post" className="flex flex-col gap-2 lg:col-start-2 lg:row-start-2 lg:self-start lg:rounded-card lg:border-2 lg:border-line lg:p-4">
+                <p className="text-sm text-ink-2">
+                  La suppression est définitive. Les images envoyées il y a moins de {heures} heures ne
+                  sont jamais touchées.
+                </p>
+                <Button
+                  type="submit"
+                  name="intention"
+                  value="supprimer"
+                  disabled={envoi}
+                  className="self-start"
+                  onClick={(e) => {
+                    if (!window.confirm(`Supprimer définitivement ${nombre} image${nombre > 1 ? "s" : ""} inutilisée${nombre > 1 ? "s" : ""} ?`)) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  {envoi ? "Suppression…" : `Supprimer ${nombre} image${nombre > 1 ? "s" : ""} inutilisée${nombre > 1 ? "s" : ""}`}
+                </Button>
+              </Form>
+            ) : (
+              <p className="text-sm text-muted lg:col-start-2 lg:row-start-2">Seul un administrateur peut supprimer ces images.</p>
+            )}
+          </>
+        )}
+      </div>
     </>
   );
 }

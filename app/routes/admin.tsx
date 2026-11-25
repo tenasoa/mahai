@@ -23,7 +23,8 @@ export default function Admin() {
   const matches = useMatches();
   // L'éditeur de sujet prend toute la largeur sur ordinateur (plan, éditeur, aperçu).
   const large = Boolean((matches[matches.length - 1]?.handle as { large?: boolean } | undefined)?.large);
-  const largeur = large ? "max-w-4xl lg:max-w-[96rem] lg:px-8" : "max-w-4xl";
+  // Les autres pages (listes, tableaux) passent aussi en largeur d'ordinateur.
+  const largeur = large ? "max-w-4xl lg:max-w-[96rem] lg:px-8" : "max-w-4xl lg:max-w-6xl lg:px-8 xl:max-w-7xl";
   return (
     <div className="min-h-dvh">
       <header className={`mx-auto flex ${largeur} flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-2`}>
