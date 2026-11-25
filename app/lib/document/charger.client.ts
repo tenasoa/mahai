@@ -102,3 +102,40 @@ export async function chargerExcalidraw() {
   ]);
   return module;
 }
+
+/* ---------- Molécules (SmilesDrawer) ---------- */
+
+/**
+ * Dessine une molécule décrite en SMILES (« CCO » : éthanol). Lève une erreur si la description
+ * est invalide. Le SVG est passé par DOMPurify par précaution.
+ */
+export async function dessinerMolecule(smiles: string, carbones: boolean): Promise<string> {
+  const [{ default: SmilesDrawer }, { default: DOMPurify }] = await Promise.all([
+    import("smiles-drawer"),
+    import("dompurify"),
+  ]);
+  let arbre: ReturnType<typeof SmilesDrawer.Parser.parse>;
+  try {
+    arbre = SmilesDrawer.Parser.parse(smiles.trim());
+  } catch {
+    throw new Error("Formule SMILES invalide.");
+  }
+  // Échelle fixe (et non « remplir la place ») : une petite molécule reste petite.
+  const echelle = 1.6;
+  const dessin = new SmilesDrawer.SvgDrawer({
+    scale: echelle,
+    bondThickness: 1.2,
+    fontSizeLarge: 9,
+    fontSizeSmall: 6,
+    padding: 8,
+    showCarbons: carbones ? "all" : "default",
+    explicitHydrogens: true,
+    compactDrawing: false,
+  });
+  const svg = dessin.draw(arbre, null, "light") as SVGSVGElement;
+  const [, , largeur = 0, hauteur = 0] = (svg.getAttribute("viewBox") ?? "").split(" ").map(Number);
+  svg.removeAttribute("style");
+  svg.setAttribute("width", String(Math.round(largeur * echelle)));
+  svg.setAttribute("height", String(Math.round(hauteur * echelle)));
+  return DOMPurify.sanitize(svg.outerHTML, { USE_PROFILES: { svg: true, svgFilters: true } });
+}

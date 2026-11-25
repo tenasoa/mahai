@@ -7,8 +7,10 @@
  * contributeurs pourront écrire des sujets.
  */
 
+import { normaliserGraphique } from "./graphique";
 import { normaliserKarnaugh } from "./karnaugh";
 import { ENCADRES, IDS_LANGAGES } from "./outils";
+import { normaliserVariations } from "./variations";
 
 export type Marque = { type: string; attrs?: Record<string, unknown> };
 export type Noeud = {
@@ -137,6 +139,18 @@ export const NOEUDS: Record<string, Regle> = {
   chronogramme: { attrs: (a) => ({ source: chaine(a?.source, 10_000) }) },
   /** Tableau de Karnaugh. */
   karnaugh: { attrs: (a) => normaliserKarnaugh(a) },
+  /** Graphique dans un repère (dessiné en SVG sur le serveur). */
+  graphique: { attrs: (a) => normaliserGraphique(a) },
+  /** Tableau de signes et de variations. */
+  variations: { attrs: (a) => normaliserVariations(a) },
+  /** Molécule en SMILES (dessinée dans le navigateur) ; supprimée si la formule est vide. */
+  molecule: {
+    attrs: (a) => {
+      const smiles = chaine(a?.smiles, 500).replace(/[^A-Za-z0-9@.+\-()[\]/\\=#$:*%]/g, "");
+      if (!smiles) return null;
+      return { smiles, nom: chaine(a?.nom, 200).trim(), carbones: a?.carbones === true };
+    },
+  },
 };
 
 const MARQUES: Record<string, Regle> = {
@@ -241,6 +255,9 @@ const BLOCS_SANS_TEXTE = new Set([
   "schema",
   "chronogramme",
   "karnaugh",
+  "graphique",
+  "variations",
+  "molecule",
 ]);
 
 /** Vrai si le document ne contient ni texte, ni formule, ni bloc (exercice, image, diagramme…). */
@@ -257,7 +274,8 @@ export function texteBrut(n: Noeud): string {
   if (n.type === "text") return n.text ?? "";
   if (n.type === "inlineMath" || n.type === "blockMath") return ` ${String(n.attrs?.latex ?? "")} `;
   if (n.type === "note") return ` ${String(n.attrs?.texte ?? "")} `;
-  if (n.type === "image" || n.type === "schema") return ` ${String(n.attrs?.alt ?? "")} `;
+  if (n.type === "image" || n.type === "schema" || n.type === "graphique") return ` ${String(n.attrs?.alt ?? "")} `;
+  if (n.type === "molecule") return ` ${String(n.attrs?.nom ?? "")} `;
   if (n.type === "exercice") {
     const titre = String(n.attrs?.titre ?? "");
     return `${titre}\n${(n.content ?? []).map(texteBrut).join("\n")}`;

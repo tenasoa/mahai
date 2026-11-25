@@ -62,17 +62,23 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   `\ce{…}` ; saisie visuelle MathLive chargée seulement dans le dialogue de l'admin.
 - Admin sous `/admin` (rôles `admin` et `moderateur`, `requireEditeur`) ; les autres voient un 404.
 - Outils de l'éditeur (`app/lib/document/outils.ts`) : image, document numéroté, encadré, note,
-  extrait, chimie, code, algorithme, diagramme. Profil par matière (`matiere.outils`, `null` = tous)
+  extrait, chimie, code, algorithme, diagramme, schéma, chronogramme, logique, graphique,
+  variations, molécule. Profil par matière (`matiere.outils`, `null` = tous)
   réglé dans `/admin/listes` ; menu « / » et bouton « Insérer… » (`app/components/editeur/commandes.tsx`).
 - Images : bucket R2 `MEDIAS` (clés `m/<uuid>.<ext>`), envoi par `/admin/medias` (type vérifié par
   les premiers octets, 5 Mo max., compressées en WebP dans le navigateur), lecture par `/medias/*`.
-- Bibliothèques lourdes (Mermaid, highlight.js, MathLive, Excalidraw, WaveDrom) : seulement dans
+- Bibliothèques lourdes (Mermaid, highlight.js, MathLive, Excalidraw, WaveDrom, SmilesDrawer) : seulement dans
   `charger.client.ts`, chargées à la demande. Ne rien exécuter au chargement d'un module partagé
   avec le serveur.
 - Électronique (`app/components/editeur/electronique.tsx`) : schémas Excalidraw enregistrés en PNG
   dans R2 avec la scène incluse (« Modifier » la relit depuis l'image), symboles CEI dans
   `app/lib/document/symboles.ts` ; chronogrammes WaveDrom (SVG passé par DOMPurify, `<use>` limité
   aux références `#…`) ; tableaux de Karnaugh (`app/lib/document/karnaugh.ts`).
+- Sciences (`app/components/editeur/sciences.tsx`) : graphiques dans un repère décrits par des
+  données (`app/lib/document/graphique.ts`) et dessinés en SVG **sur le serveur**
+  (`SvgGraphique`) ; les expressions passent par l'analyseur maison `expression.ts` (jamais
+  `eval`). Tableaux de signes et de variations (`variations.ts`, textes en LaTeX). Molécules en
+  SMILES dessinées dans le navigateur par SmilesDrawer (`dessinerMolecule`).
 - Polices d'Excalidraw servies depuis `public/excalidraw/fonts` (copiées du paquet, sans la police
   chinoise de 13 Mo) : à recopier lors d'une mise à jour d'Excalidraw.
 

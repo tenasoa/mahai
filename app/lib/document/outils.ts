@@ -16,6 +16,9 @@ export const OUTILS = [
   { id: "schema", nom: "Schéma électrique", aide: "Composants, circuits, portes logiques" },
   { id: "chronogramme", nom: "Chronogramme", aide: "Signaux, horloge, bus, logigramme" },
   { id: "logique", nom: "Logique combinatoire", aide: "Tableau de Karnaugh, table de vérité" },
+  { id: "graphique", nom: "Graphique", aide: "Courbes, points, vecteurs dans un repère" },
+  { id: "variations", nom: "Tableau de variations", aide: "Tableau de signes et de variations" },
+  { id: "molecule", nom: "Molécule", aide: "Formule topologique (SMILES)" },
 ] as const;
 
 export type OutilId = (typeof OUTILS)[number]["id"];

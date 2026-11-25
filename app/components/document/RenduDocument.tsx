@@ -2,8 +2,13 @@ import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "re
 
 import { chargerColoration, dessinerChronogramme, dessinerDiagramme } from "~/lib/document/charger.client";
 import { normaliserKarnaugh } from "~/lib/document/karnaugh";
+import { normaliserGraphique } from "~/lib/document/graphique";
+import { normaliserVariations } from "~/lib/document/variations";
 import { GrilleKarnaugh } from "./GrilleKarnaugh";
-import { dessinerFormule } from "~/lib/document/katex.client";
+import { Molecule } from "./Molecule";
+import { SvgGraphique } from "./SvgGraphique";
+import { TableauVariations } from "./TableauVariations";
+import { Tex } from "./Tex";
 import { ENCADRES, LANGAGES } from "~/lib/document/outils";
 import { urlMedia } from "~/lib/medias/medias";
 
@@ -230,6 +235,26 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
           <GrilleKarnaugh k={normaliserKarnaugh(n.attrs)} />
         </div>
       );
+    case "graphique":
+      return (
+        <figure className="figure-graphique">
+          <SvgGraphique g={normaliserGraphique(n.attrs)} />
+        </figure>
+      );
+    case "variations":
+      return (
+        <div className="tableau">
+          <TableauVariations t={normaliserVariations(n.attrs)} />
+        </div>
+      );
+    case "molecule":
+      return (
+        <Molecule
+          smiles={String(n.attrs?.smiles ?? "")}
+          nom={String(n.attrs?.nom ?? "")}
+          carbones={n.attrs?.carbones === true}
+        />
+      );
     case "horizontalRule":
       return <hr />;
     case "hardBreak":
@@ -293,21 +318,7 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
   }
 }
 
-/**
- * Formule LaTeX : le texte brut est rendu côté serveur (lisible sans JavaScript), puis KaTeX le
- * dessine dans le navigateur (trop coûteux en CPU pour un Worker).
- */
-export function Tex({ latex, bloc = false }: { latex: string; bloc?: boolean }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    if (ref.current) void dessinerFormule(ref.current, latex, bloc);
-  }, [latex, bloc]);
-  return (
-    <span ref={ref} className="tex" data-bloc={bloc ? "" : undefined}>
-      {latex}
-    </span>
-  );
-}
+export { Tex };
 
 type Hast = { type: string; value?: string; properties?: { className?: string[] }; children?: Hast[] };
 

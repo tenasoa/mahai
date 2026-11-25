@@ -40,6 +40,12 @@
   --color-code-texte: #1d7a3a;
   --color-code-nombre: #b34700;
 
+  /* Tracés des graphiques (lisibles imprimés en noir et blanc : épaisseurs et pointillés aussi) */
+  --color-trace-0: #1c5fd1;
+  --color-trace-1: #c4321b;
+  --color-trace-2: #1d7a3a;
+  --color-trace-3: #7a1fc9;
+
   --radius-tile: 20px;
   --radius-card: 18px;
   --radius-chip: 12px;
@@ -574,4 +580,212 @@ dialog > .ML__keyboard {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Graphique dans un repère (lecture et éditeur) */
+.figure-graphique {
+  margin: 1em 0;
+  text-align: center;
+}
+svg.graphique {
+  display: block;
+  width: 100%;
+  max-width: 36rem;
+  height: auto;
+  margin-inline: auto;
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.graphique .grille line {
+  stroke: var(--color-line);
+  stroke-width: 1;
+}
+.graphique .axes line {
+  stroke: var(--color-ink);
+  stroke-width: 1.2;
+}
+.graphique .pointe {
+  fill: var(--color-ink);
+}
+.graphique .graduation {
+  fill: var(--color-ink-2);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.graphique .etiquette {
+  fill: var(--color-ink);
+  font-style: italic;
+  paint-order: stroke;
+  stroke: var(--color-surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.graphique .trace {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.graphique .pointille {
+  stroke-dasharray: 6 5;
+}
+.graphique .trace-0 { stroke: var(--color-trace-0); fill: var(--color-trace-0); }
+.graphique .trace-1 { stroke: var(--color-trace-1); fill: var(--color-trace-1); }
+.graphique .trace-2 { stroke: var(--color-trace-2); fill: var(--color-trace-2); }
+.graphique .trace-3 { stroke: var(--color-trace-3); fill: var(--color-trace-3); }
+.graphique path.trace,
+.graphique ellipse.trace {
+  fill: none;
+}
+.graphique .aire {
+  stroke: none;
+  fill-opacity: 0.18;
+}
+.graphique .asymptote {
+  stroke: var(--color-ink-2);
+  stroke-width: 1.2;
+  stroke-dasharray: 8 5;
+}
+.graphique .projection {
+  fill: none;
+  stroke: var(--color-ink-2);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.graphique .segment {
+  stroke: var(--color-ink);
+  stroke-width: 1.8;
+}
+.graphique .point {
+  fill: var(--color-ink);
+}
+/* Sur téléphone le dessin est réduit de moitié : textes agrandis pour rester lisibles. */
+@media (max-width: 30rem) {
+  svg.graphique {
+    font-size: 18px;
+  }
+  .graphique .graduation {
+    font-size: 15px;
+  }
+}
+
+/* Tableau de signes et de variations */
+.contenu table.variations,
+table.variations {
+  display: table;
+  width: auto;
+  min-width: 18rem;
+  border-collapse: collapse;
+  text-align: center;
+}
+table.variations th,
+table.variations td {
+  border: 1px solid var(--color-ink);
+  padding: 0.3em 0.5em;
+  vertical-align: middle;
+  text-align: center;
+}
+table.variations th {
+  min-width: 3.5em;
+  background: var(--color-soft);
+  font-weight: 400;
+}
+table.variations td {
+  border-left: none;
+  border-right: none;
+}
+table.variations tr > :last-child {
+  border-right: 1px solid var(--color-ink);
+}
+table.variations td.point {
+  min-width: 2.6em;
+}
+table.variations td.intervalle {
+  min-width: 4em;
+}
+table.variations .ligne-signe td.signe {
+  font-weight: 700;
+}
+table.variations .ligne-signe td.trait {
+  background: linear-gradient(var(--color-ink), var(--color-ink)) center / 1px 100% no-repeat;
+}
+table.variations td.interdit {
+  background:
+    linear-gradient(var(--color-ink), var(--color-ink)) calc(50% - 2px) 0 / 1px 100% no-repeat,
+    linear-gradient(var(--color-ink), var(--color-ink)) calc(50% + 2px) 0 / 1px 100% no-repeat;
+}
+table.variations .zero {
+  padding: 0 0.15em;
+  background: var(--color-surface);
+}
+table.variations .ligne-variation td {
+  position: relative;
+  height: 5.5em;
+  padding: 0;
+}
+table.variations .ligne-variation td.point {
+  padding: 0 0.4em;
+}
+table.variations .place {
+  position: absolute;
+  inset-inline: 0;
+  white-space: nowrap;
+}
+table.variations .place-h { top: 0.3em; }
+table.variations .place-m { top: 50%; transform: translateY(-50%); }
+table.variations .place-b { bottom: 0.3em; }
+table.variations td.interdit .cote {
+  position: absolute;
+  inset-block: 0;
+  width: calc(50% - 4px);
+}
+table.variations td.interdit .gauche { left: 0; }
+table.variations td.interdit .droite { right: 0; }
+table.variations td.interdit .gauche .place { text-align: right; padding-right: 0.3em; }
+table.variations td.interdit .droite .place { text-align: left; padding-left: 0.3em; }
+table.variations td.interdit:has(.cote) {
+  min-width: 6em;
+}
+table.variations svg.fleche {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+table.variations svg.fleche line {
+  stroke: var(--color-ink);
+  stroke-width: 1.2;
+}
+table.variations .pointe {
+  fill: var(--color-ink);
+}
+.edition-variations th,
+.edition-variations td {
+  padding: 0.2em;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* Molécule (SmilesDrawer) */
+.molecule {
+  margin: 1em 0;
+  text-align: center;
+}
+.molecule > div:empty {
+  display: none;
+}
+.molecule svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+.molecule .smiles {
+  font-family: ui-monospace, monospace;
+  color: var(--color-ink-2);
+}
+.molecule figcaption {
+  font-size: 0.9em;
+  color: var(--color-ink-2);
 }

@@ -32,8 +32,11 @@ import {
   type EtatMenu,
 } from "./commandes";
 import { DialogueDiagramme, type DiagrammeEnCours } from "./DialogueDiagramme";
+import { DialogueGraphique, type GraphiqueEnCours } from "./DialogueGraphique";
 import { DialogueSchema, type SchemaEnCours, type SchemaEnregistre } from "./DialogueSchema";
 import { Chronogramme, KarnaughSujet, Schema } from "./electronique";
+import { GraphiqueSujet, MoleculeSujet, VariationsSujet } from "./sciences";
+import type { Graphique } from "~/lib/document/graphique";
 import { DialogueFormule, type FormuleEnCours } from "./DialogueFormule";
 import {
   DocumentSujet,
@@ -72,6 +75,7 @@ export function EditeurRiche({
   const [formule, setFormule] = useState<FormuleEnCours | null>(null);
   const [diagramme, setDiagramme] = useState<DiagrammeEnCours | null>(null);
   const [schema, setSchema] = useState<SchemaEnCours | null>(null);
+  const [graphique, setGraphique] = useState<GraphiqueEnCours | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [menu, setMenu] = useState<EtatMenu | null>(null);
   const [actif, setActif] = useState(0);
@@ -124,6 +128,9 @@ export function EditeurRiche({
       }),
       Schema.configure({ ouvrir: (cle, pos) => setSchema({ cle, pos }) }),
       KarnaughSujet,
+      GraphiqueSujet.configure({ ouvrir: (attrs, pos) => setGraphique({ attrs, pos }) }),
+      VariationsSujet,
+      MoleculeSujet,
       CommandeSlash.configure({
         commandes: (requete) => commandesDisponibles(outilsRef.current, requete),
         executer: (c) => {
@@ -171,6 +178,7 @@ export function EditeurRiche({
         ouvrirDiagramme: () => setDiagramme({ source: "" }),
         ouvrirChronogramme: () => setDiagramme({ source: "", genre: "chronogramme" }),
         ouvrirSchema: () => setSchema({ cle: null }),
+        ouvrirGraphique: () => setGraphique({ attrs: null }),
       }
     : null;
 
@@ -240,6 +248,23 @@ export function EditeurRiche({
     setSchema(null);
   }
 
+  function validerGraphique(g: Graphique) {
+    if (!editor || !graphique) return;
+    const pos = graphique.pos;
+    if (pos === undefined) {
+      editor.chain().focus().insertContent({ type: "graphique", attrs: g }).run();
+    } else {
+      editor
+        .chain()
+        .command(({ tr }) => {
+          if (tr.doc.nodeAt(pos)?.type.name === "graphique") tr.setNodeMarkup(pos, undefined, g);
+          return true;
+        })
+        .run();
+    }
+    setGraphique(null);
+  }
+
   // Ferme le panneau « Insérer » au clic à l'extérieur.
   const zonePanneau = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -305,6 +330,7 @@ export function EditeurRiche({
       />
       <DialogueDiagramme diagramme={diagramme} onValider={validerDiagramme} onFermer={() => setDiagramme(null)} />
       <DialogueSchema schema={schema} onValider={validerSchema} onFermer={() => setSchema(null)} />
+      <DialogueGraphique graphique={graphique} onValider={validerGraphique} onFermer={() => setGraphique(null)} />
     </SeriesEditeur.Provider>
   );
 }

@@ -6,6 +6,7 @@ import { normaliser } from "~/lib/contenu/texte";
 import type { OutilId } from "~/lib/document/outils";
 import { insererNote } from "./blocs";
 import { insererTableVerite } from "./electronique";
+import { VARIATIONS_DEFAUT, ligneSigne } from "~/lib/document/variations";
 import { insererExercice, insererQuestion, insererSousQuestion } from "./noeuds";
 
 /**
@@ -20,6 +21,7 @@ export type ContexteCommande = {
   ouvrirDiagramme: () => void;
   ouvrirChronogramme: () => void;
   ouvrirSchema: () => void;
+  ouvrirGraphique: () => void;
 };
 
 export type Commande = {
@@ -56,6 +58,10 @@ export const COMMANDES: Commande[] = [
   { id: "schema", titre: "Schéma électrique", aide: "Composants, circuits, portes logiques", motsCles: "circuit electronique electrique composant resistance transistor porte", outil: "schema", executer: ({ ouvrirSchema }) => ouvrirSchema() },
   { id: "chronogramme", titre: "Chronogramme", aide: "Signaux, horloge, bus (WaveDrom)", motsCles: "signal horloge timing bascule wavedrom logigramme", outil: "chronogramme", executer: ({ ouvrirChronogramme }) => ouvrirChronogramme() },
   { id: "karnaugh", titre: "Tableau de Karnaugh", aide: "2 à 4 variables", motsCles: "logique simplification booleen", outil: "logique", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "karnaugh", attrs: { variables: ["A", "B", "C"], sortie: "S", valeurs: "........" } }).run() },
+  { id: "graphique", titre: "Graphique", aide: "Courbes, points, vecteurs dans un repère", motsCles: "courbe fonction repere plan coordonnees vecteur droite parabole", outil: "graphique", executer: ({ ouvrirGraphique }) => ouvrirGraphique() },
+  { id: "variations", titre: "Tableau de variations", aide: "Signe de f′ et variations de f", motsCles: "fonction derivee etude croissante", outil: "variations", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "variations", attrs: VARIATIONS_DEFAUT }).run() },
+  { id: "signes", titre: "Tableau de signes", aide: "Signe d'une expression", motsCles: "signe inequation produit quotient", outil: "variations", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "variations", attrs: { nomX: "x", x: ["-\\infty", "", "+\\infty"], lignes: [ligneSigne(3, "f(x)")] } }).run() },
+  { id: "molecule", titre: "Molécule", aide: "Formule topologique (SMILES)", motsCles: "chimie organique smiles topologique semi developpee", outil: "molecule", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "molecule", attrs: { smiles: "CCO", nom: "Éthanol", carbones: false } }).run() },
   { id: "table-verite", titre: "Table de vérité", aide: "Toutes les combinaisons des entrées", motsCles: "logique booleen combinatoire", outil: "logique", executer: ({ editor }) => insererTableVerite(editor) },
 ];
 
