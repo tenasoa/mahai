@@ -88,9 +88,30 @@ export function DialogueFormule({
   useEffect(() => {
     if (!formule || chimie) return;
     let annule = false;
+    let liberer = () => {};
     void (async () => {
       const { MathfieldElement } = await chargerMathlive();
       if (annule || !zoneVisuelle.current) return;
+      // Le dialogue modal est dans la « top layer » du navigateur : un clavier attaché à <body>
+      // resterait dessous quel que soit son z-index. On l'attache donc au dialogue, et on remonte
+      // le dialogue de la hauteur du clavier pour garder les boutons visibles.
+      const clavier = window.mathVirtualKeyboard;
+      const d = dialogue.current;
+      if (d) {
+        clavier.container = d;
+        const ajuster = () => {
+          d.style.marginBottom = clavier.visible ? `${clavier.boundingRect.height + 12}px` : "";
+        };
+        clavier.addEventListener("geometrychange", ajuster);
+        clavier.addEventListener("virtual-keyboard-toggle", ajuster);
+        liberer = () => {
+          clavier.removeEventListener("geometrychange", ajuster);
+          clavier.removeEventListener("virtual-keyboard-toggle", ajuster);
+          clavier.hide();
+          clavier.container = document.body;
+          d.style.marginBottom = "";
+        };
+      }
       const mf = new MathfieldElement() as unknown as Mathfield;
       mf.mathVirtualKeyboardPolicy = "auto";
       mf.value = latexCourant.current;
@@ -104,6 +125,7 @@ export function DialogueFormule({
     })();
     return () => {
       annule = true;
+      liberer();
       champ.current = null;
       setVisuelPret(false);
       zoneVisuelle.current?.replaceChildren();

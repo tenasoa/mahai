@@ -248,6 +248,12 @@ body {
 .editeur-sujet .selectedCell {
   background: var(--color-soft);
 }
+/* Clavier MathLive attaché au dialogue de formule (top layer) : en bas de l'écran, pas du dialogue */
+dialog > .ML__keyboard {
+  position: fixed;
+  inset: auto 0 0 0;
+  width: 100vw;
+}
 .champ-formule {
   display: block;
   width: 100%;
