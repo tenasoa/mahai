@@ -5,6 +5,7 @@ import Suggestion from "@tiptap/suggestion";
 import { normaliser } from "~/lib/contenu/texte";
 import type { OutilId } from "~/lib/document/outils";
 import { insererNote } from "./blocs";
+import { insererTableVerite } from "./electronique";
 import { insererExercice, insererQuestion, insererSousQuestion } from "./noeuds";
 
 /**
@@ -17,6 +18,8 @@ export type ContexteCommande = {
   ouvrirFormule: (bloc: boolean, chimie: boolean) => void;
   choisirImage: () => void;
   ouvrirDiagramme: () => void;
+  ouvrirChronogramme: () => void;
+  ouvrirSchema: () => void;
 };
 
 export type Commande = {
@@ -50,13 +53,24 @@ export const COMMANDES: Commande[] = [
   { id: "code", titre: "Code", aide: "Python, C, Java, SQL…", motsCles: "programme informatique source", outil: "code", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "codeBlock", attrs: { language: "python", numeros: true } }).run() },
   { id: "algo", titre: "Algorithme", aide: "Pseudo-code en français", motsCles: "pseudo code algorithmique", outil: "algo", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "codeBlock", attrs: { language: "algo", numeros: true } }).run() },
   { id: "diagramme", titre: "Diagramme", aide: "Organigramme, UML, automate", motsCles: "mermaid uml graphe organigramme sequence etat", outil: "diagramme", executer: ({ ouvrirDiagramme }) => ouvrirDiagramme() },
+  { id: "schema", titre: "Schéma électrique", aide: "Composants, circuits, portes logiques", motsCles: "circuit electronique electrique composant resistance transistor porte", outil: "schema", executer: ({ ouvrirSchema }) => ouvrirSchema() },
+  { id: "chronogramme", titre: "Chronogramme", aide: "Signaux, horloge, bus (WaveDrom)", motsCles: "signal horloge timing bascule wavedrom logigramme", outil: "chronogramme", executer: ({ ouvrirChronogramme }) => ouvrirChronogramme() },
+  { id: "karnaugh", titre: "Tableau de Karnaugh", aide: "2 à 4 variables", motsCles: "logique simplification booleen", outil: "logique", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "karnaugh", attrs: { variables: ["A", "B", "C"], sortie: "S", valeurs: "........" } }).run() },
+  { id: "table-verite", titre: "Table de vérité", aide: "Toutes les combinaisons des entrées", motsCles: "logique booleen combinatoire", outil: "logique", executer: ({ editor }) => insererTableVerite(editor) },
 ];
 
 export function commandesDisponibles(outils: readonly OutilId[], requete = ""): Commande[] {
   const q = normaliser(requete);
-  return COMMANDES.filter((c) => !c.outil || outils.includes(c.outil)).filter(
+  const proposees = COMMANDES.filter((c) => !c.outil || outils.includes(c.outil)).filter(
     (c) => !q || normaliser(`${c.titre} ${c.motsCles}`).includes(q),
   );
+  if (!q) return proposees;
+  // Le titre compte plus que les mots-clés : « /schema » propose d'abord « Schéma électrique ».
+  const rang = (c: Commande) => {
+    const titre = normaliser(c.titre);
+    return titre.startsWith(q) ? 0 : titre.includes(q) ? 1 : 2;
+  };
+  return proposees.sort((a, b) => rang(a) - rang(b));
 }
 
 /* ---------- Menu « / » ---------- */

@@ -32,6 +32,8 @@ import {
   type EtatMenu,
 } from "./commandes";
 import { DialogueDiagramme, type DiagrammeEnCours } from "./DialogueDiagramme";
+import { DialogueSchema, type SchemaEnCours, type SchemaEnregistre } from "./DialogueSchema";
+import { Chronogramme, KarnaughSujet, Schema } from "./electronique";
 import { DialogueFormule, type FormuleEnCours } from "./DialogueFormule";
 import {
   DocumentSujet,
@@ -69,6 +71,7 @@ export function EditeurRiche({
   const [json, setJson] = useState(() => (initial ? JSON.stringify(initial) : ""));
   const [formule, setFormule] = useState<FormuleEnCours | null>(null);
   const [diagramme, setDiagramme] = useState<DiagrammeEnCours | null>(null);
+  const [schema, setSchema] = useState<SchemaEnCours | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [menu, setMenu] = useState<EtatMenu | null>(null);
   const [actif, setActif] = useState(0);
@@ -116,6 +119,11 @@ export function EditeurRiche({
       Ligne,
       codeConfigure(),
       Diagramme.configure({ ouvrir: (source, pos) => setDiagramme({ source, pos }) }),
+      Chronogramme.configure({
+        ouvrir: (source, pos) => setDiagramme({ source, pos, genre: "chronogramme" }),
+      }),
+      Schema.configure({ ouvrir: (cle, pos) => setSchema({ cle, pos }) }),
+      KarnaughSujet,
       CommandeSlash.configure({
         commandes: (requete) => commandesDisponibles(outilsRef.current, requete),
         executer: (c) => {
@@ -161,6 +169,8 @@ export function EditeurRiche({
           choisirEtInsererImage(editor, setErreur);
         },
         ouvrirDiagramme: () => setDiagramme({ source: "" }),
+        ouvrirChronogramme: () => setDiagramme({ source: "", genre: "chronogramme" }),
+        ouvrirSchema: () => setSchema({ cle: null }),
       }
     : null;
 
@@ -195,7 +205,11 @@ export function EditeurRiche({
     if (!editor || !diagramme) return;
     const pos = diagramme.pos;
     if (pos === undefined) {
-      editor.chain().focus().insertContent({ type: "diagramme", attrs: { source } }).run();
+      editor
+        .chain()
+        .focus()
+        .insertContent({ type: diagramme.genre ?? "diagramme", attrs: { source } })
+        .run();
     } else {
       editor
         .chain()
@@ -206,6 +220,24 @@ export function EditeurRiche({
         .run();
     }
     setDiagramme(null);
+  }
+
+  function validerSchema({ cle, largeur, hauteur }: SchemaEnregistre) {
+    if (!editor || !schema) return;
+    const pos = schema.pos;
+    if (pos === undefined) {
+      editor.chain().focus().insertContent({ type: "schema", attrs: { cle, alt: "", largeur, hauteur } }).run();
+    } else {
+      editor
+        .chain()
+        .command(({ tr }) => {
+          const noeud = tr.doc.nodeAt(pos);
+          if (noeud) tr.setNodeMarkup(pos, undefined, { ...noeud.attrs, cle, largeur, hauteur });
+          return true;
+        })
+        .run();
+    }
+    setSchema(null);
   }
 
   // Ferme le panneau « Insérer » au clic à l'extérieur.
@@ -272,6 +304,7 @@ export function EditeurRiche({
         onFermer={() => setFormule(null)}
       />
       <DialogueDiagramme diagramme={diagramme} onValider={validerDiagramme} onFermer={() => setDiagramme(null)} />
+      <DialogueSchema schema={schema} onValider={validerSchema} onFermer={() => setSchema(null)} />
     </SeriesEditeur.Provider>
   );
 }

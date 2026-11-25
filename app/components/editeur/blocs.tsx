@@ -48,6 +48,11 @@ async function preparerImage(fichier: File): Promise<{ blob: Blob; largeur: numb
 
 export async function envoyerImage(fichier: File) {
   const { blob, largeur, hauteur } = await preparerImage(fichier);
+  return envoyerFichier(blob, largeur, hauteur);
+}
+
+/** Envoie un fichier image tel quel dans R2 (sans recompression). */
+export async function envoyerFichier(blob: Blob, largeur: number, hauteur: number) {
   const corps = new FormData();
   corps.set("fichier", blob, "image");
   corps.set("largeur", String(largeur));
@@ -427,6 +432,17 @@ export function codeConfigure() {
 
 /** Aperçu d'un diagramme : SVG produit par Mermaid (texte nettoyé, mode strict). */
 export function ApercuDiagramme({ source }: { source: string }) {
+  return <ApercuSource source={source} dessiner={dessinerDiagramme} />;
+}
+
+/** Aperçu d'un bloc décrit par du texte (Mermaid, WaveDrom) : `dessiner` renvoie un SVG sûr. */
+export function ApercuSource({
+  source,
+  dessiner,
+}: {
+  source: string;
+  dessiner: (source: string) => Promise<string>;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   useEffect(() => {
@@ -438,7 +454,7 @@ export function ApercuDiagramme({ source }: { source: string }) {
     }
     const delai = setTimeout(async () => {
       try {
-        const svg = await dessinerDiagramme(source);
+        const svg = await dessiner(source);
         if (!annule && ref.current) {
           ref.current.innerHTML = svg;
           setErreur(null);
@@ -451,7 +467,7 @@ export function ApercuDiagramme({ source }: { source: string }) {
       annule = true;
       clearTimeout(delai);
     };
-  }, [source]);
+  }, [source, dessiner]);
   return (
     <>
       <div ref={ref} className="diagramme" />

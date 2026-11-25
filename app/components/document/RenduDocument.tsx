@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "react";
 
-import { chargerColoration, dessinerDiagramme } from "~/lib/document/charger.client";
+import { chargerColoration, dessinerChronogramme, dessinerDiagramme } from "~/lib/document/charger.client";
+import { normaliserKarnaugh } from "~/lib/document/karnaugh";
+import { GrilleKarnaugh } from "./GrilleKarnaugh";
 import { dessinerFormule } from "~/lib/document/katex.client";
 import { ENCADRES, LANGAGES } from "~/lib/document/outils";
 import { urlMedia } from "~/lib/medias/medias";
@@ -204,7 +206,30 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
       );
     }
     case "diagramme":
-      return <Diagramme source={String(n.attrs?.source ?? "")} />;
+      return <Dessin source={String(n.attrs?.source ?? "")} dessiner={dessinerDiagramme} />;
+    case "chronogramme":
+      return <Dessin source={String(n.attrs?.source ?? "")} dessiner={dessinerChronogramme} />;
+    case "schema": {
+      const largeur = Number(n.attrs?.largeur) || undefined;
+      const hauteur = Number(n.attrs?.hauteur) || undefined;
+      return (
+        <img
+          src={urlMedia(String(n.attrs?.cle))}
+          alt={String(n.attrs?.alt ?? "") || "Schéma"}
+          width={largeur}
+          height={hauteur}
+          loading="lazy"
+          decoding="async"
+          className="image schema"
+        />
+      );
+    }
+    case "karnaugh":
+      return (
+        <div className="tableau">
+          <GrilleKarnaugh k={normaliserKarnaugh(n.attrs)} />
+        </div>
+      );
     case "horizontalRule":
       return <hr />;
     case "hardBreak":
@@ -330,13 +355,13 @@ function BlocCode({ code, langage, numeros }: { code: string; langage: string | 
   );
 }
 
-/** Diagramme Mermaid : description texte côté serveur, dessin SVG dans le navigateur. */
-function Diagramme({ source }: { source: string }) {
+/** Diagramme (Mermaid) ou chronogramme (WaveDrom) : texte côté serveur, SVG dans le navigateur. */
+function Dessin({ source, dessiner }: { source: string; dessiner: (source: string) => Promise<string> }) {
   const ref = useRef<HTMLDivElement>(null);
   const [dessine, setDessine] = useState(false);
   useEffect(() => {
     let annule = false;
-    dessinerDiagramme(source)
+    dessiner(source)
       .then((svg) => {
         if (annule || !ref.current) return;
         ref.current.innerHTML = svg;
@@ -346,7 +371,7 @@ function Diagramme({ source }: { source: string }) {
     return () => {
       annule = true;
     };
-  }, [source]);
+  }, [source, dessiner]);
   return (
     <figure className="diagramme">
       {/* Conteneur vide réservé à Mermaid : React n'y touche pas. */}

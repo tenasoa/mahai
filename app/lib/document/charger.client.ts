@@ -45,3 +45,60 @@ export async function chargerMathlive() {
   module.MathfieldElement.soundsDirectory = null;
   return module;
 }
+
+/* ---------- Chronogrammes (WaveDrom) ---------- */
+
+let compteurOnde = 0;
+
+/**
+ * Dessine un chronogramme WaveDrom (WaveJSON, écrit en JSON5 comme dans la documentation).
+ * Le SVG produit est passé par DOMPurify : WaveDrom n'échappe pas tout le texte.
+ */
+export async function dessinerChronogramme(source: string): Promise<string> {
+  const [{ default: wavedrom }, { default: JSON5 }, { default: DOMPurify }] = await Promise.all([
+    import("wavedrom"),
+    import("json5"),
+    import("dompurify"),
+  ]);
+  let objet: unknown;
+  try {
+    objet = JSON5.parse(source);
+  } catch (e) {
+    throw new Error(e instanceof Error ? e.message.replace(/^JSON5: /, "") : "Description illisible.");
+  }
+  if (!objet || typeof objet !== "object") throw new Error("Description illisible.");
+  const arbre = wavedrom.renderAny(++compteurOnde, objet, wavedrom.waveSkin);
+  const svg = wavedrom.onml.stringify(arbre);
+  if (!svg.startsWith("<svg")) throw new Error("Il faut une clé signal, assign ou reg.");
+  // WaveDrom dessine les ondes avec <use xlink:href="#…"> : autorisé, mais seulement vers le SVG lui-même.
+  DOMPurify.addHook("afterSanitizeAttributes", referencesLocales);
+  try {
+    return DOMPurify.sanitize(svg, {
+      USE_PROFILES: { svg: true, svgFilters: true },
+      ADD_TAGS: ["use"],
+      ADD_ATTR: ["xlink:href", "href"],
+    });
+  } finally {
+    DOMPurify.removeHook("afterSanitizeAttributes", referencesLocales);
+  }
+}
+
+function referencesLocales(noeud: Element) {
+  if (noeud.nodeName.toLowerCase() !== "use") return;
+  for (const nom of ["href", "xlink:href"]) {
+    const cible = noeud.getAttribute(nom);
+    if (cible !== null && !cible.startsWith("#")) noeud.removeAttribute(nom);
+  }
+}
+
+/* ---------- Schémas (Excalidraw) ---------- */
+
+export async function chargerExcalidraw() {
+  // Polices servies par l'application (public/excalidraw/fonts), pas par un CDN.
+  (window as unknown as { EXCALIDRAW_ASSET_PATH: string }).EXCALIDRAW_ASSET_PATH = "/excalidraw/";
+  const [module] = await Promise.all([
+    import("@excalidraw/excalidraw"),
+    import("@excalidraw/excalidraw/index.css"),
+  ]);
+  return module;
+}

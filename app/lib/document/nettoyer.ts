@@ -7,6 +7,7 @@
  * contributeurs pourront écrire des sujets.
  */
 
+import { normaliserKarnaugh } from "./karnaugh";
 import { ENCADRES, IDS_LANGAGES } from "./outils";
 
 export type Marque = { type: string; attrs?: Record<string, unknown> };
@@ -119,6 +120,23 @@ export const NOEUDS: Record<string, Regle> = {
   ligne: {},
   /** Diagramme Mermaid (source texte, dessiné dans le navigateur). */
   diagramme: { attrs: (a) => ({ source: chaine(a?.source, 10_000) }) },
+  /** Schéma (Excalidraw) : image PNG dans R2, la scène modifiable est incluse dans le PNG. */
+  schema: {
+    attrs: (a) => {
+      const cle = chaine(a?.cle, 80);
+      if (!CLE_MEDIA.test(cle) || !cle.endsWith(".png")) return null;
+      return {
+        cle,
+        alt: chaine(a?.alt, 300).trim(),
+        largeur: entier(a?.largeur, 1, 8000) ?? null,
+        hauteur: entier(a?.hauteur, 1, 8000) ?? null,
+      };
+    },
+  },
+  /** Chronogramme WaveDrom (source WaveJSON, dessiné dans le navigateur). */
+  chronogramme: { attrs: (a) => ({ source: chaine(a?.source, 10_000) }) },
+  /** Tableau de Karnaugh. */
+  karnaugh: { attrs: (a) => normaliserKarnaugh(a) },
 };
 
 const MARQUES: Record<string, Regle> = {
@@ -214,7 +232,16 @@ export function lireDocument(json: FormDataEntryValue | null): Noeud | null {
   return estVide(doc) ? null : doc;
 }
 
-const BLOCS_SANS_TEXTE = new Set(["exercice", "image", "diagramme", "documentNumerote", "encadre"]);
+const BLOCS_SANS_TEXTE = new Set([
+  "exercice",
+  "image",
+  "diagramme",
+  "documentNumerote",
+  "encadre",
+  "schema",
+  "chronogramme",
+  "karnaugh",
+]);
 
 /** Vrai si le document ne contient ni texte, ni formule, ni bloc (exercice, image, diagramme…). */
 export function estVide(doc: Noeud): boolean {
@@ -230,7 +257,7 @@ export function texteBrut(n: Noeud): string {
   if (n.type === "text") return n.text ?? "";
   if (n.type === "inlineMath" || n.type === "blockMath") return ` ${String(n.attrs?.latex ?? "")} `;
   if (n.type === "note") return ` ${String(n.attrs?.texte ?? "")} `;
-  if (n.type === "image") return ` ${String(n.attrs?.alt ?? "")} `;
+  if (n.type === "image" || n.type === "schema") return ` ${String(n.attrs?.alt ?? "")} `;
   if (n.type === "exercice") {
     const titre = String(n.attrs?.titre ?? "");
     return `${titre}\n${(n.content ?? []).map(texteBrut).join("\n")}`;

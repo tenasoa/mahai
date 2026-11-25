@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ApercuDiagramme } from "./blocs";
+import { ApercuChronogramme } from "./electronique";
 
-/** Saisie d'un diagramme Mermaid : modèles de départ, texte, aperçu en direct. */
+/**
+ * Saisie d'un bloc décrit par du texte : diagramme Mermaid ou chronogramme WaveDrom.
+ * Modèles de départ, texte, aperçu en direct.
+ */
 
-export type DiagrammeEnCours = { source: string; pos?: number };
+export type GenreSource = "diagramme" | "chronogramme";
+export type DiagrammeEnCours = { source: string; pos?: number; genre?: GenreSource };
 
-const MODELES = [
+const MODELES_MERMAID = [
   {
     nom: "Organigramme",
     source: `flowchart TD
@@ -62,6 +67,65 @@ const MODELES = [
   },
 ];
 
+const MODELES_ONDES = [
+  {
+    nom: "Horloge et bascule D",
+    source: `{ signal: [
+  { name: "H", wave: "p......." },
+  { name: "D", wave: "0.1..0.1" },
+  { name: "Q", wave: "0..1..0." }
+]}`,
+  },
+  {
+    nom: "Compteur 2 bits",
+    source: `{ signal: [
+  { name: "H",  wave: "p......." },
+  { name: "Q0", wave: "01010101" },
+  { name: "Q1", wave: "0.1.0.1." }
+]}`,
+  },
+  {
+    nom: "Bus de données",
+    source: `{ signal: [
+  { name: "H",       wave: "p....." },
+  { name: "Adresse", wave: "x.3.x.", data: ["0x2A"] },
+  { name: "Données", wave: "x..4x.", data: ["0xFF"] },
+  { name: "RD",      wave: "1.0.1." }
+]}`,
+  },
+  {
+    nom: "Logigramme",
+    source: `{ assign: [
+  ["S", ["|", ["&", "A", "B"], ["~", "C"]]]
+]}`,
+  },
+  {
+    nom: "Registre",
+    source: `{ reg: [
+  { bits: 8, name: "valeur" },
+  { bits: 4, name: "registre" },
+  { bits: 4, name: "opcode" }
+]}`,
+  },
+];
+
+const GENRES = {
+  diagramme: {
+    nouveau: "Nouveau diagramme",
+    modifier: "Modifier le diagramme",
+    modeles: MODELES_MERMAID,
+    aide: { lien: "https://mermaid.js.org/intro/syntax-reference.html", texte: "Syntaxe Mermaid" },
+    Apercu: ApercuDiagramme,
+  },
+  chronogramme: {
+    nouveau: "Nouveau chronogramme",
+    modifier: "Modifier le chronogramme",
+    modeles: MODELES_ONDES,
+    aide: { lien: "https://wavedrom.com/tutorial.html", texte: "Syntaxe WaveDrom" },
+    Apercu: ApercuChronogramme,
+  },
+} as const;
+
 export function DialogueDiagramme({
   diagramme,
   onValider,
@@ -74,11 +138,14 @@ export function DialogueDiagramme({
   const dialogue = useRef<HTMLDialogElement>(null);
   const [source, setSource] = useState("");
 
+  const genre = GENRES[diagramme?.genre ?? "diagramme"];
+  const { Apercu } = genre;
+
   useEffect(() => {
     const d = dialogue.current;
     if (!d) return;
     if (diagramme) {
-      setSource(diagramme.source || MODELES[0]!.source);
+      setSource(diagramme.source || GENRES[diagramme.genre ?? "diagramme"].modeles[0]!.source);
       if (!d.open) d.showModal();
     } else if (d.open) {
       d.close();
@@ -98,19 +165,19 @@ export function DialogueDiagramme({
       <div className="flex flex-col gap-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 id="titre-diagramme" className="text-lg font-extrabold">
-            {nouveau ? "Nouveau diagramme" : "Modifier le diagramme"}
+            {nouveau ? genre.nouveau : genre.modifier}
           </h2>
           <a
-            href="https://mermaid.js.org/intro/syntax-reference.html"
+            href={genre.aide.lien}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted underline underline-offset-4"
           >
-            Syntaxe Mermaid
+            {genre.aide.texte}
           </a>
         </div>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Modèles">
-          {MODELES.map((m) => (
+          {genre.modeles.map((m) => (
             <button
               key={m.nom}
               type="button"
@@ -136,7 +203,7 @@ export function DialogueDiagramme({
           <div className="flex min-h-48 flex-col gap-1.5 text-sm font-medium">
             Aperçu
             <div className="flex-1 overflow-auto rounded-2xl border-2 border-line p-3">
-              <ApercuDiagramme source={source} />
+              <Apercu source={source} />
             </div>
           </div>
         </div>

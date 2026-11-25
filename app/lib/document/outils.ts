@@ -13,6 +13,9 @@ export const OUTILS = [
   { id: "code", nom: "Code", aide: "Programme avec coloration" },
   { id: "algo", nom: "Algorithme", aide: "Pseudo-code en français" },
   { id: "diagramme", nom: "Diagramme", aide: "Organigramme, UML, automate, séquence" },
+  { id: "schema", nom: "Schéma électrique", aide: "Composants, circuits, portes logiques" },
+  { id: "chronogramme", nom: "Chronogramme", aide: "Signaux, horloge, bus, logigramme" },
+  { id: "logique", nom: "Logique combinatoire", aide: "Tableau de Karnaugh, table de vérité" },
 ] as const;
 
 export type OutilId = (typeof OUTILS)[number]["id"];

@@ -66,8 +66,15 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   réglé dans `/admin/listes` ; menu « / » et bouton « Insérer… » (`app/components/editeur/commandes.tsx`).
 - Images : bucket R2 `MEDIAS` (clés `m/<uuid>.<ext>`), envoi par `/admin/medias` (type vérifié par
   les premiers octets, 5 Mo max., compressées en WebP dans le navigateur), lecture par `/medias/*`.
-- Bibliothèques lourdes (Mermaid, highlight.js, MathLive) : seulement dans `charger.client.ts`,
-  chargées à la demande. Ne rien exécuter au chargement d'un module partagé avec le serveur.
+- Bibliothèques lourdes (Mermaid, highlight.js, MathLive, Excalidraw, WaveDrom) : seulement dans
+  `charger.client.ts`, chargées à la demande. Ne rien exécuter au chargement d'un module partagé
+  avec le serveur.
+- Électronique (`app/components/editeur/electronique.tsx`) : schémas Excalidraw enregistrés en PNG
+  dans R2 avec la scène incluse (« Modifier » la relit depuis l'image), symboles CEI dans
+  `app/lib/document/symboles.ts` ; chronogrammes WaveDrom (SVG passé par DOMPurify, `<use>` limité
+  aux références `#…`) ; tableaux de Karnaugh (`app/lib/document/karnaugh.ts`).
+- Polices d'Excalidraw servies depuis `public/excalidraw/fonts` (copiées du paquet, sans la police
+  chinoise de 13 Mo) : à recopier lors d'une mise à jour d'Excalidraw.
 
 ## Architecture
 
