@@ -2,8 +2,10 @@ import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "re
 
 import { chargerColoration, dessinerChronogramme, dessinerDiagramme } from "~/lib/document/charger.client";
 import { normaliserKarnaugh } from "~/lib/document/karnaugh";
+import { normaliserAvancement } from "~/lib/document/avancement";
 import { normaliserCarte } from "~/lib/document/carte";
 import { normaliserFrise } from "~/lib/document/frise";
+import { normaliserProba } from "~/lib/document/probabilites";
 import { normaliserFigure } from "~/lib/document/geometrie";
 import { normaliserStatistique } from "~/lib/document/statistique";
 import { normaliserGraphique } from "~/lib/document/graphique";
@@ -16,6 +18,8 @@ import { GrilleKarnaugh } from "./GrilleKarnaugh";
 import { ImageReperes } from "./ImageReperes";
 import { Molecule } from "./Molecule";
 import { SvgFigure } from "./SvgFigure";
+import { ArbreProbabilites } from "./ArbreProbabilites";
+import { TableauAvancement } from "./TableauAvancement";
 import { CarteDessin } from "./CarteDessin";
 import { SvgFrise } from "./SvgFrise";
 import { SvgStatistique } from "./SvgStatistique";
@@ -283,6 +287,18 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
       return (
         <figure className="figure-geometrie">
           <SvgFigure f={normaliserFigure(n.attrs)} />
+        </figure>
+      );
+    case "avancement":
+      return (
+        <div className="tableau">
+          <TableauAvancement t={normaliserAvancement(n.attrs)} />
+        </div>
+      );
+    case "probabilites":
+      return (
+        <figure className="figure-proba">
+          <ArbreProbabilites a={normaliserProba(n.attrs)} />
         </figure>
       );
     case "frise":

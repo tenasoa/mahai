@@ -65,7 +65,7 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   en deux colonnes) ; l'éditeur de sujet prend toute la largeur (`handle.large`).
 - Outils de l'éditeur (`app/lib/document/outils.ts`) : image, document numéroté, encadré, note,
   extrait, chimie, code, algorithme, diagramme, schéma, chronogramme, logique, graphique,
-  géométrie, variations, molécule, génétique, frise, statistique, carte. Profil par matière (`matiere.outils`, `null` = tous)
+  géométrie, probabilités, avancement, variations, molécule, génétique, frise, statistique, carte. Profil par matière (`matiere.outils`, `null` = tous)
   réglé dans `/admin/listes` ; menu « / » et bouton « Insérer… » (`app/components/editeur/commandes.tsx`).
 - Images : bucket R2 `MEDIAS` (clés `m/<uuid>.<ext>`), envoi par `/admin/medias` (type vérifié par
   les premiers octets, 5 Mo max., compressées en WebP dans le navigateur), lecture par `/medias/*`.
@@ -89,6 +89,13 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   nom (« A », « B1 », « A' ») ; segments, droites, demi-droites, vecteurs, polygones, cercles et
   angles avec le codage (traits, arcs, angle droit). Le cadre suit la figure ; dans le dialogue,
   on fait glisser un point et on double-clique pour en ajouter un.
+- Arbre de probabilités (nœud `probabilites`, `app/lib/document/probabilites.ts`, dessin
+  `ArbreProbabilites`) : branches imbriquées (4 niveaux), noms et probabilités en LaTeX posés en
+  HTML sur des traits SVG ; probabilité des issues calculée en option, en fractions exactes.
+- Tableau d'avancement (nœud `avancement`, `app/lib/document/avancement.ts`, `TableauAvancement`) :
+  équation en mhchem, quantités initiales saisies (nombre, notation scientifique, symbole,
+  « excès », vide) ; lignes « en cours » et « état final », x_max et réactif limitant déduits,
+  écrits dans la notation et avec les chiffres significatifs de l'énoncé.
 - Histoire-géo (`app/components/editeur/histoire.tsx`, dialogues sur le cadre commun
   `DialogueDessin`) : frise chronologique (nœud `frise`, `app/lib/document/frise.ts`, dessin
   `SvgFrise` ; périodes en bandes, événements rangés en lignes sans chevauchement, années avant

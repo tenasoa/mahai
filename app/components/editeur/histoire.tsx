@@ -17,7 +17,7 @@ export type OuvrirDessin = (attrs: Record<string, unknown> | null, pos?: number)
 const bouton = "min-h-9 rounded-full bg-soft px-3 text-sm font-medium hover:bg-line";
 
 /** Bloc dessiné à partir de ses attributs, modifié dans un dialogue (« Modifier » ou double-clic). */
-function noeudDessin({
+export function noeudDessin({
   nom,
   titre,
   libelle,

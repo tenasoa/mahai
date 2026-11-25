@@ -27,6 +27,8 @@ export type ContexteCommande = {
   ouvrirFrise: () => void;
   ouvrirStatistique: () => void;
   ouvrirCarte: () => void;
+  ouvrirProba: () => void;
+  ouvrirAvancement: () => void;
 };
 
 export type Commande = {
@@ -65,6 +67,8 @@ export const COMMANDES: Commande[] = [
   { id: "karnaugh", titre: "Tableau de Karnaugh", aide: "2 à 4 variables", motsCles: "logique simplification booleen", outil: "logique", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "karnaugh", attrs: { variables: ["A", "B", "C"], sortie: "S", valeurs: "........" } }).run() },
   { id: "graphique", titre: "Graphique", aide: "Courbes, points, vecteurs dans un repère", motsCles: "courbe fonction repere plan coordonnees vecteur droite parabole", outil: "graphique", executer: ({ ouvrirGraphique }) => ouvrirGraphique() },
   { id: "geometrie", titre: "Figure de géométrie", aide: "Triangle, cercle, constructions, codage", motsCles: "geometrie triangle cercle polygone angle droite segment milieu hauteur mediane thales pythagore parallelogramme", outil: "geometrie", executer: ({ ouvrirFigure }) => ouvrirFigure() },
+  { id: "avancement", titre: "Tableau d'avancement", aide: "Réaction chimique, x max, réactif limitant", motsCles: "chimie avancement reaction reactif limitant quantite matiere mol xmax stoechiometrie", outil: "avancement", executer: ({ ouvrirAvancement }) => ouvrirAvancement() },
+  { id: "probabilites", titre: "Arbre de probabilités", aide: "Épreuves successives, issues", motsCles: "maths probabilite arbre pondere evenement issue conditionnelle", outil: "probabilites", executer: ({ ouvrirProba }) => ouvrirProba() },
   { id: "frise", titre: "Frise chronologique", aide: "Périodes et événements datés", motsCles: "histoire chronologie dates periode evenement siecle", outil: "frise", executer: ({ ouvrirFrise }) => ouvrirFrise() },
   { id: "statistique", titre: "Diagramme statistique", aide: "Barres, courbe, secteurs, pyramide, ombrothermique", motsCles: "geographie histogramme barres camembert secteurs pyramide ages population climat ombrothermique courbe evolution", outil: "statistique", executer: ({ ouvrirStatistique }) => ouvrirStatistique() },
   { id: "carte", titre: "Carte à légender", aide: "Croquis : zones, flèches, lieux, légende", motsCles: "geographie croquis schema carte fond legende figure zone fleche flux ville port", outil: "carte", executer: ({ ouvrirCarte }) => ouvrirCarte() },

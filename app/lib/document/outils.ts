@@ -18,6 +18,8 @@ export const OUTILS = [
   { id: "logique", nom: "Logique combinatoire", aide: "Tableau de Karnaugh, table de vérité" },
   { id: "graphique", nom: "Graphique", aide: "Courbes, points, vecteurs dans un repère" },
   { id: "geometrie", nom: "Figure de géométrie", aide: "Triangles, cercles, constructions, codage" },
+  { id: "avancement", nom: "Tableau d'avancement", aide: "Réaction chimique, x max, réactif limitant" },
+  { id: "probabilites", nom: "Arbre de probabilités", aide: "Épreuves successives, probabilités des issues" },
   { id: "frise", nom: "Frise chronologique", aide: "Périodes et événements datés" },
   { id: "statistique", nom: "Diagramme statistique", aide: "Barres, courbe, secteurs, pyramide des âges, ombrothermique" },
   { id: "carte", nom: "Carte à légender", aide: "Croquis : zones, lignes, flèches, lieux et légende" },

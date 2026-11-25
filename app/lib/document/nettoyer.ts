@@ -7,6 +7,7 @@
  * contributeurs pourront écrire des sujets.
  */
 
+import { normaliserAvancement, texteAvancement } from "./avancement";
 import { normaliserCarte, texteCarte } from "./carte";
 import { normaliserArbre, normaliserEchiquier } from "./genetique";
 import { normaliserFrise } from "./frise";
@@ -15,6 +16,7 @@ import { normaliserGraphique } from "./graphique";
 import { normaliserKarnaugh } from "./karnaugh";
 import { ENCADRES, IDS_LANGAGES } from "./outils";
 import { normaliserReperes } from "./reperes";
+import { normaliserProba, texteProba } from "./probabilites";
 import { normaliserStatistique } from "./statistique";
 import { normaliserVariations } from "./variations";
 
@@ -151,6 +153,10 @@ export const NOEUDS: Record<string, Regle> = {
   graphique: { attrs: (a) => normaliserGraphique(a) },
   /** Figure de géométrie plane (dessinée en SVG sur le serveur). */
   geometrie: { attrs: (a) => normaliserFigure(a) },
+  /** Tableau d'avancement (chimie). */
+  avancement: { attrs: (a) => normaliserAvancement(a) },
+  /** Arbre de probabilités (maths). */
+  probabilites: { attrs: (a) => normaliserProba(a) },
   /** Frise chronologique (histoire). */
   frise: { attrs: (a) => normaliserFrise(a) },
   /** Diagramme statistique : barres, courbe, secteurs, pyramide des âges, ombrothermique. */
@@ -282,6 +288,8 @@ const BLOCS_SANS_TEXTE = new Set([
   "karnaugh",
   "graphique",
   "geometrie",
+  "probabilites",
+  "avancement",
   "frise",
   "statistique",
   "carte",
@@ -315,6 +323,8 @@ export function texteBrut(n: Noeud): string {
     const textes = [...(f.periodes ?? []).map((p) => p.texte ?? ""), ...(f.evenements ?? []).map((e) => `${e.date ?? ""} ${e.texte ?? ""}`)];
     return ` ${f.alt ?? ""} ${textes.join(" ")} `;
   }
+  if (n.type === "avancement") return ` ${texteAvancement(normaliserAvancement(n.attrs))} `;
+  if (n.type === "probabilites") return ` ${texteProba(normaliserProba(n.attrs))} `;
   if (n.type === "carte") return ` ${texteCarte(normaliserCarte(n.attrs))} `;
   if (n.type === "molecule") return ` ${String(n.attrs?.nom ?? "")} `;
   if (n.type === "exercice") {

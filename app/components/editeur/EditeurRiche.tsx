@@ -33,10 +33,14 @@ import {
 } from "./commandes";
 import { DialogueDiagramme, type DiagrammeEnCours } from "./DialogueDiagramme";
 import { DialogueFigure, type FigureEnCours } from "./DialogueFigure";
+import { DialogueAvancement, type AvancementEnCours } from "./DialogueAvancement";
 import { DialogueCarte, type CarteEnCours } from "./DialogueCarte";
 import { DialogueFrise, type FriseEnCours } from "./DialogueFrise";
+import { DialogueProba, type ProbaEnCours } from "./DialogueProba";
 import { DialogueStatistique, type StatistiqueEnCours } from "./DialogueStatistique";
 import { CarteSujet, FriseSujet, StatistiqueSujet } from "./histoire";
+import { ProbabilitesSujet } from "./probabilites";
+import { AvancementSujet } from "./avancement";
 import { DialogueGraphique, type GraphiqueEnCours } from "./DialogueGraphique";
 import { GeometrieSujet } from "./geometrie";
 import { DialogueSchema, type SchemaEnCours, type SchemaEnregistre } from "./DialogueSchema";
@@ -91,6 +95,8 @@ export function EditeurRiche({
   const [frise, setFrise] = useState<FriseEnCours | null>(null);
   const [statistique, setStatistique] = useState<StatistiqueEnCours | null>(null);
   const [carte, setCarte] = useState<CarteEnCours | null>(null);
+  const [proba, setProba] = useState<ProbaEnCours | null>(null);
+  const [avancement, setAvancement] = useState<AvancementEnCours | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [menu, setMenu] = useState<EtatMenu | null>(null);
   const [actif, setActif] = useState(0);
@@ -150,6 +156,8 @@ export function EditeurRiche({
       FriseSujet.configure({ ouvrir: (attrs, pos) => setFrise({ attrs, pos }) }),
       StatistiqueSujet.configure({ ouvrir: (attrs, pos) => setStatistique({ attrs, pos }) }),
       CarteSujet.configure({ ouvrir: (attrs, pos) => setCarte({ attrs, pos }) }),
+      ProbabilitesSujet.configure({ ouvrir: (attrs, pos) => setProba({ attrs, pos }) }),
+      AvancementSujet.configure({ ouvrir: (attrs, pos) => setAvancement({ attrs, pos }) }),
       VariationsSujet,
       MoleculeSujet,
       ArbreSujet,
@@ -210,6 +218,8 @@ export function EditeurRiche({
         ouvrirFrise: () => setFrise({ attrs: null }),
         ouvrirStatistique: () => setStatistique({ attrs: null }),
         ouvrirCarte: () => setCarte({ attrs: null }),
+        ouvrirProba: () => setProba({ attrs: null }),
+        ouvrirAvancement: () => setAvancement({ attrs: null }),
       }
     : null;
 
@@ -414,6 +424,22 @@ export function EditeurRiche({
           setCarte(null);
         }}
         onFermer={() => setCarte(null)}
+      />
+      <DialogueProba
+        proba={proba}
+        onValider={(a) => {
+          poserBloc("probabilites", a, proba?.pos);
+          setProba(null);
+        }}
+        onFermer={() => setProba(null)}
+      />
+      <DialogueAvancement
+        avancement={avancement}
+        onValider={(t) => {
+          poserBloc("avancement", t, avancement?.pos);
+          setAvancement(null);
+        }}
+        onFermer={() => setAvancement(null)}
       />
     </SeriesEditeur.Provider>
   );
