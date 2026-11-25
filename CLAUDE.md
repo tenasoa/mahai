@@ -61,6 +61,13 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
 - Formules : KaTeX dessiné **côté navigateur** (trop coûteux en CPU pour un Worker), mhchem pour
   `\ce{…}` ; saisie visuelle MathLive chargée seulement dans le dialogue de l'admin.
 - Admin sous `/admin` (rôles `admin` et `moderateur`, `requireEditeur`) ; les autres voient un 404.
+- Outils de l'éditeur (`app/lib/document/outils.ts`) : image, document numéroté, encadré, note,
+  extrait, chimie, code, algorithme, diagramme. Profil par matière (`matiere.outils`, `null` = tous)
+  réglé dans `/admin/listes` ; menu « / » et bouton « Insérer… » (`app/components/editeur/commandes.tsx`).
+- Images : bucket R2 `MEDIAS` (clés `m/<uuid>.<ext>`), envoi par `/admin/medias` (type vérifié par
+  les premiers octets, 5 Mo max., compressées en WebP dans le navigateur), lecture par `/medias/*`.
+- Bibliothèques lourdes (Mermaid, highlight.js, MathLive) : seulement dans `charger.client.ts`,
+  chargées à la demande. Ne rien exécuter au chargement d'un module partagé avec le serveur.
 
 ## Architecture
 

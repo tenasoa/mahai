@@ -190,6 +190,8 @@ export const matiere = sqliteTable(
     nom: text("nom").notNull(),
     couleur: text("couleur", { enum: COULEURS }).notNull(),
     ordre: integer("ordre").notNull().default(0),
+    /** Outils de l'éditeur proposés pour cette matière (app/lib/document/outils.ts) ; null = tous. */
+    outils: text("outils", { mode: "json" }).$type<string[]>(),
   },
   (t) => [check("matiere_couleur_check", dansListe(t.couleur, COULEURS))],
 );
@@ -265,4 +267,19 @@ export const sujetSerie = sqliteTable(
     index("sujet_serie_serie_id_idx").on(t.serieId),
     check("sujet_serie_coefficient_check", sql`${t.coefficient} is null or ${t.coefficient} between 1 and 20`),
   ],
+);
+
+/** Fichiers envoyés dans R2 (images des sujets). La clé R2 est aussi l'adresse /medias/<cle>. */
+export const media = sqliteTable(
+  "media",
+  {
+    cle: text("cle").primaryKey(), // ex. « m/2f1c…e9.webp »
+    type: text("type").notNull(), // type MIME vérifié à l'envoi
+    taille: integer("taille").notNull(), // octets
+    largeur: integer("largeur"),
+    hauteur: integer("hauteur"),
+    auteurId: text("auteur_id").references(() => user.id, { onDelete: "set null" }),
+    creeLe: integer("cree_le", { mode: "timestamp_ms" }).notNull().default(maintenant),
+  },
+  (t) => [index("media_auteur_id_idx").on(t.auteurId)],
 );

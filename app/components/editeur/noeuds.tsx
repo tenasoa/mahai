@@ -40,7 +40,7 @@ function deplacer(editor: Editor, getPos: () => number | undefined, sens: -1 | 1
   view.dispatch(tr.scrollIntoView());
 }
 
-function Commandes({
+export function Commandes({
   props,
   libelle,
 }: {
@@ -157,7 +157,7 @@ function ChampPoints({ props }: { props: ReactNodeViewProps }) {
   );
 }
 
-function Poignee() {
+export function Poignee() {
   return (
     <span
       data-drag-handle=""

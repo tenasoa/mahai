@@ -4,6 +4,7 @@ import { data, Form, Link, redirect, useNavigation } from "react-router";
 import type { Route } from "./+types/admin.sujet";
 import { Choix, Texte } from "~/components/admin/Champs";
 import { EditeurRiche } from "~/components/editeur/EditeurRiche";
+import { outilsActifs } from "~/lib/document/outils";
 import { Button } from "~/components/ui/Button";
 import { FormError, FormSucces } from "~/components/ui/Field";
 import { getDb } from "~/db/db.server";
@@ -85,6 +86,8 @@ export default function AdminSujet({ loaderData, actionData }: Route.ComponentPr
   const envoi = navigation.state === "submitting";
 
   const [examenId, setExamenId] = useState(sujet?.examenId ?? "");
+  const [matiereId, setMatiereId] = useState(sujet?.matiereId ?? "");
+  const outils = outilsActifs(listes.matieres.find((m) => m.id === matiereId)?.outils);
   const [cochees, setCochees] = useState<string[]>(sujet?.series.map((s) => s.serieId) ?? []);
   const seriesExamen = listes.series.filter((s) => s.examenId === examenId);
   const seriesChoisies = useMemo(
@@ -157,7 +160,8 @@ export default function AdminSujet({ loaderData, actionData }: Route.ComponentPr
               label="Matière (épreuve)"
               required
               vide="Choisir…"
-              defaultValue={sujet?.matiereId ?? ""}
+              value={matiereId}
+              onChange={(e) => setMatiereId(e.target.value)}
               options={listes.matieres.map((m) => ({ valeur: m.id, libelle: m.nom }))}
               erreur={erreurs.matiereId}
             />
@@ -311,6 +315,7 @@ export default function AdminSujet({ loaderData, actionData }: Route.ComponentPr
             initial={sujet?.enonce ?? null}
             placeholder="Écris l'énoncé, ou ajoute un exercice avec « + Exercice »."
             series={seriesChoisies}
+            outils={outils}
           />
         </section>
 
@@ -323,6 +328,7 @@ export default function AdminSujet({ loaderData, actionData }: Route.ComponentPr
             initial={sujet?.corrige ?? null}
             placeholder="Corrigé détaillé, avec les mêmes exercices."
             series={seriesChoisies}
+            outils={outils}
           />
         </section>
 

@@ -1,6 +1,9 @@
-import { Fragment, useEffect, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "react";
 
+import { chargerColoration, dessinerDiagramme } from "~/lib/document/charger.client";
 import { dessinerFormule } from "~/lib/document/katex.client";
+import { ENCADRES, LANGAGES } from "~/lib/document/outils";
+import { urlMedia } from "~/lib/medias/medias";
 
 import { pointsPour, type Marque, type Noeud } from "~/lib/document/nettoyer";
 
@@ -81,7 +84,12 @@ type Contexte = {
   /** Série choisie par l'élève (barème affiché pour elle seule). */
   serie: string | null;
   series: SerieAffichee[];
+  /** Partagé par tout le document : numéros des documents et notes de bas de page. */
+  compteurs: { documents: number; notes: string[]; prefixe: string };
 };
+
+const texteDe = (n: Noeud): string =>
+  n.type === "text" ? (n.text ?? "") : (n.content ?? []).map(texteDe).join("");
 
 function enfants(n: Noeud, ctx: Contexte): ReactNode {
   let indexQuestion = 0;
@@ -122,10 +130,81 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
       return <blockquote>{enfants(n, ctx)}</blockquote>;
     case "codeBlock":
       return (
-        <pre>
-          <code>{enfants(n, ctx)}</code>
-        </pre>
+        <BlocCode
+          code={texteDe(n)}
+          langage={(n.attrs?.language as string | null) ?? null}
+          numeros={n.attrs?.numeros === true}
+        />
       );
+    case "image": {
+      const largeur = Number(n.attrs?.largeur) || undefined;
+      const hauteur = Number(n.attrs?.hauteur) || undefined;
+      return (
+        <img
+          src={urlMedia(String(n.attrs?.cle))}
+          alt={String(n.attrs?.alt ?? "")}
+          width={largeur}
+          height={hauteur}
+          loading="lazy"
+          decoding="async"
+          className="image"
+        />
+      );
+    }
+    case "documentNumerote": {
+      const numeroDocument = ++ctx.compteurs.documents;
+      const legende = String(n.attrs?.legende ?? "");
+      return (
+        <figure className="document">
+          <div className="corps">{enfants(n, ctx)}</div>
+          <figcaption>
+            <strong>Document {numeroDocument}</strong>
+            {legende ? ` — ${legende}` : ""}
+          </figcaption>
+        </figure>
+      );
+    }
+    case "encadre": {
+      const genre = String(n.attrs?.genre ?? "donnees") as keyof typeof ENCADRES;
+      return (
+        <aside className="encadre" data-genre={genre}>
+          <p className="titre-encadre">{ENCADRES[genre] ?? ENCADRES.donnees}</p>
+          {enfants(n, ctx)}
+        </aside>
+      );
+    }
+    case "note": {
+      const { notes, prefixe } = ctx.compteurs;
+      notes.push(String(n.attrs?.texte ?? ""));
+      const k = notes.length;
+      return (
+        <sup className="appel-note">
+          <a id={`${prefixe}-appel-${k}`} href={`#${prefixe}-note-${k}`} aria-label={`Note ${k}`}>
+            {k}
+          </a>
+        </sup>
+      );
+    }
+    case "extrait": {
+      const source = String(n.attrs?.source ?? "");
+      return (
+        <figure className="extrait">
+          <ol>
+            {(n.content ?? []).map((ligne, i) => (
+              <li key={i}>
+                <span className="num" aria-hidden="true">
+                  {(i + 1) % 5 === 0 ? i + 1 : ""}
+                </span>
+                <span>{ligne.content?.length ? enfants(ligne, ctx) : " "}</span>
+              </li>
+            ))}
+          </ol>
+          {source ? <figcaption>{source}</figcaption> : null}
+        </figure>
+      );
+    }
+    case "diagramme":
+      return <Diagramme source={String(n.attrs?.source ?? "")} />;
     case "horizontalRule":
       return <hr />;
     case "hardBreak":
@@ -205,6 +284,78 @@ export function Tex({ latex, bloc = false }: { latex: string; bloc?: boolean }) 
   );
 }
 
+type Hast = { type: string; value?: string; properties?: { className?: string[] }; children?: Hast[] };
+
+function depuisHast(n: Hast, cle: number): ReactNode {
+  if (n.type === "text") return n.value ?? "";
+  const contenu = (n.children ?? []).map(depuisHast);
+  if (n.type !== "element") return <Fragment key={cle}>{contenu}</Fragment>;
+  return (
+    <span key={cle} className={n.properties?.className?.join(" ")}>
+      {contenu}
+    </span>
+  );
+}
+
+/** Code source : texte brut côté serveur, coloré dans le navigateur (lowlight chargé à la demande). */
+function BlocCode({ code, langage, numeros }: { code: string; langage: string | null; numeros: boolean }) {
+  const [colore, setColore] = useState<ReactNode>(null);
+  useEffect(() => {
+    if (!langage || langage === "plaintext") return;
+    let annule = false;
+    void chargerColoration().then((lowlight) => {
+      if (annule || !lowlight.registered(langage)) return;
+      setColore(depuisHast(lowlight.highlight(langage, code) as Hast, 0));
+    });
+    return () => {
+      annule = true;
+    };
+  }, [code, langage]);
+  const nom = LANGAGES.find((l) => l.id === langage)?.nom;
+  const lignes = code.split("\n").length;
+  return (
+    <figure className="code" aria-label={nom ? `Code ${nom}` : "Code"}>
+      {nom && langage !== "plaintext" ? <figcaption>{nom}</figcaption> : null}
+      <div className="defilement">
+        {numeros ? (
+          <pre className="numeros" aria-hidden="true">
+            {Array.from({ length: lignes }, (_, i) => i + 1).join("\n")}
+          </pre>
+        ) : null}
+        <pre>
+          <code className="hljs">{colore ?? code}</code>
+        </pre>
+      </div>
+    </figure>
+  );
+}
+
+/** Diagramme Mermaid : description texte côté serveur, dessin SVG dans le navigateur. */
+function Diagramme({ source }: { source: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [dessine, setDessine] = useState(false);
+  useEffect(() => {
+    let annule = false;
+    dessinerDiagramme(source)
+      .then((svg) => {
+        if (annule || !ref.current) return;
+        ref.current.innerHTML = svg;
+        setDessine(true);
+      })
+      .catch(() => {});
+    return () => {
+      annule = true;
+    };
+  }, [source]);
+  return (
+    <figure className="diagramme">
+      {/* Conteneur vide réservé à Mermaid : React n'y touche pas. */}
+      <div ref={ref} />
+      {dessine ? null : <pre>{source}</pre>}
+    </figure>
+  );
+}
+
 export function RenduDocument({
   doc,
   serie = null,
@@ -216,9 +367,25 @@ export function RenduDocument({
   series?: SerieAffichee[];
   className?: string;
 }) {
+  const prefixe = `n${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const compteurs = { documents: 0, notes: [] as string[], prefixe };
+  // Rendu synchrone : les notes sont collectées pendant le parcours, puis listées à la fin.
+  const corps = noeud(doc, { profondeurQuestion: 0, serie, series, compteurs }, 0);
   return (
     <div className={`contenu ${className}`}>
-      {noeud(doc, { profondeurQuestion: 0, serie, series }, 0)}
+      {corps}
+      {compteurs.notes.length > 0 ? (
+        <ol className="notes" aria-label="Notes">
+          {compteurs.notes.map((texte, i) => (
+            <li key={i} id={`${prefixe}-note-${i + 1}`}>
+              {texte}{" "}
+              <a href={`#${prefixe}-appel-${i + 1}`} aria-label="Retour au texte">
+                ↩
+              </a>
+            </li>
+          ))}
+        </ol>
+      ) : null}
     </div>
   );
 }

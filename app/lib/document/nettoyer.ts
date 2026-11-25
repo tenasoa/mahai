@@ -7,6 +7,8 @@
  * contributeurs pourront écrire des sujets.
  */
 
+import { ENCADRES, IDS_LANGAGES } from "./outils";
+
 export type Marque = { type: string; attrs?: Record<string, unknown> };
 export type Noeud = {
   type: string;
@@ -17,7 +19,8 @@ export type Noeud = {
 };
 
 type Attrs = Record<string, unknown> | undefined;
-type Regle = { attrs?: (a: Attrs) => Record<string, unknown> | undefined };
+/** `attrs` renvoie `null` quand le nœud est invalide : il est alors supprimé. */
+type Regle = { attrs?: (a: Attrs) => Record<string, unknown> | undefined | null };
 
 const entier = (v: unknown, min: number, max: number): number | undefined => {
   const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
@@ -50,6 +53,9 @@ const bareme = (a: Attrs) => {
   return series ? { points: points(a?.points), pointsSeries: series } : { points: points(a?.points) };
 };
 
+/** Clé d'un fichier envoyé dans R2 (voir app/routes/admin.medias.ts). */
+export const CLE_MEDIA = /^m\/[0-9a-f-]{36}\.(png|jpg|webp|gif)$/;
+
 const cellule: Regle = {
   attrs: (a) => ({
     colspan: entier(a?.colspan, 1, 20) ?? 1,
@@ -66,7 +72,12 @@ export const NOEUDS: Record<string, Regle> = {
   orderedList: { attrs: (a) => ({ start: entier(a?.start, 1, 1000) ?? 1 }) },
   listItem: {},
   blockquote: {},
-  codeBlock: {},
+  codeBlock: {
+    attrs: (a) => ({
+      language: typeof a?.language === "string" && IDS_LANGAGES.includes(a.language) ? a.language : null,
+      numeros: a?.numeros === true,
+    }),
+  },
   horizontalRule: {},
   hardBreak: {},
   table: {},
@@ -81,6 +92,33 @@ export const NOEUDS: Record<string, Regle> = {
   },
   /** Question (ou sous-question si elle est dans une question) avec son barème. */
   question: { attrs: bareme },
+  /** Image stockée dans R2 ; supprimée si la clé n'est pas celle d'un envoi. */
+  image: {
+    attrs: (a) => {
+      const cle = chaine(a?.cle, 80);
+      if (!CLE_MEDIA.test(cle)) return null;
+      return {
+        cle,
+        alt: chaine(a?.alt, 300).trim(),
+        largeur: entier(a?.largeur, 1, 8000) ?? null,
+        hauteur: entier(a?.hauteur, 1, 8000) ?? null,
+      };
+    },
+  },
+  /** « Document N » avec légende : contient image, tableau, texte… */
+  documentNumerote: { attrs: (a) => ({ legende: chaine(a?.legende, 300).trim() }) },
+  encadre: {
+    attrs: (a) => ({
+      genre: typeof a?.genre === "string" && a.genre in ENCADRES ? a.genre : "donnees",
+    }),
+  },
+  /** Note de bas de page (nœud en ligne, numéroté à l'affichage). */
+  note: { attrs: (a) => ({ texte: chaine(a?.texte, 1000).trim() }) },
+  /** Extrait à lignes numérotées : une `ligne` par ligne du texte. */
+  extrait: { attrs: (a) => ({ source: chaine(a?.source, 300).trim() }) },
+  ligne: {},
+  /** Diagramme Mermaid (source texte, dessiné dans le navigateur). */
+  diagramme: { attrs: (a) => ({ source: chaine(a?.source, 10_000) }) },
 };
 
 const MARQUES: Record<string, Regle> = {
@@ -146,6 +184,7 @@ export function nettoyerDocument(brut: unknown): Noeud {
 
     const propre: Noeud = { type };
     const attrs = regle.attrs?.((n as Noeud).attrs);
+    if (attrs === null) return null;
     if (attrs) propre.attrs = attrs;
     const enfants = (n as Noeud).content;
     if (Array.isArray(enfants)) {
@@ -175,9 +214,11 @@ export function lireDocument(json: FormDataEntryValue | null): Noeud | null {
   return estVide(doc) ? null : doc;
 }
 
-/** Vrai si le document ne contient ni texte, ni formule, ni exercice. */
+const BLOCS_SANS_TEXTE = new Set(["exercice", "image", "diagramme", "documentNumerote", "encadre"]);
+
+/** Vrai si le document ne contient ni texte, ni formule, ni bloc (exercice, image, diagramme…). */
 export function estVide(doc: Noeud): boolean {
-  return texteBrut(doc).trim() === "" && !contient(doc, (n) => n.type === "exercice");
+  return texteBrut(doc).trim() === "" && !contient(doc, (n) => BLOCS_SANS_TEXTE.has(n.type));
 }
 
 function contient(n: Noeud, test: (n: Noeud) => boolean): boolean {
@@ -188,11 +229,14 @@ function contient(n: Noeud, test: (n: Noeud) => boolean): boolean {
 export function texteBrut(n: Noeud): string {
   if (n.type === "text") return n.text ?? "";
   if (n.type === "inlineMath" || n.type === "blockMath") return ` ${String(n.attrs?.latex ?? "")} `;
+  if (n.type === "note") return ` ${String(n.attrs?.texte ?? "")} `;
+  if (n.type === "image") return ` ${String(n.attrs?.alt ?? "")} `;
   if (n.type === "exercice") {
     const titre = String(n.attrs?.titre ?? "");
     return `${titre}\n${(n.content ?? []).map(texteBrut).join("\n")}`;
   }
-  const separateur = n.type === "paragraph" || n.type === "heading" ? "" : "\n";
+  const enLigne = new Set(["paragraph", "heading", "ligne", "codeBlock"]);
+  const separateur = enLigne.has(n.type) ? "" : "\n";
   const interieur = (n.content ?? []).map(texteBrut).join(separateur);
   return n.type === "hardBreak" ? "\n" : interieur;
 }

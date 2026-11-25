@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import type { Db } from "~/db/db.server";
 import { COULEURS, examen, matiere, serie, type Couleur } from "~/db/schema";
 import { slugifier } from "~/lib/contenu/texte";
+import { IDS_OUTILS } from "~/lib/document/outils";
 
 export type TypeListe = "examen" | "serie" | "matiere";
 
@@ -26,6 +27,12 @@ const ordre = (f: FormData) => {
 const couleur = (f: FormData): Couleur | null => {
   const c = texte(f, "couleur", 20);
   return (COULEURS as readonly string[]).includes(c) ? (c as Couleur) : null;
+};
+
+/** Outils cochés pour une matière ; tous cochés = `null` (la matière suit les nouveaux outils). */
+const outils = (f: FormData): string[] | null => {
+  const choisis = IDS_OUTILS.filter((id) => f.getAll("outils").includes(id));
+  return choisis.length === IDS_OUTILS.length ? null : choisis;
 };
 
 export type ResultatListe = { ok: true; message: string } | { ok: false; erreur: string };
@@ -51,7 +58,9 @@ export async function modifierListe(db: Db, f: FormData): Promise<ResultatListe>
       } else {
         const c = couleur(f);
         if (!c) return { ok: false, erreur: "Choisis une couleur." };
-        await db.insert(matiere).values({ id: slugifier(nom), nom, couleur: c, ordre: ordre(f) });
+        await db
+          .insert(matiere)
+          .values({ id: slugifier(nom), nom, couleur: c, ordre: ordre(f), outils: outils(f) });
       }
       return { ok: true, message: `« ${nom} » ajouté.` };
     }
@@ -67,7 +76,10 @@ export async function modifierListe(db: Db, f: FormData): Promise<ResultatListe>
       } else {
         const c = couleur(f);
         if (!c) return { ok: false, erreur: "Choisis une couleur." };
-        await db.update(matiere).set({ nom, couleur: c, ordre: ordre(f) }).where(eq(matiere.id, id));
+        await db
+          .update(matiere)
+          .set({ nom, couleur: c, ordre: ordre(f), outils: outils(f) })
+          .where(eq(matiere.id, id));
       }
       return { ok: true, message: "Modification enregistrée." };
     }

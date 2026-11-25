@@ -34,6 +34,12 @@
   --color-a-revoir: #ffd84d;
   --color-erreur: #ff9ec4;
 
+  /* Coloration du code (contraste AA sur fond soft) */
+  --color-code-mot: #7a1fc9;
+  --color-code-nom: #1c5fd1;
+  --color-code-texte: #1d7a3a;
+  --color-code-nombre: #b34700;
+
   --radius-tile: 20px;
   --radius-card: 18px;
   --radius-chip: 12px;
@@ -166,7 +172,7 @@ body {
 .editeur-sujet {
   outline: none;
   min-height: 14rem;
-  counter-reset: exercice question;
+  counter-reset: exercice question document note;
 }
 .editeur-sujet p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
@@ -248,6 +254,233 @@ body {
   border: none;
   outline: none;
   background: transparent;
+}
+
+/* Outils du sujet (lecture) : image, document, encadré, note, extrait, code, diagramme */
+.contenu .image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  border-radius: 12px;
+}
+.contenu .document,
+.contenu .extrait,
+.contenu .code,
+.contenu .diagramme {
+  margin: 0;
+}
+.contenu .document {
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 0.75em 1em;
+}
+.contenu .document > .corps > * + * {
+  margin-top: 0.6em;
+}
+.contenu .document figcaption,
+.contenu .extrait figcaption {
+  margin-top: 0.5em;
+  font-size: 0.9em;
+  color: var(--color-ink-2);
+}
+.contenu .encadre {
+  background: var(--color-soft);
+  border-radius: var(--radius-card);
+  padding: 0.75em 1em;
+}
+.contenu .encadre > * + * {
+  margin-top: 0.5em;
+}
+.contenu .titre-encadre {
+  font-weight: 700;
+}
+.contenu .encadre[data-genre="attention"] {
+  box-shadow: inset 4px 0 0 var(--color-a-revoir);
+}
+.contenu .appel-note a {
+  text-decoration: none;
+  font-weight: 700;
+  padding: 0 0.1em;
+}
+.contenu .notes {
+  border-top: 1px solid var(--color-line);
+  padding-top: 0.75em;
+  font-size: 0.9em;
+  color: var(--color-ink-2);
+}
+.contenu .notes a {
+  text-decoration: none;
+}
+.contenu .extrait ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.contenu .extrait li {
+  display: grid;
+  grid-template-columns: 2.2em minmax(0, 1fr);
+  column-gap: 0.5em;
+}
+.contenu .extrait li + li {
+  margin-top: 0;
+}
+.contenu .extrait .num {
+  text-align: right;
+  font-size: 0.8em;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  padding-top: 0.2em;
+}
+.contenu .code figcaption {
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--color-muted);
+  margin-bottom: 0.25em;
+}
+.contenu .code .defilement {
+  display: flex;
+  overflow-x: auto;
+  background: var(--color-soft);
+  border-radius: 12px;
+}
+.contenu .code pre {
+  margin: 0;
+  padding: 0.75em 1em;
+  font-size: 0.88em;
+  line-height: 1.55;
+  tab-size: 4;
+}
+.contenu .code pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+.contenu .code pre.numeros {
+  padding-right: 0.6em;
+  text-align: right;
+  color: var(--color-muted);
+  border-right: 1px solid var(--color-line);
+  user-select: none;
+}
+.contenu .diagramme {
+  overflow-x: auto;
+  text-align: center;
+}
+.contenu .diagramme svg,
+.diagramme svg {
+  max-width: 100%;
+  height: auto;
+}
+.contenu .diagramme pre {
+  text-align: left;
+  font-size: 0.85em;
+  color: var(--color-ink-2);
+}
+
+/* Coloration du code (classes de highlight.js), lecture et éditeur */
+.hljs-keyword,
+.hljs-built_in,
+.hljs-selector-tag {
+  color: var(--color-code-mot);
+  font-weight: 600;
+}
+.hljs-type,
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.function_ {
+  color: var(--color-code-nom);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-attr {
+  color: var(--color-code-texte);
+}
+.hljs-number,
+.hljs-literal {
+  color: var(--color-code-nombre);
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--color-muted);
+  font-style: italic;
+}
+.hljs-operator,
+.hljs-meta {
+  color: var(--color-ink-2);
+}
+
+/* Outils du sujet dans l'éditeur */
+.editeur-sujet .bloc-outil {
+  border: 2px solid var(--color-line);
+  border-radius: 1.25rem;
+  padding: 0.25rem 0.75rem 0.75rem;
+  margin: 0;
+}
+.editeur-sujet .ProseMirror-selectednode > .bloc-outil,
+.editeur-sujet .bloc-outil.ProseMirror-selectednode {
+  border-color: var(--color-ink);
+}
+.editeur-sujet .bloc-document {
+  counter-increment: document;
+}
+.editeur-sujet .document-numero::before {
+  content: "Document " counter(document);
+}
+.editeur-sujet .bloc-encadre {
+  background: var(--color-soft);
+}
+.editeur-sujet .note-editeur {
+  counter-increment: note;
+}
+.editeur-sujet .note-appel {
+  vertical-align: super;
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 0;
+  padding: 0 0.15em;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.editeur-sujet .note-appel::before {
+  content: counter(note);
+}
+.editeur-sujet .note-appel:hover {
+  background: var(--color-line);
+}
+.editeur-sujet .lignes-extrait {
+  counter-reset: ligne;
+}
+.editeur-sujet .lignes-extrait p[data-type="ligne"] {
+  counter-increment: ligne;
+  position: relative;
+  padding-left: 2.6em;
+  margin: 0;
+  min-height: 1.65em;
+}
+.editeur-sujet .lignes-extrait p[data-type="ligne"]::before {
+  content: counter(ligne);
+  position: absolute;
+  left: 0;
+  width: 2em;
+  text-align: right;
+  font-size: 0.8em;
+  color: var(--color-muted);
+  padding-top: 0.2em;
+}
+.editeur-sujet .bloc-code pre {
+  background: var(--color-soft);
+  border-radius: 12px;
+  padding: 0.75em 1em;
+  overflow-x: auto;
+  font-size: 0.88em;
+  line-height: 1.55;
+  tab-size: 4;
+}
+.editeur-sujet .bloc-code pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
 }
 
 /* Impression / enregistrement en PDF : seulement le sujet */

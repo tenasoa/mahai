@@ -21,6 +21,8 @@ export default [
     route("confidentialite", "routes/confidentialite.tsx"),
     route("conditions", "routes/conditions.tsx"),
   ]),
+  route("admin/medias", "routes/admin.medias.ts"),
+  route("medias/*", "routes/medias.$.ts"),
   route("admin", "routes/admin.tsx", [
     index("routes/admin._index.ts"),
     route("sujets", "routes/admin.sujets.tsx"),

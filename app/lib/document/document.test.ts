@@ -93,6 +93,46 @@ describe("nettoyage des documents", () => {
     expect(() => lireDocument("{pas du json")).toThrow(DocumentInvalide);
   });
 
+  it("garde les blocs des outils et refuse les images étrangères", () => {
+    const cle = "m/2f1c0a4e-1b2c-4d5e-8f90-123456789abc.webp";
+    const propre = nettoyerDocument({
+      type: "doc",
+      content: [
+        {
+          type: "documentNumerote",
+          attrs: { legende: "Coupe du testicule" },
+          content: [
+            { type: "image", attrs: { cle, alt: "Coupe", largeur: 800, hauteur: "600", onerror: "x" } },
+            { type: "image", attrs: { cle: "https://pirate.test/x.png" } },
+            { type: "image", attrs: { cle: "m/../../secret.png" } },
+          ],
+        },
+        { type: "encadre", attrs: { genre: "inconnu" }, content: [p(t("Masse du proton"))] },
+        { type: "codeBlock", attrs: { language: "python", numeros: "oui" }, content: [t("print(1)")] },
+        { type: "codeBlock", attrs: { language: "brainfuck" }, content: [t("+")] },
+        { type: "extrait", attrs: { source: "Hugo" }, content: [{ type: "ligne", content: [t("Demain, dès l'aube")] }] },
+        p(t("Voir"), { type: "note", attrs: { texte: "Édition 1856" } }),
+        { type: "diagramme", attrs: { source: "graph TD; A-->B" } },
+      ],
+    });
+    const [doc, encadre, code, code2, extrait, para, diag] = propre.content!;
+    expect(doc!.content).toEqual([
+      { type: "image", attrs: { cle, alt: "Coupe", largeur: 800, hauteur: 600 } },
+    ]);
+    expect(encadre!.attrs).toEqual({ genre: "donnees" });
+    expect(code!.attrs).toEqual({ language: "python", numeros: false });
+    expect(code2!.attrs).toEqual({ language: null, numeros: false });
+    expect(extrait!.content![0]!.type).toBe("ligne");
+    expect(para!.content![1]).toEqual({ type: "note", attrs: { texte: "Édition 1856" } });
+    expect(diag!.attrs).toEqual({ source: "graph TD; A-->B" });
+    expect(texteBrut(propre)).toContain("Édition 1856");
+  });
+
+  it("ne considère pas vide un document qui n'a qu'une image ou un diagramme", () => {
+    const doc = JSON.stringify({ type: "doc", content: [{ type: "diagramme", attrs: { source: "graph TD; A" } }] });
+    expect(lireDocument(doc)).not.toBeNull();
+  });
+
   it("considère un document sans contenu comme vide", () => {
     expect(lireDocument(JSON.stringify({ type: "doc", content: [p()] }))).toBeNull();
     expect(lireDocument("")).toBeNull();

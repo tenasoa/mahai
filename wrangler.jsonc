@@ -6,6 +6,8 @@
  * env.preprod = préproduction (mahai-preprod.tenasoa.workers.dev), avec sa propre base.
  * En local, `pnpm dev` utilise une D1 locale (.wrangler/state) et les valeurs de .dev.vars.
  *
+ * Images des sujets : bucket R2 lié à MEDIAS (mahai-medias / mahai-preprod-medias).
+ *
  * Secrets (jamais ici) : BETTER_AUTH_SECRET, via `wrangler secret put` (ajouter --env preprod).
  */
 {
@@ -31,6 +33,7 @@
 			"migrations_dir": "drizzle"
 		}
 	],
+	"r2_buckets": [{ "binding": "MEDIAS", "bucket_name": "mahai-medias" }],
 
 	"env": {
 		"preprod": {
@@ -45,7 +48,8 @@
 					"database_id": "edef9e24-8503-4952-8bae-ec1d63a98e8c",
 					"migrations_dir": "drizzle"
 				}
-			]
+			],
+			"r2_buckets": [{ "binding": "MEDIAS", "bucket_name": "mahai-preprod-medias" }]
 		}
 	}
 }

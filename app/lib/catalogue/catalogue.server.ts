@@ -9,7 +9,7 @@ import { slugifier } from "~/lib/contenu/texte";
 import { texteRecherche, type DonneesSujet, type Listes } from "./formulaire";
 
 export type ListesCompletes = Omit<Listes, "matieres"> & {
-  matieres: { id: string; nom: string; couleur: Couleur }[];
+  matieres: { id: string; nom: string; couleur: Couleur; outils: string[] | null }[];
 };
 
 export async function chargerListes(db: Db): Promise<ListesCompletes> {
@@ -20,7 +20,7 @@ export async function chargerListes(db: Db): Promise<ListesCompletes> {
       .from(serie)
       .orderBy(asc(serie.ordre), asc(serie.nom)),
     db
-      .select({ id: matiere.id, nom: matiere.nom, couleur: matiere.couleur })
+      .select({ id: matiere.id, nom: matiere.nom, couleur: matiere.couleur, outils: matiere.outils })
       .from(matiere)
       .orderBy(asc(matiere.ordre), asc(matiere.nom)),
   ]);

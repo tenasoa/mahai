@@ -8,6 +8,7 @@ import { requireEditeur } from "~/lib/auth/session.server";
 import { chargerListes } from "~/lib/catalogue/catalogue.server";
 import { modifierListe } from "~/lib/catalogue/listes.server";
 import { NOMS_COULEURS, TUILES } from "~/lib/couleurs";
+import { OUTILS, outilsActifs } from "~/lib/document/outils";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireEditeur(request);
@@ -37,6 +38,35 @@ function SelectCouleur({ valeur }: { valeur?: Couleur }) {
   );
 }
 
+/** Outils de l'éditeur proposés pour une matière (texte, formules, tableaux toujours là). */
+function ChoixOutils({ profil }: { profil: string[] | null }) {
+  const actifs: string[] = outilsActifs(profil);
+  return (
+    <details className="basis-full">
+      <summary className="cursor-pointer text-sm text-muted">
+        Outils de l'éditeur : {actifs.length === OUTILS.length ? "tous" : `${actifs.length} sur ${OUTILS.length}`}
+      </summary>
+      <fieldset className="mt-2 grid gap-1 sm:grid-cols-2">
+        <legend className="sr-only">Outils de l'éditeur</legend>
+        {OUTILS.map((o) => (
+          <label key={o.id} className="flex min-h-11 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="outils"
+              value={o.id}
+              defaultChecked={actifs.includes(o.id)}
+              className="size-5 shrink-0 accent-ink"
+            />
+            <span>
+              <span className="font-medium">{o.nom}</span> <span className="text-muted">· {o.aide}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+    </details>
+  );
+}
+
 /** Une ligne modifiable : nom, ordre, (couleur), Enregistrer / Supprimer. */
 function Ligne({
   type,
@@ -44,12 +74,14 @@ function Ligne({
   nom,
   ordre,
   couleur,
+  outils = null,
 }: {
   type: "examen" | "serie" | "matiere";
   id: string;
   nom: string;
   ordre: number;
   couleur?: Couleur;
+  outils?: string[] | null;
 }) {
   return (
     <li>
@@ -85,6 +117,7 @@ function Ligne({
         >
           Supprimer
         </button>
+        {type === "matiere" ? <ChoixOutils profil={outils} /> : null}
       </Form>
     </li>
   );
@@ -109,6 +142,7 @@ function Ajout({ type, children }: { type: "examen" | "serie" | "matiere"; child
       <button type="submit" name="intention" value="ajouter" className={`${petit} border-2 border-ink font-bold`}>
         Ajouter
       </button>
+      {type === "matiere" ? <ChoixOutils profil={null} /> : null}
     </Form>
   );
 }
@@ -177,7 +211,7 @@ export default function AdminListes({ loaderData, actionData }: Route.ComponentP
         <h2 className="text-lg font-bold">Matières</h2>
         <ul className="divide-y-2 divide-line">
           {matieres.map((m, i) => (
-            <Ligne key={m.id} type="matiere" id={m.id} nom={m.nom} ordre={i + 1} couleur={m.couleur} />
+            <Ligne key={m.id} type="matiere" id={m.id} nom={m.nom} ordre={i + 1} couleur={m.couleur} outils={m.outils} />
           ))}
         </ul>
         <Ajout type="matiere" />

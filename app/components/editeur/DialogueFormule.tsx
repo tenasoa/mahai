@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Tex } from "~/components/document/RenduDocument";
+import { chargerMathlive } from "~/lib/document/charger.client";
 
 /**
  * Saisie d'une formule.
@@ -88,11 +89,8 @@ export function DialogueFormule({
     if (!formule || chimie) return;
     let annule = false;
     void (async () => {
-      const { MathfieldElement } = await import("mathlive");
-      await import("mathlive/fonts.css");
+      const { MathfieldElement } = await chargerMathlive();
       if (annule || !zoneVisuelle.current) return;
-      MathfieldElement.fontsDirectory = null; // polices chargées par fonts.css
-      MathfieldElement.soundsDirectory = null;
       const mf = new MathfieldElement() as unknown as Mathfield;
       mf.mathVirtualKeyboardPolicy = "auto";
       mf.value = latexCourant.current;
