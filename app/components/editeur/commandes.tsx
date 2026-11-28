@@ -28,6 +28,7 @@ export type ContexteCommande = {
   ouvrirStatistique: () => void;
   ouvrirCarte: () => void;
   ouvrirProba: () => void;
+  ouvrirOptique: () => void;
   ouvrirAvancement: () => void;
 };
 
@@ -62,12 +63,13 @@ export const COMMANDES: Commande[] = [
   { id: "code", titre: "Code", aide: "Python, C, Java, SQL…", motsCles: "programme informatique source", outil: "code", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "codeBlock", attrs: { language: "python", numeros: true } }).run() },
   { id: "algo", titre: "Algorithme", aide: "Pseudo-code en français", motsCles: "pseudo code algorithmique", outil: "algo", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "codeBlock", attrs: { language: "algo", numeros: true } }).run() },
   { id: "diagramme", titre: "Diagramme", aide: "Organigramme, UML, automate", motsCles: "mermaid uml graphe organigramme sequence etat", outil: "diagramme", executer: ({ ouvrirDiagramme }) => ouvrirDiagramme() },
-  { id: "schema", titre: "Schéma électrique", aide: "Composants, circuits, portes logiques", motsCles: "circuit electronique electrique composant resistance transistor porte", outil: "schema", executer: ({ ouvrirSchema }) => ouvrirSchema() },
+  { id: "schema", titre: "Schéma (électricité, mécanique)", aide: "Circuits, portes logiques, forces, ressorts, poulies", motsCles: "circuit electronique electrique composant resistance transistor porte mecanique force vecteur ressort poulie plan incline pendule solide champ magnetique aimant plaques laplace", outil: "schema", executer: ({ ouvrirSchema }) => ouvrirSchema() },
   { id: "chronogramme", titre: "Chronogramme", aide: "Signaux, horloge, bus (WaveDrom)", motsCles: "signal horloge timing bascule wavedrom logigramme", outil: "chronogramme", executer: ({ ouvrirChronogramme }) => ouvrirChronogramme() },
   { id: "karnaugh", titre: "Tableau de Karnaugh", aide: "2 à 4 variables", motsCles: "logique simplification booleen", outil: "logique", executer: ({ editor }) => editor.chain().focus().insertContent({ type: "karnaugh", attrs: { variables: ["A", "B", "C"], sortie: "S", valeurs: "........" } }).run() },
   { id: "graphique", titre: "Graphique", aide: "Courbes, points, vecteurs dans un repère", motsCles: "courbe fonction repere plan coordonnees vecteur droite parabole", outil: "graphique", executer: ({ ouvrirGraphique }) => ouvrirGraphique() },
   { id: "geometrie", titre: "Figure de géométrie", aide: "Triangle, cercle, constructions, codage", motsCles: "geometrie triangle cercle polygone angle droite segment milieu hauteur mediane thales pythagore parallelogramme", outil: "geometrie", executer: ({ ouvrirFigure }) => ouvrirFigure() },
   { id: "avancement", titre: "Tableau d'avancement", aide: "Réaction chimique, x max, réactif limitant", motsCles: "chimie avancement reaction reactif limitant quantite matiere mol xmax stoechiometrie", outil: "avancement", executer: ({ ouvrirAvancement }) => ouvrirAvancement() },
+  { id: "optique", titre: "Optique", aide: "Lentilles, objet, image et rayons", motsCles: "physique optique lentille convergente divergente foyer image objet rayon loupe lunette microscope conjugaison grandissement", outil: "optique", executer: ({ ouvrirOptique }) => ouvrirOptique() },
   { id: "probabilites", titre: "Arbre de probabilités", aide: "Épreuves successives, issues", motsCles: "maths probabilite arbre pondere evenement issue conditionnelle", outil: "probabilites", executer: ({ ouvrirProba }) => ouvrirProba() },
   { id: "frise", titre: "Frise chronologique", aide: "Périodes et événements datés", motsCles: "histoire chronologie dates periode evenement siecle", outil: "frise", executer: ({ ouvrirFrise }) => ouvrirFrise() },
   { id: "statistique", titre: "Diagramme statistique", aide: "Barres, courbe, secteurs, pyramide, ombrothermique", motsCles: "geographie histogramme barres camembert secteurs pyramide ages population climat ombrothermique courbe evolution", outil: "statistique", executer: ({ ouvrirStatistique }) => ouvrirStatistique() },

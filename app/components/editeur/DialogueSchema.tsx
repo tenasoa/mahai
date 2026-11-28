@@ -3,12 +3,14 @@ import { createPortal } from "react-dom";
 import type { ExcalidrawImperativeAPI, ExcalidrawInitialDataState } from "@excalidraw/excalidraw/types";
 
 import { chargerExcalidraw } from "~/lib/document/charger.client";
-import { SYMBOLES } from "~/lib/document/symboles";
+import { lireLocal, ecrireLocal } from "~/lib/clavier";
+import { FAMILLES_SYMBOLES, type FamilleSymboles } from "~/lib/document/symboles";
 import { TAILLE_MAX, urlMedia } from "~/lib/medias/medias";
 import { envoyerFichier } from "./blocs";
 
 /**
- * Éditeur de schémas (Excalidraw), plein écran, avec la bibliothèque de symboles électriques.
+ * Éditeur de schémas (Excalidraw), plein écran, avec une bibliothèque de symboles au choix
+ * (électricité et logique, mécanique et champs ; la dernière choisie est retenue).
  * Le schéma est enregistré en PNG (×2) dans R2, la scène Excalidraw incluse dans le fichier :
  * « Modifier » la relit depuis l'image, sans stockage à part.
  */
@@ -30,8 +32,16 @@ const APPARENCE = {
   gridStep: 5,
 } as const;
 
-function bibliotheque(m: Module) {
-  return SYMBOLES.map((s) => ({
+const CLE_FAMILLE = "mahai:schema-symboles";
+
+const familleRetenue = (): FamilleSymboles => {
+  const f = lireLocal(CLE_FAMILLE);
+  return FAMILLES_SYMBOLES.some((x) => x.id === f) ? (f as FamilleSymboles) : "electricite";
+};
+
+function bibliotheque(m: Module, famille: FamilleSymboles) {
+  const symboles = FAMILLES_SYMBOLES.find((f) => f.id === famille)!.symboles;
+  return symboles.map((s) => ({
     id: s.id,
     status: "published" as const,
     created: 1,
@@ -56,6 +66,7 @@ export function DialogueSchema({
   const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [famille, setFamille] = useState<FamilleSymboles>("electricite");
 
   useEffect(() => {
     if (!schema) {
@@ -77,10 +88,12 @@ export function DialogueSchema({
           scene = { elements: lu.elements, files: lu.files };
         }
         if (annule) return;
+        const retenue = familleRetenue();
+        setFamille(retenue);
         setModule(m);
         setInitial({
           ...scene,
-          libraryItems: bibliotheque(m),
+          libraryItems: bibliotheque(m, retenue),
           // Bibliothèque ouverte et ancrée : on enchaîne les symboles sans la rouvrir.
           appState: {
             ...APPARENCE,
@@ -98,6 +111,12 @@ export function DialogueSchema({
       document.body.style.overflow = ancien;
     };
   }, [schema]);
+
+  function changerFamille(f: FamilleSymboles) {
+    setFamille(f);
+    ecrireLocal(CLE_FAMILLE, f);
+    if (module && api) void api.updateLibrary({ libraryItems: bibliotheque(module, f), merge: false, openLibraryMenu: true });
+  }
 
   async function enregistrer() {
     if (!module || !api) return;
@@ -152,9 +171,21 @@ export function DialogueSchema({
         <h2 id="titre-schema" className="text-lg font-extrabold">
           {nouveau ? "Nouveau schéma" : "Modifier le schéma"}
         </h2>
-        <p className="hidden text-sm text-muted lg:block">
-          Symboles dans la bibliothèque (à droite) ; fils avec l'outil « Ligne ».
-        </p>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          Symboles
+          <select
+            value={famille}
+            onChange={(e) => changerFamille(e.target.value as FamilleSymboles)}
+            className="h-10 rounded-xl border-2 border-line bg-surface px-2 text-sm focus:border-ink"
+          >
+            {FAMILLES_SYMBOLES.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.nom}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="hidden text-sm text-muted xl:block">Bibliothèque à droite ; fils et traits avec l'outil « Ligne ».</p>
         <span className="flex-1" />
         {erreur ? (
           <p role="alert" className="rounded-full bg-erreur px-3 py-1 text-sm font-medium">

@@ -5,6 +5,7 @@ import { normaliserKarnaugh } from "~/lib/document/karnaugh";
 import { normaliserAvancement } from "~/lib/document/avancement";
 import { normaliserCarte } from "~/lib/document/carte";
 import { normaliserFrise } from "~/lib/document/frise";
+import { normaliserOptique } from "~/lib/document/optique";
 import { normaliserProba } from "~/lib/document/probabilites";
 import { normaliserFigure } from "~/lib/document/geometrie";
 import { normaliserStatistique } from "~/lib/document/statistique";
@@ -19,6 +20,7 @@ import { ImageReperes } from "./ImageReperes";
 import { Molecule } from "./Molecule";
 import { SvgFigure } from "./SvgFigure";
 import { ArbreProbabilites } from "./ArbreProbabilites";
+import { SvgOptique } from "./SvgOptique";
 import { TableauAvancement } from "./TableauAvancement";
 import { CarteDessin } from "./CarteDessin";
 import { SvgFrise } from "./SvgFrise";
@@ -294,6 +296,12 @@ function noeud(n: Noeud, ctx: Contexte, index: number): ReactNode {
         <div className="tableau">
           <TableauAvancement t={normaliserAvancement(n.attrs)} />
         </div>
+      );
+    case "optique":
+      return (
+        <figure className="figure-optique">
+          <SvgOptique o={normaliserOptique(n.attrs)} />
+        </figure>
       );
     case "probabilites":
       return (

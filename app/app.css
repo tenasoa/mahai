@@ -1127,6 +1127,84 @@ ul.legende-croquis li.partie:first-child {
   font-size: 0.78rem;
 }
 
+/* Banc d'optique (lecture et éditeur) */
+.figure-optique {
+  margin: 1em 0;
+  text-align: center;
+}
+svg.optique {
+  display: block;
+  width: 100%;
+  max-width: 40rem;
+  height: auto;
+  margin-inline: auto;
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+.optique .axe {
+  stroke: var(--color-ink);
+  stroke-width: 1.2;
+}
+.optique .graduation,
+.optique .repere {
+  stroke: var(--color-ink);
+  stroke-width: 1.4;
+}
+.optique .lentille line,
+.optique .lentille path {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.optique .objet line {
+  stroke: var(--color-ink);
+  stroke-width: 2;
+}
+.optique .objet.intermediaire line {
+  stroke: var(--color-muted);
+}
+.optique .rayon line {
+  stroke-width: 1.4;
+}
+.optique .pointille {
+  stroke-dasharray: 6 5;
+}
+.optique .c1 { stroke: var(--color-trace-0); fill: var(--color-trace-0); }
+.optique .c2 { stroke: var(--color-trace-1); fill: var(--color-trace-1); }
+.optique .c3 { stroke: var(--color-trace-2); fill: var(--color-trace-2); }
+.optique .tete {
+  stroke: none;
+}
+.optique .pointe {
+  fill: var(--color-ink);
+}
+.optique .nom,
+.optique .note {
+  fill: var(--color-ink);
+  stroke: var(--color-surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+.optique .nom {
+  font-weight: 600;
+}
+.optique .note {
+  font-size: 13px;
+  fill: var(--color-muted);
+}
+/* Le dessin rétrécit sur téléphone : noms plus grands pour rester lisibles. */
+@media (max-width: 640px) {
+  svg.optique {
+    font-size: 21px;
+  }
+  .optique .note {
+    font-size: 17px;
+  }
+}
+
 /* Arbre de probabilités (lecture et éditeur) */
 .figure-proba {
   margin: 1em 0;

@@ -65,7 +65,7 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   en deux colonnes) ; l'éditeur de sujet prend toute la largeur (`handle.large`).
 - Outils de l'éditeur (`app/lib/document/outils.ts`) : image, document numéroté, encadré, note,
   extrait, chimie, code, algorithme, diagramme, schéma, chronogramme, logique, graphique,
-  géométrie, probabilités, avancement, variations, molécule, génétique, frise, statistique, carte. Profil par matière (`matiere.outils`, `null` = tous)
+  géométrie, probabilités, avancement, optique, variations, molécule, génétique, frise, statistique, carte. Profil par matière (`matiere.outils`, `null` = tous)
   réglé dans `/admin/listes` ; menu « / » et bouton « Insérer… » (`app/components/editeur/commandes.tsx`).
 - Images : bucket R2 `MEDIAS` (clés `m/<uuid>.<ext>`), envoi par `/admin/medias` (type vérifié par
   les premiers octets, 5 Mo max., compressées en WebP dans le navigateur), lecture par `/medias/*`.
@@ -75,8 +75,9 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
   `charger.client.ts`, chargées à la demande. Ne rien exécuter au chargement d'un module partagé
   avec le serveur.
 - Électronique (`app/components/editeur/electronique.tsx`) : schémas Excalidraw enregistrés en PNG
-  dans R2 avec la scène incluse (« Modifier » la relit depuis l'image), symboles CEI dans
-  `app/lib/document/symboles.ts` ; chronogrammes WaveDrom (SVG passé par DOMPurify, `<use>` limité
+  dans R2 avec la scène incluse (« Modifier » la relit depuis l'image), bibliothèques de symboles
+  dans `app/lib/document/symboles.ts` (électricité et logique CEI, mécanique et champs ; choix
+  retenu dans le navigateur) ; chronogrammes WaveDrom (SVG passé par DOMPurify, `<use>` limité
   aux références `#…`) ; tableaux de Karnaugh (`app/lib/document/karnaugh.ts`).
 - Sciences (`app/components/editeur/sciences.tsx`) : graphiques dans un repère décrits par des
   données (`app/lib/document/graphique.ts`) et dessinés en SVG **sur le serveur**
@@ -92,6 +93,11 @@ Toujours tester en préprod (migrations puis déploiement) avant la production.
 - Arbre de probabilités (nœud `probabilites`, `app/lib/document/probabilites.ts`, dessin
   `ArbreProbabilites`) : branches imbriquées (4 niveaux), noms et probabilités en LaTeX posés en
   HTML sur des traits SVG ; probabilité des issues calculée en option, en fractions exactes.
+- Optique (nœud `optique`, `app/lib/document/optique.ts`, dessin `SvgOptique` sur le serveur) :
+  lentilles minces (f' > 0 convergente), objet AB ou à l'infini ; images par la relation de
+  conjugaison, en chaîne d'une lentille à l'autre ; rayons de construction suivis à travers
+  toutes les lentilles, prolongements virtuels en pointillés. Le dialogue affiche OA', γ et la
+  nature de l'image pour le corrigé.
 - Tableau d'avancement (nœud `avancement`, `app/lib/document/avancement.ts`, `TableauAvancement`) :
   équation en mhchem, quantités initiales saisies (nombre, notation scientifique, symbole,
   « excès », vide) ; lignes « en cours » et « état final », x_max et réactif limitant déduits,

@@ -16,6 +16,7 @@ import { normaliserGraphique } from "./graphique";
 import { normaliserKarnaugh } from "./karnaugh";
 import { ENCADRES, IDS_LANGAGES } from "./outils";
 import { normaliserReperes } from "./reperes";
+import { normaliserOptique, texteOptique } from "./optique";
 import { normaliserProba, texteProba } from "./probabilites";
 import { normaliserStatistique } from "./statistique";
 import { normaliserVariations } from "./variations";
@@ -157,6 +158,8 @@ export const NOEUDS: Record<string, Regle> = {
   avancement: { attrs: (a) => normaliserAvancement(a) },
   /** Arbre de probabilités (maths). */
   probabilites: { attrs: (a) => normaliserProba(a) },
+  /** Banc d'optique : lentilles, objet, image et rayons calculés (physique). */
+  optique: { attrs: (a) => normaliserOptique(a) },
   /** Frise chronologique (histoire). */
   frise: { attrs: (a) => normaliserFrise(a) },
   /** Diagramme statistique : barres, courbe, secteurs, pyramide des âges, ombrothermique. */
@@ -289,6 +292,7 @@ const BLOCS_SANS_TEXTE = new Set([
   "graphique",
   "geometrie",
   "probabilites",
+  "optique",
   "avancement",
   "frise",
   "statistique",
@@ -325,6 +329,7 @@ export function texteBrut(n: Noeud): string {
   }
   if (n.type === "avancement") return ` ${texteAvancement(normaliserAvancement(n.attrs))} `;
   if (n.type === "probabilites") return ` ${texteProba(normaliserProba(n.attrs))} `;
+  if (n.type === "optique") return ` ${texteOptique(normaliserOptique(n.attrs))} `;
   if (n.type === "carte") return ` ${texteCarte(normaliserCarte(n.attrs))} `;
   if (n.type === "molecule") return ` ${String(n.attrs?.nom ?? "")} `;
   if (n.type === "exercice") {

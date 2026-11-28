@@ -36,9 +36,11 @@ import { DialogueFigure, type FigureEnCours } from "./DialogueFigure";
 import { DialogueAvancement, type AvancementEnCours } from "./DialogueAvancement";
 import { DialogueCarte, type CarteEnCours } from "./DialogueCarte";
 import { DialogueFrise, type FriseEnCours } from "./DialogueFrise";
+import { DialogueOptique, type OptiqueEnCours } from "./DialogueOptique";
 import { DialogueProba, type ProbaEnCours } from "./DialogueProba";
 import { DialogueStatistique, type StatistiqueEnCours } from "./DialogueStatistique";
 import { CarteSujet, FriseSujet, StatistiqueSujet } from "./histoire";
+import { OptiqueSujet } from "./optique";
 import { ProbabilitesSujet } from "./probabilites";
 import { AvancementSujet } from "./avancement";
 import { DialogueGraphique, type GraphiqueEnCours } from "./DialogueGraphique";
@@ -96,6 +98,7 @@ export function EditeurRiche({
   const [statistique, setStatistique] = useState<StatistiqueEnCours | null>(null);
   const [carte, setCarte] = useState<CarteEnCours | null>(null);
   const [proba, setProba] = useState<ProbaEnCours | null>(null);
+  const [optique, setOptique] = useState<OptiqueEnCours | null>(null);
   const [avancement, setAvancement] = useState<AvancementEnCours | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [menu, setMenu] = useState<EtatMenu | null>(null);
@@ -157,6 +160,7 @@ export function EditeurRiche({
       StatistiqueSujet.configure({ ouvrir: (attrs, pos) => setStatistique({ attrs, pos }) }),
       CarteSujet.configure({ ouvrir: (attrs, pos) => setCarte({ attrs, pos }) }),
       ProbabilitesSujet.configure({ ouvrir: (attrs, pos) => setProba({ attrs, pos }) }),
+      OptiqueSujet.configure({ ouvrir: (attrs, pos) => setOptique({ attrs, pos }) }),
       AvancementSujet.configure({ ouvrir: (attrs, pos) => setAvancement({ attrs, pos }) }),
       VariationsSujet,
       MoleculeSujet,
@@ -219,6 +223,7 @@ export function EditeurRiche({
         ouvrirStatistique: () => setStatistique({ attrs: null }),
         ouvrirCarte: () => setCarte({ attrs: null }),
         ouvrirProba: () => setProba({ attrs: null }),
+        ouvrirOptique: () => setOptique({ attrs: null }),
         ouvrirAvancement: () => setAvancement({ attrs: null }),
       }
     : null;
@@ -424,6 +429,14 @@ export function EditeurRiche({
           setCarte(null);
         }}
         onFermer={() => setCarte(null)}
+      />
+      <DialogueOptique
+        optique={optique}
+        onValider={(o) => {
+          poserBloc("optique", o, optique?.pos);
+          setOptique(null);
+        }}
+        onFermer={() => setOptique(null)}
       />
       <DialogueProba
         proba={proba}
