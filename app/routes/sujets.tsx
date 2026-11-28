@@ -6,6 +6,7 @@ import type { MiseEnPage } from "./_app";
 import type { Apercu } from "./api.apercu.$slug";
 import { champRecherche } from "~/components/catalogue/recherche";
 import { TableSujets, type ListesAffichage, type SujetResume } from "~/components/catalogue/TableSujets";
+import { ToutesMatieres } from "~/components/catalogue/ToutesMatieres";
 import { ButtonLink } from "~/components/ui/Button";
 import { EmptyState } from "~/components/ui/EmptyState";
 import { Icon } from "~/components/ui/Icon";
@@ -23,6 +24,7 @@ import { motsRecherche } from "~/lib/contenu/texte";
 import { TuileMatiere } from "~/components/ui/Pictogramme";
 import type { Couleur } from "~/db/schema";
 import { pts } from "~/lib/document/plan";
+import { MATIERES_EN_AVANT, matieresEnAvant } from "~/lib/catalogue/matieres";
 
 export const handle: MiseEnPage = { large: true };
 
@@ -112,6 +114,20 @@ export default function Sujets({ loaderData }: Route.ComponentProps) {
   );
 }
 
+/** Lien qui choisit (ou retire) une matière en gardant les autres filtres. */
+function useLienMatiere() {
+  const [params] = useSearchParams();
+  return (id: string | null) => {
+    const suite = new URLSearchParams(params);
+    suite.delete("page");
+    suite.delete("matieres");
+    if (id) suite.set("matiere", id);
+    else suite.delete("matiere");
+    const texte = suite.toString();
+    return texte ? `?${texte}` : "/sujets";
+  };
+}
+
 function filtreActif(f: Donnees["filtres"]) {
   return Boolean(f.mots.length || f.examenId || f.matiereId || f.serieId || f.annee || f.corrige);
 }
@@ -131,12 +147,16 @@ function Vide({ filtre }: { filtre: boolean }) {
 /* ---------- Téléphone : recherche, listes déroulantes, cartes ---------- */
 
 function Telephone({ donnees }: { donnees: Donnees }) {
-  const { listes, annees, filtres, sujets } = donnees;
+  const { listes, annees, filtres, sujets, compteurs } = donnees;
   const [params] = useSearchParams();
   const q = params.get("q") ?? "";
   const seriesExamen = filtres.examenId
     ? listes.series.filter((s) => s.examenId === filtres.examenId)
     : listes.series;
+
+  const lienMatiere = useLienMatiere();
+  const nombre = (id: string) => compteurs.matieres[id] ?? 0;
+  const { visibles, avecSujets } = matieresEnAvant(listes.matieres, nombre, MATIERES_EN_AVANT, filtres.matiereId);
 
   // La matière choisie reste visible dans la bande qui défile.
   const bande = useRef<HTMLUListElement>(null);
@@ -204,19 +224,14 @@ function Telephone({ donnees }: { donnees: Donnees }) {
         </div>
       </Form>
 
-      <nav aria-label="Filtrer par matière" className="-mx-5">
-        <ul ref={bande} className="relative flex snap-x gap-1 overflow-x-auto scroll-px-5 px-5 [scrollbar-width:none]">
-          {listes.matieres.map((m) => {
+      <nav aria-label="Filtrer par matière" className="flex flex-col gap-3">
+        <ul ref={bande} className="relative -mx-5 flex snap-x gap-1 overflow-x-auto scroll-px-5 px-5 [scrollbar-width:none]">
+          {visibles.map((m) => {
             const actif = filtres.matiereId === m.id;
-            const suite = new URLSearchParams(params);
-            suite.delete("page");
-            if (actif) suite.delete("matiere");
-            else suite.set("matiere", m.id);
-            const lien = suite.toString();
             return (
               <li key={m.id} className="w-19 shrink-0 snap-start">
                 <Link
-                  to={lien ? `?${lien}` : "."}
+                  to={lienMatiere(actif ? null : m.id)}
                   aria-current={actif ? "true" : undefined}
                   className={`flex h-full flex-col items-center gap-1.5 rounded-2xl border-2 px-0.5 py-2 text-center text-[11px] leading-tight break-words hyphens-auto ${
                     actif ? "border-ink bg-soft font-bold" : "border-transparent"
@@ -229,6 +244,15 @@ function Telephone({ donnees }: { donnees: Donnees }) {
             );
           })}
         </ul>
+        {avecSujets.length > visibles.length ? (
+          <ToutesMatieres
+            matieres={avecSujets}
+            nombre={nombre}
+            lien={lienMatiere}
+            choisie={filtres.matiereId}
+            ouvert={params.get("matieres") === "toutes"}
+          />
+        ) : null}
       </nav>
 
       {sujets.length === 0 ? (
@@ -303,7 +327,7 @@ function Ordinateur({ donnees }: { donnees: Donnees }) {
   }, [sujets, choisi, navigate]);
 
   const garde = (sauf: string[]) =>
-    [...params.entries()].filter(([k, v]) => v && !sauf.includes(k) && k !== "page");
+    [...params.entries()].filter(([k, v]) => v && !sauf.includes(k) && k !== "page" && k !== "matieres");
 
   const sujet = sujets[Math.min(choisi, sujets.length - 1)];
 
@@ -481,21 +505,16 @@ function MatieresEnTuiles({
   compteurs: Donnees["compteurs"];
 }) {
   const [params] = useSearchParams();
-  const lien = (id: string | null) => {
-    const suite = new URLSearchParams(params);
-    suite.delete("page");
-    if (id) suite.set("matiere", id);
-    else suite.delete("matiere");
-    const texte = suite.toString();
-    return texte ? `?${texte}` : "/sujets";
-  };
+  const lien = useLienMatiere();
+  const nombre = (id: string) => compteurs.matieres[id] ?? 0;
+  const { visibles, avecSujets } = matieresEnAvant(listes.matieres, nombre, MATIERES_EN_AVANT, filtres.matiereId);
   const total = Object.values(compteurs.matieres).reduce((a, n) => a + n, 0);
   const tuile = (actif: boolean, vide: boolean) =>
     `flex min-h-12 items-center gap-2.5 rounded-2xl border-2 py-1.5 pr-3.5 pl-1.5 text-sm ${
       actif ? "border-ink bg-soft font-bold" : `border-line hover:border-control ${vide ? "text-muted" : ""}`
     }`;
   return (
-    <nav aria-label="Filtrer par matière">
+    <nav aria-label="Filtrer par matière" className="flex flex-col gap-2">
       <ul className="flex flex-wrap gap-2">
         <li>
           <Link to={lien(null)} preventScrollReset aria-current={!filtres.matiereId ? "true" : undefined} className={tuile(!filtres.matiereId, false)}>
@@ -509,9 +528,9 @@ function MatieresEnTuiles({
             <span className="text-xs font-normal text-muted tabular-nums">{total}</span>
           </Link>
         </li>
-        {listes.matieres.map((m) => {
+        {visibles.map((m) => {
           const actif = filtres.matiereId === m.id;
-          const n = compteurs.matieres[m.id] ?? 0;
+          const n = nombre(m.id);
           return (
             <li key={m.id}>
               <Link to={lien(actif ? null : m.id)} preventScrollReset aria-current={actif ? "true" : undefined} className={tuile(actif, n === 0)}>
@@ -523,6 +542,15 @@ function MatieresEnTuiles({
           );
         })}
       </ul>
+      {avecSujets.length > visibles.length ? (
+        <ToutesMatieres
+          matieres={avecSujets}
+          nombre={nombre}
+          lien={lien}
+          choisie={filtres.matiereId ?? null}
+          ouvert={params.get("matieres") === "toutes"}
+        />
+      ) : null}
     </nav>
   );
 }

@@ -11,6 +11,7 @@ import { LiensLegaux } from "~/components/ui/LiensLegaux";
 import { getDb } from "~/db/db.server";
 import { anneesPubliees, chargerListes, chiffresCatalogue, derniersSujets } from "~/lib/catalogue/catalogue.server";
 import { TUILES } from "~/lib/couleurs";
+import { matieresEnAvant } from "~/lib/catalogue/matieres";
 import { Pictogramme } from "~/components/ui/Pictogramme";
 
 export const handle: MiseEnPage = { large: true };
@@ -43,12 +44,19 @@ const A_VENIR = [
   "Examens blancs chronométrés",
 ];
 
+/** 11 tuiles et « Toutes les matières » : des rangées pleines à 2, 3 et 6 colonnes. */
+const TUILES_MAX = 11;
+
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
 const selectRecherche = "min-h-12 min-w-0 flex-1 rounded-full border-2 border-line bg-surface px-4 text-sm";
 
 export default function Accueil({ loaderData }: Route.ComponentProps) {
   const { listes, chiffres, derniers, annees } = loaderData;
+  // Les matières qui ont des sujets, les plus fournies d'abord ; tant que le catalogue est vide,
+  // les premières matières annoncées « Bientôt ».
+  const { visibles, avecSujets } = matieresEnAvant(listes.matieres, (id) => chiffres.parMatiere[id]?.sujets ?? 0, TUILES_MAX);
+  const tuiles = visibles.length ? visibles : listes.matieres.slice(0, TUILES_MAX);
 
   return (
     <>
@@ -93,7 +101,7 @@ export default function Accueil({ loaderData }: Route.ComponentProps) {
               </select>
               <select name="matiere" defaultValue="" aria-label="Matière" className={selectRecherche}>
                 <option value="">Toutes matières</option>
-                {listes.matieres.map((m) => (
+                {(avecSujets.length ? avecSujets : listes.matieres).map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.nom}
                   </option>
@@ -155,7 +163,7 @@ export default function Accueil({ loaderData }: Route.ComponentProps) {
           </Link>
         </div>
         <ul className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3 xl:grid-cols-5 2xl:grid-cols-6">
-          {listes.matieres.map((m) => {
+          {tuiles.map((m) => {
             const c = chiffres.parMatiere[m.id];
             return (
               <li key={m.id}>
@@ -176,7 +184,7 @@ export default function Accueil({ loaderData }: Route.ComponentProps) {
           })}
           <li>
             <Link
-              to="/sujets"
+              to={avecSujets.length > tuiles.length ? "/sujets?matieres=toutes" : "/sujets"}
               className="flex h-full min-h-24 flex-col justify-end rounded-tile bg-soft p-4 text-base font-bold text-ink lg:min-h-30 lg:p-[18px] lg:text-[17px]"
             >
               Toutes les matières
