@@ -124,7 +124,7 @@ function Ligne({
         {couleur ? (
           <TuileMatiere couleur={couleur} icone={icone} taille={32} />
         ) : null}
-        <input name="nom" defaultValue={nom} required maxLength={60} aria-label="Nom" className={`${champ} grow basis-32`} />
+        <input name="nom" defaultValue={nom} required maxLength={60} aria-label="Nom" className={`${champ} grow basis-52`} />
         <input
           name="ordre"
           type="number"

@@ -42,7 +42,7 @@ export function TableSujets({
   choisi?: number;
   surChoix?: (i: number) => void;
   legende: string;
-  /** À partir de 1280 px (aperçu affiché à côté) : séries sous l'examen, corrigé en icône. */
+  /** À partir de 1280 px (aperçu affiché à côté) : examen et séries sous le titre, corrigé en icône. */
   compact?: boolean;
 }) {
   return (
@@ -52,7 +52,7 @@ export function TableSujets({
         <thead>
           <tr className="text-left text-xs text-muted">
             <th scope="col" className="px-3 pb-2.5 font-medium">Sujet</th>
-            <th scope="col" className="px-3 pb-2.5 font-medium">Examen</th>
+            <th scope="col" className={`px-3 pb-2.5 font-medium ${compact ? "xl:hidden" : ""}`}>Examen</th>
             <th scope="col" className={`px-3 pb-2.5 font-medium ${compact ? "xl:hidden" : ""}`}>Séries</th>
             <th scope="col" className="px-3 pb-2.5 font-medium">Durée</th>
             <th scope="col" className="px-3 pb-2.5 font-medium">Corrigé</th>
@@ -75,19 +75,25 @@ export function TableSujets({
                     to={`/sujets/${s.slug}`}
                     prefetch="intent"
                     onFocus={surChoix ? () => surChoix(i) : undefined}
-                    className="flex items-center gap-3 font-bold hover:underline hover:underline-offset-4"
+                    className="flex min-w-40 items-center gap-3 font-bold hover:underline hover:underline-offset-4"
                   >
                     <TuileMatiere couleur={matiere?.couleur} icone={matiere?.icone} taille={30} />
                     <span>
                       {s.titre}
                       {matiere && matiere.nom !== s.titre ? <span className="sr-only">, {matiere.nom}</span> : null}
+                      {compact ? (
+                        <span className="hidden text-xs font-normal text-muted xl:block">
+                          {nomDe(listes.examens, s.examenId)}
+                          {s.annee ? ` ${s.annee}` : ""}
+                          {series ? ` · Série ${series}` : ""}
+                        </span>
+                      ) : null}
                     </span>
                   </Link>
                 </td>
-                <td className="px-3 py-3 whitespace-nowrap tabular-nums">
+                <td className={`min-w-32 px-3 py-3 tabular-nums ${compact ? "xl:hidden" : ""}`}>
                   {nomDe(listes.examens, s.examenId)}
                   {s.annee ? ` ${s.annee}` : ""}
-                  {compact && series ? <span className="hidden text-xs text-muted xl:block">Série {series}</span> : null}
                 </td>
                 <td className={`px-3 py-3 ${compact ? "xl:hidden" : ""}`}>{series || "—"}</td>
                 <td className="px-3 py-3 whitespace-nowrap tabular-nums">{duree(s.dureeMinutes) ?? "—"}</td>
@@ -99,7 +105,7 @@ export function TableSujets({
                     </span>
                   ) : (
                     <span className="text-muted">
-                      <span className={compact ? "xl:hidden" : ""}>Pas encore</span>
+                      <span className={`whitespace-nowrap ${compact ? "xl:hidden" : ""}`}>Pas encore</span>
                       {compact ? (
                         <span className="hidden xl:inline">
                           <span aria-hidden="true">—</span>

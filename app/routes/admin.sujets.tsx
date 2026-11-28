@@ -111,7 +111,7 @@ export default function AdminSujets({ loaderData }: Route.ComponentProps) {
                 defaultValue={filtres.q}
                 placeholder="Titre, examen, matière, année…"
                 aria-label="Chercher un sujet"
-                className={`${champ} w-full sm:w-auto sm:flex-1 lg:w-64 lg:flex-none`}
+                className={`${champ} w-full sm:w-auto sm:flex-1 lg:w-80 lg:flex-none`}
               />
               <select name="matiere" defaultValue={filtres.matiere} aria-label="Matière" className={champ}>
                 <option value="">Toutes les matières</option>
@@ -147,7 +147,7 @@ export default function AdminSujets({ loaderData }: Route.ComponentProps) {
                       <Link to={`/admin/sujets/${s.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-soft">
                         <TuileMatiere couleur={matiere?.couleur} icone={matiere?.icone} taille={32} />
                         <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate font-bold">{s.titre}</span>
+                          <span className="line-clamp-2 font-bold">{s.titre}</span>
                           <span className="text-sm text-muted">
                             {nom(listes.examens, s.examenId)}
                             {s.annee ? ` ${s.annee}` : ""} · {matiere?.nom ?? s.matiereId} · modifié le{" "}
@@ -164,7 +164,7 @@ export default function AdminSujets({ loaderData }: Route.ComponentProps) {
               {/* Ordinateur : tableau, toute la ligne mène à l'éditeur */}
               <div className="hidden overflow-hidden rounded-card border-2 border-line lg:block">
                 <table className="w-full border-collapse text-left text-sm">
-                  <thead className="bg-soft text-xs font-bold tracking-wide text-muted uppercase">
+                  <thead className="bg-soft text-xs font-bold text-muted">
                     <tr>
                       <th scope="col" className="px-4 py-3">
                         Sujet
@@ -192,7 +192,7 @@ export default function AdminSujets({ loaderData }: Route.ComponentProps) {
                       return (
                         <tr key={s.id} className="relative hover:bg-soft">
                           <td className="px-4 py-3">
-                            <span className="flex items-center gap-3">
+                            <span className="flex min-w-48 items-center gap-3">
                               <TuileMatiere couleur={matiere?.couleur} icone={matiere?.icone} taille={32} />
                               {/* Le lien couvre toute la ligne (pseudo-élément) */}
                               <Link
@@ -203,12 +203,12 @@ export default function AdminSujets({ loaderData }: Route.ComponentProps) {
                               </Link>
                             </span>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-4 py-3">
                             {nom(listes.examens, s.examenId)}
                             {s.annee ? ` ${s.annee}` : ""}
                             {s.session ? <span className="text-muted"> · {s.session}</span> : null}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">{matiere?.nom ?? s.matiereId}</td>
+                          <td className="px-4 py-3">{matiere?.nom ?? s.matiereId}</td>
                           <td className="px-4 py-3 text-muted">{s.aCorrige ? "Oui" : "—"}</td>
                           <td className="px-4 py-3">
                             <Statut publie={s.statut === "publie"} />

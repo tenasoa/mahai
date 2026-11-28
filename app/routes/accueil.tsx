@@ -45,7 +45,7 @@ const A_VENIR = [
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
-const selectRecherche = "min-h-12 rounded-full border-2 border-line bg-surface px-4 text-sm";
+const selectRecherche = "min-h-12 min-w-0 flex-1 rounded-full border-2 border-line bg-surface px-4 text-sm";
 
 export default function Accueil({ loaderData }: Route.ComponentProps) {
   const { listes, chiffres, derniers, annees } = loaderData;
@@ -154,17 +154,17 @@ export default function Accueil({ loaderData }: Route.ComponentProps) {
             Tout le catalogue
           </Link>
         </div>
-        <ul className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3 xl:grid-cols-6">
+        <ul className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3 xl:grid-cols-5 2xl:grid-cols-6">
           {listes.matieres.map((m) => {
             const c = chiffres.parMatiere[m.id];
             return (
               <li key={m.id}>
                 <Link
                   to={`/sujets?matiere=${m.id}`}
-                  className={`${TUILES[m.couleur]} flex min-h-24 flex-col justify-end gap-0.5 rounded-tile p-4 text-ink lg:min-h-30 lg:p-[18px]`}
+                  className={`${TUILES[m.couleur]} flex h-full min-h-24 flex-col justify-end gap-0.5 rounded-tile p-4 text-ink lg:min-h-30 lg:p-[18px]`}
                 >
                   <Pictogramme id={m.icone} taille={26} className="mb-auto" />
-                  <span className="text-base font-bold lg:text-[17px]">{m.nom}</span>
+                  <span className="text-base font-bold break-words hyphens-auto lg:text-[17px] xl:text-base 2xl:text-[17px]">{m.nom}</span>
                   <span className="text-xs tabular-nums lg:text-[13px]">
                     {c?.sujets
                       ? `${pluriel(c.sujets, "sujet")}${c.corriges ? ` · ${pluriel(c.corriges, "corrigé")}` : ""}`
@@ -177,7 +177,7 @@ export default function Accueil({ loaderData }: Route.ComponentProps) {
           <li>
             <Link
               to="/sujets"
-              className="flex min-h-24 flex-col justify-end rounded-tile bg-soft p-4 text-base font-bold text-ink lg:min-h-30 lg:p-[18px] lg:text-[17px]"
+              className="flex h-full min-h-24 flex-col justify-end rounded-tile bg-soft p-4 text-base font-bold text-ink lg:min-h-30 lg:p-[18px] lg:text-[17px]"
             >
               Toutes les matières
             </Link>

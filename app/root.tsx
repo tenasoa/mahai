@@ -45,7 +45,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   if (isRouteErrorResponse(error)) {
     if (error.status === 404) {
       titre = "Page introuvable";
-      details = "Cette page n'existe pas ou a été déplacée.";
+      details = "Cette page n'existe pas ou a été déplacée (erreur 404).";
     } else {
       details = error.statusText || details;
     }
@@ -54,7 +54,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     stack = error.stack;
   }
 
-  const introuvable = isRouteErrorResponse(error) && error.status === 404;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -65,9 +64,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       </header>
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-5 pt-12 pb-16 lg:flex-row lg:items-center lg:gap-16 lg:px-10 lg:pt-0">
         <div className="flex flex-col items-start gap-4 lg:flex-1">
-          {introuvable ? (
-            <p className="text-sm font-bold tracking-wide text-muted uppercase">Erreur 404</p>
-          ) : null}
           <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight lg:text-5xl">{titre}</h1>
           <p className="text-base text-ink-2 lg:text-lg">{details}</p>
           <div className="flex flex-wrap items-center gap-2 pt-2">

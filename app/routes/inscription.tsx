@@ -140,7 +140,7 @@ export default function Inscription({
         </Link>
       </p>
 
-      <LiensLegaux intro="En créant ton compte, tu acceptes les règles de Mah.ai :" />
+      <LiensLegaux intro="En créant ton compte, tu acceptes les règles de Mah.ai :" />
     </>
   );
 }

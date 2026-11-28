@@ -15,6 +15,9 @@ import { totalPoints } from "~/lib/document/nettoyer";
 import { planDocument, pts, type EntreePlan } from "~/lib/document/plan";
 import { TuileMatiere } from "~/components/ui/Pictogramme";
 
+/** « Maths » → « maths », mais un sigle (SVT, POO) garde ses majuscules. */
+const enMinuscule = (nom: string) => (/^\p{Lu}\p{Ll}/u.test(nom) ? nom[0]!.toLocaleLowerCase("fr") + nom.slice(1) : nom);
+
 export const handle: MiseEnPage = { large: true, rail: true };
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -395,7 +398,7 @@ export default function Sujet({ loaderData }: Route.ComponentProps) {
             {voisins.length ? (
               <section aria-labelledby="titre-voisins" className="flex flex-col gap-2.5 rounded-card border-2 border-line p-4">
                 <h2 id="titre-voisins" className="text-sm font-bold">
-                  {matiere ? `Autres sujets de ${matiere.nom.toLowerCase()}` : "Autres sujets"}
+                  {matiere ? `Autres sujets de ${enMinuscule(matiere.nom)}` : "Autres sujets"}
                 </h2>
                 <ul className="flex flex-col gap-1 text-sm">
                   {voisins.map((v) => (

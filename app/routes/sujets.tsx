@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Form, Link, useFetcher, useLocation, useNavigate, useSearchParams, useSubmit } from "react-router";
 
 import type { Route } from "./+types/sujets";
@@ -60,7 +60,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 type Donnees = Route.ComponentProps["loaderData"];
 
 const selectFiltre =
-  "min-h-11 min-w-0 flex-1 rounded-full border-2 border-line bg-surface px-3 text-sm";
+  "min-h-11 min-w-0 flex-[1_1_9rem] rounded-full border-2 border-line bg-surface px-3 text-sm";
 
 const nomDe = (liste: { id: string; nom: string }[], id: string) => liste.find((x) => x.id === id)?.nom ?? "";
 
@@ -138,6 +138,14 @@ function Telephone({ donnees }: { donnees: Donnees }) {
     ? listes.series.filter((s) => s.examenId === filtres.examenId)
     : listes.series;
 
+  // La matière choisie reste visible dans la bande qui défile.
+  const bande = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    const ul = bande.current;
+    const actif = ul?.querySelector<HTMLElement>("[aria-current]");
+    if (ul && actif) ul.scrollLeft = actif.offsetLeft - (ul.clientWidth - actif.offsetWidth) / 2;
+  }, [filtres.matiereId]);
+
   return (
     <div className="flex flex-col gap-5 lg:hidden">
       <h1 className="text-[2rem] leading-none font-extrabold tracking-tight">Sujets</h1>
@@ -190,14 +198,14 @@ function Telephone({ donnees }: { donnees: Donnees }) {
             </select>
           ) : null}
           {filtres.matiereId ? <input type="hidden" name="matiere" value={filtres.matiereId} /> : null}
-          <button type="submit" className="min-h-11 rounded-full border-2 border-ink px-5 text-sm font-bold">
+          <button type="submit" className="min-h-11 grow rounded-full border-2 border-ink px-5 text-sm font-bold">
             Filtrer
           </button>
         </div>
       </Form>
 
-      <nav aria-label="Filtrer par matière">
-        <ul className="grid grid-cols-5 gap-2">
+      <nav aria-label="Filtrer par matière" className="-mx-5">
+        <ul ref={bande} className="relative flex snap-x gap-1 overflow-x-auto scroll-px-5 px-5 [scrollbar-width:none]">
           {listes.matieres.map((m) => {
             const actif = filtres.matiereId === m.id;
             const suite = new URLSearchParams(params);
@@ -206,11 +214,11 @@ function Telephone({ donnees }: { donnees: Donnees }) {
             else suite.set("matiere", m.id);
             const lien = suite.toString();
             return (
-              <li key={m.id}>
+              <li key={m.id} className="w-19 shrink-0 snap-start">
                 <Link
                   to={lien ? `?${lien}` : "."}
                   aria-current={actif ? "true" : undefined}
-                  className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 py-2 text-center text-[11px] leading-tight ${
+                  className={`flex h-full flex-col items-center gap-1.5 rounded-2xl border-2 px-0.5 py-2 text-center text-[11px] leading-tight break-words hyphens-auto ${
                     actif ? "border-ink bg-soft font-bold" : "border-transparent"
                   }`}
                 >
@@ -405,7 +413,7 @@ function Filtres({
         for (const [k, v] of [...donnees.entries()]) if (!v || (k === "tri" && v === "recent")) donnees.delete(k);
         submit(donnees, { method: "get", preventScrollReset: true });
       }}
-      className="flex flex-col gap-6"
+      className="flex min-w-0 flex-col gap-6"
     >
       {q ? <input type="hidden" name="q" value={q} /> : null}
 
@@ -428,7 +436,7 @@ function Filtres({
           options={annees.map((a) => ({ id: String(a), nom: String(a), n: compteurs.annees[String(a)] ?? 0 }))} />
       ) : null}
 
-      <fieldset className="flex flex-col gap-2.5">
+      <fieldset className="flex min-w-0 flex-col gap-2.5">
         <legend className="mb-2 text-xs font-medium text-muted">Affichage</legend>
         <label className="flex min-h-9 cursor-pointer items-center gap-2.5 text-sm">
           <input type="checkbox" name="corrige" value="1" defaultChecked={filtres.corrige} className="size-4.5 accent-ink" />
@@ -532,7 +540,7 @@ function Groupe({
   options: { id: string; nom: string; n: number; couleur?: Couleur; icone?: string | null }[];
 }) {
   return (
-    <fieldset className="flex flex-col gap-0.5">
+    <fieldset className="flex min-w-0 flex-col gap-0.5">
       <legend className="mb-2 text-xs font-medium text-muted">{titre}</legend>
       {[{ id: "", nom: "Tous", n: -1 }, ...options].map((o) => {
         const coche = (valeur ?? "") === o.id;
